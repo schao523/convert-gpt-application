@@ -1,0 +1,78 @@
+{
+  "schema_version": 1,
+  "marketplace_commit": "e5fd82419ecf52dcb708a35f5b9c453616380822",
+  "rationale": {
+    "digest_mismatch": "Integrated OpenClaw compatibility/runtime work and repository-relocation import changes are intentionally newer than the unchanged public marketplace baseline.",
+    "missing": "Compatibility-contract files exist in the development source but have not been published.",
+    "unexpected": "Marketplace-only tests and retained empty-fixture markers are not inputs to the extracted application workspace."
+  },
+  "codex": {
+    "digest_mismatch": [
+      ".gitattributes",
+      "README.md",
+      "assets/openclaw/remote-assets.json",
+      "scripts/cool_bible_tutor.py",
+      "skills/retrieving-chinese-union-version-scripture/scripts/discover_bible_references.py",
+      "skills/retrieving-chinese-union-version-scripture/scripts/ingest_bible_rag.py",
+      "skills/retrieving-chinese-union-version-scripture/scripts/rag_documents.py",
+      "skills/retrieving-chinese-union-version-scripture/scripts/rag_metadata_sync.py",
+      "skills/retrieving-chinese-union-version-scripture/scripts/rag_runtime.py",
+      "skills/retrieving-chinese-union-version-scripture/scripts/rag_setup.py",
+      "skills/retrieving-chinese-union-version-scripture/scripts/rag_vector_lock.py",
+      "skills/retrieving-chinese-union-version-scripture/scripts/rag_vector_manifest.py",
+      "skills/retrieving-chinese-union-version-scripture/scripts/review_cuv_index.py",
+      "skills/retrieving-chinese-union-version-scripture/scripts/review_server.py",
+      "skills/retrieving-chinese-union-version-scripture/scripts/review_web/app.js",
+      "skills/retrieving-chinese-union-version-scripture/scripts/review_web/index.html",
+      "skills/retrieving-chinese-union-version-scripture/scripts/review_web/styles.css",
+      "tests/scripture/test_corpus_db.py",
+      "tests/scripture/test_discover_bible_references.py",
+      "tests/scripture/test_ingest_bible_rag.py",
+      "tests/scripture/test_rag_metadata_sync.py",
+      "tests/scripture/test_rag_runtime.py",
+      "tests/scripture/test_rag_setup.py",
+      "tests/scripture/test_review_server.py",
+      "tests/scripture/test_review_web.py",
+      "tests/test_distribution.py",
+      "tests/test_setup_launcher.py"
+    ],
+    "missing": [
+      "assets/openclaw/runtime-compatibility.json",
+      "docs/runtime-compatibility-contract.md"
+    ],
+    "unexpected": [
+      "tests/_runtime_fixture/.gitkeep",
+      "tests/_runtime_fixture/cache-fixture/.gitkeep",
+      "tests/_runtime_fixture/references/.gitkeep",
+      "tests/test_clawhub_retry_workflow.py",
+      "tests/test_openclaw_marketplace.py"
+    ]
+  },
+  "openclaw": {
+    "digest_mismatch": [
+      ".gitattributes",
+      "README.md",
+      "assets/openclaw/remote-assets.json",
+      "package.json",
+      "scripts/cool_bible_tutor.py",
+      "skills/retrieving-chinese-union-version-scripture/scripts/discover_bible_references.py",
+      "skills/retrieving-chinese-union-version-scripture/scripts/ingest_bible_rag.py",
+      "skills/retrieving-chinese-union-version-scripture/scripts/rag_documents.py",
+      "skills/retrieving-chinese-union-version-scripture/scripts/rag_metadata_sync.py",
+      "skills/retrieving-chinese-union-version-scripture/scripts/rag_runtime.py",
+      "skills/retrieving-chinese-union-version-scripture/scripts/rag_setup.py",
+      "skills/retrieving-chinese-union-version-scripture/scripts/rag_vector_lock.py",
+      "skills/retrieving-chinese-union-version-scripture/scripts/rag_vector_manifest.py",
+      "skills/retrieving-chinese-union-version-scripture/scripts/review_cuv_index.py",
+      "skills/retrieving-chinese-union-version-scripture/scripts/review_server.py",
+      "skills/retrieving-chinese-union-version-scripture/scripts/review_web/app.js",
+      "skills/retrieving-chinese-union-version-scripture/scripts/review_web/index.html",
+      "skills/retrieving-chinese-union-version-scripture/scripts/review_web/styles.css"
+    ],
+    "missing": [
+      "assets/openclaw/runtime-compatibility.json",
+      "docs/runtime-compatibility-contract.md"
+    ],
+    "unexpected": []
+  }
+}
