@@ -2,7 +2,7 @@
 /.tmp/
 /dist/
 /build/
-/*.egg-info/
+**/*.egg-info/
 **/__pycache__/
 *.py[cod]
 applications/*/conversion.local.json

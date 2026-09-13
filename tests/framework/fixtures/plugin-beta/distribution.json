@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "plugin_id": "plugin-beta",
+  "package_name": "@obvious-one/plugin-beta",
+  "family": "bundle-plugin",
+  "version": "1.0.0",
+  "source_root": "source",
+  "include_files": ["README.md", ".codex-plugin/plugin.json"],
+  "include_prefixes": [],
+  "exclude_paths": ["assets/index.bin", "assets/source.txt"],
+  "max_total_bytes": 1048576,
+  "release_repository": "example/obvious-one-plugins",
+  "release_tag_template": "plugin-beta-v{version}",
+  "readme_overlay": null,
+  "audit_hook": null,
+  "rag": {
+    "app_id": "plugin-beta",
+    "namespace": "plugin-beta:docs",
+    "runtime_lock": "runtime-lock.json",
+    "runtime_lock_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "model_manifest": "model-manifest.json",
+    "model_digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "index_manifest": "index-manifest.json",
+    "asset_groups": [
+      {"name":"index","archive_name":"plugin-beta-index-{version}.zip","source_paths":["assets/index.bin"],"install_subdir":"indexes"},
+      {"name":"sources","archive_name":"plugin-beta-sources-{version}.zip","source_paths":["assets/source.txt"],"install_subdir":"source-assets"}
+    ]
+  }
+}
