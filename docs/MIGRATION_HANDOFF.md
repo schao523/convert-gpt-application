@@ -3,8 +3,8 @@
 ## Result
 
 The reusable GPT-application conversion framework and the Cool Bible Tutor
-development workspace were extracted into a fresh, independent Git repository.
-This repository is ready to be moved to `D:\GitHub\convert-gpt-application`.
+development workspace were extracted into a fresh, independent Git repository
+at `D:\GitHub\convert-gpt-application`.
 
 ## Provenance
 
