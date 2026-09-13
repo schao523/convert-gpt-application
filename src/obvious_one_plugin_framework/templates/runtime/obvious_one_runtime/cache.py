@@ -71,7 +71,10 @@ def ensure_cached_object(
     populate: Callable[[Path], None],
     verify: Callable[[Path], None],
 ) -> Path:
-    target = Path(target).resolve()
+    # ``Path.resolve()`` can switch to a ``\\?\``-prefixed spelling on Windows
+    # after another thread creates the target. Preserve one stable lexical
+    # absolute spelling across both sides of that race.
+    target = Path(os.path.abspath(os.fspath(target)))
     if _is_complete(target, digest):
         verify(target)
         return target

@@ -34,7 +34,8 @@
       "tests/scripture/test_review_server.py",
       "tests/scripture/test_review_web.py",
       "tests/test_distribution.py",
-      "tests/test_setup_launcher.py"
+      "tests/test_setup_launcher.py",
+      "vendor/obvious-one-runtime/obvious_one_runtime/cache.py"
     ],
     "missing": [
       "assets/openclaw/runtime-compatibility.json",
@@ -67,7 +68,8 @@
       "skills/retrieving-chinese-union-version-scripture/scripts/review_server.py",
       "skills/retrieving-chinese-union-version-scripture/scripts/review_web/app.js",
       "skills/retrieving-chinese-union-version-scripture/scripts/review_web/index.html",
-      "skills/retrieving-chinese-union-version-scripture/scripts/review_web/styles.css"
+      "skills/retrieving-chinese-union-version-scripture/scripts/review_web/styles.css",
+      "vendor/obvious-one-runtime/obvious_one_runtime/cache.py"
     ],
     "missing": [
       "assets/openclaw/runtime-compatibility.json",
