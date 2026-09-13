@@ -1,0 +1,74 @@
+{
+  "schema_version": 1,
+  "plugin_id": "cool-bible-tutor",
+  "package_name": "@obvious-one/cool-bible-tutor",
+  "family": "bundle-plugin",
+  "version": "2.4.6",
+  "source_root": "..",
+  "include_files": [
+    ".codex-plugin/plugin.json",
+    ".gitattributes",
+    "README.md",
+    "DISTRIBUTION.md",
+    "LICENSE",
+    "PRIVACY.md",
+    "SECURITY.md",
+    "THIRD_PARTY_CONTENT.md",
+    "THIRD_PARTY_NOTICES.md",
+    "assets/openclaw/remote-assets.json",
+    "assets/openclaw/runtime-compatibility.json",
+    "assets/scripture/cuv.sqlite3",
+    "assets/scripture/cuv-approved-gaps.json",
+    "assets/scripture/cuv-runtime-manifest.json",
+    "assets/rag/bge-large-zh-v1.5-model-manifest.json",
+    "assets/rag/cuv-rag-runtime-manifest.json",
+    "vendor/rag-runtime/model-manifest.json",
+    "vendor/rag-runtime/requirements-rag.in",
+    "vendor/rag-runtime/requirements-rag.lock",
+    "vendor/rag-runtime/runtime-lock.json",
+    "vendor/rag-subsystem/manifest.json",
+    "vendor/rag-subsystem/rag_subsystem-0.2.1-py3-none-any.whl"
+  ],
+  "include_prefixes": ["skills", "scripts", "docs"],
+  "exclude_paths": [
+    "assets/rag/cuv-rag-index.sqlite3",
+    "assets/scripture/Bible 舊約聖經和合本.pdf",
+    "assets/scripture/Bible 新約聖經和合本.pdf",
+    "tests/test_openclaw_release.py",
+    "tests/test_vendored_runtime.py"
+  ],
+  "max_total_bytes": 47185920,
+  "release_repository": "schao523/obvious-one-plugins",
+  "release_tag_template": "cool-bible-tutor-v{version}",
+  "readme_overlay": "openclaw/README.md",
+  "audit_hook": "scripts/openclaw_distribution.py:audit_cool_bible_tutor",
+  "rag": {
+    "app_id": "cool-bible-tutor",
+    "namespace": "cool-bible-tutor:zh:bge-large-zh",
+    "runtime_lock": "vendor/rag-runtime/runtime-lock.json",
+    "runtime_lock_digest": "9415eeaf584942b95e6eced96a1d30288094984bbf66f72875fdb09b832ede13",
+    "model_manifest": "assets/rag/bge-large-zh-v1.5-model-manifest.json",
+    "model_digest": "24c87f0eb20f6f8d296247b8c1d8102499fdf8a307a3780810bba34b23181276",
+    "index_manifest": "assets/rag/cuv-rag-runtime-manifest.json",
+    "asset_groups": [
+      {
+        "name": "rag-index",
+        "archive_name": "cool-bible-tutor-rag-index-{version}.zip",
+        "source_paths": [
+          "assets/rag/cuv-rag-index.sqlite3",
+          "assets/rag/cuv-rag-runtime-manifest.json"
+        ],
+        "install_subdir": "indexes"
+      },
+      {
+        "name": "source-pdfs",
+        "archive_name": "cool-bible-tutor-source-pdfs-{version}.zip",
+        "source_paths": [
+          "assets/scripture/Bible 舊約聖經和合本.pdf",
+          "assets/scripture/Bible 新約聖經和合本.pdf"
+        ],
+        "install_subdir": "source-assets"
+      }
+    ]
+  }
+}

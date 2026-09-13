@@ -1,0 +1,7 @@
+{
+  "license": "MIT",
+  "python_requires": ">=3.10",
+  "source_commit": "94cf5609517a0024b3fd2f039c10d9eb5e93bc69",
+  "version": "0.2.1",
+  "wheel_sha256": "163778ca8b3e6cf1ffcf591395beab4ce4467024d3293a12c9a41bd6a9d746df"
+}

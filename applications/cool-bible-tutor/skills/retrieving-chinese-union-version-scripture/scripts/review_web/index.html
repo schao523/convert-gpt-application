@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>和合本經文核對工作台</title>
+  <link rel="stylesheet" href="/review_web/styles.css?token=__REVIEW_TOKEN__">
+  <script defer src="/review_web/app.js?token=__REVIEW_TOKEN__"></script>
+</head>
+<body>
+  <header class="topbar">
+    <div>
+      <p class="eyebrow">COOL BIBLE TUTOR · LOCAL REVIEW</p>
+      <h1>和合本經文核對工作台</h1>
+      <p class="subtitle">逐頁比對來源 PDF，所有核實動作都由你明確確認。</p>
+    </div>
+    <section class="status-grid" aria-label="語料狀態">
+      <article><span>經文筆數</span><strong id="verse-count">—</strong></article>
+      <article><span>結構缺口</span><strong id="gap-count">—</strong></article>
+      <article><span>待核實</span><strong id="unverified-count">—</strong></article>
+      <article><span>本次備份</span><strong id="backup-state">尚未建立</strong></article>
+      <article>
+        <span>RAG 索引</span><strong id="rag-state">讀取中</strong>
+        <button id="rag-metadata-sync" class="rag-sync-button" type="button" hidden>同步核實資料</button>
+      </article>
+    </section>
+  </header>
+
+  <nav class="queue-nav" aria-label="核對佇列">
+    <div class="tabs" role="tablist" aria-label="問題類型">
+      <button id="gap-tab" class="tab is-active" type="button" role="tab" aria-selected="true" data-kind="gap">結構缺口</button>
+      <button id="unverified-tab" class="tab" type="button" role="tab" aria-selected="false" data-kind="unverified">依頁待核實</button>
+    </div>
+    <form id="filters" class="filters">
+      <label for="testament-filter">約別</label>
+      <select id="testament-filter" name="testament">
+        <option value="">全部</option><option value="OT">舊約</option><option value="NT">新約</option>
+      </select>
+      <label for="book-filter">書卷編號</label>
+      <input id="book-filter" name="book_id" type="number" min="1" max="66" inputmode="numeric">
+      <label for="chapter-filter">章</label>
+      <input id="chapter-filter" name="chapter" type="number" min="1" inputmode="numeric">
+      <label for="page-filter">PDF 頁</label>
+      <input id="page-filter" name="source_page" type="number" min="1" inputmode="numeric">
+      <button type="submit">套用篩選</button>
+    </form>
+    <div class="queue-controls">
+      <button id="previous-page" type="button" aria-label="上一頁佇列">← 上一頁</button>
+      <span id="queue-position">尚未載入</span>
+      <button id="next-page" type="button" aria-label="下一頁佇列">下一頁 →</button>
+    </div>
+    <ol id="queue-list" class="queue-list" aria-label="待處理項目"></ol>
+  </nav>
+
+  <main>
+    <section class="source-panel" aria-labelledby="source-heading">
+      <div class="panel-heading">
+        <div><p class="section-kicker">SOURCE</p><h2 id="source-heading">來源 PDF</h2></div>
+        <a id="pdf-direct-link" class="quiet-link" href="#">另開 PDF</a>
+      </div>
+      <div class="pdf-shell">
+        <iframe id="pdf-viewer" title="聖經來源 PDF 頁面"></iframe>
+        <p id="pdf-placeholder">從佇列選擇一個項目，即可顯示相應來源頁。</p>
+      </div>
+    </section>
+
+    <section class="editor-panel" aria-labelledby="editor-heading">
+      <div class="panel-heading">
+        <div><p class="section-kicker">REVIEW</p><h2 id="editor-heading">經文核對</h2></div>
+        <span id="selection-kind" class="pill">未選取</span>
+      </div>
+      <div id="context-verses" class="context-verses" aria-label="相鄰經文"></div>
+      <form id="verse-form" autocomplete="off">
+        <div class="form-row three">
+          <div><label for="book-id">書卷編號</label><input id="book-id" type="number" min="1" max="66" required></div>
+          <div><label for="chapter">章</label><input id="chapter" type="number" min="1" required></div>
+          <div><label for="verse">節</label><input id="verse" type="number" min="1" required></div>
+        </div>
+        <label for="verse-text">經文文字</label>
+        <textarea id="verse-text" rows="7" required></textarea>
+        <div class="form-row two">
+          <div><label for="source-file">來源檔名</label><input id="source-file" required></div>
+          <div><label for="source-page">來源頁碼</label><input id="source-page" type="number" min="1" required></div>
+        </div>
+        <div class="form-row two">
+          <div><label for="confidence">OCR 信心值</label><input id="confidence" type="number" min="0" max="100" step="0.1" required></div>
+          <div class="check-field"><input id="verified" type="checkbox"><label for="verified">已人工核實</label></div>
+        </div>
+        <label for="review-note">核對註記（選填）</label>
+        <textarea id="review-note" rows="2"></textarea>
+        <div class="action-row">
+          <button id="save-verse" class="primary" type="submit" data-mutation>儲存修改</button>
+          <button id="verify-verse" type="button" data-mutation>核實此節</button>
+          <button id="unverify-verse" type="button" data-mutation>取消核實</button>
+          <button id="insert-verse" class="warning" type="button" data-mutation>補入缺節</button>
+          <button id="verify-page" class="warning" type="button" data-mutation>核實本頁全部經文</button>
+        </div>
+      </form>
+      <section id="conflict-panel" class="conflict" hidden aria-labelledby="conflict-heading">
+        <h3 id="conflict-heading">另一個分頁已更新此內容</h3>
+        <p>你的輸入仍保留在表單。伺服器目前內容如下：</p>
+        <pre id="server-values"></pre>
+      </section>
+      <p id="app-status" class="app-status" aria-live="polite">正在載入本機核對資料……</p>
+    </section>
+  </main>
+
+  <aside class="history-panel" aria-labelledby="history-heading">
+    <div class="panel-heading"><div><p class="section-kicker">AUDIT</p><h2 id="history-heading">核對紀錄</h2></div></div>
+    <ol id="history-list"><li>本工作階段尚無變更。</li></ol>
+  </aside>
+
+  <dialog id="confirm-dialog" aria-labelledby="confirm-title">
+    <form method="dialog">
+      <h2 id="confirm-title">確認核對動作</h2>
+      <p id="confirm-message"></p>
+      <label for="confirm-input">輸入畫面顯示的確認文字</label>
+      <input id="confirm-input" autocomplete="off">
+      <div class="action-row"><button value="cancel">取消</button><button id="confirm-submit" class="warning" value="confirm">確認</button></div>
+    </form>
+  </dialog>
+</body>
+</html>

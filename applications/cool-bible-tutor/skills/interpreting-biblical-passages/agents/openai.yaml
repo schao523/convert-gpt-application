@@ -1,0 +1,4 @@
+interface:
+  display_name: "解釋聖經經文"
+  short_description: "依歸納釋經法帶領逐題解答、歸納總意與神學主題三階段。"
+  default_prompt: "請使用 $interpreting-biblical-passages，根據已有觀察帶領我解釋這段經文。"

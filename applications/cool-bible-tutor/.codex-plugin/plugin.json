@@ -1,0 +1,30 @@
+{
+  "name": "cool-bible-tutor",
+  "version": "2.4.6",
+  "description": "A Traditional Chinese inductive Bible tutor with learner-paced study, exegesis, theology, and application skills.",
+  "author": {
+    "name": "schao523",
+    "url": "https://github.com/schao523"
+  },
+  "homepage": "https://github.com/schao523/obvious-one-plugins/tree/main/plugins/cool-bible-tutor",
+  "repository": "https://github.com/schao523/obvious-one-plugins",
+  "license": "MIT",
+  "keywords": [
+    "明明可知", "Obvious One", "酷聖經教師", "Cool Bible Tutor",
+    "bible-study", "inductive-study", "traditional-chinese", "theology"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "酷聖經教師",
+    "shortDescription": "以歸納釋經法引導查經、神學討論與生活應用。",
+    "longDescription": "完整保留酷聖經教師 v2.4 的繁體中文互動查經、十階段歸納釋經、神學討論、生活應用、八種合法處境、原文譯本比較，以及由內附公版和合本 PDF 建立的可核實檢索；以可再散布的內嵌技能執行。",
+    "developerName": "schao523",
+    "category": "Education",
+    "capabilities": ["Interactive", "Read"],
+    "defaultPrompt": [
+      "我想用歸納釋經法查考一段經文。",
+      "請從聖經角度陪我探討一個神學問題。",
+      "我想把一段經文的原則落實在生活中。"
+    ]
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "index_urls": [
+    "https://pypi.org/simple",
+    "https://download.pytorch.org/whl/cpu"
+  ],
+  "lock_generator": "uv 0.12.5",
+  "model_manifest": "assets/rag/bge-large-zh-v1.5-model-manifest.json",
+  "model_manifest_sha256": "24c87f0eb20f6f8d296247b8c1d8102499fdf8a307a3780810bba34b23181276",
+  "model_download_manifest": "vendor/rag-runtime/model-manifest.json",
+  "model_download_manifest_sha256": "cee45b25fdafa8c1485399f41cdd02343c724cca84f7a1f54f1b356a08984a89",
+  "model_total_bytes": 1302771424,
+  "package_versions": {
+    "sentence-transformers": "5.7.0",
+    "torch": "2.13.0"
+  },
+  "python_max": [
+    3,
+    13
+  ],
+  "python_min": [
+    3,
+    10
+  ],
+  "required_free_bytes": 6000000000,
+  "requirements": "vendor/rag-runtime/requirements-rag.lock",
+  "requirements_sha256": "11b614da90628c263d9b8d004c8474dd770172a6daeacfea9a9eed7d83557a36",
+  "runtime_lock_id": "9415eeaf584942b95e6eced96a1d30288094984bbf66f72875fdb09b832ede13",
+  "schema_version": 1,
+  "supported_platforms": [
+    "windows-x86_64",
+    "linux-x86_64",
+    "macos-arm64",
+    "macos-x86_64"
+  ],
+  "wheel": "vendor/rag-subsystem/rag_subsystem-0.2.1-py3-none-any.whl",
+  "wheel_sha256": "163778ca8b3e6cf1ffcf591395beab4ce4467024d3293a12c9a41bd6a9d746df",
+  "wheel_version": "0.2.1"
+}

@@ -1,0 +1,4 @@
+interface:
+  display_name: "比較聖經字詞與譯本"
+  short_description: "以可核實來源比較原文字詞、文法與譯本差異，並回到經文脈絡。"
+  default_prompt: "請使用 $comparing-biblical-words-and-translations，比較這段經文的字詞或譯本差異。"

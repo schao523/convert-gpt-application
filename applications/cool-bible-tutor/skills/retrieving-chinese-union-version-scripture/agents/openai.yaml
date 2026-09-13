@@ -1,0 +1,4 @@
+interface:
+  display_name: "檢索和合本經文"
+  short_description: "從內附公版來源建立的索引取得具頁碼與核實狀態的和合本經文。"
+  default_prompt: "請使用 $retrieving-chinese-union-version-scripture，從核實索引取得這段和合本經文。"

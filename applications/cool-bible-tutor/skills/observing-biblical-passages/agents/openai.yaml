@@ -1,0 +1,4 @@
+interface:
+  display_name: "觀察聖經經文"
+  short_description: "依歸納釋經法帶領事實、關係、結構與提問四階段觀察。"
+  default_prompt: "Use $observing-biblical-passages to guide my observation of this Bible passage."

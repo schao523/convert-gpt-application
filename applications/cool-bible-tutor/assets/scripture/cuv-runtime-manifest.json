@@ -1,0 +1,14 @@
+{
+  "approved_gap_sha256": "eb25db662530ef9b93bef4816b62813ca2f2845afe52de369a7d9c3010d48c77",
+  "approved_source_gaps": 71,
+  "corpus_schema_version": "1",
+  "corpus_structure_sha256": "4895c110ecf698f041ca585227b6a7253fc38ee907a88bbdb48448e522fb7058",
+  "database_sha256": "47391b73eb65552a6e746492b25bd1b5921b71ff45032c0282556afc6232311b",
+  "row_count": 31008,
+  "schema_version": 1,
+  "source_sha256": {
+    "Bible 新約聖經和合本.pdf": "4f0f9ef4c4a78b83f918c74e8f368a7e0eae515c17866c7767c310ca75786490",
+    "Bible 舊約聖經和合本.pdf": "2740a6f824f96374cb127d78c3d646b489963898dacc252b842d9a8894a91125"
+  },
+  "sqlite_integrity": "ok"
+}

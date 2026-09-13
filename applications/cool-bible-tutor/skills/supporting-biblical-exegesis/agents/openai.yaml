@@ -1,0 +1,4 @@
+interface:
+  display_name: "補充聖經釋經處境"
+  short_description: "按問題選用八種合法處境，提供有界線且可追溯的釋經支援。"
+  default_prompt: "請使用 $supporting-biblical-exegesis，選出最相關的處境協助解釋這段經文。"

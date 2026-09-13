@@ -1,0 +1,13 @@
+.codex-plugin/*.json text eol=lf
+assets/rag/*.json text eol=lf
+assets/scripture/*.json text eol=lf
+assets/scripture/cuv-approved-gaps.json text eol=crlf
+assets/scripture/cuv-runtime-manifest.json text eol=crlf
+vendor/rag-runtime/*.json text eol=lf
+vendor/rag-runtime/*.lock text eol=lf
+vendor/rag-runtime/*.in text eol=lf
+vendor/rag-subsystem/*.json text eol=lf
+
+assets/**/*.pdf binary
+assets/**/*.sqlite3 binary
+vendor/**/*.whl binary

@@ -1,0 +1,4 @@
+interface:
+  display_name: "引導酷聖經教師課程"
+  short_description: "以繁體中文引導循序查經、神學反思與具體生活應用操練。"
+  default_prompt: "Use $guiding-bible-tutor-sessions to guide me through a learner-paced Bible study."

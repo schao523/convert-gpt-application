@@ -1,0 +1,17 @@
+{
+  "artifact_type": "compatible-bundle",
+  "bundle_format": "codex",
+  "execution_contract": "inline-launcher",
+  "launcher": "scripts/cool_bible_tutor.py",
+  "native_openclaw_plugin": false,
+  "readiness_layers": {
+    "exact_retrieval": "bundled-offline",
+    "package": "host-detected",
+    "publication": "channel-dependent",
+    "review": "external-authoring-dependencies",
+    "semantic_rag": "explicit-setup",
+    "skills": "bundled"
+  },
+  "schema_version": 1,
+  "skill_count": 8
+}

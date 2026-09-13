@@ -1,0 +1,10 @@
+{
+  "schema_version": 1,
+  "application_id": "cool-bible-tutor",
+  "plugin_id": "cool-bible-tutor",
+  "source_inventory": "../../docs/provenance/source-extraction.json",
+  "source_location": "conversion.local.json",
+  "coverage_matrix": "tests/coverage-matrix.md",
+  "distribution_contract": "openclaw/distribution.json",
+  "marketplace_repository": "schao523/obvious-one-plugins"
+}

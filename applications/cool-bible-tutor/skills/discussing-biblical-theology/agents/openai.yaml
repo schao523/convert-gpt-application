@@ -1,0 +1,4 @@
+interface:
+  display_name: "討論聖經神學"
+  short_description: "以聖經為本進行蘇格拉底式神學對話，公平區分核心與次要觀點。"
+  default_prompt: "請使用 $discussing-biblical-theology，帶領我從經文討論這個神學問題。"

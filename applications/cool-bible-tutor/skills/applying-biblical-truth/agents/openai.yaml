@@ -1,0 +1,4 @@
+interface:
+  display_name: "實踐聖經真理"
+  short_description: "帶領寫下恆久神學原則、SMART 應用細節並付諸具體行動。"
+  default_prompt: "請使用 $applying-biblical-truth，把已解釋的經文真理化為可實踐的行動。"

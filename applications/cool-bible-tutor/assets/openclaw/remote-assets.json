@@ -1,0 +1,49 @@
+{
+  "asset_groups": [
+    {
+      "install_subdir": "indexes",
+      "members": [
+        {
+          "path": "assets/rag/cuv-rag-index.sqlite3",
+          "sha256": "2c48dcb91880276bd917ed8017f7059bb0bd573f26b69f79979b61c3f9706efc",
+          "size": 55050240
+        },
+        {
+          "path": "assets/rag/cuv-rag-runtime-manifest.json",
+          "sha256": "e2a77684a950a1b57dccc2d1a063e590487c7b4e80be4525b72fcd49d183cc46",
+          "size": 2000
+        }
+      ],
+      "name": "cool-bible-tutor-rag-index-2.4.6.zip",
+      "owner_plugin_id": "cool-bible-tutor",
+      "sha256": "3babdb0ab413153d8b5ceada43c55116bdff8bdbf6e839b8a6fe84e8c4ec1731",
+      "size": 55052558,
+      "url": "https://github.com/schao523/obvious-one-plugins/releases/download/cool-bible-tutor-v2.4.6/cool-bible-tutor-rag-index-2.4.6.zip"
+    },
+    {
+      "install_subdir": "source-assets",
+      "members": [
+        {
+          "path": "assets/scripture/Bible 新約聖經和合本.pdf",
+          "sha256": "4f0f9ef4c4a78b83f918c74e8f368a7e0eae515c17866c7767c310ca75786490",
+          "size": 1557874
+        },
+        {
+          "path": "assets/scripture/Bible 舊約聖經和合本.pdf",
+          "sha256": "2740a6f824f96374cb127d78c3d646b489963898dacc252b842d9a8894a91125",
+          "size": 4427709
+        }
+      ],
+      "name": "cool-bible-tutor-source-pdfs-2.4.6.zip",
+      "owner_plugin_id": "cool-bible-tutor",
+      "sha256": "3a283b647f1833da9bf5651f68d1b08192aae43f06a08e92362dcf89f1504eac",
+      "size": 5985949,
+      "url": "https://github.com/schao523/obvious-one-plugins/releases/download/cool-bible-tutor-v2.4.6/cool-bible-tutor-source-pdfs-2.4.6.zip"
+    }
+  ],
+  "plugin_id": "cool-bible-tutor",
+  "release_repository": "schao523/obvious-one-plugins",
+  "release_tag": "cool-bible-tutor-v2.4.6",
+  "schema_version": 1,
+  "version": "2.4.6"
+}
