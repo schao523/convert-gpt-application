@@ -1,0 +1,23 @@
+name: Validate {{PLUGIN_ID}}
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  validate:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Run {{PLUGIN_ID}} tests
+        run: python -B -m unittest discover -s plugins/{{PLUGIN_ID}}/tests -v
+      - name: Audit {{PLUGIN_ID}}
+        run: python -B plugins/{{PLUGIN_ID}}/scripts/distribution_audit.py plugins/{{PLUGIN_ID}}

@@ -1,0 +1,34 @@
+from pathlib import Path
+import unittest
+
+
+ROOT = Path(__file__).resolve().parents[1]
+TEMPLATES = ROOT / "templates"
+
+
+class PublicationTemplateTests(unittest.TestCase):
+    def test_expected_publication_templates_exist(self) -> None:
+        expected = {
+            "github-workflows/release-openclaw.yml.template",
+            "github-workflows/retry-clawhub.yml.template",
+            "github-workflows/validate.yml.template",
+            "marketplace/codex-marketplace.json.template",
+            "marketplace/openclaw-marketplace.json.template",
+        }
+        actual = {
+            path.relative_to(TEMPLATES).as_posix()
+            for path in TEMPLATES.rglob("*.template")
+        }
+        self.assertEqual(actual, expected)
+
+    def test_generic_templates_have_no_case_study_identity(self) -> None:
+        forbidden = ("cool-bible-tutor", "2.4.6", "John 3:16", "約 3:16")
+        for path in TEMPLATES.rglob("*.template"):
+            content = path.read_text(encoding="utf-8")
+            for value in forbidden:
+                self.assertNotIn(value, content, path.as_posix())
+            self.assertIn("{{PLUGIN_ID}}", content)
+
+
+if __name__ == "__main__":
+    unittest.main()

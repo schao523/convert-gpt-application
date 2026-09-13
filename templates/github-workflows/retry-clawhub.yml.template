@@ -1,0 +1,31 @@
+name: Retry {{PLUGIN_DISPLAY_NAME}} ClawHub publication
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Existing immutable release version
+        required: true
+        default: "{{PLUGIN_VERSION}}"
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  publish-clawhub:
+    runs-on: ubuntu-latest
+    environment: release
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Validate and publish {{PLUGIN_ID}}
+        env:
+          CLAWHUB_TOKEN: ${{ secrets.CLAWHUB_TOKEN }}
+        run: |
+          test -n "${CLAWHUB_TOKEN}"
+          clawhub login --token "${CLAWHUB_TOKEN}"
+          clawhub package validate openclaw/{{PLUGIN_ID}} --json
+          clawhub package publish openclaw/{{PLUGIN_ID}} --family bundle-plugin --owner {{MARKETPLACE_ID}} --version "${{ inputs.version }}" --json

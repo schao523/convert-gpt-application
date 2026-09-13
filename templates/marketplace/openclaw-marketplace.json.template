@@ -1,0 +1,13 @@
+{
+  "name": "{{MARKETPLACE_ID}}",
+  "version": "1.0.0",
+  "description": "{{MARKETPLACE_DISPLAY_NAME}} redistributable skill plugins.",
+  "plugins": [
+    {
+      "name": "{{PLUGIN_ID}}",
+      "version": "{{PLUGIN_VERSION}}",
+      "description": "{{PLUGIN_DISPLAY_NAME}}",
+      "source": "./openclaw/{{PLUGIN_ID}}"
+    }
+  ]
+}

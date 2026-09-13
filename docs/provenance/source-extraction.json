@@ -1,0 +1,158 @@
+{
+  "incorporated_branches": [
+    "feature/generic-openclaw-framework",
+    "codex/openclaw-compat-evaluation"
+  ],
+  "marketplace_commit": "e5fd82419ecf52dcb708a35f5b9c453616380822",
+  "marketplace_repository": "schao523/obvious-one-plugins",
+  "schema_version": 1,
+  "source_commit": "103839c8655706b47fe747f16abf617c774e4e50",
+  "source_inventory": [
+    {
+      "classification": "public-product-asset",
+      "path": "cool-bible-tutor/assets/openclaw/remote-assets.json",
+      "sha256": "4456151da79a1c968c6fdbc23b077d02acf64eff8e272d53d053de941666df5d"
+    },
+    {
+      "classification": "public-product-asset",
+      "path": "cool-bible-tutor/assets/openclaw/runtime-compatibility.json",
+      "sha256": "179f6e802b20f6052b99f332e5de77c39834eaa0e9ea24a4192c91e1e3020cc6"
+    },
+    {
+      "classification": "public-product-asset",
+      "path": "cool-bible-tutor/assets/rag/bge-large-zh-v1.5-model-manifest.json",
+      "sha256": "24c87f0eb20f6f8d296247b8c1d8102499fdf8a307a3780810bba34b23181276"
+    },
+    {
+      "classification": "public-product-asset",
+      "path": "cool-bible-tutor/assets/rag/cuv-rag-index.sqlite3",
+      "sha256": "2c48dcb91880276bd917ed8017f7059bb0bd573f26b69f79979b61c3f9706efc"
+    },
+    {
+      "classification": "public-product-asset",
+      "path": "cool-bible-tutor/assets/rag/cuv-rag-runtime-manifest.json",
+      "sha256": "e2a77684a950a1b57dccc2d1a063e590487c7b4e80be4525b72fcd49d183cc46"
+    },
+    {
+      "classification": "public-product-asset",
+      "path": "cool-bible-tutor/assets/scripture/Bible 新約聖經和合本.pdf",
+      "sha256": "4f0f9ef4c4a78b83f918c74e8f368a7e0eae515c17866c7767c310ca75786490"
+    },
+    {
+      "classification": "public-product-asset",
+      "path": "cool-bible-tutor/assets/scripture/Bible 舊約聖經和合本.pdf",
+      "sha256": "2740a6f824f96374cb127d78c3d646b489963898dacc252b842d9a8894a91125"
+    },
+    {
+      "classification": "public-product-asset",
+      "path": "cool-bible-tutor/assets/scripture/cuv-approved-gaps.json",
+      "sha256": "eb25db662530ef9b93bef4816b62813ca2f2845afe52de369a7d9c3010d48c77"
+    },
+    {
+      "classification": "public-product-asset",
+      "path": "cool-bible-tutor/assets/scripture/cuv-runtime-manifest.json",
+      "sha256": "3160e6d1377529e31682b9eaea4d4850d47a4f7b783989506d8953d3bf705341"
+    },
+    {
+      "classification": "public-product-asset",
+      "path": "cool-bible-tutor/assets/scripture/cuv.sqlite3",
+      "sha256": "47391b73eb65552a6e746492b25bd1b5921b71ff45032c0282556afc6232311b"
+    },
+    {
+      "classification": "source-only",
+      "path": "Bible 新約聖經和合本.pdf",
+      "sha256": "4f0f9ef4c4a78b83f918c74e8f368a7e0eae515c17866c7767c310ca75786490"
+    },
+    {
+      "classification": "source-only",
+      "path": "Bible 舊約聖經和合本.pdf",
+      "sha256": "2740a6f824f96374cb127d78c3d646b489963898dacc252b842d9a8894a91125"
+    },
+    {
+      "classification": "source-only",
+      "path": "answer_questions_guide.md",
+      "sha256": "ce079b141f93a658bc931b29ef9678eb34eb16f9dfb1e6abe7b264ec87fd0fb6"
+    },
+    {
+      "classification": "source-only",
+      "path": "apply_in_action_guide.md",
+      "sha256": "1fb7cbf8f420ff52431e9c9070c5ee4c1a734fbbb8fb38c8da82fd2bf957fd61"
+    },
+    {
+      "classification": "source-only",
+      "path": "examine_structure_guide.md",
+      "sha256": "5c79d2842844d7cb5a4e8700082fcb34c5cd44637c637094e7f3efaf62dc4c78"
+    },
+    {
+      "classification": "source-only",
+      "path": "formulate_questions_guide.md",
+      "sha256": "60c085dec2c25c0a5390e0319da722f3dbb4cac211a2d77699c8f10eb478814c"
+    },
+    {
+      "classification": "source-only",
+      "path": "identify_relationships_guide.md",
+      "sha256": "dd384b8914c3b466506abde7feef26385b343fe2391f7a07ee336df3abaae5f1"
+    },
+    {
+      "classification": "source-only",
+      "path": "identify_theme_guide.md",
+      "sha256": "ead5b5369d2e5b8055480abea3218346004e025aa3273cd5dfd335b386c1d798"
+    },
+    {
+      "classification": "source-only",
+      "path": "list_specifics_guide.md",
+      "sha256": "821b4852c28b50073a3f905bf627da4df507c1a7bfe37585d7b7dfa8a1cd9c98"
+    },
+    {
+      "classification": "source-only",
+      "path": "observation_guide.md",
+      "sha256": "c08e58050868545b1dc6efd9f50e2ccbbdfe2cdf5bc79f036c3505ad8a6d96b1"
+    },
+    {
+      "classification": "source-only",
+      "path": "summarize_meaning_guide.md",
+      "sha256": "10a7207f4b7477afc8a520544b622c9be5d0deabc8c03b7708a3155f75ed24f8"
+    },
+    {
+      "classification": "source-only",
+      "path": "write_principles_guide.md",
+      "sha256": "151cb5ba5066933f3cb47379df19f7f16f99af006bd1a808827604635c031349"
+    },
+    {
+      "classification": "source-only",
+      "path": "《酷聖經教師 GPT》Resource Index.docx",
+      "sha256": "5149b75deb26769b5b9ce37f25e431454f5cc432477347fed0221cfd94ebd3ed"
+    },
+    {
+      "classification": "source-only",
+      "path": "合法處境補充材料.docx",
+      "sha256": "79da061dfdec725d64b1c04f81021d307a81e4f9ac7f382fc0da15a1f62e5fd1"
+    },
+    {
+      "classification": "source-only",
+      "path": "合法處境補充材料.pdf",
+      "sha256": "d49faa810311e446d88a08a68aa2d37f8114a7a49be4acba14bfc3e625a0efec"
+    },
+    {
+      "classification": "source-only",
+      "path": "歸納釋經法 102025.pdf",
+      "sha256": "bd2eda9d9ef862e33645469c034d9d474cca56c03e9467a01d3cf119c1aba520"
+    },
+    {
+      "classification": "source-only",
+      "path": "測試建議.docx",
+      "sha256": "9f9000eca220ed3926f6f0602c11c0d3b454855b9d307acf20095c62905fa040"
+    },
+    {
+      "classification": "source-only",
+      "path": "酷聖經教師 4 new.docx",
+      "sha256": "f67de9e6fe112b3dcf258ee80611ea2408b99655a216817301e22f84df5f288d"
+    },
+    {
+      "classification": "source-only",
+      "path": "酷聖經教師 4.pdf",
+      "sha256": "f4da7ef2ff8da46f7d8fd902abf1fd7bfb95a8f14f79a4268df427da44293d24"
+    }
+  ],
+  "source_repository": "cool-bible-tutor-gpt-source"
+}
