@@ -1,0 +1,8 @@
+/.venv/
+/.tmp/
+/dist/
+/build/
+/*.egg-info/
+**/__pycache__/
+*.py[cod]
+applications/*/conversion.local.json

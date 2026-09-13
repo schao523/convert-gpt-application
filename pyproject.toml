@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools>=65", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "obvious-one-plugin-framework"
+version = "0.1.0"
+description = "Reusable framework for converting GPT applications into distributable plugins of skills"
+readme = "README.md"
+requires-python = ">=3.11"
+license = {text = "MIT"}
+dependencies = []
+
+[project.optional-dependencies]
+dev = ["pytest>=7"]
+rag = ["rag-subsystem[local-embeddings]>=0.1.0"]
+
+[project.scripts]
+obvious-one-plugin = "obvious_one_plugin_framework.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+obvious_one_plugin_framework = ["templates/runtime/obvious_one_runtime/*.py"]
