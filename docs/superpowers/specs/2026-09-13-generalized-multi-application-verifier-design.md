@@ -1,7 +1,9 @@
 # Generalized Multi-Application Verifier Design
 
-**Date:** 2026-09-13  
-**Repository:** `convert-gpt-application`  
+**Date:** 2026-09-13
+
+**Repository:** `convert-gpt-application`
+
 **Status:** Approved design, pending implementation plan
 
 ## 1. Purpose
