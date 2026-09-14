@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 import json
 from pathlib import Path, PurePosixPath
 from string import Formatter
-from typing import Any, Mapping
+from typing import Any, Iterable, Mapping, Sequence
 
 from .contract import ContractError, load_contract
 
@@ -85,6 +85,30 @@ class ApplicationConfig:
     distribution_contract: Path
     marketplace_repository: str
     verification: ApplicationVerificationProfile
+
+
+@dataclass(frozen=True)
+class ExpansionContext:
+    python: str
+    repository_root: Path
+    application_root: Path
+    diagnostics: Path
+    plugin_id: str
+    application_id: str
+    version: str
+
+
+@dataclass(frozen=True)
+class GateResult:
+    gate_id: str
+    state: str
+    detail: str
+    log_path: str | None = None
+    data: Mapping[str, object] = field(default_factory=dict)
+
+    def __post_init__(self) -> None:
+        if self.state not in RESULT_STATES:
+            raise ValueError(f"invalid result state: {self.state}")
 
 
 def _error(path: Path, field: str, detail: str) -> VerificationConfigError:
@@ -354,3 +378,72 @@ def discover_applications(repository_root: Path) -> tuple[ApplicationConfig, ...
     if len(plugin_ids) != len(set(plugin_ids)):
         raise VerificationConfigError("conversion.json: plugin_id: duplicate identity")
     return configs
+
+
+def select_applications(
+    configs: Sequence[ApplicationConfig],
+    *,
+    application_id: str | None,
+    select_all: bool,
+) -> tuple[ApplicationConfig, ...]:
+    """Select one application or all applications in stable identity order."""
+
+    if application_id is not None and select_all:
+        raise VerificationConfigError("--all and --application are mutually exclusive")
+    ordered = tuple(sorted(configs, key=lambda item: item.application_id))
+    if application_id is None:
+        return ordered
+    for config in ordered:
+        if config.application_id == application_id:
+            return (config,)
+    raise VerificationConfigError(f"unknown application: {application_id}")
+
+
+def expand_argv(argv: Sequence[str], context: ExpansionContext) -> list[str]:
+    """Expand a validated argv template without invoking a command shell."""
+
+    values = {
+        "python": context.python,
+        "repository_root": str(context.repository_root),
+        "application_root": str(context.application_root),
+        "diagnostics": str(context.diagnostics),
+        "plugin_id": context.plugin_id,
+        "application_id": context.application_id,
+        "version": context.version,
+    }
+    result: list[str] = []
+    for index, argument in enumerate(argv):
+        if not isinstance(argument, str) or not argument:
+            raise VerificationConfigError(f"argv[{index}]: must be non-empty text")
+        _validate_placeholders(argument, Path("<runtime>"), f"argv[{index}]")
+        try:
+            expanded = argument.format_map(values)
+        except (KeyError, ValueError) as exc:
+            raise VerificationConfigError(f"argv[{index}]: invalid placeholder") from exc
+        if not expanded:
+            raise VerificationConfigError(f"argv[{index}]: expansion is empty")
+        if argument.startswith(("{repository_root}", "{application_root}", "{diagnostics}")):
+            expanded = str(Path(expanded))
+        result.append(expanded)
+    if not result:
+        raise VerificationConfigError("argv: must not be empty")
+    return result
+
+
+def resolve_within(base: Path, value: str | Path, *, field: str) -> Path:
+    """Resolve a relative path and require the result to remain below base."""
+
+    boundary = Path(base).resolve()
+    candidate = Path(value)
+    if candidate.is_absolute():
+        raise VerificationConfigError(f"{field}: absolute paths are forbidden")
+    resolved = (boundary / candidate).resolve()
+    if not resolved.is_relative_to(boundary):
+        raise VerificationConfigError(f"{field}: path escapes declared boundary")
+    return resolved
+
+
+def aggregate_state(gates: Iterable[GateResult]) -> str:
+    """Return FAIL for any failed required gate, otherwise PASS."""
+
+    return "FAIL" if any(gate.state == "FAIL" for gate in gates) else "PASS"

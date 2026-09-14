@@ -14,11 +14,17 @@ from .verification import (
     ApplicationConfig,
     ApplicationVerificationProfile,
     CodexBuildProfile,
+    ExpansionContext,
+    GateResult,
     MarketplaceProfile,
     VerificationCommand,
     VerificationConfigError,
+    aggregate_state,
     discover_applications,
+    expand_argv,
     load_application_config,
+    resolve_within,
+    select_applications,
 )
 
 __all__ = [
@@ -33,11 +39,17 @@ __all__ = [
     "ApplicationConfig",
     "ApplicationVerificationProfile",
     "CodexBuildProfile",
+    "ExpansionContext",
+    "GateResult",
     "MarketplaceProfile",
     "VerificationCommand",
     "VerificationConfigError",
+    "aggregate_state",
     "discover_applications",
+    "expand_argv",
     "load_application_config",
+    "resolve_within",
+    "select_applications",
 ]
 
 __version__ = "0.1.0"
