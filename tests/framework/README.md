@@ -20,6 +20,6 @@ The generated package may share only content-addressed runtimes and embedding mo
 
 `check-index-reuse` compares source hashes, normalized corpus and structure, ordered chunk identity/text, chunker configuration, model ID/revision/dimensions/normalization, vector schema/serialization, row counts, and source-index integrity. Any mismatch returns `reembedding_required`.
 
-When eligible, `derive-index` copies the source into staging, preserves vector blobs, rewrites all app/namespace identity and provenance for the destination plugin, verifies SQLite integrity and absence of source identity, and atomically activates an independent target index. It never turns the original index into a runtime-shared Bible asset.
+When eligible, `derive-index` copies the source into staging, preserves vector blobs, rewrites all app/namespace identity and provenance for the destination plugin, verifies SQLite integrity and absence of source identity, and atomically activates an independent target index. It never turns the original index into a runtime-shared application content asset.
 
 Product audit hooks should enforce domain-specific provenance and behavior that the generic deny-by-default package audit cannot know. Tests in this directory use only synthetic fixture plugins and must remain network-free.

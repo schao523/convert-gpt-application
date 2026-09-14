@@ -97,6 +97,24 @@ python -B -m obvious_one_plugin_framework.cli derive-index `
 
 `derive-index` preserves compatible vector blobs but rewrites application and namespace identity. It does not create a runtime-shared content index.
 
+### Application-aware provenance
+
+Each `applications/<plugin-id>/conversion.json` declares its source-repository
+label, historical branch labels, inventory rules, and shared marketplace
+identity. Generate or refresh that application's redacted source inventory with:
+
+```powershell
+python -B .\scripts\write_extraction_provenance.py `
+  --application <plugin-id> `
+  --source <path-to-source-repository> `
+  --marketplace D:\GitHub\obvious-one-plugins
+```
+
+The generator writes to the configured `source_inventory` path. An optional
+`--output` override must remain inside this development repository. Generated
+records contain relative paths and SHA-256 hashes, never private absolute
+source paths.
+
 ## 4. Framework and product tests
 
 ### Multi-application verification
@@ -105,6 +123,11 @@ The top-level verifier discovers `applications/*/conversion.json` and validates
 the generic framework once before running the selected application-owned test,
 audit, smoke, Codex-build, and deterministic OpenClaw-build gates. Every
 converted plugin targets both Codex and OpenClaw by default.
+
+Shared gates do not require a reference application. Provenance validation,
+product tests, declared commands, builds, and marketplace comparison belong to
+the selected application, so one application's failure does not redefine the
+generic framework or another application's evidence.
 
 Verify every discovered application (also the default when no selector is
 given):
@@ -156,6 +179,9 @@ the explicitly supplied marketplace comparison and all declared application
 invariants.
 
 Application configuration uses `"schema_version": 2`. Its required
+`provenance` object declares `source_repository`, `incorporated_branches`, and
+ordered `inventory_rules`; each rule has a safe source-relative `root`, a
+`classification`, and one or more `include` glob patterns. Its required
 `verification` object declares `test_directory`, ordered command objects with
 unique `id` and direct `argv` arrays, and a `codex_build` command plus artifact
 path. A previously published application also declares `marketplace.codex_path`,

@@ -27,6 +27,12 @@ class DocumentationContractTests(unittest.TestCase):
         self.assertIn("Codex and OpenClaw", combined)
         self.assertIn("not release-readiness evidence", combined)
 
+    def test_documents_application_aware_provenance_and_independent_shared_gates(self) -> None:
+        content = COMMAND_REFERENCE.read_text(encoding="utf-8")
+        self.assertIn("write_extraction_provenance.py", content)
+        self.assertIn("--application <plugin-id>", content)
+        self.assertIn("Shared gates do not require a reference application", content)
+
 
 if __name__ == "__main__":
     unittest.main()

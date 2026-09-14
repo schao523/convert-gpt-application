@@ -308,6 +308,21 @@ The redistribution rights are unclear. Exclude the file from the public
 release until I confirm them. Do not infer permission.
 ```
 
+After the rights decision, record application-specific source inventory rules
+in `applications/<plugin-id>/conversion.json`. Generate the redacted,
+hash-based provenance record from the repository root:
+
+```powershell
+python -B .\scripts\write_extraction_provenance.py `
+  --application <plugin-id> `
+  --source <path-to-source-repository> `
+  --marketplace D:\GitHub\obvious-one-plugins
+```
+
+The shared marketplace may serve every application, but source labels,
+historical branches, asset roots, and inclusion patterns remain owned by the
+individual application configuration.
+
 ### What Codex delivers
 
 - an included-assets list;

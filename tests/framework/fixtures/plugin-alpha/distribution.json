@@ -23,7 +23,7 @@
     "index_manifest": "index-manifest.json",
     "asset_groups": [
       {"name":"index","archive_name":"plugin-alpha-index-{version}.zip","source_paths":["assets/index.bin"],"install_subdir":"indexes"},
-      {"name":"sources","archive_name":"plugin-alpha-sources-{version}.zip","source_paths":["assets/source.txt","assets/經文.txt"],"install_subdir":"source-assets"}
+      {"name":"sources","archive_name":"plugin-alpha-sources-{version}.zip","source_paths":["assets/source.txt","assets/繁體中文資料.txt"],"install_subdir":"source-assets"}
     ]
   }
 }
