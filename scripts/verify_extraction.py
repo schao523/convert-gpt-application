@@ -25,6 +25,7 @@ from obvious_one_plugin_framework.verification import (  # noqa: E402
     ApplicationConfig,
     ExpansionContext,
     GateResult,
+    RESULT_STATES,
     VerificationConfigError,
     aggregate_state,
     discover_applications,
@@ -55,6 +56,10 @@ class ApplicationResult:
     gates: tuple[GateResult, ...]
     artifacts: Mapping[str, str] = field(default_factory=dict)
 
+    def __post_init__(self) -> None:
+        if self.state not in RESULT_STATES:
+            raise ValueError(f"invalid result state: {self.state}")
+
     def to_dict(self) -> dict[str, object]:
         return {
             "application_id": self.application_id,
@@ -71,6 +76,10 @@ class VerificationReport:
     report_path: Path
     shared_gates: tuple[GateResult, ...]
     applications: tuple[ApplicationResult, ...]
+
+    def __post_init__(self) -> None:
+        if self.state not in RESULT_STATES:
+            raise ValueError(f"invalid result state: {self.state}")
 
     def to_dict(self, repository_root: Path | None = None) -> dict[str, object]:
         root = (repository_root or ROOT).resolve()

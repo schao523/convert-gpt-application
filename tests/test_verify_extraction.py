@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import json
+import contextlib
+import io
 from pathlib import Path
 import shutil
 import tempfile
@@ -52,7 +54,7 @@ class VerifierSelectionAndAggregationTests(unittest.TestCase):
         selected = build_parser().parse_args(["--application", "plugin-alpha"])
         self.assertEqual(selected.application, "plugin-alpha")
 
-        with self.assertRaises(SystemExit):
+        with contextlib.redirect_stderr(io.StringIO()), self.assertRaises(SystemExit):
             build_parser().parse_args(["--all", "--application", "plugin-alpha"])
 
     def test_verify_continues_with_later_application_after_failure(self) -> None:
@@ -126,15 +128,11 @@ class VerifierCliTests(unittest.TestCase):
             shared_gates=(),
             applications=(),
         )
-        with patch("scripts.verify_extraction.verify", return_value=report) as invoked:
-            code = main(
-                [
-                    "--marketplace",
-                    "marketplace",
-                    "--provenance",
-                    "docs/source.json",
-                ]
-            )
+        with patch("scripts.verify_extraction.verify", return_value=report) as invoked, contextlib.redirect_stdout(io.StringIO()):
+            code = main([
+                "--marketplace", "marketplace",
+                "--provenance", "docs/source.json",
+            ])
 
         self.assertEqual(code, 0)
         self.assertEqual(invoked.call_args.kwargs["marketplace"], Path("marketplace").resolve())
@@ -147,7 +145,7 @@ class VerifierCliTests(unittest.TestCase):
         with patch(
             "scripts.verify_extraction.verify",
             side_effect=VerificationConfigError("unknown application: missing"),
-        ):
+        ), contextlib.redirect_stderr(io.StringIO()):
             self.assertEqual(main(["--application", "missing"]), 1)
 
 
