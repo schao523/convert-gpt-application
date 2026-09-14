@@ -1,0 +1,18 @@
+{
+  "schema_version": 2,
+  "application_id": "plugin-beta",
+  "plugin_id": "plugin-beta",
+  "source_inventory": "../../docs/source.json",
+  "source_location": "conversion.local.json",
+  "coverage_matrix": "tests/coverage-matrix.md",
+  "distribution_contract": "openclaw/distribution.json",
+  "marketplace_repository": "example/plugins",
+  "verification": {
+    "test_directory": "tests",
+    "commands": [{"id":"smoke","argv":["{python}","-B","{application_root}/scripts/product_check.py","smoke","--plugin-id","{plugin_id}"]}],
+    "codex_build": {
+      "argv": ["{python}","-B","{application_root}/scripts/product_check.py","build","--destination","{diagnostics}/codex-marketplace","--plugin-id","{plugin_id}"],
+      "artifact_path": "plugins/{plugin_id}"
+    }
+  }
+}

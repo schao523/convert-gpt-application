@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "plugin_id": "plugin-beta",
+  "package_name": "@example/plugin-beta",
+  "family": "bundle-plugin",
+  "version": "1.0.0",
+  "source_root": "..",
+  "include_files": [".codex-plugin/plugin.json", "README.md"],
+  "include_prefixes": ["skills"],
+  "exclude_paths": ["tests"],
+  "max_total_bytes": 1000000,
+  "release_repository": "example/plugins",
+  "release_tag_template": "plugin-beta-v{version}",
+  "readme_overlay": null,
+  "audit_hook": null,
+  "rag": {
+    "app_id": "plugin-beta",
+    "namespace": "plugin-beta:default",
+    "runtime_lock": "vendor/runtime-lock.json",
+    "runtime_lock_digest": "0000000000000000000000000000000000000000000000000000000000000000",
+    "model_manifest": "assets/model.json",
+    "model_digest": "1111111111111111111111111111111111111111111111111111111111111111",
+    "index_manifest": "assets/index.json",
+    "asset_groups": [{"name":"index","archive_name":"plugin-beta-index-{version}.zip","source_paths":["assets/index.sqlite3"],"install_subdir":"indexes"}]
+  }
+}
