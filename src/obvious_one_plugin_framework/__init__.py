@@ -28,6 +28,12 @@ from .verification import (
     resolve_within,
     select_applications,
 )
+from .provenance import (
+    ProvenanceError,
+    build_provenance,
+    inventory_source,
+    validate_provenance,
+)
 
 __all__ = [
     "AssetGroup",
@@ -54,6 +60,10 @@ __all__ = [
     "load_application_config",
     "resolve_within",
     "select_applications",
+    "ProvenanceError",
+    "build_provenance",
+    "inventory_source",
+    "validate_provenance",
 ]
 
 __version__ = "0.1.0"

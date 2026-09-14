@@ -1,77 +1,30 @@
-"""Write redacted, reproducible provenance for a controlled extraction."""
+"""Write redacted, reproducible provenance for one configured application."""
 
 from __future__ import annotations
 
 import argparse
-from hashlib import sha256
 import json
 import os
 from pathlib import Path
-import subprocess
+import sys
+from typing import Iterable
 
 
-SOURCE_SUFFIXES = {".pdf", ".docx", ".ppt", ".pptx"}
-INCORPORATED_BRANCHES = (
-    "feature/generic-openclaw-framework",
-    "codex/openclaw-compat-evaluation",
+ROOT = Path(__file__).resolve().parents[1]
+SOURCE_ROOT = ROOT / "src"
+if str(SOURCE_ROOT) not in sys.path:
+    sys.path.insert(0, str(SOURCE_ROOT))
+
+from obvious_one_plugin_framework.provenance import (  # noqa: E402
+    ProvenanceError,
+    build_provenance,
 )
-
-
-def sha256_file(path: Path) -> str:
-    digest = sha256()
-    with path.open("rb") as stream:
-        for block in iter(lambda: stream.read(1024 * 1024), b""):
-            digest.update(block)
-    return digest.hexdigest()
-
-
-def _record(root: Path, path: Path, classification: str) -> dict[str, str]:
-    return {
-        "classification": classification,
-        "path": path.relative_to(root).as_posix(),
-        "sha256": sha256_file(path),
-    }
-
-
-def inventory_source(source: Path) -> list[dict[str, str]]:
-    source = source.resolve()
-    records: list[dict[str, str]] = []
-    for path in source.iterdir():
-        if not path.is_file():
-            continue
-        if path.suffix.lower() in SOURCE_SUFFIXES or path.name.endswith("_guide.md"):
-            records.append(_record(source, path, "source-only"))
-
-    product_assets = source / "cool-bible-tutor" / "assets"
-    for path in product_assets.rglob("*"):
-        if path.is_file() and not path.is_symlink():
-            records.append(_record(source, path, "public-product-asset"))
-    return sorted(records, key=lambda item: (item["classification"], item["path"]))
-
-
-def _git_head(repository: Path) -> str:
-    return subprocess.check_output(
-        ["git", "rev-parse", "HEAD"],
-        cwd=repository,
-        text=True,
-    ).strip()
-
-
-def build_provenance(
-    source_repo: Path,
-    marketplace_repo: Path,
-) -> dict[str, object]:
-    source_repo = source_repo.resolve()
-    marketplace_repo = marketplace_repo.resolve()
-    return {
-        "schema_version": 1,
-        "source_repository": "cool-bible-tutor-gpt-source",
-        "source_commit": _git_head(source_repo),
-        "marketplace_repository": "schao523/obvious-one-plugins",
-        "marketplace_commit": _git_head(marketplace_repo),
-        "incorporated_branches": list(INCORPORATED_BRANCHES),
-        "source_inventory": inventory_source(source_repo),
-    }
+from obvious_one_plugin_framework.verification import (  # noqa: E402
+    ApplicationConfig,
+    VerificationConfigError,
+    discover_applications,
+    select_applications,
+)
 
 
 def write_atomic(destination: Path, payload: dict[str, object]) -> None:
@@ -94,17 +47,47 @@ def output_report(destination: Path) -> str:
     )
 
 
-def main() -> int:
+def resolve_output(
+    config: ApplicationConfig,
+    repository_root: Path,
+    override: Path | None,
+) -> Path:
+    repository = Path(repository_root).resolve()
+    destination = config.source_inventory.resolve() if override is None else Path(override).resolve()
+    if not destination.is_relative_to(repository):
+        raise ProvenanceError("output_path_escape")
+    return destination
+
+
+def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--application", required=True)
     parser.add_argument("--source", required=True, type=Path)
     parser.add_argument("--marketplace", required=True, type=Path)
-    parser.add_argument("--output", required=True, type=Path)
-    arguments = parser.parse_args()
-    write_atomic(
-        arguments.output,
-        build_provenance(arguments.source, arguments.marketplace),
-    )
-    print(output_report(arguments.output))
+    parser.add_argument("--output", type=Path)
+    return parser
+
+
+def main(arguments: Iterable[str] | None = None) -> int:
+    options = build_parser().parse_args(arguments)
+    try:
+        configs = discover_applications(ROOT)
+        config = select_applications(
+            configs,
+            application_id=options.application,
+            select_all=False,
+        )[0]
+        destination = resolve_output(config, ROOT, options.output)
+        payload = build_provenance(
+            config,
+            options.source.resolve(),
+            options.marketplace.resolve(),
+        )
+        write_atomic(destination, payload)
+    except (OSError, ProvenanceError, VerificationConfigError) as exc:
+        print(f"FAIL {exc}", file=sys.stderr)
+        return 1
+    print(output_report(destination))
     return 0
 
 
