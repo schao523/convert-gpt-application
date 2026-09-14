@@ -7,6 +7,13 @@
   "coverage_matrix": "tests/coverage-matrix.md",
   "distribution_contract": "openclaw/distribution.json",
   "marketplace_repository": "example/plugins",
+  "provenance": {
+    "source_repository": "plugin-beta-source",
+    "incorporated_branches": [],
+    "inventory_rules": [
+      {"root": ".", "classification": "source-only", "include": ["*.md"]}
+    ]
+  },
   "verification": {
     "test_directory": "tests",
     "commands": [{"id":"smoke","argv":["{python}","-B","{application_root}/scripts/product_check.py","smoke","--plugin-id","{plugin_id}"]}],

@@ -33,12 +33,15 @@ _ROOT_KEYS = {
     "coverage_matrix",
     "distribution_contract",
     "marketplace_repository",
+    "provenance",
     "verification",
 }
 _VERIFICATION_KEYS = {"test_directory", "commands", "codex_build", "marketplace"}
 _COMMAND_KEYS = {"id", "argv", "clean_environment_prefixes"}
 _CODEX_BUILD_KEYS = {"argv", "artifact_path"}
 _MARKETPLACE_KEYS = {"codex_path", "openclaw_path", "approved_delta"}
+_PROVENANCE_KEYS = {"source_repository", "incorporated_branches", "inventory_rules"}
+_INVENTORY_RULE_KEYS = {"root", "classification", "include"}
 
 
 class VerificationConfigError(ValueError):
@@ -66,6 +69,20 @@ class MarketplaceProfile:
 
 
 @dataclass(frozen=True)
+class ProvenanceInventoryRule:
+    root: PurePosixPath
+    classification: str
+    include: tuple[str, ...]
+
+
+@dataclass(frozen=True)
+class ProvenanceProfile:
+    source_repository: str
+    incorporated_branches: tuple[str, ...]
+    inventory_rules: tuple[ProvenanceInventoryRule, ...]
+
+
+@dataclass(frozen=True)
 class ApplicationVerificationProfile:
     test_directory: Path
     commands: tuple[VerificationCommand, ...]
@@ -84,6 +101,7 @@ class ApplicationConfig:
     coverage_matrix: Path
     distribution_contract: Path
     marketplace_repository: str
+    provenance: ProvenanceProfile
     verification: ApplicationVerificationProfile
 
 
@@ -206,6 +224,57 @@ def _artifact_template(value: Any, config_path: Path, field: str) -> str:
     if any(part in {"", "."} for part in candidate.parts):
         raise _error(config_path, field, "invalid relative path")
     return text
+
+
+def _safe_rule_path(value: Any, config_path: Path, field: str, *, allow_dot: bool) -> PurePosixPath:
+    text = _text(value, config_path, field).replace("\\", "/")
+    candidate = PurePosixPath(text)
+    if candidate.is_absolute() or (candidate.parts and candidate.parts[0].endswith(":")):
+        raise _error(config_path, field, "absolute paths are forbidden")
+    if ".." in candidate.parts:
+        raise _error(config_path, field, "path escape is forbidden")
+    if not allow_dot and candidate.as_posix() in {"", "."}:
+        raise _error(config_path, field, "must name a relative pattern")
+    return candidate
+
+
+def _load_provenance(raw: Any, *, config_path: Path) -> ProvenanceProfile:
+    profile = _mapping(raw, config_path, "provenance")
+    _only_keys(profile, _PROVENANCE_KEYS, config_path, "provenance")
+    rules_raw = profile["inventory_rules"]
+    if not isinstance(rules_raw, list) or not rules_raw:
+        raise _error(config_path, "provenance.inventory_rules", "must be a non-empty list")
+    rules: list[ProvenanceInventoryRule] = []
+    identities: set[tuple[str, str, tuple[str, ...]]] = set()
+    for index, item in enumerate(rules_raw):
+        field = f"provenance.inventory_rules[{index}]"
+        rule = _mapping(item, config_path, field)
+        _only_keys(rule, _INVENTORY_RULE_KEYS, config_path, field)
+        root = _safe_rule_path(rule["root"], config_path, f"{field}.root", allow_dot=True)
+        classification = _text(rule["classification"], config_path, f"{field}.classification")
+        patterns = _string_list(rule["include"], config_path, f"{field}.include")
+        if not patterns:
+            raise _error(config_path, f"{field}.include", "must not be empty")
+        normalized_patterns = tuple(
+            _safe_rule_path(pattern, config_path, f"{field}.include", allow_dot=False).as_posix()
+            for pattern in patterns
+        )
+        identity = (root.as_posix(), classification, normalized_patterns)
+        if identity in identities:
+            raise _error(config_path, "provenance.inventory_rules", "duplicate rule")
+        identities.add(identity)
+        rules.append(ProvenanceInventoryRule(root, classification, normalized_patterns))
+    return ProvenanceProfile(
+        source_repository=_text(
+            profile["source_repository"], config_path, "provenance.source_repository"
+        ),
+        incorporated_branches=_string_list(
+            profile["incorporated_branches"],
+            config_path,
+            "provenance.incorporated_branches",
+        ),
+        inventory_rules=tuple(rules),
+    )
 
 
 def _load_verification(
@@ -353,6 +422,7 @@ def load_application_config(application_root: Path, repository_root: Path) -> Ap
         marketplace_repository=_text(
             raw["marketplace_repository"], config_path, "marketplace_repository"
         ),
+        provenance=_load_provenance(raw["provenance"], config_path=config_path),
         verification=_load_verification(
             raw["verification"],
             application_root=application,

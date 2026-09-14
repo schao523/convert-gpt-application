@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import replace
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 import sys
 import tempfile
 import unittest
@@ -12,6 +12,8 @@ from obvious_one_plugin_framework.verification import (
     CodexBuildProfile,
     ExpansionContext,
     GateResult,
+    ProvenanceInventoryRule,
+    ProvenanceProfile,
     VerificationConfigError,
     aggregate_state,
     expand_argv,
@@ -32,6 +34,13 @@ def _config(root: Path, application_id: str) -> ApplicationConfig:
         coverage_matrix=application / "tests" / "coverage-matrix.md",
         distribution_contract=application / "openclaw" / "distribution.json",
         marketplace_repository="example/plugins",
+        provenance=ProvenanceProfile(
+            source_repository=f"{application_id}-source",
+            incorporated_branches=(),
+            inventory_rules=(
+                ProvenanceInventoryRule(PurePosixPath("."), "source-only", ("*.md",)),
+            ),
+        ),
         verification=ApplicationVerificationProfile(
             test_directory=application / "tests",
             commands=(),

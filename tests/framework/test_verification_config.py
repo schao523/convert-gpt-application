@@ -68,6 +68,22 @@ def _make_application(repository: Path, application_id: str = "plugin-alpha") ->
             "coverage_matrix": "tests/coverage-matrix.md",
             "distribution_contract": "openclaw/distribution.json",
             "marketplace_repository": "example/plugins",
+            "provenance": {
+                "source_repository": "plugin-alpha-gpt-source",
+                "incorporated_branches": ["feature/source-import"],
+                "inventory_rules": [
+                    {
+                        "root": ".",
+                        "classification": "source-only",
+                        "include": ["*.pdf", "*_guide.md"],
+                    },
+                    {
+                        "root": f"applications/{application_id}/assets",
+                        "classification": "public-product-asset",
+                        "include": ["**/*"],
+                    },
+                ],
+            },
             "verification": {
                 "test_directory": "tests",
                 "commands": [
@@ -108,12 +124,64 @@ class VerificationConfigTests(unittest.TestCase):
             self.assertEqual(config.application_id, "plugin-alpha")
             self.assertEqual(config.plugin_id, "plugin-alpha")
             self.assertEqual(config.version, "1.2.3")
+            self.assertEqual(config.provenance.source_repository, "plugin-alpha-gpt-source")
+            self.assertEqual(
+                config.provenance.incorporated_branches,
+                ("feature/source-import",),
+            )
+            self.assertEqual(config.provenance.inventory_rules[0].root.as_posix(), ".")
+            self.assertEqual(
+                config.provenance.inventory_rules[0].include,
+                ("*.pdf", "*_guide.md"),
+            )
             self.assertEqual(config.verification.commands[0].command_id, "smoke")
             self.assertEqual(
                 config.verification.codex_build.artifact_path,
                 "plugins/{plugin_id}",
             )
             self.assertIsNone(config.verification.marketplace)
+
+    def test_missing_provenance_is_rejected(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            repository = Path(temp)
+            application = _make_application(repository)
+            data = self._conversion(application)
+            del data["provenance"]
+            self._write_conversion(application, data)
+
+            with self.assertRaisesRegex(ValueError, r"conversion\.json.*provenance"):
+                self._load(application, repository)
+
+    def test_unsafe_provenance_inventory_rules_are_rejected(self) -> None:
+        cases = (
+            ("root", "../outside"),
+            ("root", str(Path(tempfile.gettempdir()).resolve())),
+            ("include", []),
+            ("include", ["../private/*"]),
+            ("include", ["/absolute/*"]),
+        )
+        for field, value in cases:
+            with self.subTest(field=field, value=value), tempfile.TemporaryDirectory() as temp:
+                repository = Path(temp)
+                application = _make_application(repository)
+                data = self._conversion(application)
+                data["provenance"]["inventory_rules"][0][field] = value  # type: ignore[index]
+                self._write_conversion(application, data)
+
+                with self.assertRaisesRegex(ValueError, r"conversion\.json.*provenance"):
+                    self._load(application, repository)
+
+    def test_duplicate_provenance_inventory_rules_are_rejected(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            repository = Path(temp)
+            application = _make_application(repository)
+            data = self._conversion(application)
+            rule = data["provenance"]["inventory_rules"][0]  # type: ignore[index]
+            data["provenance"]["inventory_rules"] = [rule, rule]  # type: ignore[index]
+            self._write_conversion(application, data)
+
+            with self.assertRaisesRegex(ValueError, r"conversion\.json.*duplicate"):
+                self._load(application, repository)
 
     def test_schema_v1_requires_migration(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
