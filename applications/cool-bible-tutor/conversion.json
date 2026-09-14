@@ -1,10 +1,67 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "application_id": "cool-bible-tutor",
   "plugin_id": "cool-bible-tutor",
   "source_inventory": "../../docs/provenance/source-extraction.json",
   "source_location": "conversion.local.json",
   "coverage_matrix": "tests/coverage-matrix.md",
   "distribution_contract": "openclaw/distribution.json",
-  "marketplace_repository": "schao523/obvious-one-plugins"
+  "marketplace_repository": "schao523/obvious-one-plugins",
+  "verification": {
+    "test_directory": "tests",
+    "commands": [
+      {
+        "id": "distribution-audit",
+        "argv": [
+          "{python}",
+          "-B",
+          "{application_root}/scripts/distribution_audit.py",
+          "{application_root}"
+        ]
+      },
+      {
+        "id": "exact-passage",
+        "argv": [
+          "{python}",
+          "-B",
+          "{application_root}/scripts/cool_bible_tutor.py",
+          "passage",
+          "約 3:16",
+          "--format",
+          "json"
+        ],
+        "clean_environment_prefixes": ["COOL_BIBLE_TUTOR_"]
+      },
+      {
+        "id": "runtime-status",
+        "argv": [
+          "{python}",
+          "-B",
+          "{application_root}/scripts/cool_bible_tutor.py",
+          "status",
+          "--json"
+        ],
+        "clean_environment_prefixes": ["COOL_BIBLE_TUTOR_"]
+      }
+    ],
+    "codex_build": {
+      "argv": [
+        "{python}",
+        "-B",
+        "{application_root}/scripts/build_marketplace_release.py",
+        "--source",
+        "{application_root}",
+        "--destination",
+        "{diagnostics}/codex-marketplace",
+        "--version",
+        "{version}"
+      ],
+      "artifact_path": "plugins/{plugin_id}"
+    },
+    "marketplace": {
+      "codex_path": "plugins/{plugin_id}",
+      "openclaw_path": "openclaw/{plugin_id}",
+      "approved_delta": "../../docs/provenance/marketplace-approved-delta.json"
+    }
+  }
 }
