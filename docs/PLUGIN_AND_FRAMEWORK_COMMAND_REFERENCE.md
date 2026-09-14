@@ -99,6 +99,73 @@ python -B -m obvious_one_plugin_framework.cli derive-index `
 
 ## 4. Framework and product tests
 
+### Multi-application verification
+
+The top-level verifier discovers `applications/*/conversion.json` and validates
+the generic framework once before running the selected application-owned test,
+audit, smoke, Codex-build, and deterministic OpenClaw-build gates. Every
+converted plugin targets both Codex and OpenClaw by default.
+
+Verify every discovered application (also the default when no selector is
+given):
+
+```powershell
+python -B .\scripts\verify_extraction.py --all
+```
+
+Verify one application:
+
+```powershell
+python -B .\scripts\verify_extraction.py `
+  --application <plugin-id>
+```
+
+Compare generated Codex and OpenClaw artifacts with a clean, read-only local
+marketplace checkout:
+
+```powershell
+python -B .\scripts\verify_extraction.py `
+  --all `
+  --marketplace D:\GitHub\obvious-one-plugins
+```
+
+The migration-compatible single-application form remains accepted:
+
+```powershell
+python -B .\scripts\verify_extraction.py `
+  --marketplace D:\GitHub\obvious-one-plugins `
+  --provenance .\docs\provenance\source-extraction.json
+```
+
+`--all` and `--application` are mutually exclusive. `--provenance` may override
+the configured source inventory only when exactly one application is selected.
+Verification never installs dependencies, downloads models or corpora, writes
+to a marketplace, publishes, or pushes.
+
+Reports are written below `.tmp/verification/` and use four states:
+
+- `PASS`: a required gate succeeded;
+- `FAIL`: a required gate failed;
+- `NOT VERIFIED`: an evidence source was configured but not evaluated, or a
+  prerequisite failed;
+- `NOT APPLICABLE`: the application does not declare that evidence source.
+
+A local run may return success when marketplace evidence is `NOT VERIFIED`.
+That result is not release-readiness evidence. A release-readiness claim needs
+the explicitly supplied marketplace comparison and all declared application
+invariants.
+
+Application configuration uses `"schema_version": 2`. Its required
+`verification` object declares `test_directory`, ordered command objects with
+unique `id` and direct `argv` arrays, and a `codex_build` command plus artifact
+path. A previously published application also declares `marketplace.codex_path`,
+`marketplace.openclaw_path`, and `marketplace.approved_delta`. Supported command
+placeholders are `{python}`, `{repository_root}`, `{application_root}`,
+`{diagnostics}`, `{plugin_id}`, `{application_id}`, and `{version}`. The version
+is always taken from the validated OpenClaw distribution contract.
+
+### Individual suites
+
 Run the generic, network-free framework suite:
 
 ```powershell
