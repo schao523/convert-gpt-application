@@ -5,13 +5,18 @@ import contextlib
 import io
 from pathlib import Path
 import shutil
+import subprocess
+import sys
 import tempfile
 import unittest
 from unittest.mock import Mock, patch
 
+import scripts.verify_extraction as verifier
+
 from obvious_one_plugin_framework.verification import GateResult, VerificationConfigError
 from scripts.verify_extraction import (
     ApplicationResult,
+    RunContext,
     VerificationReport,
     build_parser,
     main,
@@ -30,7 +35,23 @@ def _fixture_repository(root: Path) -> Path:
         shutil.copytree(FIXTURES / application_id, applications / application_id)
     docs = repository / "docs"
     docs.mkdir()
-    (docs / "source.json").write_text('{"files": []}\n', encoding="utf-8")
+    for application_id in ("plugin-alpha", "plugin-beta"):
+        (docs / f"{application_id}-source.json").write_text(
+            json.dumps(
+                {
+                    "schema_version": 2,
+                    "application_id": application_id,
+                    "plugin_id": application_id,
+                    "source_repository": f"{application_id}-source",
+                    "source_commit": "1" * 40,
+                    "marketplace_repository": "example/plugins",
+                    "marketplace_commit": "0" * 40,
+                    "incorporated_branches": [],
+                    "source_inventory": [],
+                }
+            ),
+            encoding="utf-8",
+        )
     (docs / "delta.json").write_text(
         json.dumps(
             {
@@ -46,6 +67,53 @@ def _fixture_repository(root: Path) -> Path:
 
 
 class VerifierSelectionAndAggregationTests(unittest.TestCase):
+    def test_shared_gates_do_not_execute_application_provenance_tests(self) -> None:
+        commands: list[list[str]] = []
+
+        def runner(command, **kwargs):
+            commands.append(command)
+            return subprocess.CompletedProcess(command, 0, "", "")
+
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            context = RunContext(
+                repository_root=root,
+                diagnostics=root / ".tmp" / "verification",
+                python=sys.executable,
+                command_runner=runner,
+            )
+            verifier.run_shared_gates(context)
+
+        flattened = "\n".join(" ".join(command) for command in commands)
+        self.assertNotIn("tests.test_provenance", flattened)
+
+    def test_application_provenance_is_an_application_gate(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            repository = _fixture_repository(Path(temp))
+            config = verifier.discover_applications(repository)[0]
+            payload = {
+                "schema_version": 2,
+                "application_id": config.application_id,
+                "plugin_id": config.plugin_id,
+                "source_repository": config.provenance.source_repository,
+                "source_commit": "1" * 40,
+                "marketplace_repository": config.marketplace_repository,
+                "marketplace_commit": "2" * 40,
+                "incorporated_branches": list(config.provenance.incorporated_branches),
+                "source_inventory": [],
+            }
+            config.source_inventory.write_text(json.dumps(payload), encoding="utf-8")
+            context = RunContext(
+                repository_root=repository,
+                diagnostics=repository / ".tmp" / "verification",
+                python=sys.executable,
+            )
+
+            gate = verifier._provenance_gate(config, context)
+
+            self.assertEqual(gate.gate_id, "provenance")
+            self.assertEqual(gate.state, "PASS")
+
     def test_parser_defaults_to_all_and_supports_explicit_selection(self) -> None:
         default = build_parser().parse_args([])
         self.assertFalse(default.all)

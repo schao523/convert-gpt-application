@@ -2,7 +2,7 @@
   "schema_version": 2,
   "application_id": "plugin-alpha",
   "plugin_id": "plugin-alpha",
-  "source_inventory": "../../docs/source.json",
+  "source_inventory": "../../docs/plugin-alpha-source.json",
   "source_location": "conversion.local.json",
   "coverage_matrix": "tests/coverage-matrix.md",
   "distribution_contract": "openclaw/distribution.json",

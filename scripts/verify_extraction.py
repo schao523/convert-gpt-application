@@ -33,6 +33,10 @@ from obvious_one_plugin_framework.verification import (  # noqa: E402
     resolve_within,
     select_applications,
 )
+from obvious_one_plugin_framework.provenance import (  # noqa: E402
+    ProvenanceError,
+    validate_provenance,
+)
 
 
 CommandRunner = Callable[..., subprocess.CompletedProcess[str]]
@@ -230,7 +234,6 @@ def run_shared_gates(context: RunContext) -> list[GateResult]:
     python = context.python
     commands = (
         ("repository-layout", [python, "-B", "-m", "unittest", "tests.test_repository_layout", "-v"]),
-        ("provenance", [python, "-B", "-m", "unittest", "tests.test_provenance", "-v"]),
         ("extraction-boundary", [python, "-B", "-m", "unittest", "tests.test_extraction_boundary", "-v"]),
         ("framework-tests", [python, "-B", "-m", "unittest", "discover", "-s", "tests/framework", "-v"]),
         ("application-config", [python, "-B", "-m", "unittest", "tests.test_application_config", "-v"]),
@@ -266,6 +269,15 @@ def _load_json(path: Path) -> dict[str, object]:
     if not isinstance(value, dict):
         raise VerificationConfigError(f"{path}: must contain an object")
     return value
+
+
+def _provenance_gate(config: ApplicationConfig, context: RunContext) -> GateResult:
+    path = context.provenance_override or config.source_inventory
+    try:
+        validate_provenance(_load_json(path), config)
+    except (ProvenanceError, VerificationConfigError) as exc:
+        return GateResult("provenance", "FAIL", str(exc))
+    return GateResult("provenance", "PASS", "application provenance is valid")
 
 
 def _git_output(repository: Path, *arguments: str) -> str:
@@ -357,7 +369,7 @@ def run_application(config: ApplicationConfig, context: RunContext) -> Applicati
     application_diagnostics.mkdir(parents=True, exist_ok=True)
     logs = application_diagnostics / "logs"
     expansion = _expansion_context(config, context, application_diagnostics)
-    gates: list[GateResult] = []
+    gates: list[GateResult] = [_provenance_gate(config, context)]
 
     gates.append(
         _run_gate(

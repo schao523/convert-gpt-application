@@ -32,7 +32,23 @@ def _repository(root: Path, *application_ids: str) -> Path:
         shutil.copytree(FIXTURES / application_id, applications / application_id)
     docs = repository / "docs"
     docs.mkdir()
-    (docs / "source.json").write_text('{"files": []}\n', encoding="utf-8")
+    for application_id in application_ids:
+        (docs / f"{application_id}-source.json").write_text(
+            json.dumps(
+                {
+                    "schema_version": 2,
+                    "application_id": application_id,
+                    "plugin_id": application_id,
+                    "source_repository": f"{application_id}-source",
+                    "source_commit": "1" * 40,
+                    "marketplace_repository": "example/plugins",
+                    "marketplace_commit": "0" * 40,
+                    "incorporated_branches": [],
+                    "source_inventory": [],
+                }
+            ),
+            encoding="utf-8",
+        )
     (docs / "delta.json").write_text(
         json.dumps(
             {
@@ -185,9 +201,10 @@ class VerificationReportTests(unittest.TestCase):
             commit = subprocess.check_output(
                 ["git", "rev-parse", "HEAD"], cwd=marketplace, text=True
             ).strip()
-            (repository / "docs" / "source.json").write_text(
-                json.dumps({"marketplace_commit": commit}), encoding="utf-8"
-            )
+            provenance_path = repository / "docs" / "plugin-alpha-source.json"
+            provenance = json.loads(provenance_path.read_text(encoding="utf-8"))
+            provenance["marketplace_commit"] = commit
+            provenance_path.write_text(json.dumps(provenance), encoding="utf-8")
             delta = json.loads((repository / "docs" / "delta.json").read_text(encoding="utf-8"))
             delta["marketplace_commit"] = commit
             (repository / "docs" / "delta.json").write_text(json.dumps(delta), encoding="utf-8")
@@ -228,9 +245,8 @@ class VerificationReportTests(unittest.TestCase):
             changed_commit = subprocess.check_output(
                 ["git", "rev-parse", "HEAD"], cwd=marketplace, text=True
             ).strip()
-            (repository / "docs" / "source.json").write_text(
-                json.dumps({"marketplace_commit": changed_commit}), encoding="utf-8"
-            )
+            provenance["marketplace_commit"] = changed_commit
+            provenance_path.write_text(json.dumps(provenance), encoding="utf-8")
             delta["marketplace_commit"] = changed_commit
             (repository / "docs" / "delta.json").write_text(json.dumps(delta), encoding="utf-8")
             changed_context = RunContext(
