@@ -26,6 +26,7 @@
     "missing": [
       "assets/openclaw/runtime-compatibility.json",
       "docs/runtime-compatibility-contract.md",
+      "tests/test_conversion_contract.py",
       "tests/test_verification_profile.py"
     ],
     "unexpected": [
