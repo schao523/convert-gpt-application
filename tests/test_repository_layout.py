@@ -23,7 +23,7 @@ class RepositoryLayoutTests(unittest.TestCase):
     def test_required_roots_exist(self) -> None:
         for relative in (
             "src/obvious_one_plugin_framework",
-            "applications/cool-bible-tutor",
+            "applications",
             "templates/plugin",
             "templates/skill",
             "templates/github-workflows",

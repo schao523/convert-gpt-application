@@ -7,6 +7,25 @@
   "coverage_matrix": "tests/coverage-matrix.md",
   "distribution_contract": "openclaw/distribution.json",
   "marketplace_repository": "schao523/obvious-one-plugins",
+  "provenance": {
+    "source_repository": "cool-bible-tutor-gpt-source",
+    "incorporated_branches": [
+      "feature/generic-openclaw-framework",
+      "codex/openclaw-compat-evaluation"
+    ],
+    "inventory_rules": [
+      {
+        "root": ".",
+        "classification": "source-only",
+        "include": ["*.pdf", "*.docx", "*.ppt", "*.pptx", "*_guide.md"]
+      },
+      {
+        "root": "cool-bible-tutor/assets",
+        "classification": "public-product-asset",
+        "include": ["**/*"]
+      }
+    ]
+  },
   "verification": {
     "test_directory": "tests",
     "commands": [

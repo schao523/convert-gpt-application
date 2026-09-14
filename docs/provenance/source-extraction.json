@@ -1,11 +1,13 @@
 {
+  "application_id": "cool-bible-tutor",
   "incorporated_branches": [
     "feature/generic-openclaw-framework",
     "codex/openclaw-compat-evaluation"
   ],
   "marketplace_commit": "e5fd82419ecf52dcb708a35f5b9c453616380822",
   "marketplace_repository": "schao523/obvious-one-plugins",
-  "schema_version": 1,
+  "plugin_id": "cool-bible-tutor",
+  "schema_version": 2,
   "source_commit": "103839c8655706b47fe747f16abf617c774e4e50",
   "source_inventory": [
     {

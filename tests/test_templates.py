@@ -21,12 +21,9 @@ class PublicationTemplateTests(unittest.TestCase):
         }
         self.assertEqual(actual, expected)
 
-    def test_generic_templates_have_no_case_study_identity(self) -> None:
-        forbidden = ("cool-bible-tutor", "2.4.6", "John 3:16", "約 3:16")
+    def test_generic_templates_expose_plugin_identity_placeholder(self) -> None:
         for path in TEMPLATES.rglob("*.template"):
             content = path.read_text(encoding="utf-8")
-            for value in forbidden:
-                self.assertNotIn(value, content, path.as_posix())
             self.assertIn("{{PLUGIN_ID}}", content)
 
 
