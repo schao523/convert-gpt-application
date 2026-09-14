@@ -2,6 +2,10 @@ from __future__ import annotations
 
 from hashlib import sha256
 from pathlib import Path, PurePosixPath
+import contextlib
+import io
+import json
+import shutil
 import subprocess
 import tempfile
 import unittest
@@ -145,6 +149,24 @@ class ProvenanceValidationTests(unittest.TestCase):
         with self.assertRaisesRegex(ProvenanceError, "application_identity_mismatch"):
             validate_provenance(self.payload, self.config)
 
+    def test_schema_version_requires_an_exact_supported_integer(self) -> None:
+        for value in (True, 1.0, "2", None):
+            with self.subTest(value=value):
+                payload = {**self.payload, "schema_version": value}
+                with self.assertRaisesRegex(ProvenanceError, "unsupported_schema_version"):
+                    validate_provenance(payload, self.config)
+
+    def test_rejects_unknown_top_level_and_inventory_fields(self) -> None:
+        top_level = {**self.payload, "private_source_path": "D:/private/source"}
+        with self.assertRaisesRegex(ProvenanceError, "unknown_provenance_field"):
+            validate_provenance(top_level, self.config)
+
+        inventory = dict(self.payload["source_inventory"][0])
+        inventory["absolute_path"] = "D:/private/source.pdf"
+        payload = {**self.payload, "source_inventory": [inventory]}
+        with self.assertRaisesRegex(ProvenanceError, "unknown_inventory_field"):
+            validate_provenance(payload, self.config)
+
     def test_rejects_marketplace_identity_mismatch(self) -> None:
         self.payload["marketplace_repository"] = "example/other"
         with self.assertRaisesRegex(ProvenanceError, "marketplace_identity_mismatch"):
@@ -163,6 +185,18 @@ class ProvenanceValidationTests(unittest.TestCase):
                 payload["source_inventory"][0][field] = value
                 with self.assertRaisesRegex(ProvenanceError, error):
                     validate_provenance(payload, self.config)
+
+    def test_rejects_dot_inventory_path(self) -> None:
+        payload = {**self.payload, "source_inventory": [dict(self.payload["source_inventory"][0])]}
+        payload["source_inventory"][0]["path"] = "."
+        with self.assertRaisesRegex(ProvenanceError, "invalid_inventory_path"):
+            validate_provenance(payload, self.config)
+
+    def test_rejects_whitespace_inventory_classification(self) -> None:
+        payload = {**self.payload, "source_inventory": [dict(self.payload["source_inventory"][0])]}
+        payload["source_inventory"][0]["classification"] = "   "
+        with self.assertRaisesRegex(ProvenanceError, "invalid_inventory_classification"):
+            validate_provenance(payload, self.config)
 
 
 class ProvenanceCliTests(unittest.TestCase):
@@ -194,6 +228,41 @@ class ProvenanceCliTests(unittest.TestCase):
                     repository,
                     repository.parent / "outside.json",
                 )
+
+    def test_main_discovers_application_and_writes_valid_configured_record(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            repository = root / "repository"
+            application = repository / "applications" / "plugin-beta"
+            fixture = Path(__file__).parents[1] / "fixtures" / "verification" / "plugin-beta"
+            shutil.copytree(fixture, application)
+            docs = repository / "docs"
+            docs.mkdir()
+            output = docs / "plugin-beta-source.json"
+            output.write_text("{}\n", encoding="utf-8")
+            source = root / "source"
+            marketplace = root / "marketplace"
+            _git_repository(source, "source.md")
+            _git_repository(marketplace, "catalog.json")
+
+            with contextlib.redirect_stdout(io.StringIO()):
+                code = provenance_cli.main(
+                    [
+                        "--application",
+                        "plugin-beta",
+                        "--source",
+                        str(source),
+                        "--marketplace",
+                        str(marketplace),
+                    ],
+                    repository_root=repository,
+                )
+
+            self.assertEqual(code, 0)
+            payload = json.loads(output.read_text(encoding="utf-8"))
+            from obvious_one_plugin_framework.verification import load_application_config
+
+            validate_provenance(payload, load_application_config(application, repository))
 
 
 if __name__ == "__main__":

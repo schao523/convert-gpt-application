@@ -13,6 +13,17 @@ from .verification import ApplicationConfig, ProvenanceInventoryRule
 
 _COMMIT = re.compile(r"^[0-9a-f]{40}$")
 _DIGEST = re.compile(r"^[0-9a-f]{64}$")
+_COMMON_KEYS = {
+    "schema_version",
+    "source_repository",
+    "source_commit",
+    "marketplace_repository",
+    "marketplace_commit",
+    "incorporated_branches",
+    "source_inventory",
+}
+_SCHEMA_KEYS = {1: _COMMON_KEYS, 2: _COMMON_KEYS | {"application_id", "plugin_id"}}
+_INVENTORY_KEYS = {"classification", "path", "sha256"}
 
 
 class ProvenanceError(ValueError):
@@ -131,8 +142,10 @@ def validate_provenance(
     """Validate identity and integrity metadata for one application."""
 
     version = payload.get("schema_version")
-    if version not in {1, 2}:
+    if type(version) is not int or version not in (1, 2):
         raise ProvenanceError("unsupported_schema_version")
+    if set(payload) - _SCHEMA_KEYS[version]:
+        raise ProvenanceError("unknown_provenance_field")
     if version == 2:
         if _required_text(payload, "application_id") != config.application_id:
             raise ProvenanceError("application_identity_mismatch")
@@ -160,13 +173,17 @@ def validate_provenance(
     for item in inventory:
         if not isinstance(item, dict):
             raise ProvenanceError("invalid_inventory_record")
+        if set(item) - _INVENTORY_KEYS:
+            raise ProvenanceError("unknown_inventory_field")
         classification = item.get("classification")
-        if not isinstance(classification, str) or not classification:
+        if not isinstance(classification, str) or not classification.strip():
             raise ProvenanceError("invalid_inventory_classification")
         path = item.get("path")
         if not isinstance(path, str) or not path:
             raise ProvenanceError("invalid_inventory_path")
         normalized = _safe_relative(path, "inventory_path_escape").as_posix()
+        if normalized in {"", "."}:
+            raise ProvenanceError("invalid_inventory_path")
         if normalized in paths:
             raise ProvenanceError("duplicate_inventory_path")
         paths.add(normalized)

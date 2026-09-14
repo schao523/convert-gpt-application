@@ -11,6 +11,7 @@ import unittest
 from obvious_one_plugin_framework.verification import (
     RESULT_STATES,
     discover_applications,
+    select_applications,
 )
 from scripts.verify_extraction import (
     ApplicationResult,
@@ -77,6 +78,39 @@ class RecordingRunner:
 
 
 class VerificationReportTests(unittest.TestCase):
+    def test_selected_application_runs_without_reference_application_dependency(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            repository = _repository(Path(temp), "plugin-alpha", "plugin-beta")
+            alpha_provenance = repository / "docs" / "plugin-alpha-source.json"
+            alpha_provenance.write_text('{"schema_version": false}\n', encoding="utf-8")
+            marker = repository / "alpha-product-ran.txt"
+            alpha_test = repository / "applications" / "plugin-alpha" / "tests" / "test_must_not_run.py"
+            alpha_test.write_text(
+                "from pathlib import Path\n"
+                f"Path({str(marker)!r}).write_text('ran', encoding='utf-8')\n"
+                "raise AssertionError('plugin-alpha must not run')\n",
+                encoding="utf-8",
+            )
+            selected = select_applications(
+                discover_applications(repository),
+                application_id="plugin-beta",
+                select_all=False,
+            )[0]
+            context = RunContext(
+                repository_root=repository,
+                diagnostics=repository / ".tmp" / "verification" / "selected-beta",
+                python=sys.executable,
+            )
+
+            result = run_application(selected, context)
+
+            self.assertEqual(
+                result.state,
+                "PASS",
+                [(gate.gate_id, gate.state, gate.detail) for gate in result.gates],
+            )
+            self.assertFalse(marker.exists())
+
     def test_application_and_report_states_reject_unsupported_values(self) -> None:
         with self.assertRaisesRegex(ValueError, "invalid result state"):
             ApplicationResult("plugin-alpha", "SKIPPED", (), {})

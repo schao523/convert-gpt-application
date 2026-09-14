@@ -68,16 +68,21 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def main(arguments: Iterable[str] | None = None) -> int:
+def main(
+    arguments: Iterable[str] | None = None,
+    *,
+    repository_root: Path = ROOT,
+) -> int:
     options = build_parser().parse_args(arguments)
     try:
-        configs = discover_applications(ROOT)
+        repository = Path(repository_root).resolve()
+        configs = discover_applications(repository)
         config = select_applications(
             configs,
             application_id=options.application,
             select_all=False,
         )[0]
-        destination = resolve_output(config, ROOT, options.output)
+        destination = resolve_output(config, repository, options.output)
         payload = build_provenance(
             config,
             options.source.resolve(),
