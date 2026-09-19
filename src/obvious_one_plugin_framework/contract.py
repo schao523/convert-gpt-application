@@ -68,7 +68,7 @@ class DistributionContract:
     release_tag_template: str
     readme_overlay: str | None
     audit_hook: str | None
-    rag: RagProfile
+    rag: RagProfile | None
     contract_path: Path
 
 
@@ -144,33 +144,44 @@ def load_contract(path: Path) -> DistributionContract:
     except (OSError, UnicodeError, json.JSONDecodeError) as exc:
         raise ContractError("invalid_json", str(path)) from exc
     _only_keys(raw, _ROOT_KEYS, "contract")
-    rag_raw = _mapping(raw["rag"], "rag")
-    _only_keys(rag_raw, _RAG_KEYS, "rag")
-    groups_raw = rag_raw["asset_groups"]
-    if not isinstance(groups_raw, list) or not groups_raw:
-        raise ContractError("invalid_asset_groups", "at least one group is required")
     groups: list[AssetGroup] = []
-    for index, item in enumerate(groups_raw):
-        group = _mapping(item, f"rag.asset_groups[{index}]")
-        _only_keys(group, _ASSET_KEYS, f"rag.asset_groups[{index}]")
-        archive = _relative(group["archive_name"], "archive_name")
-        if "/" in archive or "{version}" not in archive:
-            raise ContractError("invalid_archive_name", archive)
-        groups.append(AssetGroup(
-            name=_text(group["name"], "asset_group.name"),
-            archive_name=archive,
-            source_paths=_path_list(group["source_paths"], "asset_group.source_paths"),
-            install_subdir=_relative(group["install_subdir"], "asset_group.install_subdir"),
-        ))
-    if len({group.name for group in groups}) != len(groups):
-        raise ContractError("duplicate_asset_group", "name")
-    if len({group.install_subdir for group in groups}) != len(groups):
-        raise ContractError("duplicate_asset_destination", "install_subdir")
-
-    app_id = _text(rag_raw["app_id"], "rag.app_id")
-    namespace = _text(rag_raw["namespace"], "rag.namespace")
-    if not namespace.startswith(app_id + ":"):
-        raise ContractError("namespace_owner_mismatch", namespace)
+    rag_profile = None
+    if raw["rag"] is not None:
+        rag_raw = _mapping(raw["rag"], "rag")
+        _only_keys(rag_raw, _RAG_KEYS, "rag")
+        groups_raw = rag_raw["asset_groups"]
+        if not isinstance(groups_raw, list) or not groups_raw:
+            raise ContractError("invalid_asset_groups", "at least one group is required")
+        for index, item in enumerate(groups_raw):
+            group = _mapping(item, f"rag.asset_groups[{index}]")
+            _only_keys(group, _ASSET_KEYS, f"rag.asset_groups[{index}]")
+            archive = _relative(group["archive_name"], "archive_name")
+            if "/" in archive or "{version}" not in archive:
+                raise ContractError("invalid_archive_name", archive)
+            groups.append(AssetGroup(
+                name=_text(group["name"], "asset_group.name"),
+                archive_name=archive,
+                source_paths=_path_list(group["source_paths"], "asset_group.source_paths"),
+                install_subdir=_relative(group["install_subdir"], "asset_group.install_subdir"),
+            ))
+        if len({group.name for group in groups}) != len(groups):
+            raise ContractError("duplicate_asset_group", "name")
+        if len({group.install_subdir for group in groups}) != len(groups):
+            raise ContractError("duplicate_asset_destination", "install_subdir")
+        app_id = _text(rag_raw["app_id"], "rag.app_id")
+        namespace = _text(rag_raw["namespace"], "rag.namespace")
+        if not namespace.startswith(app_id + ":"):
+            raise ContractError("namespace_owner_mismatch", namespace)
+        rag_profile = RagProfile(
+            app_id=app_id,
+            namespace=namespace,
+            runtime_lock=_relative(rag_raw["runtime_lock"], "rag.runtime_lock"),
+            runtime_lock_digest=_digest(rag_raw["runtime_lock_digest"], "rag.runtime_lock_digest"),
+            model_manifest=_relative(rag_raw["model_manifest"], "rag.model_manifest"),
+            model_digest=_digest(rag_raw["model_digest"], "rag.model_digest"),
+            index_manifest=_relative(rag_raw["index_manifest"], "rag.index_manifest"),
+            asset_groups=tuple(groups),
+        )
     family = _text(raw["family"], "family")
     if family != "bundle-plugin":
         raise ContractError("invalid_family", family)
@@ -195,16 +206,7 @@ def load_contract(path: Path) -> DistributionContract:
         release_tag_template=_text(raw["release_tag_template"], "release_tag_template"),
         readme_overlay=_optional_text(raw["readme_overlay"], "readme_overlay"),
         audit_hook=_optional_text(raw["audit_hook"], "audit_hook"),
-        rag=RagProfile(
-            app_id=app_id,
-            namespace=namespace,
-            runtime_lock=_relative(rag_raw["runtime_lock"], "rag.runtime_lock"),
-            runtime_lock_digest=_digest(rag_raw["runtime_lock_digest"], "rag.runtime_lock_digest"),
-            model_manifest=_relative(rag_raw["model_manifest"], "rag.model_manifest"),
-            model_digest=_digest(rag_raw["model_digest"], "rag.model_digest"),
-            index_manifest=_relative(rag_raw["index_manifest"], "rag.index_manifest"),
-            asset_groups=tuple(groups),
-        ),
+        rag=rag_profile,
         contract_path=contract_path,
     )
     validate_contract(contract, contract.source_root)
@@ -212,8 +214,10 @@ def load_contract(path: Path) -> DistributionContract:
 
 
 def validate_contract(contract: DistributionContract, source_root: Path) -> None:
-    if contract.schema_version != 1:
+    if contract.schema_version not in (1, 2):
         raise ContractError("unsupported_schema", str(contract.schema_version))
+    if contract.schema_version == 1 and contract.rag is None:
+        raise ContractError("missing_rag", "schema_version 1 requires rag")
     if not source_root.is_dir():
         raise ContractError("source_root_missing", str(source_root))
     manifest_path = source_root / ".codex-plugin" / "plugin.json"

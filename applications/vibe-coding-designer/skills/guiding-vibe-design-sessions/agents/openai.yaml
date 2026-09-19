@@ -1,0 +1,3 @@
+interface:
+  display_name: "Guide Vibe Design Sessions"
+  short_description: "Guide a software-design session without assuming a Web GUI."

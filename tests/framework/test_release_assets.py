@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 from dataclasses import replace
+import json
 from pathlib import Path
+import shutil
 import tempfile
 import unittest
 import zipfile
@@ -18,6 +20,24 @@ FIXTURES = Path(__file__).resolve().parent / "fixtures"
 
 
 class ReleaseAssetTests(unittest.TestCase):
+    def test_skill_only_contract_has_no_remote_asset_archives(self) -> None:
+        raw = json.loads(
+            (FIXTURES / "plugin-alpha" / "distribution.json").read_text(encoding="utf-8")
+        )
+        raw["schema_version"] = 2
+        raw["rag"] = None
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            shutil.copytree(FIXTURES / "plugin-alpha" / "source", root / "source")
+            contract_path = root / "distribution.json"
+            raw["source_root"] = "source"
+            contract_path.write_text(json.dumps(raw), encoding="utf-8")
+            contract = load_contract(contract_path)
+
+            records = build_asset_groups(contract, Path(temp) / "assets")
+
+            self.assertEqual(records, ())
+
     def setUp(self) -> None:
         self.temporary = tempfile.TemporaryDirectory()
         self.addCleanup(self.temporary.cleanup)

@@ -201,7 +201,8 @@ def build_package(contract: DistributionContract, output: Path) -> BuildResult:
         stage.mkdir()
         for source, relative in _declared_sources(contract):
             _copy_file(source, stage / relative, relative)
-        _render_bootstrap(stage)
+        if contract.rag is not None:
+            _render_bootstrap(stage)
         _write_package_json(contract, stage)
         _apply_overlay(contract, stage)
         _audit(stage, contract)

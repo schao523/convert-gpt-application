@@ -1,0 +1,17 @@
+{
+  "workflow_id": "report-job-v1",
+  "version": "1.0",
+  "description": "Generate a report without a graphical interface.",
+  "roles": [{"id": "operator"}],
+  "events": [{"id": "report.requested"}],
+  "guards": [{"id": "valid_request"}],
+  "states": [
+    {"id": "start", "type": "start", "on": {"next": "validate"}},
+    {"id": "validate", "type": "task", "action": {"type": "service_call", "binding_ref": "local.report.validate"}, "on": {"success": "complete", "failure": "failed"}},
+    {"id": "complete", "type": "end"},
+    {"id": "failed", "type": "end"}
+  ],
+  "bindings": [{"id": "local.report.validate", "kind": "local"}],
+  "schemas": {"ReportRequest": {"required": ["source"]}},
+  "policies": {"privacy": {"minimize_fields": true}}
+}

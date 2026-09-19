@@ -38,6 +38,13 @@ class PackageBuilderTests(unittest.TestCase):
             self.assertTrue((result.output / ".codex-plugin/plugin.json").is_file())
             self.assertFalse((result.output / "openclaw.plugin.json").exists())
 
+    def test_skill_only_bundle_omits_unused_runtime_bootstrap(self) -> None:
+        contract = replace(self.contract(), schema_version=2, rag=None)
+
+        result = build_package(contract, self.output / "skill-only")
+
+        self.assertFalse((result.output / "vendor").exists())
+
     def test_repeat_build_has_identical_content_identity(self) -> None:
         one = build_package(self.contract(), self.output / "one")
         two = build_package(self.contract(), self.output / "two")

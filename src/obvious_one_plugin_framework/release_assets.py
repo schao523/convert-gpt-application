@@ -111,6 +111,8 @@ def build_asset_groups(
     validate_contract(contract, contract.source_root)
     destination = Path(output_dir).resolve()
     destination.mkdir(parents=True, exist_ok=True)
+    if contract.rag is None:
+        return ()
     return tuple(
         _build_group(contract, group, destination)
         for group in sorted(contract.rag.asset_groups, key=lambda item: item.name)

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+import tempfile
 import unittest
 from unittest.mock import patch
 
@@ -12,6 +13,45 @@ FIXTURES = Path(__file__).resolve().parent / "fixtures"
 
 
 class ContractTests(unittest.TestCase):
+    def test_schema_v2_accepts_skill_only_contract_without_rag(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            source = root / "source"
+            manifest = source / ".codex-plugin" / "plugin.json"
+            manifest.parent.mkdir(parents=True)
+            manifest.write_text(
+                json.dumps({"name": "skill-only", "version": "1.0.0"}),
+                encoding="utf-8",
+            )
+            (source / "README.md").write_text("skill only\n", encoding="utf-8")
+            contract_path = root / "distribution.json"
+            contract_path.write_text(
+                json.dumps(
+                    {
+                        "schema_version": 2,
+                        "plugin_id": "skill-only",
+                        "package_name": "@obvious-one/skill-only",
+                        "family": "bundle-plugin",
+                        "version": "1.0.0",
+                        "source_root": "source",
+                        "include_files": ["README.md", ".codex-plugin/plugin.json"],
+                        "include_prefixes": [],
+                        "exclude_paths": [],
+                        "max_total_bytes": 1048576,
+                        "release_repository": "example/plugins",
+                        "release_tag_template": "skill-only-v{version}",
+                        "readme_overlay": None,
+                        "audit_hook": None,
+                        "rag": None,
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+            contract = load_contract(contract_path)
+
+            self.assertIsNone(contract.rag)
+
     def test_two_plugins_keep_distinct_content_identity(self) -> None:
         alpha = load_contract(FIXTURES / "plugin-alpha" / "distribution.json")
         beta = load_contract(FIXTURES / "plugin-beta" / "distribution.json")

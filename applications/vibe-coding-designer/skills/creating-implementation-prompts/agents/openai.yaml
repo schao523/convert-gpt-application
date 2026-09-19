@@ -1,0 +1,3 @@
+interface:
+  display_name: "Create Implementation Prompts"
+  short_description: "Create precise handoff prompts from approved software designs."

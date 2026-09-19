@@ -1,0 +1,30 @@
+{
+  "schema_version": 2,
+  "application_id": "vibe-coding-designer",
+  "plugin_id": "vibe-coding-designer",
+  "source_inventory": "docs/source-inventory.json",
+  "source_location": "conversion.local.json",
+  "coverage_matrix": "tests/coverage-matrix.md",
+  "distribution_contract": "openclaw/distribution.json",
+  "marketplace_repository": "schao523/obvious-one-plugins",
+  "provenance": {
+    "source_repository": "vibe-coding-designer-gpt-source",
+    "incorporated_branches": [],
+    "inventory_rules": [
+      {"root": ".", "classification": "source-only", "include": ["*"]},
+      {"root": "Old", "classification": "obsolete-source-only", "include": ["**/*"]}
+    ]
+  },
+  "verification": {
+    "test_directory": "tests",
+    "commands": [
+      {"id": "runtime-status", "argv": ["{python}", "-B", "{application_root}/scripts/vibe_designer.py", "status", "--json"]},
+      {"id": "design-validator", "argv": ["{python}", "-B", "{application_root}/scripts/vibe_designer.py", "validate-design", "{application_root}/tests/fixtures/cli-design-spec.md", "--json"]},
+      {"id": "workflow-validator", "argv": ["{python}", "-B", "{application_root}/scripts/vibe_designer.py", "validate-workflow", "{application_root}/tests/fixtures/workflow-valid.json", "--json"]}
+    ],
+    "codex_build": {
+      "argv": ["{python}", "-B", "{application_root}/scripts/build_marketplace_release.py", "--source", "{application_root}", "--destination", "{diagnostics}/codex-marketplace", "--version", "{version}"],
+      "artifact_path": "plugins/{plugin_id}"
+    }
+  }
+}

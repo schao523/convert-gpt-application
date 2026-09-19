@@ -74,6 +74,22 @@ def _config(root: Path) -> ApplicationConfig:
 
 
 class ProvenanceGenerationTests(unittest.TestCase):
+    def test_non_git_source_uses_content_addressed_tree_identity(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            source = root / "source"
+            marketplace = root / "marketplace"
+            source.mkdir()
+            (source / "source.pdf").write_bytes(b"source archive")
+            _git_repository(marketplace, "catalog.json")
+
+            payload = build_provenance(_config(root), source, marketplace)
+
+            self.assertEqual(payload["schema_version"], 3)
+            self.assertNotIn("source_commit", payload)
+            self.assertRegex(str(payload["source_tree_sha256"]), r"^[0-9a-f]{64}$")
+            validate_provenance(payload, _config(root))
+
     def test_builds_sorted_rule_driven_record_with_configured_identities(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)

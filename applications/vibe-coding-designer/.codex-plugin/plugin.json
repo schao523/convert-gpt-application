@@ -1,0 +1,29 @@
+{
+  "name": "vibe-coding-designer",
+  "version": "1.0.0",
+  "description": "Design implementation-ready software specifications, workflows, test plans, prompts, and repository development packages without assuming a Web GUI.",
+  "author": {
+    "name": "schao523",
+    "url": "https://github.com/schao523"
+  },
+  "homepage": "https://github.com/schao523/obvious-one-plugins/tree/main/plugins/vibe-coding-designer",
+  "repository": "https://github.com/schao523/obvious-one-plugins",
+  "license": "MIT",
+  "keywords": [
+    "software-design", "vibe-coding", "specification", "workflow", "test-planning", "repo-development"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Vibe Coding Designer",
+    "shortDescription": "Design GUI or non-GUI software before implementation.",
+    "longDescription": "Guides product discovery and produces implementation-ready general-software specifications, data and workflow contracts, implementation prompts, traceable tests, reviews, and agent-neutral repository development packages. Web UI rules are applied only when needed.",
+    "developerName": "schao523",
+    "category": "Productivity",
+    "capabilities": ["Interactive", "Read", "Write"],
+    "defaultPrompt": [
+      "Help me design a software product from an idea.",
+      "Create an implementation-ready specification without assuming a Web GUI.",
+      "Review my software design and produce a traceable test plan."
+    ]
+  }
+}

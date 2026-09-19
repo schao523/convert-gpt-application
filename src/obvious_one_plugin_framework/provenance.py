@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from hashlib import sha256
+import json
 from pathlib import Path, PurePosixPath
 import re
 import subprocess
@@ -23,6 +24,7 @@ _COMMON_KEYS = {
     "source_inventory",
 }
 _SCHEMA_KEYS = {1: _COMMON_KEYS, 2: _COMMON_KEYS | {"application_id", "plugin_id"}}
+_SCHEMA_KEYS[3] = (_SCHEMA_KEYS[2] - {"source_commit"}) | {"source_tree_sha256"}
 _INVENTORY_KEYS = {"classification", "path", "sha256"}
 
 
@@ -113,18 +115,28 @@ def build_provenance(
 ) -> dict[str, object]:
     """Build a schema-v2 provenance record for one configured application."""
 
-    return {
-        "schema_version": 2,
+    inventory = list(inventory_source(Path(source_repo), config.provenance.inventory_rules))
+    common = {
         "application_id": config.application_id,
         "plugin_id": config.plugin_id,
         "source_repository": config.provenance.source_repository,
-        "source_commit": _git_head(Path(source_repo).resolve()),
         "marketplace_repository": config.marketplace_repository,
         "marketplace_commit": _git_head(Path(marketplace_repo).resolve()),
         "incorporated_branches": list(config.provenance.incorporated_branches),
-        "source_inventory": list(
-            inventory_source(Path(source_repo), config.provenance.inventory_rules)
-        ),
+        "source_inventory": inventory,
+    }
+    try:
+        return {"schema_version": 2, **common, "source_commit": _git_head(Path(source_repo).resolve())}
+    except ProvenanceError as exc:
+        if str(exc) != "git_commit_unavailable":
+            raise
+    encoded = json.dumps(
+        inventory, ensure_ascii=False, separators=(",", ":"), sort_keys=True
+    ).encode("utf-8")
+    return {
+        "schema_version": 3,
+        **common,
+        "source_tree_sha256": sha256(encoded).hexdigest(),
     }
 
 
@@ -142,11 +154,11 @@ def validate_provenance(
     """Validate identity and integrity metadata for one application."""
 
     version = payload.get("schema_version")
-    if type(version) is not int or version not in (1, 2):
+    if type(version) is not int or version not in (1, 2, 3):
         raise ProvenanceError("unsupported_schema_version")
     if set(payload) - _SCHEMA_KEYS[version]:
         raise ProvenanceError("unknown_provenance_field")
-    if version == 2:
+    if version in (2, 3):
         if _required_text(payload, "application_id") != config.application_id:
             raise ProvenanceError("application_identity_mismatch")
         if _required_text(payload, "plugin_id") != config.plugin_id:
@@ -155,7 +167,10 @@ def validate_provenance(
         raise ProvenanceError("source_repository_mismatch")
     if _required_text(payload, "marketplace_repository") != config.marketplace_repository:
         raise ProvenanceError("marketplace_identity_mismatch")
-    if not _COMMIT.fullmatch(_required_text(payload, "source_commit")):
+    if version == 3:
+        if not _DIGEST.fullmatch(_required_text(payload, "source_tree_sha256")):
+            raise ProvenanceError("invalid_source_tree_sha256")
+    elif not _COMMIT.fullmatch(_required_text(payload, "source_commit")):
         raise ProvenanceError("invalid_source_commit")
     if not _COMMIT.fullmatch(_required_text(payload, "marketplace_commit")):
         raise ProvenanceError("invalid_marketplace_commit")

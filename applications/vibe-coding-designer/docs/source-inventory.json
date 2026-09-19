@@ -1,0 +1,77 @@
+{
+  "application_id": "vibe-coding-designer",
+  "incorporated_branches": [],
+  "marketplace_commit": "e5fd82419ecf52dcb708a35f5b9c453616380822",
+  "marketplace_repository": "schao523/obvious-one-plugins",
+  "plugin_id": "vibe-coding-designer",
+  "schema_version": 3,
+  "source_inventory": [
+    {
+      "classification": "obsolete-source-only",
+      "path": "Old/Repo Knowledge Modules — Methodology & Architecture.md",
+      "sha256": "02a797b293e3f504b0b23cca2a05694192b06006affecefbd289d2214ee56ba7"
+    },
+    {
+      "classification": "obsolete-source-only",
+      "path": "Old/Repo Knowledge Modules — Templates & Validation.md",
+      "sha256": "68b6a416cd2c401dfb944b56f419cc2869c2e5c039c3b1eb1ebe409d8b1a986b"
+    },
+    {
+      "classification": "source-only",
+      "path": "Backend_Examples.md",
+      "sha256": "d77b7760fefeb0902941a76d6c937ea8b5b77db3b7c3fbdeba0a1fb3709c3ae5"
+    },
+    {
+      "classification": "source-only",
+      "path": "Design_Tokens.md",
+      "sha256": "dca01a8cfc432b1cfe71b72210b2f6ccc18dfd4a965f797dc6d7b06b83ba2825"
+    },
+    {
+      "classification": "source-only",
+      "path": "Prompt_Template_v2.md",
+      "sha256": "9e630b58d0836915374916527e6e60b31cc81233c1cfe9957b178517f633bce8"
+    },
+    {
+      "classification": "source-only",
+      "path": "Vibe Coding Designer Resources Index.md",
+      "sha256": "124ba6dc1f9c988b10109c273e6c86ca18b043fd09cc83f51c41cd5d9a86ee5d"
+    },
+    {
+      "classification": "source-only",
+      "path": "Workflow_Execution_Mapping_Template.md",
+      "sha256": "012be9fa6321f9e9a6d340e672963cca00d028707af054c73031d43978bc48d2"
+    },
+    {
+      "classification": "source-only",
+      "path": "repo_development_methodology.md",
+      "sha256": "d9142c34fcc875aaf9adf57df2efa6a95900890353004b9e043cee652324c3d6"
+    },
+    {
+      "classification": "source-only",
+      "path": "repo_document_architecture_guide.md",
+      "sha256": "75ad2e7dd0e223284ac24780a558894b7c60a797719d46c34ea3ff225833192e"
+    },
+    {
+      "classification": "source-only",
+      "path": "repo_document_templates.md",
+      "sha256": "2bbc39e2d2a58e71c71416468171d66e48fedd0dd2b19f514cc019733e10f5b8"
+    },
+    {
+      "classification": "source-only",
+      "path": "repo_traceability_validation_guide.md",
+      "sha256": "fb0c34975c9ece07b12eecaf2e5c8bccc87d44e44b1a28be77bc524bae6c4173"
+    },
+    {
+      "classification": "source-only",
+      "path": "酷Vibe 編碼設計助手 · Vibe Designer GPT v3.docx",
+      "sha256": "b4b96749e03b7f0ddbb3cb255738cc852910d9e109255e9a4b4c84cf41ef0ce3"
+    },
+    {
+      "classification": "source-only",
+      "path": "酷Vibe 編碼設計助手 · Vibe Designer GPT v3.pdf",
+      "sha256": "962041af189ae4bae1e89be244e349c9582bbad7faba5126c3b672a7187fac6d"
+    }
+  ],
+  "source_repository": "vibe-coding-designer-gpt-source",
+  "source_tree_sha256": "83dc62c800ff2670792e8790689112dd279c84e5ad0efa0b6ecd3fdc976aeee5"
+}
