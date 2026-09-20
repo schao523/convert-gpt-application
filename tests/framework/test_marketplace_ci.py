@@ -132,6 +132,12 @@ class MarketplaceCiTests(unittest.TestCase):
 
     def test_generated_verifier_validates_stage_and_detects_legacy_drift(self) -> None:
         prepare_marketplace(self.catalog, self.fixture.baseline, self.fixture.output)
+        self.assertTrue(
+            (self.fixture.output / ".agents/plugins/marketplace.json").is_file()
+        )
+        self.assertTrue(
+            (self.fixture.output / ".claude-plugin/marketplace.json").is_file()
+        )
         command = [
             sys.executable,
             "-B",

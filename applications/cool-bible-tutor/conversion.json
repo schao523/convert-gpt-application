@@ -36,7 +36,8 @@
           "-B",
           "{application_root}/scripts/distribution_audit.py",
           "{application_root}"
-        ]
+        ],
+        "marketplace_targets": ["codex", "openclaw"]
       },
       {
         "id": "exact-passage",
@@ -49,7 +50,8 @@
           "--format",
           "json"
         ],
-        "clean_environment_prefixes": ["COOL_BIBLE_TUTOR_"]
+        "clean_environment_prefixes": ["COOL_BIBLE_TUTOR_"],
+        "marketplace_targets": ["openclaw"]
       },
       {
         "id": "runtime-status",
@@ -60,7 +62,8 @@
           "status",
           "--json"
         ],
-        "clean_environment_prefixes": ["COOL_BIBLE_TUTOR_"]
+        "clean_environment_prefixes": ["COOL_BIBLE_TUTOR_"],
+        "marketplace_targets": ["codex", "openclaw"]
       }
     ],
     "codex_build": {

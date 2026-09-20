@@ -314,8 +314,14 @@ def _write_generated_controls(catalog: PreparationCatalog, stage: Path) -> None:
         render_validation_workflow,
     )
 
-    codex_path = stage / ".codex-plugin" / "marketplace.json"
-    openclaw_path = stage / "openclaw" / "marketplace.json"
+    codex_path = _first_catalog(
+        stage,
+        (".agents/plugins/marketplace.json", ".codex-plugin/marketplace.json"),
+    )
+    openclaw_path = _first_catalog(
+        stage,
+        (".claude-plugin/marketplace.json", "openclaw/marketplace.json"),
+    )
     if codex_path.is_file():
         codex_catalog: object = codex_path
     else:
@@ -349,6 +355,14 @@ def _write_generated_controls(catalog: PreparationCatalog, stage: Path) -> None:
     _write_text_file(stage / "tools" / "verify_marketplace.py", render_marketplace_verifier())
     _write_text_file(stage / ".github" / "workflows" / "validate.yml", render_validation_workflow())
     _merge_exact_byte_attributes(catalog, stage)
+
+
+def _first_catalog(stage: Path, candidates: tuple[str, ...]) -> Path:
+    for relative in candidates:
+        candidate = stage / Path(relative)
+        if candidate.is_file():
+            return candidate
+    return stage / Path(candidates[0])
 
 
 def _merge_exact_byte_attributes(catalog: PreparationCatalog, stage: Path) -> None:
