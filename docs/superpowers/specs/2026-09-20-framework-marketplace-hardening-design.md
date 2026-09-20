@@ -429,6 +429,12 @@ product migration is deferred.
 
 Product descriptions, categories, versions, build commands, and validation
 commands continue to come from their existing application-owned declarations.
+An application validation command opts into marketplace execution through the
+optional `marketplace_targets` array on its existing command object. Allowed
+values are `codex` and `openclaw`; omission means development verification
+only. An opted-in command may use `{application_root}`, which registry
+generation translates to the selected `{artifact_root}`, but it may not use
+development-only `{repository_root}` or `{diagnostics}` placeholders.
 Duplicate plugin IDs or destinations are invalid. The generated marketplace
 contains `.obvious-one-validation.json` as the normalized plugin-validation
 registry and `tools/verify_marketplace.py` as the self-contained verifier; the
