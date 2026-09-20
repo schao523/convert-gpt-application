@@ -46,8 +46,10 @@ capability is complete.
   domain behavior, product audits, and runtime acceptance tests with the
   owning application.
 - **FRH-010:** Make the public Python and CLI contracts usable by an
-  independently distributed future client without developer-local paths or
-  repository-relative hidden state.
+  independently distributed client or orchestrator without developer-local
+  paths or repository-relative hidden state.
+- **FRH-011:** Require no human identity, interactive prompt, or human-only
+  execution path; authorization is represented by explicit approved inputs.
 
 ### Non-goals
 
@@ -67,15 +69,23 @@ capability is complete.
 
 ## 3. Users and Actors
 
-- **Conversion maintainer:** authors schema-v3 contracts, reviews diagnostics,
-  approves classifications and rights decisions, and requests builds.
+- **Conversion caller:** invokes the public Python API or CLI and supplies
+  explicit inputs. A caller may be a coding agent, CI job, script, future
+  Workbench plugin, or human operator. Calling the framework does not grant
+  authority to invent scope, rights, or publication decisions.
+- **Decision owner:** is the person or organization authorized to approve
+  application scope, file classifications, redistribution rights, target
+  runtimes, and publication. Owner decisions are recorded in application-owned
+  contracts or provenance before an automated caller applies them.
 - **Application workspace:** owns product files, distribution rules, rights
   records, product audits, and behavioral tests.
 - **Generic framework:** validates declarations, canonicalizes approved files,
   builds artifacts, prepares deltas, and emits evidence. It has no authority
   to make product or rights decisions.
-- **Future client:** may translate structured diagnostics into a guided
-  experience, but must submit explicit approved inputs back to the framework.
+- **Client or orchestrator:** is an optional conversion caller that may
+  translate structured diagnostics into guided interaction. It must submit
+  explicit, already approved inputs back to the framework and cannot treat a
+  framework suggestion as owner approval.
 - **Marketplace repository:** owns public catalogs, generated plugin artifacts,
   CI workflows, and release metadata. It is an explicit input or staged
   destination, never an implicitly discovered writable location.
@@ -86,6 +96,8 @@ capability is complete.
   not treat a valid bundle-plugin package as proof of ClawHub admission.
 
 The framework trusts only validated configuration and confined local paths.
+It validates that required decision evidence exists, but it cannot identify
+whether its caller is human or verify the legal authority of a decision owner.
 Source files, product hooks, marketplace contents, and Git output remain
 untrusted inputs until their applicable checks pass.
 
@@ -93,7 +105,7 @@ untrusted inputs until their applicable checks pass.
 
 ### Validate a schema-v3 contract
 
-The maintainer supplies a contract. The framework validates its schema,
+The conversion caller supplies a contract. The framework validates its schema,
 identity, path confinement, selection rules, content policies, rights
 declarations, publication declarations, and application manifest. Success
 returns a `PASS` result without writing an artifact. A recoverable missing
@@ -106,13 +118,14 @@ finds one with no unique policy. It stops before staging or output replacement
 and emits `unclassified_files`. The diagnostic contains the relative path,
 detected characteristics, candidate classifications, required contract fields,
 and applicable dispositions: packaged text, packaged binary, excluded,
-external asset, or private/local-only. Suggestions are advisory. A maintainer
-or future client records an approved decision and reruns validation.
+external asset, or private/local-only. Suggestions are advisory. The decision
+owner approves the disposition; a conversion caller then records that approved
+decision and reruns validation.
 
 ### Migrate a legacy contract
 
-The maintainer supplies a schema-v1 or schema-v2 contract and a distinct output
-path. The framework parses the legacy contract, inventories its selected
+The conversion caller supplies a schema-v1 or schema-v2 contract and a distinct
+output path. The framework parses the legacy contract, inventories its selected
 files, and writes a proposed schema-v3 contract only when the destination does
 not already exist. Any unresolved classifications or rights declarations are
 represented in diagnostics, not guessed in the proposal. The source contract
@@ -130,12 +143,13 @@ the final bytes and rejects any difference.
 
 ### Prepare and verify a marketplace delta
 
-The maintainer supplies application configurations, a marketplace catalog or
-checkout, and an output staging root. The framework builds the declared Codex
-and OpenClaw artifacts, updates staged catalogs and per-plugin Git attributes,
-generates generic CI, and writes a delta report. The source marketplace remains
-unchanged. Verification checks staged bytes and, when explicitly given a Git
-index or commit, compares exact blob bytes and a clean-checkout result.
+The conversion caller supplies application configurations, a marketplace
+catalog or checkout, and an output staging root. The framework builds the
+declared Codex and OpenClaw artifacts, updates staged catalogs and per-plugin
+Git attributes, generates generic CI, and writes a delta report. The source
+marketplace remains unchanged. Verification checks staged bytes and, when
+explicitly given a Git index or commit, compares exact blob bytes and a
+clean-checkout result.
 
 ### Validate marketplace CI
 
@@ -356,11 +370,11 @@ versioned built-in rules and cannot be reclassified by an application.
 Every packaged application rule requires `redistribution.status` equal to
 `approved` and a nonempty, safe, source-root-relative provenance path. The
 framework confirms the provenance file exists but does not interpret its legal
-sufficiency. A maintainer handles a non-distributable discovery by changing
-the explicit selection boundary: `exclude_paths` for excluded or private-local
+sufficiency. The decision owner chooses how a non-distributable discovery is
+handled. A conversion caller then records that approved choice by changing the
+explicit selection boundary: `exclude_paths` for excluded or private-local
 material, or the existing declared asset-group mechanism for an approved
-external asset. Diagnostics describe these alternatives but do not apply
-them.
+external asset. Diagnostics describe these alternatives but do not apply them.
 
 GitHub marketplace publication may be enabled independently. ClawHub defaults
 to disabled. Enabling ClawHub requires an explicit supported family and the
@@ -497,7 +511,8 @@ Marketplace workflow:
   APIs remain compatible unless an implementation plan identifies and tests a
   necessary transition.
 - **Accessibility and localization:** not applicable because the framework has
-  no user interface. JSON codes remain locale-neutral for future clients.
+  no user interface. JSON codes remain locale-neutral for clients and
+  orchestrators.
 
 ## 12. Security and Privacy
 
@@ -515,6 +530,9 @@ Marketplace workflow:
   absolute paths, and source document contents.
 - Rights approval is declarative evidence, not inferred from file type,
   location, or source ownership. Missing evidence blocks redistribution.
+- The framework validates the presence and shape of approval evidence; it does
+  not authenticate a human caller or adjudicate the decision owner's legal
+  authority.
 - Marketplace preparation is deny-by-default and writes only to a separate
   validated staging root.
 - Git integration is read-only for the supplied marketplace and never invokes
@@ -572,6 +590,9 @@ the corresponding production change.
 - **FRH-A18 / FRH-009:** Vibe Coding Designer passes its application suite and
   generic marketplace validation without hard-coded Vibe behavior in generic
   modules.
+- **FRH-A19 / FRH-010, FRH-011:** API and CLI operations require no human
+  identity or interactive input and return identical results for identical
+  explicit inputs whether invoked by a script, agent, CI job, client, or human.
 
 ### Required verification commands and evidence
 
@@ -596,7 +617,7 @@ run may be `PASS` without remote OS evidence, but release readiness remains
 - Schema v3 is mandatory for new distribution builds; v1/v2 are read-only
   legacy formats.
 - The framework is non-interactive and machine-readable. Guided recovery is a
-  future client responsibility.
+  client or orchestrator responsibility.
 - Unclassified files block the build and trigger structured recovery
   diagnostics; the framework never silently chooses a disposition.
 - GitHub marketplace and ClawHub are separate publication surfaces.
