@@ -44,6 +44,12 @@ from .contract_migration import (
     build_migration_proposal,
     write_migration_proposal,
 )
+from .content_policy import (
+    ContentPolicyError,
+    ResolvedContentPolicy,
+    resolve_content_policies,
+    write_canonical_file,
+)
 from .results import (
     ArtifactRecord,
     Diagnostic,
@@ -93,6 +99,10 @@ __all__ = [
     "MigrationProposal",
     "build_migration_proposal",
     "write_migration_proposal",
+    "ContentPolicyError",
+    "ResolvedContentPolicy",
+    "resolve_content_policies",
+    "write_canonical_file",
     "ArtifactRecord",
     "Diagnostic",
     "MutationRecord",

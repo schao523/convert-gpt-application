@@ -18,7 +18,23 @@
   "release_tag_template": "plugin-v3-v{version}",
   "readme_overlay": null,
   "audit_hook": null,
-  "rag": null,
+  "rag": {
+    "app_id": "plugin-v3",
+    "namespace": "plugin-v3:docs",
+    "runtime_lock": "runtime-lock.json",
+    "runtime_lock_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "model_manifest": "model-manifest.json",
+    "model_digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "index_manifest": "index-manifest.json",
+    "asset_groups": [
+      {
+        "name": "logo",
+        "archive_name": "plugin-v3-logo-{version}.zip",
+        "source_paths": ["assets/logo.bin"],
+        "install_subdir": "assets"
+      }
+    ]
+  },
   "content_rules": [
     {
       "id": "portable-text",

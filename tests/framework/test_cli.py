@@ -25,30 +25,30 @@ class FrameworkCliTests(unittest.TestCase):
             code = main(list(arguments))
         return code, json.loads(stdout.getvalue())
 
-    def test_cli_builds_both_fixture_plugins(self) -> None:
-        for name in ("plugin-alpha", "plugin-beta"):
-            code, payload = self.invoke(
-                "build-package",
-                "--contract", str(FIXTURES / name / "distribution.json"),
-                "--output", str(self.output / name),
-                "--json",
-            )
-            self.assertEqual(code, 0)
-            self.assertEqual(payload["plugin_id"], name)
-            self.assertTrue((self.output / name / "CONTENT-MANIFEST.json").is_file())
+    def test_cli_builds_schema_v3_fixture(self) -> None:
+        name = "plugin-v3"
+        code, payload = self.invoke(
+            "build-package",
+            "--contract", str(FIXTURES / name / "distribution.json"),
+            "--output", str(self.output / name),
+            "--json",
+        )
+        self.assertEqual(code, 0)
+        self.assertEqual(payload["plugin_id"], name)
+        self.assertTrue((self.output / name / "CONTENT-MANIFEST.json").is_file())
 
     def test_cli_builds_assets_and_manifest(self) -> None:
         manifest = self.output / "remote-assets.json"
         code, payload = self.invoke(
             "build-assets",
-            "--contract", str(FIXTURES / "plugin-alpha/distribution.json"),
+            "--contract", str(FIXTURES / "plugin-v3/distribution.json"),
             "--output", str(self.output / "assets"),
             "--manifest", str(manifest),
             "--json",
         )
         self.assertEqual(code, 0)
-        self.assertEqual(payload["asset_count"], 2)
-        self.assertEqual(json.loads(manifest.read_text(encoding="utf-8"))["plugin_id"], "plugin-alpha")
+        self.assertEqual(payload["asset_count"], 1)
+        self.assertEqual(json.loads(manifest.read_text(encoding="utf-8"))["plugin_id"], "plugin-v3")
 
     def test_cli_json_is_safe_on_legacy_windows_console(self) -> None:
         bytes_output = io.BytesIO()
@@ -56,7 +56,7 @@ class FrameworkCliTests(unittest.TestCase):
         with contextlib.redirect_stdout(output):
             code = main([
                 "build-assets",
-                "--contract", str(FIXTURES / "plugin-alpha/distribution.json"),
+                "--contract", str(FIXTURES / "plugin-v3/distribution.json"),
                 "--output", str(self.output / "legacy-assets"),
                 "--json",
             ])
@@ -64,7 +64,7 @@ class FrameworkCliTests(unittest.TestCase):
         output.detach()
         self.assertEqual(code, 0)
         payload = json.loads(bytes_output.getvalue().decode("cp1252"))
-        self.assertEqual(payload["asset_count"], 2)
+        self.assertEqual(payload["asset_count"], 1)
 
 
 if __name__ == "__main__":

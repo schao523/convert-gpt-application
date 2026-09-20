@@ -12,7 +12,8 @@ import shutil
 import stat
 from tempfile import TemporaryDirectory
 
-from .contract import DistributionContract, validate_contract
+from .content_policy import ResolvedContentPolicy, resolve_content_policies, write_canonical_file
+from .contract import DistributionContract, require_buildable_contract, validate_contract
 
 
 MANIFEST_NAME = "CONTENT-MANIFEST.json"
@@ -86,12 +87,22 @@ def _copy_file(source: Path, destination: Path, relative: str) -> None:
     shutil.copyfile(source, destination)
 
 
-def _render_bootstrap(stage: Path) -> None:
+def _render_bootstrap(stage: Path) -> dict[str, ResolvedContentPolicy]:
     destination = stage / "vendor" / "obvious-one-runtime"
+    policies: dict[str, ResolvedContentPolicy] = {}
     for source in sorted(BOOTSTRAP_SOURCE.rglob("*")):
         if source.is_file():
             relative = source.relative_to(BOOTSTRAP_SOURCE)
-            _copy_file(source, destination / relative, relative.as_posix())
+            output_relative = (Path("vendor/obvious-one-runtime") / relative).as_posix()
+            policy = ResolvedContentPolicy(
+                output_relative,
+                "framework-runtime",
+                "utf8-lf-v1",
+                "framework-runtime-v1",
+            )
+            write_canonical_file(source, destination / relative, policy)
+            policies[output_relative] = policy
+    return policies
 
 
 def _write_package_json(contract: DistributionContract, stage: Path) -> None:
@@ -108,15 +119,6 @@ def _write_package_json(contract: DistributionContract, stage: Path) -> None:
         encoding="utf-8",
         newline="\n",
     )
-
-
-def _apply_overlay(contract: DistributionContract, stage: Path) -> None:
-    if contract.readme_overlay is None:
-        return
-    source = contract.source_root / contract.readme_overlay
-    if not source.is_file():
-        raise PackageAuditError("readme_overlay_missing", contract.readme_overlay)
-    _copy_file(source, stage / "README.md", contract.readme_overlay)
 
 
 def _audit(stage: Path, contract: DistributionContract) -> None:
@@ -166,7 +168,7 @@ def _run_product_audit(stage: Path, contract: DistributionContract) -> None:
         raise PackageAuditError("product_audit_failed", str(exc)) from exc
 
 
-def _records(stage: Path) -> list[dict[str, object]]:
+def _records_legacy(stage: Path) -> list[dict[str, object]]:
     records = []
     for candidate in sorted(stage.rglob("*"), key=lambda item: item.relative_to(stage).as_posix()):
         if candidate.is_file() and candidate.name != MANIFEST_NAME:
@@ -178,11 +180,50 @@ def _records(stage: Path) -> list[dict[str, object]]:
     return records
 
 
-def _manifest_data(stage: Path, contract: DistributionContract) -> dict[str, object]:
-    records = _records(stage)
+def _manifest_data(
+    stage: Path,
+    contract: DistributionContract,
+    policies: dict[str, ResolvedContentPolicy] | None = None,
+) -> dict[str, object]:
+    if contract.schema_version in (1, 2):
+        records = _records_legacy(stage)
+        schema_version = 1
+    else:
+        if policies is None:
+            _, policies = _planned_application_sources(contract)
+            policies = dict(policies)
+            if contract.rag is not None:
+                for source in sorted(BOOTSTRAP_SOURCE.rglob("*")):
+                    if source.is_file():
+                        relative = (Path("vendor/obvious-one-runtime") / source.relative_to(BOOTSTRAP_SOURCE)).as_posix()
+                        policies[relative] = ResolvedContentPolicy(
+                            relative, "framework-runtime", "utf8-lf-v1", "framework-runtime-v1"
+                        )
+            policies["package.json"] = ResolvedContentPolicy(
+                "package.json", "generated-json", "canonical-json-v1", "framework-generated-json-v1"
+            )
+        records = []
+        for candidate in sorted(stage.rglob("*"), key=lambda item: item.relative_to(stage).as_posix()):
+            if not candidate.is_file() or candidate.name == MANIFEST_NAME:
+                continue
+            relative = candidate.relative_to(stage).as_posix()
+            try:
+                policy = policies[relative]
+            except KeyError as exc:
+                raise PackageAuditError("manifest_policy_missing", relative) from exc
+            records.append(
+                {
+                    "path": relative,
+                    "classification": policy.classification,
+                    "canonicalization": policy.canonicalization,
+                    "size": candidate.stat().st_size,
+                    "sha256": _file_sha(candidate),
+                }
+            )
+        schema_version = 2
     identity_payload = json.dumps(records, ensure_ascii=False, separators=(",", ":"), sort_keys=True).encode("utf-8")
     return {
-        "schema_version": 1,
+        "schema_version": schema_version,
         "plugin_id": contract.plugin_id,
         "version": contract.version,
         "file_count": len(records),
@@ -193,21 +234,28 @@ def _manifest_data(stage: Path, contract: DistributionContract) -> dict[str, obj
 
 
 def build_package(contract: DistributionContract, output: Path) -> BuildResult:
+    require_buildable_contract(contract)
+    validate_contract(contract, contract.source_root)
+    planned_sources, planned_policies = _planned_application_sources(contract)
     output = Path(output).resolve()
     output.parent.mkdir(parents=True, exist_ok=True)
-    validate_contract(contract, contract.source_root)
     with TemporaryDirectory(prefix=f".{contract.plugin_id}-", dir=output.parent) as temporary:
         stage = Path(temporary) / contract.plugin_id
         stage.mkdir()
-        for source, relative in _declared_sources(contract):
-            _copy_file(source, stage / relative, relative)
+        policies = dict(planned_policies)
+        for source, relative in planned_sources:
+            if _is_reparse_or_symlink(source):
+                raise PackageAuditError("link_forbidden", relative)
+            write_canonical_file(source, stage / relative, policies[relative])
         if contract.rag is not None:
-            _render_bootstrap(stage)
+            policies.update(_render_bootstrap(stage))
         _write_package_json(contract, stage)
-        _apply_overlay(contract, stage)
+        policies["package.json"] = ResolvedContentPolicy(
+            "package.json", "generated-json", "canonical-json-v1", "framework-generated-json-v1"
+        )
         _audit(stage, contract)
         _run_product_audit(stage, contract)
-        manifest = _manifest_data(stage, contract)
+        manifest = _manifest_data(stage, contract, policies)
         (stage / MANIFEST_NAME).write_text(
             json.dumps(manifest, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
             encoding="utf-8",
@@ -238,3 +286,42 @@ def verify_package(contract: DistributionContract, output: Path) -> BuildResult:
     if recorded != actual:
         raise PackageAuditError("content_manifest_mismatch", str(output))
     return BuildResult(output, int(actual["file_count"]), int(actual["total_bytes"]), str(actual["content_sha256"]))
+
+
+def _planned_application_sources(
+    contract: DistributionContract,
+) -> tuple[tuple[tuple[Path, str], ...], dict[str, ResolvedContentPolicy]]:
+    declared = _declared_sources(contract)
+    source_paths = [relative for _, relative in declared]
+    if contract.readme_overlay is not None and contract.readme_overlay not in source_paths:
+        source_paths.append(contract.readme_overlay)
+    source_policies = resolve_content_policies(contract, source_paths)
+
+    planned: dict[str, tuple[Path, ResolvedContentPolicy]] = {}
+    for source, relative in declared:
+        planned[relative] = (source, source_policies[relative])
+    if contract.readme_overlay is not None:
+        overlay = contract.source_root / contract.readme_overlay
+        if not overlay.is_file():
+            raise PackageAuditError("readme_overlay_missing", contract.readme_overlay)
+        overlay_policy = source_policies[contract.readme_overlay]
+        planned["README.md"] = (
+            overlay,
+            ResolvedContentPolicy(
+                "README.md",
+                overlay_policy.classification,
+                overlay_policy.canonicalization,
+                overlay_policy.rule_id,
+            ),
+        )
+
+    folded: dict[str, str] = {}
+    for relative in sorted(planned):
+        previous = folded.setdefault(relative.casefold(), relative)
+        if previous != relative:
+            from .content_policy import ContentPolicyError
+
+            raise ContentPolicyError("casefold_path_collision", f"{previous}, {relative}")
+    sources = tuple((planned[key][0], key) for key in sorted(planned))
+    policies = {key: planned[key][1] for key in sorted(planned)}
+    return sources, policies
