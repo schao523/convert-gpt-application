@@ -58,6 +58,7 @@ from .marketplace import (
     load_preparation_catalog,
     prepare_marketplace,
 )
+from .git_evidence import GitEvidenceReport, exact_byte_attributes, verify_git_evidence
 from .results import (
     ArtifactRecord,
     Diagnostic,
@@ -117,6 +118,9 @@ __all__ = [
     "PreparationEntry",
     "load_preparation_catalog",
     "prepare_marketplace",
+    "GitEvidenceReport",
+    "exact_byte_attributes",
+    "verify_git_evidence",
     "ArtifactRecord",
     "Diagnostic",
     "MutationRecord",
