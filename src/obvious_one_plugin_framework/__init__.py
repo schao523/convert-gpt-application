@@ -39,6 +39,11 @@ from .provenance import (
     inventory_source,
     validate_provenance,
 )
+from .contract_migration import (
+    MigrationProposal,
+    build_migration_proposal,
+    write_migration_proposal,
+)
 from .results import (
     ArtifactRecord,
     Diagnostic,
@@ -85,6 +90,9 @@ __all__ = [
     "build_provenance",
     "inventory_source",
     "validate_provenance",
+    "MigrationProposal",
+    "build_migration_proposal",
+    "write_migration_proposal",
     "ArtifactRecord",
     "Diagnostic",
     "MutationRecord",
