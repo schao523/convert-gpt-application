@@ -2,17 +2,85 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+import shutil
 import tempfile
 import unittest
 from unittest.mock import patch
 
-from obvious_one_plugin_framework.contract import ContractError, load_contract
+from obvious_one_plugin_framework.contract import (
+    ContractError,
+    load_contract,
+    require_buildable_contract,
+)
 
 
 FIXTURES = Path(__file__).resolve().parent / "fixtures"
 
 
 class ContractTests(unittest.TestCase):
+    def test_schema_v3_loads_content_and_publication_rules(self) -> None:
+        contract = load_contract(FIXTURES / "plugin-v3" / "distribution.json")
+
+        self.assertEqual(contract.schema_version, 3)
+        self.assertEqual(contract.content_rules[0].classification, "text")
+        self.assertTrue(contract.publication.github_marketplace.enabled)
+        self.assertFalse(contract.publication.clawhub.enabled)
+
+    def test_legacy_contract_is_read_only_for_builds(self) -> None:
+        contract = load_contract(FIXTURES / "plugin-alpha" / "distribution.json")
+
+        with self.assertRaisesRegex(ContractError, "legacy_contract_read_only"):
+            require_buildable_contract(contract)
+
+    def test_schema_v3_rejects_unknown_keys(self) -> None:
+        with self.assertRaisesRegex(ContractError, "unknown_key"):
+            self._load_modified_v3(lambda raw: raw.update({"surprise": True}))
+
+    def test_schema_v3_rejects_empty_rule_selectors(self) -> None:
+        def modify(raw: dict[str, object]) -> None:
+            raw["content_rules"][0]["paths"] = []
+            raw["content_rules"][0]["prefixes"] = []
+
+        with self.assertRaisesRegex(ContractError, "empty_rule_selector"):
+            self._load_modified_v3(modify)
+
+    def test_schema_v3_rejects_duplicate_rule_ids(self) -> None:
+        def modify(raw: dict[str, object]) -> None:
+            raw["content_rules"].append(dict(raw["content_rules"][0]))
+
+        with self.assertRaisesRegex(ContractError, "duplicate_content_rule"):
+            self._load_modified_v3(modify)
+
+    def test_schema_v3_rejects_unsafe_provenance_paths(self) -> None:
+        def modify(raw: dict[str, object]) -> None:
+            raw["content_rules"][0]["redistribution"]["provenance"] = "../private.md"
+
+        with self.assertRaisesRegex(ContractError, "asset_path_escape"):
+            self._load_modified_v3(modify)
+
+    def test_schema_v3_rejects_disabled_clawhub_fields(self) -> None:
+        def modify(raw: dict[str, object]) -> None:
+            raw["publication"]["clawhub"]["family"] = "native-plugin"
+
+        with self.assertRaisesRegex(ContractError, "clawhub_disabled_fields"):
+            self._load_modified_v3(modify)
+
+    def test_schema_v3_rejects_enabled_clawhub_without_native_manifest(self) -> None:
+        def modify(raw: dict[str, object]) -> None:
+            raw["publication"]["clawhub"].update(
+                {"enabled": True, "family": "native-plugin", "native_manifest": None}
+            )
+
+        with self.assertRaisesRegex(ContractError, "clawhub_native_manifest_required"):
+            self._load_modified_v3(modify)
+
+    def test_schema_v3_rejects_missing_provenance_file(self) -> None:
+        def modify(raw: dict[str, object]) -> None:
+            raw["content_rules"][0]["redistribution"]["provenance"] = "docs/missing.md"
+
+        with self.assertRaisesRegex(ContractError, "redistribution_provenance_missing"):
+            self._load_modified_v3(modify)
+
     def test_schema_v2_accepts_skill_only_contract_without_rag(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)
@@ -85,6 +153,16 @@ class ContractTests(unittest.TestCase):
     def _raw_alpha(self) -> dict[str, object]:
         path = FIXTURES / "plugin-alpha" / "distribution.json"
         return json.loads(path.read_text(encoding="utf-8"))
+
+    def _load_modified_v3(self, modify) -> object:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp) / "plugin-v3"
+            shutil.copytree(FIXTURES / "plugin-v3", root)
+            contract_path = root / "distribution.json"
+            raw = json.loads(contract_path.read_text(encoding="utf-8"))
+            modify(raw)
+            contract_path.write_text(json.dumps(raw), encoding="utf-8")
+            return load_contract(contract_path)
 
 if __name__ == "__main__":
     unittest.main()
