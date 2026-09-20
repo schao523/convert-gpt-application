@@ -30,6 +30,7 @@ from .verification import (
     discover_applications,
     expand_argv,
     load_application_config,
+    load_application_config_path,
     resolve_within,
     select_applications,
 )
@@ -49,6 +50,13 @@ from .content_policy import (
     ResolvedContentPolicy,
     resolve_content_policies,
     write_canonical_file,
+)
+from .marketplace import (
+    MarketplaceError,
+    PreparationCatalog,
+    PreparationEntry,
+    load_preparation_catalog,
+    prepare_marketplace,
 )
 from .results import (
     ArtifactRecord,
@@ -90,6 +98,7 @@ __all__ = [
     "discover_applications",
     "expand_argv",
     "load_application_config",
+    "load_application_config_path",
     "resolve_within",
     "select_applications",
     "ProvenanceError",
@@ -103,6 +112,11 @@ __all__ = [
     "ResolvedContentPolicy",
     "resolve_content_policies",
     "write_canonical_file",
+    "MarketplaceError",
+    "PreparationCatalog",
+    "PreparationEntry",
+    "load_preparation_catalog",
+    "prepare_marketplace",
     "ArtifactRecord",
     "Diagnostic",
     "MutationRecord",

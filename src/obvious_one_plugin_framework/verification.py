@@ -37,7 +37,7 @@ _ROOT_KEYS = {
     "verification",
 }
 _VERIFICATION_KEYS = {"test_directory", "commands", "codex_build", "marketplace"}
-_COMMAND_KEYS = {"id", "argv", "clean_environment_prefixes"}
+_COMMAND_KEYS = {"id", "argv", "clean_environment_prefixes", "marketplace_targets"}
 _CODEX_BUILD_KEYS = {"argv", "artifact_path"}
 _MARKETPLACE_KEYS = {"codex_path", "openclaw_path", "approved_delta"}
 _PROVENANCE_KEYS = {"source_repository", "incorporated_branches", "inventory_rules"}
@@ -53,6 +53,7 @@ class VerificationCommand:
     command_id: str
     argv: tuple[str, ...]
     clean_environment_prefixes: tuple[str, ...] = ()
+    marketplace_targets: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -309,7 +310,13 @@ def _load_verification(
     for index, item in enumerate(commands_raw):
         field = f"verification.commands[{index}]"
         command = _mapping(item, config_path, field)
-        _only_keys(command, _COMMAND_KEYS, config_path, field, optional={"clean_environment_prefixes"})
+        _only_keys(
+            command,
+            _COMMAND_KEYS,
+            config_path,
+            field,
+            optional={"clean_environment_prefixes", "marketplace_targets"},
+        )
         command_id = _text(command["id"], config_path, f"{field}.id")
         if command_id in command_ids:
             raise _error(config_path, "verification.commands", f"duplicate id {command_id}")
@@ -319,11 +326,30 @@ def _load_verification(
             config_path,
             f"{field}.clean_environment_prefixes",
         )
+        targets = _string_list(
+            command.get("marketplace_targets", []),
+            config_path,
+            f"{field}.marketplace_targets",
+        )
+        if len(targets) != len(set(targets)) or not set(targets) <= {"codex", "openclaw"}:
+            raise _error(config_path, f"{field}.marketplace_targets", "invalid marketplace target")
+        argv = _argv(command["argv"], config_path, f"{field}.argv")
+        if targets and any(
+            token in argument
+            for argument in argv
+            for token in ("{repository_root}", "{diagnostics}")
+        ):
+            raise _error(
+                config_path,
+                f"{field}.argv",
+                "marketplace command uses development-only root",
+            )
         commands.append(
             VerificationCommand(
                 command_id=command_id,
-                argv=_argv(command["argv"], config_path, f"{field}.argv"),
+                argv=argv,
                 clean_environment_prefixes=prefixes,
+                marketplace_targets=targets,
             )
         )
 
@@ -364,14 +390,10 @@ def _load_verification(
     )
 
 
-def load_application_config(application_root: Path, repository_root: Path) -> ApplicationConfig:
-    """Load and validate one immediate `applications/*/conversion.json`."""
-
-    repository = Path(repository_root).resolve()
-    application = Path(application_root).resolve()
-    config_path = application / "conversion.json"
-    if application.parent != repository / "applications":
-        raise _error(config_path, "application_root", "must be an immediate applications child")
+def _load_application_config(config_path: Path, boundary_root: Path) -> ApplicationConfig:
+    repository = Path(boundary_root).resolve()
+    config_path = Path(config_path).resolve()
+    application = config_path.parent
     try:
         raw = _mapping(json.loads(config_path.read_text(encoding="utf-8")), config_path, "conversion")
     except (OSError, UnicodeError, json.JSONDecodeError) as exc:
@@ -430,6 +452,27 @@ def load_application_config(application_root: Path, repository_root: Path) -> Ap
             config_path=config_path,
         ),
     )
+
+
+def load_application_config_path(config_path: Path, boundary_root: Path) -> ApplicationConfig:
+    """Load a conversion config anywhere below an explicit workspace boundary."""
+
+    boundary = Path(boundary_root).resolve()
+    path = Path(config_path).resolve()
+    if path.name != "conversion.json" or not path.is_relative_to(boundary):
+        raise _error(path, "config_path", "path escapes declared boundary")
+    return _load_application_config(path, boundary)
+
+
+def load_application_config(application_root: Path, repository_root: Path) -> ApplicationConfig:
+    """Load and validate one immediate `applications/*/conversion.json`."""
+
+    repository = Path(repository_root).resolve()
+    application = Path(application_root).resolve()
+    config_path = application / "conversion.json"
+    if application.parent != repository / "applications":
+        raise _error(config_path, "application_root", "must be an immediate applications child")
+    return _load_application_config(config_path, repository)
 
 
 def discover_applications(repository_root: Path) -> tuple[ApplicationConfig, ...]:
