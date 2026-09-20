@@ -22,4 +22,7 @@ obvious-one-plugin = "obvious_one_plugin_framework.cli:main"
 where = ["src"]
 
 [tool.setuptools.package-data]
-obvious_one_plugin_framework = ["templates/runtime/obvious_one_runtime/*.py"]
+obvious_one_plugin_framework = [
+  "templates/runtime/obvious_one_runtime/*.py",
+  "templates/marketplace/*.template",
+]

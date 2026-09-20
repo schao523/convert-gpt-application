@@ -1,4 +1,4 @@
-name: Validate {{PLUGIN_ID}}
+name: Validate marketplace
 
 on:
   push:
@@ -6,10 +6,26 @@ on:
   workflow_dispatch:
 
 jobs:
+  matrix:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.registry.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: registry
+        shell: python
+        run: |
+          import json, os
+          data = json.load(open('.obvious-one-validation.json', encoding='utf-8'))
+          matrix = json.dumps({'plugin': [item['plugin_id'] for item in data['plugins']]}, separators=(',', ':'))
+          with open(os.environ['GITHUB_OUTPUT'], 'a', encoding='utf-8') as stream:
+              stream.write(f'matrix={matrix}\n')
   validate:
+    needs: matrix
     strategy:
       fail-fast: false
       matrix:
+        plugin: ${{ fromJson(needs.matrix.outputs.matrix).plugin }}
         os: [windows-latest, ubuntu-latest, macos-latest]
     runs-on: ${{ matrix.os }}
     steps:
@@ -17,7 +33,10 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      - name: Run {{PLUGIN_ID}} tests
-        run: python -B -m unittest discover -s plugins/{{PLUGIN_ID}}/tests -v
-      - name: Audit {{PLUGIN_ID}}
-        run: python -B plugins/{{PLUGIN_ID}}/scripts/distribution_audit.py plugins/{{PLUGIN_ID}}
+      - run: python -B tools/verify_marketplace.py --registry .obvious-one-validation.json --plugin "${{ matrix.plugin }}" --json
+  aggregate:
+    if: always()
+    needs: validate
+    runs-on: ubuntu-latest
+    steps:
+      - run: test "${{ needs.validate.result }}" = success

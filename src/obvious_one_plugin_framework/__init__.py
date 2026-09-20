@@ -58,6 +58,11 @@ from .marketplace import (
     load_preparation_catalog,
     prepare_marketplace,
 )
+from .marketplace_ci import (
+    build_validation_registry,
+    render_marketplace_verifier,
+    render_validation_workflow,
+)
 from .git_evidence import GitEvidenceReport, exact_byte_attributes, verify_git_evidence
 from .results import (
     ArtifactRecord,
@@ -118,6 +123,9 @@ __all__ = [
     "PreparationEntry",
     "load_preparation_catalog",
     "prepare_marketplace",
+    "build_validation_registry",
+    "render_marketplace_verifier",
+    "render_validation_workflow",
     "GitEvidenceReport",
     "exact_byte_attributes",
     "verify_git_evidence",

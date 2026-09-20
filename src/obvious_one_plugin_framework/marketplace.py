@@ -135,6 +135,7 @@ def prepare_marketplace(
                 _build_entry(entry, stage, temporary_root / entry.application.plugin_id)
             else:
                 _verify_existing_entry(entry, baseline_root, stage)
+        _write_generated_controls(catalog, stage)
         delta = _tree_delta(baseline_root, stage)
         aggregate, total_bytes = _tree_identity(stage)
         _replace_tree_transactionally(stage, output_root)
@@ -209,6 +210,61 @@ def _check_plugin_manifest(root: Path, plugin_id: str, version: str) -> None:
         raise MarketplaceError("codex_manifest_invalid", plugin_id) from exc
     if payload.get("name") != plugin_id or payload.get("version") != version:
         raise MarketplaceError("codex_manifest_identity_mismatch", plugin_id)
+
+
+def _write_generated_controls(catalog: PreparationCatalog, stage: Path) -> None:
+    from .marketplace_ci import (
+        build_validation_registry,
+        render_marketplace_verifier,
+        render_validation_workflow,
+    )
+
+    codex_path = stage / ".codex-plugin" / "marketplace.json"
+    openclaw_path = stage / "openclaw" / "marketplace.json"
+    if codex_path.is_file():
+        codex_catalog: object = codex_path
+    else:
+        codex_catalog = {
+            "plugins": [
+                {
+                    "name": entry.application.plugin_id,
+                    "source": {"path": f"./{entry.codex_destination}"},
+                }
+                for entry in catalog.applications
+            ]
+        }
+        _write_json_file(codex_path, codex_catalog)
+    if openclaw_path.is_file():
+        openclaw_catalog: object = openclaw_path
+    else:
+        openclaw_catalog = {
+            "plugins": [
+                {
+                    "name": entry.application.plugin_id,
+                    "version": entry.application.version,
+                    "source": f"./{entry.openclaw_destination}",
+                }
+                for entry in catalog.applications
+            ]
+        }
+        _write_json_file(openclaw_path, openclaw_catalog)
+
+    registry = build_validation_registry(codex_catalog, openclaw_catalog, catalog)
+    _write_json_file(stage / ".obvious-one-validation.json", registry)
+    _write_text_file(stage / "tools" / "verify_marketplace.py", render_marketplace_verifier())
+    _write_text_file(stage / ".github" / "workflows" / "validate.yml", render_validation_workflow())
+
+
+def _write_json_file(path: Path, value: object) -> None:
+    _write_text_file(
+        path,
+        json.dumps(value, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+    )
+
+
+def _write_text_file(path: Path, value: str) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_bytes(value.replace("\r\n", "\n").replace("\r", "\n").encode("utf-8"))
 
 
 def _validate_separate_roots(repository: Path, baseline: Path, output: Path) -> None:
