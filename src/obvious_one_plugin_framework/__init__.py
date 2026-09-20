@@ -34,6 +34,17 @@ from .provenance import (
     inventory_source,
     validate_provenance,
 )
+from .results import (
+    ArtifactRecord,
+    Diagnostic,
+    MutationRecord,
+    OperationResult,
+    ResultStatus,
+    load_result,
+    operation_result_from_payload,
+    result_json,
+    result_payload,
+)
 
 __all__ = [
     "AssetGroup",
@@ -64,6 +75,15 @@ __all__ = [
     "build_provenance",
     "inventory_source",
     "validate_provenance",
+    "ArtifactRecord",
+    "Diagnostic",
+    "MutationRecord",
+    "OperationResult",
+    "ResultStatus",
+    "load_result",
+    "operation_result_from_payload",
+    "result_json",
+    "result_payload",
 ]
 
 __version__ = "0.1.0"
