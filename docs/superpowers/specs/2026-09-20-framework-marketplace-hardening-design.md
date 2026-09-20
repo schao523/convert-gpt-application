@@ -145,11 +145,12 @@ the final bytes and rejects any difference.
 
 The conversion caller supplies application configurations, a marketplace
 catalog or checkout, and an output staging root. The framework builds the
-declared Codex and OpenClaw artifacts, updates staged catalogs and per-plugin
-Git attributes, generates generic CI, and writes a delta report. The source
-marketplace remains unchanged. Verification checks staged bytes and, when
-explicitly given a Git index or commit, compares exact blob bytes and a
-clean-checkout result.
+declared schema-v3 Codex and OpenClaw artifacts, preserves and verifies any
+legacy `verify_existing` artifacts without rebuilding them, updates staged
+catalogs and per-plugin Git attributes, generates generic CI, and writes a
+delta report. The source marketplace remains unchanged. Verification checks
+staged bytes and, when explicitly given a Git index or commit, compares exact
+blob bytes and a clean-checkout result.
 
 ### Validate marketplace CI
 
@@ -411,15 +412,27 @@ a generated control file when the workflow cannot derive it directly.
 
 The `--catalog` argument names a preparation catalog, not either public
 runtime catalog. Preparation-catalog schema version 1 contains a marketplace
-identity and an ordered `applications` array. Each application entry contains
-safe catalog-relative paths to its `conversion.json` and schema-v3 distribution
-contract plus its intended Codex and OpenClaw marketplace destinations. Product
-descriptions, categories, versions, build commands, and validation commands
-continue to come from their existing application-owned declarations. Duplicate
-plugin IDs or destinations are invalid. The generated marketplace contains
-`.obvious-one-validation.json` as the normalized plugin-validation registry
-and `tools/verify_marketplace.py` as the self-contained verifier; the workflow
-uses these files rather than embedding named-plugin assertions.
+identity and an ordered `applications` array. Each application entry contains:
+
+- a safe catalog-relative path to its `conversion.json` and distribution
+  contract;
+- its intended Codex and OpenClaw marketplace destinations; and
+- `mode`, which is exactly `build` or `verify_existing`.
+
+`build` requires a schema-v3 distribution contract and may generate replacement
+artifacts. `verify_existing` accepts a schema-v1, schema-v2, or schema-v3
+contract only for inspection, CI registration, and verification of artifacts
+already present in the marketplace baseline; it must not invoke a builder,
+replace bytes, or update that plugin's catalog identity or version. This mode
+allows a legacy plugin to remain covered by generic marketplace CI while its
+product migration is deferred.
+
+Product descriptions, categories, versions, build commands, and validation
+commands continue to come from their existing application-owned declarations.
+Duplicate plugin IDs or destinations are invalid. The generated marketplace
+contains `.obvious-one-validation.json` as the normalized plugin-validation
+registry and `tools/verify_marketplace.py` as the self-contained verifier; the
+workflow uses these files rather than embedding named-plugin assertions.
 
 Reports are immutable JSON artifacts below caller-selected staging, `dist`, or
 `.tmp` locations. The framework introduces no database, daemon state, or
@@ -481,7 +494,9 @@ failure, the previous output is restored when possible and the operation is
 Marketplace workflow:
 
 1. Validate every selected application and catalog identity.
-2. Build Codex and OpenClaw artifacts into a new staging tree.
+2. Copy the marketplace baseline to a new staging tree, build only entries in
+   `build` mode, and verify without rebuilding entries in `verify_existing`
+   mode.
 3. Generate catalogs, exact-byte attributes, verifier, CI, and delta report.
 4. Verify staging-tree bytes.
 5. Optionally verify a separately prepared Git index, commit, and clean
@@ -593,6 +608,11 @@ the corresponding production change.
 - **FRH-A19 / FRH-010, FRH-011:** API and CLI operations require no human
   identity or interactive input and return identical results for identical
   explicit inputs whether invoked by a script, agent, CI job, client, or human.
+- **FRH-A20 / FRH-001, FRH-005, FRH-007:** a schema-v3 `build` entry may replace
+  only its staged artifact paths, while a schema-v1 or schema-v2
+  `verify_existing` entry receives generic CI coverage and remains byte-for-byte
+  unchanged; using a legacy contract with `build` returns
+  `legacy_contract_read_only`.
 
 ### Required verification commands and evidence
 
@@ -623,7 +643,7 @@ run may be `PASS` without remote OS evidence, but release readiness remains
 - GitHub marketplace and ClawHub are separate publication surfaces.
 - Vibe Coding Designer is the first generic-CI integration case.
 - Cool Bible Tutor migration and ClawHub resolution are separate follow-up
-  work.
+  work; until then its preparation-catalog entry uses `verify_existing`.
 - The current work prepares local changes only and does not publish.
 
 ### Assumptions
