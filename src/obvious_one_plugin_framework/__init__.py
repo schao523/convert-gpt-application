@@ -57,6 +57,7 @@ from .marketplace import (
     PreparationEntry,
     load_preparation_catalog,
     prepare_marketplace,
+    verify_marketplace,
 )
 from .marketplace_ci import (
     build_validation_registry,
@@ -75,6 +76,7 @@ from .results import (
     result_json,
     result_payload,
 )
+from .readiness_report import combine_results, write_result_transactionally
 
 __all__ = [
     "AssetGroup",
@@ -123,6 +125,7 @@ __all__ = [
     "PreparationEntry",
     "load_preparation_catalog",
     "prepare_marketplace",
+    "verify_marketplace",
     "build_validation_registry",
     "render_marketplace_verifier",
     "render_validation_workflow",
@@ -138,6 +141,8 @@ __all__ = [
     "operation_result_from_payload",
     "result_json",
     "result_payload",
+    "combine_results",
+    "write_result_transactionally",
 ]
 
 __version__ = "0.1.0"

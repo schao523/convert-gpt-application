@@ -10,7 +10,9 @@ from .content_policy import ContentPolicyError
 from .contract import ContractError, load_contract
 from .contract_migration import write_migration_proposal
 from .index_reuse import IndexReuseError, check_index_reuse, derive_index
+from .marketplace import MarketplaceError, load_preparation_catalog, prepare_marketplace, verify_marketplace
 from .package_builder import PackageAuditError, build_package, verify_package
+from .readiness_report import combine_results, write_result_transactionally
 from .release_assets import AssetBuildError, build_asset_groups, write_remote_manifest
 from .results import ArtifactRecord, Diagnostic, MutationRecord, OperationResult, result_json
 
@@ -65,6 +67,23 @@ def _parser() -> argparse.ArgumentParser:
     derive.add_argument("--source-index", required=True, type=Path)
     derive.add_argument("--destination", required=True, type=Path)
     derive.add_argument("--json", action="store_true")
+    prepare = commands.add_parser("prepare-marketplace")
+    prepare.add_argument("--catalog", required=True, type=Path)
+    prepare.add_argument("--marketplace", required=True, type=Path)
+    prepare.add_argument("--output", required=True, type=Path)
+    prepare.add_argument("--json", action="store_true")
+    verify_market = commands.add_parser("verify-marketplace")
+    verify_market.add_argument("--catalog", required=True, type=Path)
+    verify_market.add_argument("--marketplace", required=True, type=Path)
+    git_mode = verify_market.add_mutually_exclusive_group()
+    git_mode.add_argument("--index", action="store_true")
+    git_mode.add_argument("--commit")
+    git_mode.add_argument("--fresh-checkout", action="store_true")
+    verify_market.add_argument("--json", action="store_true")
+    report = commands.add_parser("report")
+    report.add_argument("--inputs", required=True, nargs="+", type=Path)
+    report.add_argument("--output", required=True, type=Path)
+    report.add_argument("--json", action="store_true")
     return parser
 
 
@@ -89,8 +108,10 @@ def main(argv: list[str] | None = None) -> int:
         result = _typed_failure(operation, exc.code)
     except ContentPolicyError as exc:
         result = _typed_failure(operation, exc.code)
-    except (PackageAuditError, AssetBuildError, IndexReuseError) as exc:
+    except (PackageAuditError, AssetBuildError, IndexReuseError, MarketplaceError) as exc:
         result = _typed_failure(operation, exc.code)
+    except ValueError as exc:
+        result = _failure(operation, "FAIL", str(exc).split(":", 1)[0] or "invalid_value")
     except OSError:
         emit_result(_failure(operation, "FAIL", "io_failure"))
         return 4
@@ -105,6 +126,22 @@ def main(argv: list[str] | None = None) -> int:
 
 def _dispatch(arguments: argparse.Namespace) -> OperationResult:
     operation = arguments.command
+    if operation in {"prepare-marketplace", "verify-marketplace"}:
+        repository = _catalog_repository(arguments.catalog)
+        catalog = load_preparation_catalog(arguments.catalog, repository)
+        if operation == "prepare-marketplace":
+            return prepare_marketplace(catalog, arguments.marketplace, arguments.output)
+        return verify_marketplace(
+            catalog,
+            arguments.marketplace,
+            check_index=arguments.index,
+            commit=arguments.commit,
+            fresh_checkout=arguments.fresh_checkout,
+        )
+    if operation == "report":
+        result = combine_results(arguments.inputs)
+        write_result_transactionally(result, arguments.output)
+        return result
     if operation == "validate-contract":
         contract = load_contract(arguments.contract)
         return OperationResult(
@@ -179,6 +216,11 @@ def _dispatch(arguments: argparse.Namespace) -> OperationResult:
             "vector_identity_sha256": record.vector_identity_sha256,
         },
     )
+
+
+def _catalog_repository(path: Path) -> Path:
+    catalog = Path(path).resolve()
+    return catalog.parent.parent if catalog.parent.name == "marketplaces" else catalog.parent
 
 
 def _typed_failure(operation: str, code: str) -> OperationResult:

@@ -106,7 +106,7 @@ def _run_commands(plugin, codex, openclaw):
             argv.append(expanded)
         completed = subprocess.run(
             argv, cwd=roots[artifact], shell=False, timeout=120,
-            check=False, stdin=subprocess.DEVNULL,
+            check=False, stdin=subprocess.DEVNULL, capture_output=True,
         )
         if completed.returncode != 0:
             raise ValueError("marketplace_command_failed")

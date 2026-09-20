@@ -152,6 +152,101 @@ def prepare_marketplace(
     )
 
 
+def verify_marketplace(
+    catalog: PreparationCatalog,
+    marketplace: Path,
+    *,
+    check_index: bool = False,
+    commit: str | None = None,
+    fresh_checkout: bool = False,
+) -> OperationResult:
+    """Verify staged artifacts and optional Git byte evidence without mutation."""
+
+    from .git_evidence import verify_git_evidence
+
+    root = Path(marketplace).resolve()
+    registry_path = root / ".obvious-one-validation.json"
+    verifier = root / "tools" / "verify_marketplace.py"
+    if not registry_path.is_file() or not verifier.is_file():
+        raise MarketplaceError("marketplace_controls_missing")
+
+    gates = {
+        "filesystem": "PASS",
+        "index": "NOT VERIFIED",
+        "commit": "NOT VERIFIED",
+        "fresh_checkout": "NOT VERIFIED",
+    }
+    diagnostics = []
+    for entry in catalog.applications:
+        completed = subprocess.run(
+            [
+                sys.executable,
+                "-B",
+                str(verifier),
+                "--registry",
+                str(registry_path),
+                "--plugin",
+                entry.application.plugin_id,
+                "--json",
+            ],
+            cwd=root,
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            shell=False,
+            timeout=180,
+            check=False,
+        )
+        if completed.returncode != 0:
+            gates["filesystem"] = "FAIL"
+            diagnostics.append(entry.application.plugin_id)
+
+    git_codes: tuple[str, ...] = ()
+    files_checked = 0
+    requested_git = check_index or commit is not None or fresh_checkout
+    if gates["filesystem"] == "PASS" and requested_git:
+        scopes = tuple(
+            destination
+            for entry in catalog.applications
+            for destination in (entry.codex_destination, entry.openclaw_destination)
+        )
+        reference = "HEAD" if fresh_checkout and commit is None else commit
+        report = verify_git_evidence(
+            root,
+            scopes,
+            commit=reference,
+            fresh_checkout=fresh_checkout,
+        )
+        git_codes = report.codes
+        files_checked = report.files_checked
+        gates["index"] = report.status
+        if commit is not None or fresh_checkout:
+            gates["commit"] = report.status
+        if fresh_checkout:
+            gates["fresh_checkout"] = report.status
+
+    failed = gates["filesystem"] == "FAIL" or any(
+        value == "FAIL" for value in gates.values()
+    )
+    aggregate, total_bytes = _tree_identity(root)
+    return OperationResult(
+        operation="verify-marketplace",
+        status="FAIL" if failed else "PASS",
+        code="marketplace_verification_failed" if failed else "marketplace_verified",
+        artifacts=(ArtifactRecord(root.name, "marketplace_stage", aggregate, total_bytes),),
+        evidence={
+            "diagnostic_plugins": diagnostics,
+            "files_checked": files_checked,
+            "gates": gates,
+            "git_codes": list(git_codes),
+            "marketplace_id": catalog.marketplace_id,
+        },
+    )
+
+
 def _build_entry(entry: PreparationEntry, stage: Path, work: Path) -> None:
     work.mkdir(parents=True)
     diagnostics = work / "diagnostics"
@@ -253,6 +348,25 @@ def _write_generated_controls(catalog: PreparationCatalog, stage: Path) -> None:
     _write_json_file(stage / ".obvious-one-validation.json", registry)
     _write_text_file(stage / "tools" / "verify_marketplace.py", render_marketplace_verifier())
     _write_text_file(stage / ".github" / "workflows" / "validate.yml", render_validation_workflow())
+    _merge_exact_byte_attributes(catalog, stage)
+
+
+def _merge_exact_byte_attributes(catalog: PreparationCatalog, stage: Path) -> None:
+    from .git_evidence import exact_byte_attributes
+
+    path = stage / ".gitattributes"
+    existing = path.read_text(encoding="utf-8") if path.is_file() else ""
+    existing = existing.replace("\r\n", "\n").replace("\r", "\n")
+    lines = existing.splitlines()
+    scopes = tuple(
+        destination
+        for entry in catalog.applications
+        for destination in (entry.codex_destination, entry.openclaw_destination)
+    )
+    for line in exact_byte_attributes(scopes).splitlines():
+        if line not in lines:
+            lines.append(line)
+    _write_text_file(path, "\n".join(lines) + "\n")
 
 
 def _write_json_file(path: Path, value: object) -> None:
