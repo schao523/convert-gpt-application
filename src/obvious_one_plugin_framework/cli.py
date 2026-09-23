@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import argparse
 from pathlib import Path
+from pathlib import PurePosixPath, PureWindowsPath
+import subprocess
 import sys
 
 from .content_policy import ContentPolicyError
@@ -11,7 +13,7 @@ from .contract import ContractError, load_contract
 from .contract_migration import write_migration_proposal
 from .index_reuse import IndexReuseError, check_index_reuse, derive_index
 from .marketplace import MarketplaceError, load_preparation_catalog, prepare_marketplace, verify_marketplace
-from .package_builder import PackageAuditError, build_package, verify_package
+from .package_builder import PackageAuditError, build_package, preflight_package, verify_package
 from .readiness_report import combine_results, write_result_transactionally
 from .release_assets import AssetBuildError, build_asset_groups, write_remote_manifest
 from .results import ArtifactRecord, Diagnostic, MutationRecord, OperationResult, result_json
@@ -102,21 +104,31 @@ def main(argv: list[str] | None = None) -> int:
         return 2
 
     operation = arguments.command
+    exit_code: int | None = None
     try:
         result = _dispatch(arguments)
     except ContractError as exc:
-        result = _typed_failure(operation, exc.code)
+        result = _typed_failure(operation, exc)
+        exit_code = 2
     except ContentPolicyError as exc:
-        result = _typed_failure(operation, exc.code)
+        result = _typed_failure(operation, exc)
+        exit_code = 2
     except (PackageAuditError, AssetBuildError, IndexReuseError, MarketplaceError) as exc:
-        result = _typed_failure(operation, exc.code)
+        result = _typed_failure(operation, exc)
+        exit_code = 3
+    except subprocess.TimeoutExpired:
+        result = _failure(operation, "FAIL", "operation_timeout")
+        exit_code = 4
     except ValueError as exc:
         result = _failure(operation, "FAIL", str(exc).split(":", 1)[0] or "invalid_value")
+        exit_code = 2
     except OSError:
-        emit_result(_failure(operation, "FAIL", "io_failure"))
-        return 4
+        result = _failure(operation, "FAIL", "io_failure")
+        exit_code = 4
 
     emit_result(result)
+    if exit_code is not None:
+        return exit_code
     if result.status == "PASS":
         return 0
     if result.status == "BLOCKED":
@@ -144,6 +156,7 @@ def _dispatch(arguments: argparse.Namespace) -> OperationResult:
         return result
     if operation == "validate-contract":
         contract = load_contract(arguments.contract)
+        preflight_package(contract)
         return OperationResult(
             operation=operation,
             status="PASS",
@@ -223,8 +236,45 @@ def _catalog_repository(path: Path) -> Path:
     return catalog.parent.parent if catalog.parent.name == "marketplaces" else catalog.parent
 
 
-def _typed_failure(operation: str, code: str) -> OperationResult:
-    return _failure(operation, "BLOCKED" if code in BLOCKING_CODES else "FAIL", code)
+def _typed_failure(operation: str, error: object) -> OperationResult:
+    code = getattr(error, "code", "operation_failed")
+    status = "BLOCKED" if code in BLOCKING_CODES else "FAIL"
+    if isinstance(error, ContentPolicyError) and error.paths:
+        diagnostics = tuple(
+            Diagnostic(
+                code,
+                path,
+                "classification decision required",
+                error.candidates,
+            )
+            for path in error.paths
+        )
+        return OperationResult(operation, status, code, diagnostics=diagnostics)
+    if code == "rights_unresolved":
+        detail = getattr(error, "detail", "")
+        path = detail if _safe_relative_diagnostic_path(detail) else None
+        return OperationResult(
+            operation,
+            status,
+            code,
+            diagnostics=(
+                Diagnostic(
+                    code,
+                    path,
+                    "redistribution rights decision required",
+                    ("approved_with_provenance", "exclude", "external_asset", "private_local"),
+                ),
+            ),
+        )
+    return _failure(operation, status, code)
+
+
+def _safe_relative_diagnostic_path(value: object) -> bool:
+    if not isinstance(value, str) or not value:
+        return False
+    posix = PurePosixPath(value.replace("\\", "/"))
+    windows = PureWindowsPath(value)
+    return not posix.is_absolute() and not windows.is_absolute() and not windows.drive and ".." not in posix.parts
 
 
 def _failure(operation: str, status: str, code: str) -> OperationResult:

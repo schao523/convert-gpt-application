@@ -6,6 +6,7 @@ from pathlib import Path
 import subprocess
 import tempfile
 import unittest
+from unittest.mock import patch
 
 from tests.framework.test_verification_config import _make_application, _write_json
 
@@ -159,6 +160,23 @@ class MarketplaceTests(unittest.TestCase):
         with self.assertRaisesRegex(MarketplaceError, "catalog_path_escape"):
             load_preparation_catalog(self.catalog_path, self.repository)
 
+    def test_windows_root_dot_and_case_equivalent_destinations_are_rejected(self) -> None:
+        for unsafe in ("C:/outside-target", "C:\\outside-target", "."):
+            with self.subTest(destination=unsafe):
+                self._write_catalog()
+                raw = json.loads(self.catalog_path.read_text(encoding="utf-8"))
+                raw["applications"][1]["codex_destination"] = unsafe
+                _write_json(self.catalog_path, raw)
+                with self.assertRaisesRegex(MarketplaceError, "catalog_path_escape"):
+                    load_preparation_catalog(self.catalog_path, self.repository)
+
+        self._write_catalog()
+        raw = json.loads(self.catalog_path.read_text(encoding="utf-8"))
+        raw["applications"][1]["codex_destination"] = "Plugins/Legacy"
+        _write_json(self.catalog_path, raw)
+        with self.assertRaisesRegex(MarketplaceError, "duplicate_marketplace_destination"):
+            load_preparation_catalog(self.catalog_path, self.repository)
+
     def test_prepare_changes_only_declared_build_destinations_and_preserves_legacy(self) -> None:
         catalog = load_preparation_catalog(self.catalog_path, self.repository)
         baseline_before = self._tree(self.baseline)
@@ -287,6 +305,22 @@ class MarketplaceTests(unittest.TestCase):
         self.assertEqual(result.status, "FAIL")
         self.assertEqual(result.evidence["gates"]["filesystem"], "FAIL")
         self.assertEqual(result.evidence["gates"]["index"], "PASS")
+
+    def test_verifier_timeouts_are_isolated_per_plugin(self) -> None:
+        catalog = load_preparation_catalog(self.catalog_path, self.repository)
+        prepare_marketplace(catalog, self.baseline, self.output)
+
+        with patch(
+            "obvious_one_plugin_framework.marketplace.subprocess.run",
+            side_effect=subprocess.TimeoutExpired(["verifier"], 180),
+        ):
+            result = verify_marketplace(catalog, self.output)
+
+        self.assertEqual(result.status, "FAIL")
+        self.assertEqual(result.evidence["gates"]["filesystem"], "FAIL")
+        self.assertEqual(
+            result.evidence["diagnostic_plugins"], ["legacy", "modern"]
+        )
 
     @staticmethod
     def git(root: Path, *arguments: str) -> None:

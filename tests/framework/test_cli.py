@@ -4,6 +4,7 @@ import contextlib
 import io
 import json
 from pathlib import Path
+import shutil
 import subprocess
 import tempfile
 import unittest
@@ -95,6 +96,45 @@ class FrameworkCliTests(unittest.TestCase):
         self.assertEqual((code, payload["status"]), (0, "PASS"))
         self.assertEqual(payload["code"], "contract_valid")
 
+    def test_validate_contract_blocks_unclassified_selected_file(self) -> None:
+        root = self.output / "unclassified"
+        shutil.copytree(FIXTURES / "plugin-v3", root)
+        contract_path = root / "distribution.json"
+        raw = json.loads(contract_path.read_text(encoding="utf-8"))
+        raw["content_rules"] = [raw["content_rules"][0]]
+        contract_path.write_text(json.dumps(raw), encoding="utf-8")
+
+        code, payload = self.invoke("validate-contract", "--contract", str(contract_path))
+
+        self.assertEqual((code, payload["status"], payload["code"]), (2, "BLOCKED", "unclassified_files"))
+        self.assertEqual(payload["diagnostics"][0]["path"], "assets/logo.bin")
+        self.assertIn("binary", payload["diagnostics"][0]["candidates"])
+
+    def test_missing_rights_evidence_is_blocked_with_actionable_path(self) -> None:
+        root = self.output / "rights"
+        shutil.copytree(FIXTURES / "plugin-v3", root)
+        contract_path = root / "distribution.json"
+        raw = json.loads(contract_path.read_text(encoding="utf-8"))
+        raw["content_rules"][0]["redistribution"]["provenance"] = "docs/missing-rights.md"
+        contract_path.write_text(json.dumps(raw), encoding="utf-8")
+
+        code, payload = self.invoke("validate-contract", "--contract", str(contract_path))
+
+        self.assertEqual((code, payload["status"], payload["code"]), (2, "BLOCKED", "rights_unresolved"))
+        self.assertEqual(payload["diagnostics"][0]["path"], "docs/missing-rights.md")
+        self.assertIn("exclude", payload["diagnostics"][0]["candidates"])
+
+    def test_timeout_is_a_single_machine_readable_failure(self) -> None:
+        with patch(
+            "obvious_one_plugin_framework.cli._dispatch",
+            side_effect=subprocess.TimeoutExpired(["tool"], 1),
+        ):
+            code, payload = self.invoke("validate-contract", "--contract", str(V3))
+
+        self.assertEqual(code, 4)
+        self.assertEqual((payload["status"], payload["code"]), ("FAIL", "operation_timeout"))
+        self.assertEqual(len(payload["diagnostics"]), 1)
+
     def test_parser_error_is_a_single_result_document(self) -> None:
         code, payload = self.invoke("build-package", "--contract", str(V3))
 
@@ -108,7 +148,7 @@ class FrameworkCliTests(unittest.TestCase):
 
         code, payload = self.invoke("validate-contract", "--contract", str(invalid))
 
-        self.assertEqual(code, 3)
+        self.assertEqual(code, 2)
         self.assertEqual(payload["status"], "FAIL")
         self.assertEqual(payload["code"], "invalid_json")
 
@@ -122,7 +162,7 @@ class FrameworkCliTests(unittest.TestCase):
             "--output", str(destination),
         )
 
-        self.assertEqual(code, 3)
+        self.assertEqual(code, 2)
         self.assertEqual(payload["status"], "FAIL")
         self.assertEqual(payload["code"], "migration_destination_exists")
         self.assertEqual(destination.read_text(encoding="utf-8"), "keep")

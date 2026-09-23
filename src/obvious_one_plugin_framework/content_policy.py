@@ -12,9 +12,19 @@ from .contract import ContentRule, DistributionContract
 class ContentPolicyError(ValueError):
     """Raised when content cannot be classified or canonicalized safely."""
 
-    def __init__(self, code: str, detail: str = "") -> None:
+    def __init__(
+        self,
+        code: str,
+        detail: str = "",
+        *,
+        paths: tuple[str, ...] = (),
+        candidates: tuple[str, ...] = (),
+    ) -> None:
         super().__init__(code if not detail else f"{code}: {detail}")
         self.code = code
+        self.detail = detail
+        self.paths = paths
+        self.candidates = candidates
 
 
 @dataclass(frozen=True)
@@ -49,7 +59,12 @@ def resolve_content_policies(
             unclassified.append(relative)
             continue
         if len(matches) != 1:
-            raise ContentPolicyError("ambiguous_file_classification", relative)
+            raise ContentPolicyError(
+                "ambiguous_file_classification",
+                relative,
+                paths=(relative,),
+                candidates=("narrow_rule_selectors", "exclude"),
+            )
         rule = matches[0]
         resolved[relative] = ResolvedContentPolicy(
             path=relative,
@@ -58,7 +73,12 @@ def resolve_content_policies(
             rule_id=rule.rule_id,
         )
     if unclassified:
-        raise ContentPolicyError("unclassified_files", ", ".join(unclassified))
+        raise ContentPolicyError(
+            "unclassified_files",
+            ", ".join(unclassified),
+            paths=tuple(unclassified),
+            candidates=("text", "binary", "exclude", "external_asset", "private_local"),
+        )
     return resolved
 
 
@@ -69,11 +89,17 @@ def write_canonical_file(
 ) -> None:
     """Write a file using the resolved deterministic byte policy."""
 
+    canonical = canonical_content_bytes(source, policy)
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    destination.write_bytes(canonical)
+
+
+def canonical_content_bytes(source: Path, policy: ResolvedContentPolicy) -> bytes:
+    """Return validated canonical bytes without mutating the filesystem."""
+
     raw = source.read_bytes()
     if policy.classification == "binary":
-        destination.parent.mkdir(parents=True, exist_ok=True)
-        destination.write_bytes(raw)
-        return
+        return raw
     if policy.classification not in {"text", "framework-runtime"}:
         raise ContentPolicyError("unsupported_content_classification", policy.classification)
     if raw.startswith(b"\xef\xbb\xbf"):
@@ -82,9 +108,7 @@ def write_canonical_file(
         text = raw.decode("utf-8")
     except UnicodeDecodeError as exc:
         raise ContentPolicyError("text_invalid_utf8", policy.path) from exc
-    canonical = text.replace("\r\n", "\n").replace("\r", "\n").encode("utf-8")
-    destination.parent.mkdir(parents=True, exist_ok=True)
-    destination.write_bytes(canonical)
+    return text.replace("\r\n", "\n").replace("\r", "\n").encode("utf-8")
 
 
 def _matches(rule: ContentRule, relative: str) -> bool:

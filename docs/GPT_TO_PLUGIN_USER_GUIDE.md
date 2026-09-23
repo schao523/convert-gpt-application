@@ -331,11 +331,15 @@ individual application configuration.
 
 New distribution builds use `"schema_version": 3`. Schema v1 and schema v2
 remain readable for legacy verification but return `legacy_contract_read_only`
-if a caller tries to rebuild them. Run `validate-contract` first. If migration
-is needed, `migrate-contract` creates a deterministic proposal listing every
+if a caller tries to rebuild them. Run `validate-contract` first. For schema v3,
+that command performs the same file-classification, canonicalization, path, and
+rights preflight needed by a build, but writes no package. If migration is
+needed, `migrate-contract` creates a deterministic proposal listing every
 unclassified file and safe candidate decisions. It never guesses rights or
-overwrites the old contract. The decision owner reviews the proposal; a later
-conversion caller records the approved choices and validates again.
+overwrites the old contract. Missing or non-approved rights evidence is
+`rights_unresolved`, not an implicit exclusion or approval. The decision owner
+reviews the proposal; a later conversion caller records the approved choices
+and validates again.
 
 Marketplace preparation is similarly non-destructive. A catalog entry uses
 `build` for an approved schema-v3 product or `verify_existing` for a published

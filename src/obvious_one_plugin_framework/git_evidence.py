@@ -50,12 +50,21 @@ def verify_git_evidence(
         index_bytes = _git_bytes(root, "cat-file", "blob", oid)
         if path not in working or working[path].read_bytes() != index_bytes:
             codes.add("working_tree_mismatch")
-        if commit is not None:
-            committed = _show_bytes(root, commit, path)
-            if committed is None or committed != index_bytes:
+    committed: dict[str, str] = {}
+    resolved_commit: str | None = None
+    if commit is not None:
+        resolved_commit = _resolve_commit(root, commit)
+        if resolved_commit is None:
+            codes.add("commit_not_found")
+        else:
+            committed = _tree_entries(root, resolved_commit, normalized)
+            if set(committed) != set(stage_zero) or any(
+                committed[path] != stage_zero[path]
+                for path in set(committed) & set(stage_zero)
+            ):
                 codes.add("index_blob_mismatch")
 
-    checked_paths = tuple(sorted(set(working) | set(stage_zero)))
+    checked_paths = tuple(sorted(set(working) | set(stage_zero) | set(committed)))
     attributes = _attributes(root, checked_paths)
     if any(not _deterministic_attributes(attributes.get(path)) for path in checked_paths):
         codes.add("exact_byte_attribute_missing")
@@ -63,8 +72,8 @@ def verify_git_evidence(
     if fresh_checkout:
         if commit is None:
             codes.add("fresh_checkout_commit_required")
-        else:
-            _verify_fresh_checkout(root, commit, stage_zero, codes)
+        elif resolved_commit is not None:
+            _verify_fresh_checkout(root, resolved_commit, committed, codes)
 
     return GitEvidenceReport(
         status="PASS" if not codes else "FAIL",
@@ -83,6 +92,26 @@ def _index_entries(root: Path, scopes: Sequence[str]) -> tuple[tuple[str, str, s
         _mode, oid, stage = metadata.decode("ascii").split(" ")
         entries.append((raw_path.decode("utf-8", "surrogateescape"), stage, oid))
     return tuple(entries)
+
+
+def _tree_entries(root: Path, commit: str, scopes: Sequence[str]) -> dict[str, str]:
+    payload = _git_bytes(root, "ls-tree", "-r", "-z", commit, "--", *scopes)
+    entries: dict[str, str] = {}
+    for record in payload.split(b"\0"):
+        if not record:
+            continue
+        metadata, raw_path = record.split(b"\t", 1)
+        _mode, kind, oid = metadata.decode("ascii").split(" ")
+        if kind == "blob":
+            entries[raw_path.decode("utf-8", "surrogateescape")] = oid
+    return entries
+
+
+def _resolve_commit(root: Path, commit: str) -> str | None:
+    completed = _run_git(root, "rev-parse", "--verify", f"{commit}^{{commit}}")
+    if completed.returncode != 0:
+        return None
+    return completed.stdout.decode("ascii").strip()
 
 
 def _working_files(root: Path, scopes: Sequence[str]) -> dict[str, Path]:
@@ -121,18 +150,12 @@ def _deterministic_attributes(policy: tuple[str, str] | None) -> bool:
     return text == "unset" or (text == "set" and eol in {"lf", "crlf"})
 
 
-def _show_bytes(root: Path, commit: str, path: str) -> bytes | None:
-    completed = _run_git(root, "show", f"{commit}:{path}")
-    return completed.stdout if completed.returncode == 0 else None
-
-
 def _verify_fresh_checkout(
     root: Path,
     commit: str,
-    indexed: dict[str, str],
+    committed: dict[str, str],
     codes: set[str],
 ) -> None:
-    resolved = _git_bytes(root, "rev-parse", "--verify", commit).decode("ascii").strip()
     with TemporaryDirectory(prefix="git-evidence-") as temporary:
         checkout = Path(temporary) / "checkout"
         clone = subprocess.run(
@@ -146,7 +169,7 @@ def _verify_fresh_checkout(
             codes.add("fresh_checkout_failed")
             return
         checked_out = subprocess.run(
-            ["git", "-c", "core.autocrlf=true", "checkout", "--detach", resolved],
+            ["git", "-c", "core.autocrlf=true", "checkout", "--detach", commit],
             cwd=checkout,
             shell=False,
             timeout=30,
@@ -156,10 +179,10 @@ def _verify_fresh_checkout(
         if checked_out.returncode != 0:
             codes.add("fresh_checkout_failed")
             return
-        for path in indexed:
+        for path, oid in committed.items():
             candidate = checkout / Path(path)
-            committed = _show_bytes(root, resolved, path)
-            if committed is None or not candidate.is_file() or candidate.read_bytes() != committed:
+            expected = _git_bytes(root, "cat-file", "blob", oid)
+            if not candidate.is_file() or candidate.read_bytes() != expected:
                 codes.add("fresh_checkout_mismatch")
 
 

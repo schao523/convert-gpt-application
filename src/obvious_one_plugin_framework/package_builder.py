@@ -12,7 +12,12 @@ import shutil
 import stat
 from tempfile import TemporaryDirectory
 
-from .content_policy import ResolvedContentPolicy, resolve_content_policies, write_canonical_file
+from .content_policy import (
+    ResolvedContentPolicy,
+    canonical_content_bytes,
+    resolve_content_policies,
+    write_canonical_file,
+)
 from .contract import DistributionContract, require_buildable_contract, validate_contract
 
 
@@ -34,6 +39,19 @@ class BuildResult:
     file_count: int
     total_bytes: int
     content_sha256: str
+
+
+def preflight_package(contract: DistributionContract) -> None:
+    """Validate the complete schema-v3 source selection without writing output."""
+
+    validate_contract(contract, contract.source_root)
+    if contract.schema_version != 3:
+        return
+    planned_sources, planned_policies = _planned_application_sources(contract)
+    for source, relative in planned_sources:
+        if _is_reparse_or_symlink(source):
+            raise PackageAuditError("link_forbidden", relative)
+        canonical_content_bytes(source, planned_policies[relative])
 
 
 def _file_sha(path: Path) -> str:

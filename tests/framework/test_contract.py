@@ -74,11 +74,67 @@ class ContractTests(unittest.TestCase):
         with self.assertRaisesRegex(ContractError, "clawhub_native_manifest_required"):
             self._load_modified_v3(modify)
 
+    def test_schema_v3_rejects_incompatible_clawhub_native_manifest(self) -> None:
+        def modify(raw: dict[str, object]) -> None:
+            raw["publication"]["clawhub"].update(
+                {
+                    "enabled": True,
+                    "family": "native-plugin",
+                    "native_manifest": "README.md",
+                }
+            )
+
+        with self.assertRaisesRegex(ContractError, "clawhub_native_manifest_invalid"):
+            self._load_modified_v3(modify)
+
+    def test_schema_v3_accepts_complete_native_clawhub_manifest(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp) / "plugin-v3"
+            shutil.copytree(FIXTURES / "plugin-v3", root)
+            source = root / "source"
+            (source / "openclaw.plugin.json").write_text(
+                json.dumps(
+                    {
+                        "id": "plugin-v3",
+                        "configSchema": {
+                            "type": "object",
+                            "additionalProperties": False,
+                        },
+                    }
+                ),
+                encoding="utf-8",
+            )
+            (source / "index.js").write_text("export default {};\n", encoding="utf-8")
+            (source / "package.json").write_text(
+                json.dumps(
+                    {
+                        "name": "@obvious-one/plugin-v3",
+                        "version": "1.0.0",
+                        "openclaw": {"extensions": ["./index.js"]},
+                    }
+                ),
+                encoding="utf-8",
+            )
+            contract_path = root / "distribution.json"
+            raw = json.loads(contract_path.read_text(encoding="utf-8"))
+            raw["publication"]["clawhub"].update(
+                {
+                    "enabled": True,
+                    "family": "native-plugin",
+                    "native_manifest": "openclaw.plugin.json",
+                }
+            )
+            contract_path.write_text(json.dumps(raw), encoding="utf-8")
+
+            contract = load_contract(contract_path)
+
+            self.assertTrue(contract.publication.clawhub.enabled)
+
     def test_schema_v3_rejects_missing_provenance_file(self) -> None:
         def modify(raw: dict[str, object]) -> None:
             raw["content_rules"][0]["redistribution"]["provenance"] = "docs/missing.md"
 
-        with self.assertRaisesRegex(ContractError, "redistribution_provenance_missing"):
+        with self.assertRaisesRegex(ContractError, "rights_unresolved"):
             self._load_modified_v3(modify)
 
     def test_schema_v2_accepts_skill_only_contract_without_rag(self) -> None:

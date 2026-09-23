@@ -37,6 +37,7 @@ class ContractError(ValueError):
         message = code if not detail else f"{code}: {detail}"
         super().__init__(message)
         self.code = code
+        self.detail = detail
 
 
 @dataclass(frozen=True)
@@ -245,16 +246,25 @@ def load_contract(path: Path) -> DistributionContract:
     content_rules: tuple[ContentRule, ...] = ()
     publication = None
     source_root = _source_root(raw["source_root"], contract_path)
+    plugin_id = _text(raw["plugin_id"], "plugin_id")
+    package_name = _text(raw["package_name"], "package_name")
+    version = _text(raw["version"], "version")
     if schema_version == 3:
         content_rules = _parse_content_rules(raw["content_rules"], source_root)
-        publication = _parse_publication(raw["publication"], source_root)
+        publication = _parse_publication(
+            raw["publication"],
+            source_root,
+            plugin_id=plugin_id,
+            package_name=package_name,
+            version=version,
+        )
 
     contract = DistributionContract(
         schema_version=schema_version,
-        plugin_id=_text(raw["plugin_id"], "plugin_id"),
-        package_name=_text(raw["package_name"], "package_name"),
+        plugin_id=plugin_id,
+        package_name=package_name,
         family=family,
-        version=_text(raw["version"], "version"),
+        version=version,
         source_root=source_root,
         include_files=include_files,
         include_prefixes=_path_list(raw["include_prefixes"], "include_prefixes"),
@@ -322,13 +332,13 @@ def _parse_content_rules(value: Any, source_root: Path) -> tuple[ContentRule, ..
         _only_keys(redistribution_raw, _REDISTRIBUTION_KEYS, f"{label}.redistribution")
         status = _text(redistribution_raw["status"], f"{label}.redistribution.status")
         if status != "approved":
-            raise ContractError("redistribution_not_approved", label)
+            raise ContractError("rights_unresolved", label)
         provenance = _relative(
             redistribution_raw["provenance"],
             f"{label}.redistribution.provenance",
         )
         if not (source_root / provenance).is_file():
-            raise ContractError("redistribution_provenance_missing", provenance)
+            raise ContractError("rights_unresolved", provenance)
         rules.append(
             ContentRule(
                 rule_id=_text(raw["id"], f"{label}.id"),
@@ -343,7 +353,14 @@ def _parse_content_rules(value: Any, source_root: Path) -> tuple[ContentRule, ..
     return tuple(rules)
 
 
-def _parse_publication(value: Any, source_root: Path) -> PublicationProfile:
+def _parse_publication(
+    value: Any,
+    source_root: Path,
+    *,
+    plugin_id: str,
+    package_name: str,
+    version: str,
+) -> PublicationProfile:
     raw = _mapping(value, "publication")
     _only_keys(raw, _PUBLICATION_KEYS, "publication")
 
@@ -373,9 +390,50 @@ def _parse_publication(value: Any, source_root: Path) -> PublicationProfile:
         )
         if not (source_root / native_manifest).is_file():
             raise ContractError("clawhub_native_manifest_missing", native_manifest)
+        _validate_native_clawhub_manifest(
+            source_root,
+            native_manifest,
+            plugin_id=plugin_id,
+            package_name=package_name,
+            version=version,
+        )
         clawhub = PublicationTarget(
             enabled=True,
             family=family,
             native_manifest=native_manifest,
         )
     return PublicationProfile(github_marketplace=github, clawhub=clawhub)
+
+
+def _validate_native_clawhub_manifest(
+    source_root: Path,
+    native_manifest: str,
+    *,
+    plugin_id: str,
+    package_name: str,
+    version: str,
+) -> None:
+    if native_manifest != "openclaw.plugin.json":
+        raise ContractError("clawhub_native_manifest_invalid", native_manifest)
+    try:
+        manifest = json.loads((source_root / native_manifest).read_text(encoding="utf-8"))
+        package = json.loads((source_root / "package.json").read_text(encoding="utf-8"))
+    except (OSError, UnicodeError, json.JSONDecodeError) as exc:
+        raise ContractError("clawhub_native_manifest_invalid", native_manifest) from exc
+    if not isinstance(manifest, dict) or manifest.get("id") != plugin_id:
+        raise ContractError("clawhub_native_manifest_invalid", native_manifest)
+    schema = manifest.get("configSchema")
+    if not isinstance(schema, dict) or schema.get("type") != "object":
+        raise ContractError("clawhub_native_manifest_invalid", native_manifest)
+    if not isinstance(package, dict) or package.get("name") != package_name or package.get("version") != version:
+        raise ContractError("clawhub_native_manifest_invalid", "package.json")
+    openclaw = package.get("openclaw")
+    extensions = openclaw.get("extensions") if isinstance(openclaw, dict) else None
+    if not isinstance(extensions, list) or not extensions or not all(isinstance(item, str) for item in extensions):
+        raise ContractError("clawhub_native_manifest_invalid", "package.json")
+    for item in extensions:
+        normalized = item[2:] if item.startswith("./") else item
+        relative = _relative(normalized, "package.json.openclaw.extensions")
+        extension = (source_root / relative).resolve()
+        if not extension.is_relative_to(source_root.resolve()) or not extension.is_file():
+            raise ContractError("clawhub_native_manifest_invalid", relative)

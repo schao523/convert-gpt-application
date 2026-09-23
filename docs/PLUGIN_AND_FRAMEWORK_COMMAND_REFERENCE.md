@@ -64,6 +64,14 @@ python -B -m obvious_one_plugin_framework.cli validate-contract `
   --json
 ```
 
+For schema-v3 inputs, validation includes a build preflight: every selected
+file must resolve to exactly one content rule, text must be valid UTF-8 under
+the declared canonicalization, links and paths must remain confined, and every
+included rule must cite an approved, non-secret redistribution decision. No
+output directory is created. Missing classification returns `BLOCKED` with the
+relative path and safe candidate classifications; missing or non-approved
+rights evidence returns `BLOCKED` with `rights_unresolved`.
+
 Create a non-destructive schema-v3 migration proposal for a legacy contract:
 
 ```powershell
@@ -80,6 +88,14 @@ object declares GitHub marketplace and ClawHub separately. Schema v1 and schema
 v2 are readable legacy formats only; build attempts return
 `legacy_contract_read_only`. An incomplete proposal remains `BLOCKED` until the
 decision owner resolves classifications and rights.
+
+When native ClawHub publication is enabled, `family` must be `native-plugin`
+and `native_manifest` must be the application-root `openclaw.plugin.json`.
+That manifest must have the contract plugin ID and an object `configSchema`.
+The application-root `package.json` must match the contract package name and
+version and declare a non-empty `openclaw.extensions` list whose files exist
+inside the application root. A bundle-only README or another arbitrary file is
+not a native manifest.
 
 Build deterministic remote asset archives and their immutable manifest:
 
@@ -158,6 +174,14 @@ python -B -m obvious_one_plugin_framework.cli verify-marketplace --catalog .\mar
 Bible Tutor remains a legacy `verify_existing` entry in this catalog. Vibe
 Coding Designer is the schema-v3 build canary. Disabled ClawHub publication is
 `NOT APPLICABLE`, not a package failure.
+
+`verify_existing` means byte preservation, not trust in an old manifest. The
+generated marketplace verifier recalculates every legacy manifest path, size,
+and SHA-256 value and fails on stale or line-ending-altered bytes. Commit
+verification also compares the complete scoped tree, so staged deletions and a
+missing commit cannot pass through an empty path set. Per-plugin verifier
+timeouts are reported independently and do not prevent the remaining catalog
+entries from being checked.
 
 Every CLI command emits one result-schema-v1 JSON document. Status precedence
 is `FAIL`, `BLOCKED`, then `PASS`; exit codes are 0 for pass, 2 for blocked or

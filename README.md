@@ -87,7 +87,15 @@ New package builds use distribution-contract schema v3:
 Both schema v1 and schema v2 remain readable legacy formats. They can be checked in
 `verify_existing` marketplace mode but cannot be rebuilt; an attempted build
 returns `legacy_contract_read_only`. Use `validate-contract` to inspect a
-contract and `migrate-contract` to create a reviewable schema-v3 proposal.
+contract and preflight its selected files without writing build output. Missing
+classifications and unresolved redistribution rights return actionable
+`BLOCKED` results. Use `migrate-contract` to create a reviewable schema-v3
+proposal.
+
+Native ClawHub publication is an explicit, separate contract. Enabling it
+requires an application-root `openclaw.plugin.json` plus a matching
+`package.json` with declared `openclaw.extensions`; a bundle-only package does
+not satisfy that contract.
 
 The generic `prepare-marketplace` command treats the marketplace as a read-only
 baseline and writes a separate staged tree. It does not apply or publish the

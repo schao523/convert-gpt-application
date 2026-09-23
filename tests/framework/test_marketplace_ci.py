@@ -158,6 +158,57 @@ class MarketplaceCiTests(unittest.TestCase):
         self.assertNotEqual(failed.returncode, 0)
         self.assertEqual(json.loads(failed.stdout)["status"], "FAIL")
 
+    def test_generated_verifier_does_not_retrust_stale_legacy_manifest(self) -> None:
+        manifest_path = self.fixture.baseline / "openclaw/legacy/CONTENT-MANIFEST.json"
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        manifest["files"][0]["sha256"] = "0" * 64
+        manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+        prepare_marketplace(self.catalog, self.fixture.baseline, self.fixture.output)
+        completed = subprocess.run(
+            [
+                sys.executable,
+                "-B",
+                str(self.fixture.output / "tools/verify_marketplace.py"),
+                "--registry",
+                str(self.fixture.output / ".obvious-one-validation.json"),
+                "--plugin",
+                "legacy",
+                "--json",
+            ],
+            cwd=self.fixture.output,
+            capture_output=True,
+            text=True,
+        )
+
+        self.assertNotEqual(completed.returncode, 0)
+        self.assertEqual(json.loads(completed.stdout)["code"], "content_manifest_mismatch")
+
+    def test_generated_verifier_rejects_windows_drive_relative_registry_paths(self) -> None:
+        prepare_marketplace(self.catalog, self.fixture.baseline, self.fixture.output)
+        registry_path = self.fixture.output / ".obvious-one-validation.json"
+        registry = json.loads(registry_path.read_text(encoding="utf-8"))
+        registry["plugins"][1]["codex_path"] = "C:outside"
+        registry_path.write_text(json.dumps(registry), encoding="utf-8")
+
+        completed = subprocess.run(
+            [
+                sys.executable,
+                "-B",
+                str(self.fixture.output / "tools/verify_marketplace.py"),
+                "--registry",
+                str(registry_path),
+                "--plugin",
+                "modern",
+                "--json",
+            ],
+            cwd=self.fixture.output,
+            capture_output=True,
+            text=True,
+        )
+
+        self.assertNotEqual(completed.returncode, 0)
+        self.assertEqual(json.loads(completed.stdout)["code"], "registry_path_escape")
+
 
 if __name__ == "__main__":
     unittest.main()

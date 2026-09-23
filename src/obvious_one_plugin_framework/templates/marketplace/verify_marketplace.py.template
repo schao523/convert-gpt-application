@@ -5,7 +5,7 @@ from __future__ import annotations
 import argparse
 from hashlib import sha256
 import json
-from pathlib import Path
+from pathlib import Path, PurePosixPath, PureWindowsPath
 import subprocess
 import sys
 
@@ -24,10 +24,18 @@ def _result(status, code, *, diagnostics=(), evidence=None):
 
 
 def _safe(root, relative):
-    value = Path(relative)
-    if value.is_absolute():
+    if not isinstance(relative, str) or not relative:
         raise ValueError("registry_path_escape")
-    resolved = (root / value).resolve()
+    posix = PurePosixPath(relative.replace("\\", "/"))
+    windows = PureWindowsPath(relative)
+    if (
+        posix.is_absolute()
+        or windows.is_absolute()
+        or windows.drive
+        or any(part in ("", ".", "..") for part in posix.parts)
+    ):
+        raise ValueError("registry_path_escape")
+    resolved = (root / Path(*posix.parts)).resolve()
     if not resolved.is_relative_to(root.resolve()):
         raise ValueError("registry_path_escape")
     return resolved
@@ -101,8 +109,6 @@ def _verify_openclaw(root, plugin):
     )
     if sorted(by_path) != actual_paths or len(by_path) != len(records):
         raise ValueError("content_manifest_mismatch")
-    if plugin.get("mode") == "verify_existing" and schema in (1, 2):
-        return
     actual = [_file_record(root / path, root, by_path[path]) for path in actual_paths]
     identity = json.dumps(actual, ensure_ascii=False, separators=(",", ":"), sort_keys=True).encode("utf-8")
     expected = {
@@ -140,6 +146,35 @@ def _run_commands(plugin, codex, openclaw):
             raise ValueError("marketplace_command_failed")
 
 
+def _verify_clawhub(root, plugin):
+    clawhub = plugin.get("clawhub", {})
+    state = clawhub.get("state")
+    if state == "NOT APPLICABLE":
+        return
+    if state != "CONFIGURED" or clawhub.get("family") != "native-plugin":
+        raise ValueError("clawhub_contract_invalid")
+    relative = clawhub.get("native_manifest")
+    if relative != "openclaw.plugin.json":
+        raise ValueError("clawhub_native_manifest_invalid")
+    manifest = _load(_safe(root, relative))
+    if manifest.get("id") != plugin["plugin_id"]:
+        raise ValueError("clawhub_native_manifest_invalid")
+    schema = manifest.get("configSchema")
+    if not isinstance(schema, dict) or schema.get("type") != "object":
+        raise ValueError("clawhub_native_manifest_invalid")
+    package = _load(root / "package.json")
+    openclaw = package.get("openclaw")
+    extensions = openclaw.get("extensions") if isinstance(openclaw, dict) else None
+    if not isinstance(extensions, list) or not extensions:
+        raise ValueError("clawhub_native_manifest_invalid")
+    for extension in extensions:
+        if not isinstance(extension, str):
+            raise ValueError("clawhub_native_manifest_invalid")
+        normalized = extension[2:] if extension.startswith("./") else extension
+        if not _safe(root, normalized).is_file():
+            raise ValueError("clawhub_native_manifest_invalid")
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser()
     parser.add_argument("--registry", required=True, type=Path)
@@ -163,8 +198,7 @@ def main(argv=None):
         _verify_exact_artifact(openclaw, artifacts.get("openclaw", {}))
         _verify_codex(codex, plugin)
         _verify_openclaw(openclaw, plugin)
-        if plugin.get("clawhub", {}).get("state") == "FAIL":
-            raise ValueError("clawhub_contract_invalid")
+        _verify_clawhub(openclaw, plugin)
         _run_commands(plugin, codex, openclaw)
         result = _result(
             "PASS", "marketplace_verified",

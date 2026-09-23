@@ -60,6 +60,24 @@ class GitEvidenceTests(unittest.TestCase):
         self.assertIn("index_blob_mismatch", report.codes)
         self.assertIn("working_tree_mismatch", report.codes)
 
+    def test_commit_path_set_detects_staged_deletion(self) -> None:
+        path = self.repo / "plugins/demo/space 名稱.txt"
+        path.unlink()
+        _git(self.repo, "add", "--", "plugins/demo/space 名稱.txt")
+
+        report = verify_git_evidence(self.repo, SCOPES, commit="HEAD")
+
+        self.assertEqual(report.status, "FAIL")
+        self.assertIn("index_blob_mismatch", report.codes)
+
+    def test_nonexistent_commit_fails_even_for_empty_scope(self) -> None:
+        report = verify_git_evidence(
+            self.repo, ("plugins/not-present",), commit="does-not-exist"
+        )
+
+        self.assertEqual(report.status, "FAIL")
+        self.assertIn("commit_not_found", report.codes)
+
     def test_untracked_missing_attribute_and_incomplete_index_are_reported(self) -> None:
         tracked = "openclaw/demo/CONTENT-MANIFEST.json"
         initial_branch = _git(self.repo, "branch", "--show-current").stdout.strip()

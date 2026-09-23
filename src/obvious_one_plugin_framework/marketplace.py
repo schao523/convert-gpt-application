@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from hashlib import sha256
 import json
 import os
-from pathlib import Path, PurePosixPath
+from pathlib import Path, PurePosixPath, PureWindowsPath
 import shutil
 import subprocess
 import sys
@@ -100,9 +100,10 @@ def load_preparation_catalog(path: Path, repository_root: Path) -> PreparationCa
             raise MarketplaceError("duplicate_marketplace_application", application.application_id)
         identities.add(application.application_id)
         for destination in (codex_destination, openclaw_destination):
-            if destination in destinations:
+            identity = destination.casefold()
+            if identity in destinations:
                 raise MarketplaceError("duplicate_marketplace_destination", destination)
-            destinations.add(destination)
+            destinations.add(identity)
         entries.append(
             PreparationEntry(
                 application,
@@ -188,28 +189,33 @@ def verify_marketplace(
     }
     diagnostics = []
     for entry in catalog.applications:
-        completed = subprocess.run(
-            [
-                sys.executable,
-                "-B",
-                str(verifier),
-                "--registry",
-                str(registry_path),
-                "--plugin",
-                entry.application.plugin_id,
-                "--json",
-            ],
-            cwd=root,
-            stdin=subprocess.DEVNULL,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            text=True,
-            encoding="utf-8",
-            errors="replace",
-            shell=False,
-            timeout=180,
-            check=False,
-        )
+        try:
+            completed = subprocess.run(
+                [
+                    sys.executable,
+                    "-B",
+                    str(verifier),
+                    "--registry",
+                    str(registry_path),
+                    "--plugin",
+                    entry.application.plugin_id,
+                    "--json",
+                ],
+                cwd=root,
+                stdin=subprocess.DEVNULL,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+                encoding="utf-8",
+                errors="replace",
+                shell=False,
+                timeout=180,
+                check=False,
+            )
+        except subprocess.TimeoutExpired:
+            gates["filesystem"] = "FAIL"
+            diagnostics.append(entry.application.plugin_id)
+            continue
         if completed.returncode != 0:
             gates["filesystem"] = "FAIL"
             diagnostics.append(entry.application.plugin_id)
@@ -224,19 +230,33 @@ def verify_marketplace(
             for destination in (entry.codex_destination, entry.openclaw_destination)
         )
         reference = "HEAD" if fresh_checkout and commit is None else commit
-        report = verify_git_evidence(
-            root,
-            scopes,
-            commit=reference,
-            fresh_checkout=fresh_checkout,
-        )
-        git_codes = report.codes
-        files_checked = report.files_checked
-        gates["index"] = report.status
-        if commit is not None or fresh_checkout:
-            gates["commit"] = report.status
-        if fresh_checkout:
-            gates["fresh_checkout"] = report.status
+        try:
+            report = verify_git_evidence(
+                root,
+                scopes,
+                commit=reference,
+                fresh_checkout=fresh_checkout,
+            )
+        except subprocess.TimeoutExpired:
+            git_codes = ("git_evidence_timeout",)
+            report = None
+        except ValueError:
+            git_codes = ("git_evidence_command_failed",)
+            report = None
+        if report is None:
+            gates["index"] = "FAIL"
+            if commit is not None or fresh_checkout:
+                gates["commit"] = "FAIL"
+            if fresh_checkout:
+                gates["fresh_checkout"] = "FAIL"
+        else:
+            git_codes = report.codes
+            files_checked = report.files_checked
+            gates["index"] = report.status
+            if commit is not None or fresh_checkout:
+                gates["commit"] = report.status
+            if fresh_checkout:
+                gates["fresh_checkout"] = report.status
 
     failed = gates["filesystem"] == "FAIL" or any(
         value == "FAIL" for value in gates.values()
@@ -293,8 +313,8 @@ def _build_entry(entry: PreparationEntry, stage: Path, work: Path) -> None:
     openclaw_artifact = work / "openclaw" / entry.application.plugin_id
     build_package(entry.contract, openclaw_artifact)
     verify_package(entry.contract, openclaw_artifact)
-    _replace_destination(codex_artifact, stage / Path(entry.codex_destination))
-    _replace_destination(openclaw_artifact, stage / Path(entry.openclaw_destination))
+    _replace_destination(codex_artifact, _stage_destination(stage, entry.codex_destination))
+    _replace_destination(openclaw_artifact, _stage_destination(stage, entry.openclaw_destination))
 
 
 def _verify_existing_entry(entry: PreparationEntry, baseline: Path, stage: Path) -> None:
@@ -305,8 +325,8 @@ def _verify_existing_entry(entry: PreparationEntry, baseline: Path, stage: Path)
             stage,
             (entry.codex_destination, entry.openclaw_destination),
         )
-    codex = stage / Path(entry.codex_destination)
-    openclaw = stage / Path(entry.openclaw_destination)
+    codex = _stage_destination(stage, entry.codex_destination)
+    openclaw = _stage_destination(stage, entry.openclaw_destination)
     _check_plugin_manifest(codex, entry.application.plugin_id, entry.application.version)
     if entry.contract.schema_version == 3:
         verify_package(entry.contract, openclaw)
@@ -392,7 +412,7 @@ def _materialize_committed_destinations(
         )
         if listing.returncode != 0 or not listing.stdout:
             raise MarketplaceError("marketplace_destination_missing", destination)
-        target = stage / Path(destination)
+        target = _stage_destination(stage, destination)
         if target.exists():
             shutil.rmtree(target)
         for record in listing.stdout.split(b"\0"):
@@ -476,8 +496,8 @@ def _write_generated_controls(catalog: PreparationCatalog, stage: Path) -> None:
     for plugin in registry["plugins"]:
         entry = entries[plugin["plugin_id"]]
         plugin["artifacts"] = {
-            "codex": _artifact_identity(stage / Path(entry.codex_destination)),
-            "openclaw": _artifact_identity(stage / Path(entry.openclaw_destination)),
+            "codex": _artifact_identity(_stage_destination(stage, entry.codex_destination)),
+            "openclaw": _artifact_identity(_stage_destination(stage, entry.openclaw_destination)),
         }
     _write_json_file(stage / ".obvious-one-validation.json", registry)
     _write_text_file(stage / "tools" / "verify_marketplace.py", render_marketplace_verifier())
@@ -589,7 +609,32 @@ def _replace_tree_transactionally(stage: Path, output: Path) -> None:
 def _copy_marketplace_tree(source: Path, destination: Path) -> None:
     """Copy public marketplace content without repository-internal Git state."""
 
-    shutil.copytree(source, destination, ignore=shutil.ignore_patterns(".git"))
+    shutil.copytree(
+        source,
+        destination,
+        ignore=shutil.ignore_patterns(".git"),
+        symlinks=True,
+    )
+    _reject_links(destination)
+
+
+def _reject_links(root: Path) -> None:
+    for directory, names, files in os.walk(root, followlinks=False):
+        parent = Path(directory)
+        for name in (*names, *files):
+            candidate = parent / name
+            attributes = getattr(candidate.lstat(), "st_file_attributes", 0)
+            if candidate.is_symlink() or attributes & 0x400:
+                raise MarketplaceError(
+                    "link_forbidden", candidate.relative_to(root).as_posix()
+                )
+
+
+def _stage_destination(stage: Path, relative: str) -> Path:
+    destination = (stage / Path(relative)).resolve()
+    if not destination.is_relative_to(stage.resolve()) or destination == stage.resolve():
+        raise MarketplaceError("catalog_path_escape", relative)
+    return destination
 
 
 def _tree_files(root: Path) -> dict[str, str]:
@@ -638,7 +683,15 @@ def _within(root: Path, value: object, field: str, *, already_relative: bool = T
 def _destination(value: object, field: str) -> str:
     text = _text(value, field).replace("\\", "/")
     path = PurePosixPath(text)
-    if path.is_absolute() or ".." in path.parts or any(part in {"", "."} for part in path.parts):
+    windows = PureWindowsPath(text)
+    if (
+        text in {"", "."}
+        or path.is_absolute()
+        or windows.is_absolute()
+        or bool(windows.drive)
+        or ".." in path.parts
+        or any(part in {"", "."} for part in path.parts)
+    ):
         raise MarketplaceError("catalog_path_escape", field)
     return path.as_posix()
 
