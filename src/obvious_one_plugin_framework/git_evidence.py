@@ -57,7 +57,7 @@ def verify_git_evidence(
 
     checked_paths = tuple(sorted(set(working) | set(stage_zero)))
     attributes = _attributes(root, checked_paths)
-    if any(attributes.get(path) != "unset" for path in checked_paths):
+    if any(not _deterministic_attributes(attributes.get(path)) for path in checked_paths):
         codes.add("exact_byte_attribute_missing")
 
     if fresh_checkout:
@@ -98,16 +98,27 @@ def _working_files(root: Path, scopes: Sequence[str]) -> dict[str, Path]:
     return files
 
 
-def _attributes(root: Path, paths: Sequence[str]) -> dict[str, str]:
+def _attributes(root: Path, paths: Sequence[str]) -> dict[str, tuple[str, str]]:
     if not paths:
         return {}
-    payload = _git_bytes(root, "check-attr", "-z", "text", "--", *paths)
+    payload = _git_bytes(root, "check-attr", "-z", "text", "eol", "--", *paths)
     parts = payload.split(b"\0")
-    attributes: dict[str, str] = {}
+    raw: dict[str, dict[str, str]] = {}
     for index in range(0, len(parts) - 2, 3):
         path = parts[index].decode("utf-8", "surrogateescape")
-        attributes[path] = parts[index + 2].decode("utf-8", "replace")
-    return attributes
+        attribute = parts[index + 1].decode("ascii")
+        raw.setdefault(path, {})[attribute] = parts[index + 2].decode("utf-8", "replace")
+    return {
+        path: (values.get("text", "unspecified"), values.get("eol", "unspecified"))
+        for path, values in raw.items()
+    }
+
+
+def _deterministic_attributes(policy: tuple[str, str] | None) -> bool:
+    if policy is None:
+        return False
+    text, eol = policy
+    return text == "unset" or (text == "set" and eol in {"lf", "crlf"})
 
 
 def _show_bytes(root: Path, commit: str, path: str) -> bytes | None:

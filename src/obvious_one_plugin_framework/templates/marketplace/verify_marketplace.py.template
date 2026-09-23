@@ -46,6 +46,29 @@ def _verify_codex(root, plugin):
         raise ValueError("codex_identity_mismatch")
 
 
+def _verify_exact_artifact(root, recorded):
+    records = recorded.get("files")
+    if not isinstance(records, list):
+        raise ValueError("artifact_registry_invalid")
+    actual = []
+    for path in sorted(item for item in root.rglob("*") if item.is_file()):
+        data = path.read_bytes()
+        actual.append({
+            "path": path.relative_to(root).as_posix(),
+            "size": len(data),
+            "sha256": sha256(data).hexdigest(),
+        })
+    identity = json.dumps(actual, ensure_ascii=False, separators=(",", ":"), sort_keys=True).encode("utf-8")
+    expected = {
+        "files": actual,
+        "file_count": len(actual),
+        "total_bytes": sum(item["size"] for item in actual),
+        "content_sha256": sha256(identity).hexdigest(),
+    }
+    if any(recorded.get(key) != value for key, value in expected.items()):
+        raise ValueError("artifact_registry_mismatch")
+
+
 def _file_record(path, root, recorded):
     data = path.read_bytes()
     result = {
@@ -64,6 +87,9 @@ def _verify_openclaw(root, plugin):
     manifest = _load(manifest_path)
     if manifest.get("plugin_id") != plugin["plugin_id"] or manifest.get("version") != plugin["version"]:
         raise ValueError("openclaw_identity_mismatch")
+    schema = manifest.get("schema_version")
+    if schema not in (1, 2):
+        raise ValueError("content_manifest_invalid")
     records = manifest.get("files")
     if not isinstance(records, list):
         raise ValueError("content_manifest_invalid")
@@ -75,6 +101,8 @@ def _verify_openclaw(root, plugin):
     )
     if sorted(by_path) != actual_paths or len(by_path) != len(records):
         raise ValueError("content_manifest_mismatch")
+    if plugin.get("mode") == "verify_existing" and schema in (1, 2):
+        return
     actual = [_file_record(root / path, root, by_path[path]) for path in actual_paths]
     identity = json.dumps(actual, ensure_ascii=False, separators=(",", ":"), sort_keys=True).encode("utf-8")
     expected = {
@@ -128,6 +156,11 @@ def main(argv=None):
         root = registry_path.parent
         codex = _safe(root, plugin["codex_path"])
         openclaw = _safe(root, plugin["openclaw_path"])
+        artifacts = plugin.get("artifacts")
+        if not isinstance(artifacts, dict):
+            raise ValueError("artifact_registry_invalid")
+        _verify_exact_artifact(codex, artifacts.get("codex", {}))
+        _verify_exact_artifact(openclaw, artifacts.get("openclaw", {}))
         _verify_codex(codex, plugin)
         _verify_openclaw(openclaw, plugin)
         if plugin.get("clawhub", {}).get("state") == "FAIL":

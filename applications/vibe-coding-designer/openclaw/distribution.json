@@ -16,7 +16,7 @@
     "THIRD_PARTY_NOTICES.md"
   ],
   "include_prefixes": ["docs", "scripts", "skills"],
-  "exclude_paths": [],
+  "exclude_paths": ["docs/marketplace-approved-delta.json"],
   "max_total_bytes": 2097152,
   "release_repository": "schao523/obvious-one-plugins",
   "release_tag_template": "vibe-coding-designer-v{version}",

@@ -45,7 +45,8 @@ Each invocation writes ignored logs and a combined `report.json` below a unique
 Local success with a configured but omitted marketplace comparison is not
 release-readiness evidence.
 
-Each application uses schema version 2 and owns its product commands:
+Each application configuration uses schema version 2 and owns its product
+commands:
 
 ```json
 {
@@ -67,3 +68,28 @@ Each application uses schema version 2 and owns its product commands:
 
 The full profile contract and legacy compatibility command are documented in
 `docs/PLUGIN_AND_FRAMEWORK_COMMAND_REFERENCE.md`.
+
+## Distribution contracts and local marketplace staging
+
+New package builds use distribution-contract schema v3:
+
+```json
+{
+  "schema_version": 3,
+  "content_rules": [],
+  "publication": {
+    "github_marketplace": {"enabled": true},
+    "clawhub": {"enabled": false, "family": null, "native_manifest": null}
+  }
+}
+```
+
+Both schema v1 and schema v2 remain readable legacy formats. They can be checked in
+`verify_existing` marketplace mode but cannot be rebuilt; an attempted build
+returns `legacy_contract_read_only`. Use `validate-contract` to inspect a
+contract and `migrate-contract` to create a reviewable schema-v3 proposal.
+
+The generic `prepare-marketplace` command treats the marketplace as a read-only
+baseline and writes a separate staged tree. It does not apply or publish the
+delta. Use `verify-marketplace` to inspect filesystem, Git index, commit, and
+fresh-checkout evidence before any separately approved publication action.

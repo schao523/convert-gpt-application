@@ -129,14 +129,24 @@ def prepare_marketplace(
     with TemporaryDirectory(prefix=".marketplace-", dir=output_root.parent) as temporary:
         temporary_root = Path(temporary)
         stage = temporary_root / "marketplace"
-        shutil.copytree(baseline_root, stage)
+        _copy_marketplace_tree(baseline_root, stage)
         for entry in catalog.applications:
             if entry.mode == "build":
                 _build_entry(entry, stage, temporary_root / entry.application.plugin_id)
             else:
                 _verify_existing_entry(entry, baseline_root, stage)
         _write_generated_controls(catalog, stage)
-        delta = _tree_delta(baseline_root, stage)
+        comparison = temporary_root / "comparison"
+        _copy_marketplace_tree(baseline_root, comparison)
+        if _is_git_root(baseline_root):
+            for entry in catalog.applications:
+                if entry.mode == "verify_existing":
+                    _materialize_committed_destinations(
+                        baseline_root,
+                        comparison,
+                        (entry.codex_destination, entry.openclaw_destination),
+                    )
+        delta = _tree_delta(comparison, stage)
         aggregate, total_bytes = _tree_identity(stage)
         _replace_tree_transactionally(stage, output_root)
     return OperationResult(
@@ -207,7 +217,7 @@ def verify_marketplace(
     git_codes: tuple[str, ...] = ()
     files_checked = 0
     requested_git = check_index or commit is not None or fresh_checkout
-    if gates["filesystem"] == "PASS" and requested_git:
+    if requested_git:
         scopes = tuple(
             destination
             for entry in catalog.applications
@@ -288,14 +298,125 @@ def _build_entry(entry: PreparationEntry, stage: Path, work: Path) -> None:
 
 
 def _verify_existing_entry(entry: PreparationEntry, baseline: Path, stage: Path) -> None:
-    codex = baseline / Path(entry.codex_destination)
-    openclaw = baseline / Path(entry.openclaw_destination)
+    committed = _is_git_root(baseline)
+    if committed:
+        _materialize_committed_destinations(
+            baseline,
+            stage,
+            (entry.codex_destination, entry.openclaw_destination),
+        )
+    codex = stage / Path(entry.codex_destination)
+    openclaw = stage / Path(entry.openclaw_destination)
     _check_plugin_manifest(codex, entry.application.plugin_id, entry.application.version)
-    verify_package(entry.contract, openclaw)
-    if _tree_files(codex) != _tree_files(stage / Path(entry.codex_destination)):
-        raise MarketplaceError("verify_existing_mutated", entry.application.plugin_id)
-    if _tree_files(openclaw) != _tree_files(stage / Path(entry.openclaw_destination)):
-        raise MarketplaceError("verify_existing_mutated", entry.application.plugin_id)
+    if entry.contract.schema_version == 3:
+        verify_package(entry.contract, openclaw)
+    else:
+        _check_legacy_content_manifest(
+            openclaw,
+            entry.application.plugin_id,
+            entry.application.version,
+        )
+    if not committed:
+        if _tree_files(baseline / Path(entry.codex_destination)) != _tree_files(codex):
+            raise MarketplaceError("verify_existing_mutated", entry.application.plugin_id)
+        if _tree_files(baseline / Path(entry.openclaw_destination)) != _tree_files(openclaw):
+            raise MarketplaceError("verify_existing_mutated", entry.application.plugin_id)
+
+
+def _check_legacy_content_manifest(root: Path, plugin_id: str, version: str) -> None:
+    manifest_path = root / "CONTENT-MANIFEST.json"
+    try:
+        payload = json.loads(manifest_path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeError, json.JSONDecodeError) as exc:
+        raise MarketplaceError("content_manifest_invalid", plugin_id) from exc
+    if payload.get("schema_version") not in {1, 2}:
+        raise MarketplaceError("content_manifest_invalid", plugin_id)
+    if payload.get("plugin_id") != plugin_id or payload.get("version") != version:
+        raise MarketplaceError("openclaw_identity_mismatch", plugin_id)
+    records = payload.get("files")
+    if not isinstance(records, list):
+        raise MarketplaceError("content_manifest_invalid", plugin_id)
+    paths = []
+    for record in records:
+        if not isinstance(record, dict) or not isinstance(record.get("path"), str):
+            raise MarketplaceError("content_manifest_invalid", plugin_id)
+        paths.append(_destination(record["path"], "content_manifest_path"))
+    actual = sorted(
+        path.relative_to(root).as_posix()
+        for path in root.rglob("*")
+        if path.is_file() and path != manifest_path
+    )
+    if len(paths) != len(set(paths)) or sorted(paths) != actual:
+        raise MarketplaceError("content_manifest_mismatch", plugin_id)
+
+
+def _is_git_root(path: Path) -> bool:
+    completed = subprocess.run(
+        ["git", "rev-parse", "--show-toplevel"],
+        cwd=path,
+        shell=False,
+        check=False,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+    )
+    if completed.returncode != 0:
+        return False
+    return Path(completed.stdout.strip()).resolve() == path.resolve()
+
+
+def _materialize_committed_destinations(
+    baseline: Path,
+    stage: Path,
+    destinations: tuple[str, ...],
+) -> None:
+    status = subprocess.run(
+        ["git", "status", "--porcelain=v1", "--untracked-files=all", "--", *destinations],
+        cwd=baseline,
+        shell=False,
+        check=False,
+        capture_output=True,
+    )
+    if status.returncode != 0:
+        raise MarketplaceError("git_evidence_command_failed")
+    if status.stdout:
+        raise MarketplaceError("verify_existing_dirty")
+    for destination in destinations:
+        listing = subprocess.run(
+            ["git", "ls-tree", "-r", "-z", "HEAD", "--", destination],
+            cwd=baseline,
+            shell=False,
+            check=False,
+            capture_output=True,
+        )
+        if listing.returncode != 0 or not listing.stdout:
+            raise MarketplaceError("marketplace_destination_missing", destination)
+        target = stage / Path(destination)
+        if target.exists():
+            shutil.rmtree(target)
+        for record in listing.stdout.split(b"\0"):
+            if not record:
+                continue
+            metadata, raw_path = record.split(b"\t", 1)
+            mode, kind, oid = metadata.decode("ascii").split(" ")
+            relative = raw_path.decode("utf-8", "surrogateescape")
+            if kind != "blob" or mode == "120000":
+                raise MarketplaceError("link_forbidden", relative)
+            output = (stage / Path(relative)).resolve()
+            if not output.is_relative_to(target.resolve()):
+                raise MarketplaceError("catalog_path_escape", relative)
+            blob = subprocess.run(
+                ["git", "cat-file", "blob", oid],
+                cwd=baseline,
+                shell=False,
+                check=False,
+                capture_output=True,
+            )
+            if blob.returncode != 0:
+                raise MarketplaceError("git_evidence_command_failed")
+            output.parent.mkdir(parents=True, exist_ok=True)
+            output.write_bytes(blob.stdout)
 
 
 def _check_plugin_manifest(root: Path, plugin_id: str, version: str) -> None:
@@ -351,6 +472,13 @@ def _write_generated_controls(catalog: PreparationCatalog, stage: Path) -> None:
         _write_json_file(openclaw_path, openclaw_catalog)
 
     registry = build_validation_registry(codex_catalog, openclaw_catalog, catalog)
+    entries = {entry.application.plugin_id: entry for entry in catalog.applications}
+    for plugin in registry["plugins"]:
+        entry = entries[plugin["plugin_id"]]
+        plugin["artifacts"] = {
+            "codex": _artifact_identity(stage / Path(entry.codex_destination)),
+            "openclaw": _artifact_identity(stage / Path(entry.openclaw_destination)),
+        }
     _write_json_file(stage / ".obvious-one-validation.json", registry)
     _write_text_file(stage / "tools" / "verify_marketplace.py", render_marketplace_verifier())
     _write_text_file(stage / ".github" / "workflows" / "validate.yml", render_validation_workflow())
@@ -390,17 +518,49 @@ def _write_json_file(path: Path, value: object) -> None:
     )
 
 
+def _artifact_identity(root: Path) -> dict[str, object]:
+    records = []
+    for path in sorted(root.rglob("*")):
+        if path.is_file():
+            data = path.read_bytes()
+            records.append(
+                {
+                    "path": path.relative_to(root).as_posix(),
+                    "size": len(data),
+                    "sha256": sha256(data).hexdigest(),
+                }
+            )
+    identity = json.dumps(
+        records, ensure_ascii=False, separators=(",", ":"), sort_keys=True
+    ).encode("utf-8")
+    return {
+        "content_sha256": sha256(identity).hexdigest(),
+        "file_count": len(records),
+        "total_bytes": sum(record["size"] for record in records),
+        "files": records,
+    }
+
+
 def _write_text_file(path: Path, value: str) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_bytes(value.replace("\r\n", "\n").replace("\r", "\n").encode("utf-8"))
 
 
 def _validate_separate_roots(repository: Path, baseline: Path, output: Path) -> None:
-    roots = (repository.resolve(), baseline.resolve(), output.resolve())
-    for index, left in enumerate(roots):
-        for right in roots[index + 1:]:
-            if left == right or left.is_relative_to(right) or right.is_relative_to(left):
-                raise MarketplaceError("unsafe_marketplace_path")
+    repository = repository.resolve()
+    baseline = baseline.resolve()
+    output = output.resolve()
+    if (
+        repository == baseline
+        or repository.is_relative_to(baseline)
+        or baseline.is_relative_to(repository)
+        or baseline == output
+        or baseline.is_relative_to(output)
+        or output.is_relative_to(baseline)
+        or output == repository
+        or repository.is_relative_to(output)
+    ):
+        raise MarketplaceError("unsafe_marketplace_path")
 
 
 def _replace_destination(source: Path, destination: Path) -> None:
@@ -426,13 +586,19 @@ def _replace_tree_transactionally(stage: Path, output: Path) -> None:
         shutil.rmtree(backup)
 
 
+def _copy_marketplace_tree(source: Path, destination: Path) -> None:
+    """Copy public marketplace content without repository-internal Git state."""
+
+    shutil.copytree(source, destination, ignore=shutil.ignore_patterns(".git"))
+
+
 def _tree_files(root: Path) -> dict[str, str]:
     if not root.is_dir():
         raise MarketplaceError("marketplace_destination_missing", root.name)
     return {
         path.relative_to(root).as_posix(): sha256(path.read_bytes()).hexdigest()
         for path in sorted(root.rglob("*"))
-        if path.is_file()
+        if path.is_file() and ".git" not in path.relative_to(root).parts
     }
 
 
@@ -452,7 +618,7 @@ def _tree_identity(root: Path) -> tuple[str, int]:
     records = []
     total = 0
     for path in sorted(root.rglob("*")):
-        if path.is_file():
+        if path.is_file() and ".git" not in path.relative_to(root).parts:
             data = path.read_bytes()
             total += len(data)
             records.append({"path": path.relative_to(root).as_posix(), "sha256": sha256(data).hexdigest(), "size": len(data)})

@@ -89,6 +89,15 @@ references; put deterministic operations behind tested scripts or tools.
 
 ## Conversion Workflow
 
+Framework roles are automation-neutral:
+
+- A **conversion caller** invokes the non-interactive API or CLI and supplies
+  explicit paths and approved inputs. It may be an agent, script, CI job,
+  client, or human.
+- A **decision owner** authorizes product scope, redistribution, licensing,
+  runtime targets, and publication. The framework records those decisions but
+  cannot infer legal authority or approval from caller identity.
+
 For each application:
 
 1. Preserve and hash the source inventory without copying private absolute paths.
@@ -155,9 +164,17 @@ python -B -m obvious_one_plugin_framework.cli <command> ...
 
 The supported commands are:
 
+- `validate-contract`: validate any supported distribution contract without
+  building it.
+- `migrate-contract`: write a non-destructive schema-v3 migration proposal.
 - `build-package`: build a deterministic, deny-by-default lightweight OpenClaw
   bundle from a product distribution contract.
 - `verify`: verify a generated bundle and its content manifest.
+- `prepare-marketplace`: prepare a complete delta in a separate local staging
+  root without applying or publishing it.
+- `verify-marketplace`: verify staged filesystem, index, commit, or
+  fresh-checkout evidence.
+- `report`: combine machine-readable operation results deterministically.
 - `build-assets`: create deterministic remote asset archives and their immutable
   manifest.
 - `check-index-reuse`: prove whether an existing vector index has compatible

@@ -49,6 +49,7 @@ class DistributionTests(unittest.TestCase):
         self.assertNotIn("tests", raw["include_prefixes"])
         self.assertNotIn("conversion.local.json", raw["include_files"])
         self.assertNotIn("conversion.json", raw["include_files"])
+        self.assertIn("docs/marketplace-approved-delta.json", raw["exclude_paths"])
         self.assertIsNone(raw["rag"])
 
 

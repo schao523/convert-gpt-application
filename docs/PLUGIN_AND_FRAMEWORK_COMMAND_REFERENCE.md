@@ -51,6 +51,36 @@ The product launcher pattern is reusable, but every plugin implements only the c
 
 Run these from `D:\GitHub\convert-gpt-application` after the controlled repository extraction is complete.
 
+The framework is non-interactive. A **conversion caller** supplies explicit
+inputs and may be an agent, script, CI job, client, or human. A **decision
+owner** approves product scope, rights, licensing, target runtimes, and
+publication. Caller identity is not evidence of owner approval.
+
+Validate a contract without building:
+
+```powershell
+python -B -m obvious_one_plugin_framework.cli validate-contract `
+  --contract .\applications\<plugin-id>\openclaw\distribution.json `
+  --json
+```
+
+Create a non-destructive schema-v3 migration proposal for a legacy contract:
+
+```powershell
+python -B -m obvious_one_plugin_framework.cli migrate-contract `
+  --contract .\applications\<plugin-id>\openclaw\distribution.json `
+  --output .\.tmp\<plugin-id>-schema-v3-proposal.json `
+  --json
+```
+
+New builds require distribution-contract `"schema_version": 3`. Its
+`content_rules` classify every selected file as text or binary and link an
+approved redistribution decision to a provenance file. Its `publication`
+object declares GitHub marketplace and ClawHub separately. Schema v1 and schema
+v2 are readable legacy formats only; build attempts return
+`legacy_contract_read_only`. An incomplete proposal remains `BLOCKED` until the
+decision owner resolves classifications and rights.
+
 Build deterministic remote asset archives and their immutable manifest:
 
 ```powershell
@@ -96,6 +126,50 @@ python -B -m obvious_one_plugin_framework.cli derive-index `
 ```
 
 `derive-index` preserves compatible vector blobs but rewrites application and namespace identity. It does not create a runtime-shared content index.
+
+### Local marketplace preparation and verification
+
+Preparation copies a read-only marketplace baseline to a separate staging
+root, rebuilds only schema-v3 `build` entries, and preserves legacy
+`verify_existing` entries:
+
+```powershell
+python -B -m obvious_one_plugin_framework.cli prepare-marketplace `
+  --catalog .\marketplaces\obvious-one.json `
+  --marketplace D:\GitHub\obvious-one-plugins `
+  --output .\dist\marketplace-delta\obvious-one `
+  --json
+```
+
+`prepare-marketplace` does not apply or publish the delta. It writes scoped
+rules such as `/plugins/<plugin-id>/** -text whitespace=cr-at-eol` so committed
+manifest bytes survive Windows, Linux, and macOS checkouts.
+
+Verify the staged filesystem, then optionally its Git evidence:
+
+```powershell
+python -B -m obvious_one_plugin_framework.cli verify-marketplace --catalog .\marketplaces\obvious-one.json --marketplace .\dist\marketplace-delta\obvious-one --json
+python -B -m obvious_one_plugin_framework.cli verify-marketplace --catalog .\marketplaces\obvious-one.json --marketplace .\dist\marketplace-delta\obvious-one --index --json
+python -B -m obvious_one_plugin_framework.cli verify-marketplace --catalog .\marketplaces\obvious-one.json --marketplace .\dist\marketplace-delta\obvious-one --commit HEAD --json
+python -B -m obvious_one_plugin_framework.cli verify-marketplace --catalog .\marketplaces\obvious-one.json --marketplace .\dist\marketplace-delta\obvious-one --fresh-checkout --json
+```
+
+`--index`, `--commit`, and `--fresh-checkout` are mutually exclusive. Cool
+Bible Tutor remains a legacy `verify_existing` entry in this catalog. Vibe
+Coding Designer is the schema-v3 build canary. Disabled ClawHub publication is
+`NOT APPLICABLE`, not a package failure.
+
+Every CLI command emits one result-schema-v1 JSON document. Status precedence
+is `FAIL`, `BLOCKED`, then `PASS`; exit codes are 0 for pass, 2 for blocked or
+invocation errors, 3 for verification/build failure, and 4 for local I/O or
+environment failure. Consolidate saved result documents with:
+
+```powershell
+python -B -m obvious_one_plugin_framework.cli report `
+  --inputs .\.tmp\contract.json .\.tmp\marketplace.json `
+  --output .\.tmp\readiness.json `
+  --json
+```
 
 ### Application-aware provenance
 

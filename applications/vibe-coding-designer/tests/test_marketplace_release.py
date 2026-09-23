@@ -50,6 +50,7 @@ class MarketplaceReleaseTests(unittest.TestCase):
             self.assertFalse((plugin / "tests").exists())
             self.assertFalse((plugin / "conversion.json").exists())
             self.assertFalse((plugin / "openclaw").exists())
+            self.assertFalse((plugin / "docs/marketplace-approved-delta.json").exists())
 
     def test_distribution_audit_rejects_secrets_and_user_paths(self) -> None:
         audit = load_script("distribution_audit.py")

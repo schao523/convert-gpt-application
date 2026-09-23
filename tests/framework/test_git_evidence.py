@@ -101,6 +101,20 @@ class GitEvidenceTests(unittest.TestCase):
             "/plugins/demo/** -text whitespace=cr-at-eol\n",
         )
 
+    def test_explicit_legacy_eol_policy_is_deterministic_evidence(self) -> None:
+        (self.repo / ".gitattributes").write_text(
+            "/openclaw/demo/** text eol=lf\n"
+            "/plugins/demo/** text eol=lf\n",
+            encoding="utf-8",
+            newline="\n",
+        )
+        _git(self.repo, "add", ".gitattributes")
+
+        report = verify_git_evidence(self.repo, SCOPES)
+
+        self.assertEqual(report.status, "PASS")
+        self.assertEqual(report.codes, ())
+
     def _tree(self) -> dict[str, bytes]:
         return {
             path.relative_to(self.repo).as_posix(): path.read_bytes()

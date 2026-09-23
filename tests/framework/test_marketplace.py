@@ -3,6 +3,7 @@ from __future__ import annotations
 from hashlib import sha256
 import json
 from pathlib import Path
+import subprocess
 import tempfile
 import unittest
 
@@ -12,6 +13,7 @@ from obvious_one_plugin_framework.marketplace import (
     MarketplaceError,
     load_preparation_catalog,
     prepare_marketplace,
+    verify_marketplace,
 )
 
 
@@ -207,6 +209,92 @@ class MarketplaceTests(unittest.TestCase):
                     prepare_marketplace(catalog, baseline, output)
                 if baseline.is_dir():
                     self.assertEqual(self._tree(baseline), before)
+
+    def test_output_may_use_repository_owned_dist_root(self) -> None:
+        catalog = load_preparation_catalog(self.catalog_path, self.repository)
+        output = self.repository / "dist" / "marketplace"
+
+        result = prepare_marketplace(catalog, self.baseline, output)
+
+        self.assertEqual(result.status, "PASS")
+        self.assertTrue((output / ".obvious-one-validation.json").is_file())
+
+    def test_verify_existing_materializes_clean_committed_bytes_without_mutating_checkout(self) -> None:
+        readme = self.baseline / "openclaw" / "legacy" / "README.md"
+        payload = b"legacy\n"
+        readme.write_bytes(payload)
+        recorded_payload = b"legacy\r\n"
+        records = [
+            {
+                "path": "README.md",
+                "size": len(recorded_payload),
+                "sha256": sha256(recorded_payload).hexdigest(),
+            }
+        ]
+        identity = json.dumps(
+            records, ensure_ascii=False, separators=(",", ":"), sort_keys=True
+        ).encode()
+        _write_json(
+            readme.parent / "CONTENT-MANIFEST.json",
+            {
+                "schema_version": 1,
+                "plugin_id": "legacy",
+                "version": "1.2.3",
+                "file_count": 1,
+                "total_bytes": len(recorded_payload),
+                "content_sha256": sha256(identity).hexdigest(),
+                "files": records,
+            },
+        )
+        self.git(self.baseline, "init")
+        self.git(self.baseline, "config", "user.email", "tests@example.invalid")
+        self.git(self.baseline, "config", "user.name", "Framework Tests")
+        self.git(self.baseline, "config", "core.autocrlf", "true")
+        self.git(self.baseline, "add", ".")
+        self.git(self.baseline, "commit", "-m", "baseline")
+        readme.unlink()
+        self.git(self.baseline, "checkout", "--", "openclaw/legacy/README.md")
+        self.assertEqual(readme.read_bytes(), b"legacy\r\n")
+        catalog = load_preparation_catalog(self.catalog_path, self.repository)
+
+        result = prepare_marketplace(catalog, self.baseline, self.output)
+
+        self.assertEqual(result.status, "PASS")
+        self.assertEqual(readme.read_bytes(), b"legacy\r\n")
+        self.assertEqual(
+            (self.output / "openclaw/legacy/README.md").read_bytes(), b"legacy\n"
+        )
+        self.assertFalse((self.output / ".git").exists())
+        self.assertNotIn(
+            "openclaw/legacy/README.md", result.evidence["changed_paths"]
+        )
+
+    def test_git_gate_runs_independently_when_product_verifier_fails(self) -> None:
+        catalog = load_preparation_catalog(self.catalog_path, self.repository)
+        prepared = prepare_marketplace(catalog, self.baseline, self.output)
+        self.git(self.output, "init")
+        self.git(self.output, "config", "user.email", "tests@example.invalid")
+        self.git(self.output, "config", "user.name", "Framework Tests")
+        self.git(self.output, "add", ".")
+        clean = verify_marketplace(catalog, self.output, check_index=True)
+        (self.output / "tools/verify_marketplace.py").write_text(
+            "raise SystemExit(1)\n", encoding="utf-8", newline="\n"
+        )
+
+        result = verify_marketplace(catalog, self.output, check_index=True)
+
+        self.assertEqual(clean.artifacts[0].sha256, prepared.artifacts[0].sha256)
+        self.assertEqual(result.status, "FAIL")
+        self.assertEqual(result.evidence["gates"]["filesystem"], "FAIL")
+        self.assertEqual(result.evidence["gates"]["index"], "PASS")
+
+    @staticmethod
+    def git(root: Path, *arguments: str) -> None:
+        completed = subprocess.run(
+            ["git", *arguments], cwd=root, capture_output=True, text=True, check=False
+        )
+        if completed.returncode:
+            raise AssertionError(completed.stdout + completed.stderr)
 
     @staticmethod
     def _tree(root: Path) -> dict[str, bytes]:
