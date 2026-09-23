@@ -7,6 +7,17 @@ TEMPLATES = ROOT / "templates"
 
 
 class PublicationTemplateTests(unittest.TestCase):
+    def test_repository_ci_runs_full_suites_on_three_operating_systems(self) -> None:
+        content = (ROOT / ".github/workflows/ci.yml").read_text(encoding="utf-8")
+
+        for runner in ("windows-latest", "ubuntu-latest", "macos-latest"):
+            self.assertIn(runner, content)
+        self.assertIn("unittest discover -s . -v", content)
+        self.assertIn(
+            "unittest discover -s applications/vibe-coding-designer/tests -v",
+            content,
+        )
+
     def test_expected_publication_templates_exist(self) -> None:
         expected = {
             "github-workflows/release-openclaw.yml.template",
