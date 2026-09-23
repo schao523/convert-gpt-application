@@ -36,10 +36,16 @@ def _safe(root, relative):
         or any(part in ("", ".", "..") for part in posix.parts)
     ):
         raise ValueError("registry_path_escape")
-    resolved = (root / Path(*posix.parts)).resolve()
+    candidate = root / Path(*posix.parts)
+    current = root
+    for part in posix.parts:
+        current = current / part
+        if _path_is_link(current):
+            raise ValueError("artifact_link_forbidden")
+    resolved = candidate.resolve()
     if not resolved.is_relative_to(root.resolve()):
         raise ValueError("registry_path_escape")
-    return resolved
+    return candidate
 
 
 def _load(path):
@@ -80,16 +86,22 @@ def _verify_exact_artifact(root, recorded):
 
 
 def _reject_links(root):
-    attributes = getattr(root.lstat(), "st_file_attributes", 0)
-    if root.is_symlink() or attributes & 0x400:
+    if _path_is_link(root):
         raise ValueError("artifact_link_forbidden")
     for directory, names, files in os.walk(root, followlinks=False):
         parent = Path(directory)
         for name in (*names, *files):
             candidate = parent / name
-            attributes = getattr(candidate.lstat(), "st_file_attributes", 0)
-            if candidate.is_symlink() or attributes & 0x400:
+            if _path_is_link(candidate):
                 raise ValueError("artifact_link_forbidden")
+
+
+def _path_is_link(path):
+    try:
+        attributes = getattr(path.lstat(), "st_file_attributes", 0)
+    except FileNotFoundError:
+        return False
+    return path.is_symlink() or bool(attributes & 0x400)
 
 
 def _file_record(path, root, recorded):

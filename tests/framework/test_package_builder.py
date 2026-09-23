@@ -291,6 +291,9 @@ class PackageBuilderTests(unittest.TestCase):
         with self.assertRaisesRegex(PackageAuditError, "reserved_path_collision"):
             preflight_package(collision)
 
+        with self.assertRaisesRegex(PackageAuditError, "reserved_path_collision"):
+            preflight_package(replace(collision, rag=None))
+
     def test_legacy_manifest_remains_verifiable_without_rebuild(self) -> None:
         contract = load_contract(FIXTURES / "plugin-alpha" / "distribution.json")
         output = self.output / "legacy-existing"

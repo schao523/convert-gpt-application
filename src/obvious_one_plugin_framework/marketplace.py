@@ -749,25 +749,38 @@ def _copy_marketplace_tree(source: Path, destination: Path) -> None:
 
 
 def _reject_links(root: Path) -> None:
-    root_attributes = getattr(root.lstat(), "st_file_attributes", 0)
-    if root.is_symlink() or root_attributes & 0x400:
+    if _path_is_link(root):
         raise MarketplaceError("link_forbidden", ".")
     for directory, names, files in os.walk(root, followlinks=False):
         parent = Path(directory)
         for name in (*names, *files):
             candidate = parent / name
-            attributes = getattr(candidate.lstat(), "st_file_attributes", 0)
-            if candidate.is_symlink() or attributes & 0x400:
+            if _path_is_link(candidate):
                 raise MarketplaceError(
                     "link_forbidden", candidate.relative_to(root).as_posix()
                 )
 
 
 def _stage_destination(stage: Path, relative: str) -> Path:
-    destination = (stage / Path(relative)).resolve()
-    if not destination.is_relative_to(stage.resolve()) or destination == stage.resolve():
+    stage_root = stage.resolve()
+    destination = stage_root / Path(relative)
+    current = stage_root
+    for part in Path(relative).parts:
+        current = current / part
+        if _path_is_link(current):
+            raise MarketplaceError("link_forbidden", relative)
+    resolved = destination.resolve()
+    if not resolved.is_relative_to(stage_root) or resolved == stage_root:
         raise MarketplaceError("catalog_path_escape", relative)
     return destination
+
+
+def _path_is_link(path: Path) -> bool:
+    try:
+        attributes = getattr(path.lstat(), "st_file_attributes", 0)
+    except FileNotFoundError:
+        return False
+    return path.is_symlink() or bool(attributes & 0x400)
 
 
 def _tree_files(root: Path) -> dict[str, str]:

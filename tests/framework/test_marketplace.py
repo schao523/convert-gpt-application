@@ -372,6 +372,19 @@ class MarketplaceTests(unittest.TestCase):
         self.assertEqual(result.status, "FAIL")
         self.assertEqual(result.evidence["gates"]["filesystem"], "FAIL")
 
+    def test_registry_reconstruction_rejects_linked_artifact_ancestor(self) -> None:
+        catalog = load_preparation_catalog(self.catalog_path, self.repository)
+        prepare_marketplace(catalog, self.baseline, self.output)
+
+        with patch(
+            "obvious_one_plugin_framework.marketplace._path_is_link",
+            side_effect=lambda path: path.name == "plugins",
+        ):
+            result = verify_marketplace(catalog, self.output)
+
+        self.assertEqual(result.status, "FAIL")
+        self.assertEqual(result.evidence["gates"]["filesystem"], "FAIL")
+
     def test_prepare_rejects_stale_legacy_manifest_before_replacement(self) -> None:
         manifest = self.baseline / "openclaw/legacy/CONTENT-MANIFEST.json"
         payload = json.loads(manifest.read_text(encoding="utf-8"))

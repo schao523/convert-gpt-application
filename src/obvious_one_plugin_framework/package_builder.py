@@ -374,7 +374,7 @@ def _planned_application_sources(
     for relative in planned:
         folded_relative = relative.casefold()
         runtime_root = "vendor/obvious-one-runtime"
-        runtime_collision = contract.rag is not None and (
+        runtime_collision = (
             folded_relative == runtime_root
             or folded_relative.startswith(runtime_root + "/")
             or runtime_root.startswith(folded_relative + "/")
