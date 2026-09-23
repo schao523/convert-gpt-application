@@ -42,6 +42,12 @@ rights, licensing, runtimes, and publication is the **decision owner**. A
 caller may be a coding agent, CI job, script, client, or human; the framework
 does not infer owner approval from caller identity.
 
+The generic framework runs on Python 3.11 or newer. New packages use
+distribution-contract schema v3, while older schema v1 and v2 contracts remain
+read-only legacy inputs. Every framework command returns one machine-readable
+`result-schema-v1` document so clients can distinguish `PASS`, `BLOCKED`, and
+`FAIL` without parsing conversational text.
+
 ### Decisions you may delegate to Codex
 
 You can normally accept Codex's recommendation for:
@@ -347,6 +353,12 @@ legacy artifact. `prepare-marketplace` writes a separate local tree and does
 not apply or publish the delta. `verify-marketplace` then checks the generated
 artifacts and, when requested, exact Git index, commit, and fresh-checkout
 bytes. Publication still requires separate explicit approval.
+
+The generated marketplace validation registry drives catalog-driven CI so a
+new plugin is not silently omitted from validation. Each plugin receives its
+own result and the aggregate gate fails if any required entry fails. Temporary
+Git evidence must live outside the conversion repository; do not create a
+nested Git worktree under `dist`, `.tmp`, or an application directory.
 
 ### What Codex delivers
 
@@ -707,7 +719,15 @@ explicitly approve.
 
 A GitHub repository marketplace is a distribution source that users can add to Codex. Publishing that repository does not automatically list the plugin in the universal plugin directory shared by ChatGPT and Codex.
 
-Universal-directory publication requires a separate OpenAI Platform submission, verified publisher identity, listing materials, policy attestations, and review. Ask Codex to consult the current [official OpenAI plugin submission documentation](https://developers.openai.com/plugins/deploy/submission) when you are ready for that separate process.
+Universal-directory submission requires a separate OpenAI Platform process,
+verified publisher identity, listing materials, policy attestations, and
+review. Ask Codex to consult the current [official OpenAI plugin submission documentation](https://developers.openai.com/plugins/deploy/submission)
+when you are ready for that separate process.
+
+GitHub marketplace publication, a GitHub Release or tag, ClawHub publication,
+and universal-directory submission are separate external actions. Approving
+one does not approve the others, and a plugin whose ClawHub target is disabled
+reports that channel as `NOT APPLICABLE`.
 
 ### What Codex delivers before publication
 

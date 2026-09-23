@@ -34,6 +34,27 @@ class AgentsContractTests(unittest.TestCase):
             self.assertIn(command, text)
         self.assertNotIn("invoke and follow the `convert-gpt-application` skill", text)
 
+    def test_routes_each_guide_by_task_instead_of_requiring_all_guides(self) -> None:
+        text = AGENTS.read_text(encoding="utf-8")
+        normalized = " ".join(text.split())
+        self.assertIn("owner decisions, approvals, or conversion workflow", normalized)
+        self.assertIn("designing, authoring, or reviewing skills and plugin structure", normalized)
+        self.assertIn("framework CLI, packaging, verification, or marketplace operations", normalized)
+        self.assertIn("command reference is authoritative", normalized.lower())
+
+    def test_governs_hardened_framework_contracts(self) -> None:
+        text = AGENTS.read_text(encoding="utf-8")
+        for fragment in (
+            "Python 3.11 or newer",
+            "schema v3",
+            "read-only legacy formats",
+            "result-schema-v1",
+            "catalog-driven",
+            "nested Git worktrees",
+        ):
+            with self.subTest(fragment=fragment):
+                self.assertIn(fragment, text)
+
     def test_uses_automation_neutral_conversion_roles(self) -> None:
         text = AGENTS.read_text(encoding="utf-8")
         self.assertIn("conversion caller", text)

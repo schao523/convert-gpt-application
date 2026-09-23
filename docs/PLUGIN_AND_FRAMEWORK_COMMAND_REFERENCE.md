@@ -49,7 +49,9 @@ The product launcher pattern is reusable, but every plugin implements only the c
 
 ## 3. Generic distribution-framework commands
 
-Run these from `D:\GitHub\convert-gpt-application` after the controlled repository extraction is complete.
+Run these with Python 3.11 or newer from `D:\GitHub\convert-gpt-application`
+after the controlled repository extraction is complete. The package has no
+mandatory third-party runtime dependency.
 
 The framework is non-interactive. A **conversion caller** supplies explicit
 inputs and may be an agent, script, CI job, client, or human. A **decision
@@ -91,6 +93,12 @@ object declares GitHub marketplace and ClawHub separately. Schema v1 and schema
 v2 are readable legacy formats only; build attempts return
 `legacy_contract_read_only`. An incomplete proposal remains `BLOCKED` until the
 decision owner resolves classifications and rights.
+
+Distribution-contract schema v3 and application-configuration schema v2 are
+different contracts. The former controls packaged bytes, content policy, and
+publication targets; the latter controls source provenance and repository
+verification. Do not migrate one merely because the other has a different
+schema number.
 
 When native ClawHub publication is enabled, `family` must be `native-plugin`
 and `native_manifest` must be the application-root `openclaw.plugin.json`.
@@ -171,6 +179,9 @@ When the output is inside the conversion repository it must be below `dist` or
 `.tmp`; application source, catalog inputs, and overlapping marketplace
 destinations are rejected before staging. Links and Windows reparse points are
 rejected in both copied baseline content and generated artifacts.
+Do not create a nested Git worktree anywhere below the conversion repository,
+including under `dist` or `.tmp`. Initialize disposable Git evidence in a
+separate external temporary directory or use a platform-managed worktree.
 
 Build-mode entries are added to or updated in the staged Codex and OpenClaw
 catalogs while unrelated metadata and every `verify_existing` entry are
@@ -178,13 +189,15 @@ preserved. A legacy artifact with stale paths, sizes, hashes, byte totals, or
 aggregate identity blocks preparation before the previous staged output is
 replaced.
 
-Verify the staged filesystem, then optionally its Git evidence:
+Verify the staged filesystem first. For Git modes, copy that staged tree into
+an external disposable Git repository, stage or commit it as required, and use
+that external path for the remaining commands:
 
 ```powershell
 python -B -m obvious_one_plugin_framework.cli verify-marketplace --catalog .\marketplaces\obvious-one.json --marketplace .\dist\marketplace-delta\obvious-one --json
-python -B -m obvious_one_plugin_framework.cli verify-marketplace --catalog .\marketplaces\obvious-one.json --marketplace .\dist\marketplace-delta\obvious-one --index --json
-python -B -m obvious_one_plugin_framework.cli verify-marketplace --catalog .\marketplaces\obvious-one.json --marketplace .\dist\marketplace-delta\obvious-one --commit HEAD --json
-python -B -m obvious_one_plugin_framework.cli verify-marketplace --catalog .\marketplaces\obvious-one.json --marketplace .\dist\marketplace-delta\obvious-one --fresh-checkout --json
+python -B -m obvious_one_plugin_framework.cli verify-marketplace --catalog .\marketplaces\obvious-one.json --marketplace <external-git-stage> --index --json
+python -B -m obvious_one_plugin_framework.cli verify-marketplace --catalog .\marketplaces\obvious-one.json --marketplace <external-git-stage> --commit HEAD --json
+python -B -m obvious_one_plugin_framework.cli verify-marketplace --catalog .\marketplaces\obvious-one.json --marketplace <external-git-stage> --fresh-checkout --json
 ```
 
 `--index`, `--commit`, and `--fresh-checkout` are mutually exclusive. Cool
@@ -209,6 +222,9 @@ evaluated independently from the working tree, index, and selected commit so
 an unstaged rule cannot mask missing committed policy.
 Artifact identity traversal also rejects links and reparse points before
 reading bytes, both in local orchestration and in the generated verifier.
+The generated validation registry and workflow provide catalog-driven CI: each
+registered plugin receives an independent matrix result, while an aggregate
+job fails when any required entry fails.
 
 Every CLI command emits one result-schema-v1 JSON document. Status precedence
 is `FAIL`, `BLOCKED`, then `PASS`; exit codes are 0 for pass, 2 for blocked or
@@ -303,7 +319,7 @@ That result is not release-readiness evidence. A release-readiness claim needs
 the explicitly supplied marketplace comparison and all declared application
 invariants.
 
-Application configuration uses `"schema_version": 2`. Its required
+Application-configuration schema v2 uses `"schema_version": 2`. Its required
 `provenance` object declares `source_repository`, `incorporated_branches`, and
 ordered `inventory_rules`; each rule has a safe source-relative `root`, a
 `classification`, and one or more `include` glob patterns. Its required

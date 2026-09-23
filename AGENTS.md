@@ -58,6 +58,9 @@ application identity, and namespace.
 - Put product tests, behavior fixtures, and coverage matrices below the product.
 - Keep machine-specific source paths only in ignored `conversion.local.json`.
 - Put generated and diagnostic output only below ignored `dist` or `.tmp` roots.
+- Never create or retain nested Git worktrees or `.git` metadata below the
+  repository, including below `dist` or `.tmp`; use an external managed
+  worktree when Git isolation is required.
 - Do not commit private review history, credentials, caches, undeclared models,
   or unrelated source documents.
 
@@ -73,10 +76,15 @@ Before changing a conversion:
 1. Confirm the Git root, branch, status, and relevant repository boundaries.
 2. Read the product's `conversion.json` and any approved specification or
    decision record.
-3. Read only the relevant sections of:
-   - `docs/GPT_TO_PLUGIN_USER_GUIDE.md`;
-   - `docs/PLUGIN_SKILLS_TECHNICAL_REFERENCE.md`;
-   - `docs/PLUGIN_AND_FRAMEWORK_COMMAND_REFERENCE.md`.
+3. Route documentation by the work being performed and read only the relevant
+   sections:
+   - use `docs/GPT_TO_PLUGIN_USER_GUIDE.md` for owner decisions, approvals, or
+     conversion workflow;
+   - use `docs/PLUGIN_SKILLS_TECHNICAL_REFERENCE.md` when designing, authoring,
+     or reviewing skills and plugin structure;
+   - use `docs/PLUGIN_AND_FRAMEWORK_COMMAND_REFERENCE.md` for framework CLI,
+     packaging, verification, or marketplace operations. The command reference
+     is authoritative for the current operational interface.
 4. Inventory source instructions, reference files, deterministic operations,
    dependencies, rights status, and runtime requirements.
 5. Separate source content from development-agent instructions.
@@ -156,7 +164,7 @@ Their availability is not a repository dependency and must not be assumed.
 
 ### Generic framework CLI
 
-Run from the repository root with:
+The framework requires Python 3.11 or newer. Run from the repository root with:
 
 ```powershell
 python -B -m obvious_one_plugin_framework.cli <command> ...
@@ -181,6 +189,22 @@ The supported commands are:
   text, model, embedding, and schema identities.
 - `derive-index`: copy compatible vector blobs into a new plugin-owned index
   while rebinding application and namespace identity.
+
+New distribution builds require schema v3. Distribution schema v1 and v2 are
+read-only legacy formats: they may be parsed and verified, but must be migrated
+before rebuilding. Do not confuse the distribution-contract schema with the
+separate application-configuration schema.
+
+The CLI is non-interactive and emits exactly one ASCII-safe
+`result-schema-v1` document for success, blocked work, and failure. Preserve
+the documented status and exit-code meanings in clients and CI; exit code zero
+alone is not proof of a valid artifact.
+
+Marketplace preparation and verification are catalog-driven. Treat the
+preparation catalog, reconstructed runtime catalogs, generated verifier, and
+exact Git evidence as one trust boundary. `prepare-marketplace` must stage a
+separate tree without mutating the baseline marketplace, and publication is a
+later, separately approved action.
 
 The Python package also provides distribution-contract validation, package and
 asset builders, RAG identity adapters, content-addressed cache paths, verified
