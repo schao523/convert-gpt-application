@@ -11,6 +11,7 @@ import unittest
 from unittest.mock import patch
 
 from obvious_one_plugin_framework.cli import main
+from obvious_one_plugin_framework.verification import VerificationConfigError
 from tests.framework import test_marketplace as marketplace_fixture
 
 
@@ -134,6 +135,21 @@ class FrameworkCliTests(unittest.TestCase):
         self.assertEqual(code, 4)
         self.assertEqual((payload["status"], payload["code"]), ("FAIL", "operation_timeout"))
         self.assertEqual(len(payload["diagnostics"]), 1)
+
+    def test_verification_config_error_never_exposes_absolute_path_as_code(self) -> None:
+        with patch(
+            "obvious_one_plugin_framework.cli._dispatch",
+            side_effect=VerificationConfigError(
+                "/private/work/app/conversion.json: plugin_id: invalid"
+            ),
+        ):
+            code, payload = self.invoke("validate-contract", "--contract", str(V3))
+
+        self.assertEqual(code, 2)
+        self.assertEqual(payload["status"], "FAIL")
+        self.assertEqual(payload["code"], "invalid_verification_config")
+        self.assertEqual(payload["diagnostics"][0]["path"], None)
+        self.assertNotIn("/private/", json.dumps(payload))
 
     def test_parser_error_is_a_single_result_document(self) -> None:
         code, payload = self.invoke("build-package", "--contract", str(V3))

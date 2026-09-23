@@ -94,8 +94,12 @@ and `native_manifest` must be the application-root `openclaw.plugin.json`.
 That manifest must have the contract plugin ID and an object `configSchema`.
 The application-root `package.json` must match the contract package name and
 version and declare a non-empty `openclaw.extensions` list whose files exist
-inside the application root. A bundle-only README or another arbitrary file is
-not a native manifest.
+inside the application root. The native manifest and every extension must also
+be explicitly selected and covered by approved schema-v3 content rules. The
+builder then includes those native files and writes the matching extensions
+into the generated package metadata, so the staged artifact is the artifact
+that validation checks. A bundle-only README or another arbitrary file is not
+a native manifest.
 
 Build deterministic remote asset archives and their immutable manifest:
 
@@ -160,6 +164,10 @@ python -B -m obvious_one_plugin_framework.cli prepare-marketplace `
 `prepare-marketplace` does not apply or publish the delta. It writes scoped
 rules such as `/plugins/<plugin-id>/** -text whitespace=cr-at-eol` so committed
 manifest bytes survive Windows, Linux, and macOS checkouts.
+When the output is inside the conversion repository it must be below `dist` or
+`.tmp`; application source, catalog inputs, and overlapping marketplace
+destinations are rejected before staging. Links and Windows reparse points are
+rejected in both copied baseline content and generated artifacts.
 
 Verify the staged filesystem, then optionally its Git evidence:
 

@@ -17,6 +17,7 @@ from .package_builder import PackageAuditError, build_package, preflight_package
 from .readiness_report import combine_results, write_result_transactionally
 from .release_assets import AssetBuildError, build_asset_groups, write_remote_manifest
 from .results import ArtifactRecord, Diagnostic, MutationRecord, OperationResult, result_json
+from .verification import VerificationConfigError
 
 
 BLOCKING_CODES = frozenset({
@@ -119,6 +120,9 @@ def main(argv: list[str] | None = None) -> int:
     except subprocess.TimeoutExpired:
         result = _failure(operation, "FAIL", "operation_timeout")
         exit_code = 4
+    except VerificationConfigError:
+        result = _failure(operation, "FAIL", "invalid_verification_config")
+        exit_code = 2
     except ValueError as exc:
         result = _failure(operation, "FAIL", str(exc).split(":", 1)[0] or "invalid_value")
         exit_code = 2

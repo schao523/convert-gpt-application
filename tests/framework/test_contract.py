@@ -117,6 +117,10 @@ class ContractTests(unittest.TestCase):
             )
             contract_path = root / "distribution.json"
             raw = json.loads(contract_path.read_text(encoding="utf-8"))
+            raw["include_files"].extend(["openclaw.plugin.json", "index.js"])
+            raw["content_rules"][0]["paths"].extend(
+                ["openclaw.plugin.json", "index.js"]
+            )
             raw["publication"]["clawhub"].update(
                 {
                     "enabled": True,
@@ -129,6 +133,7 @@ class ContractTests(unittest.TestCase):
             contract = load_contract(contract_path)
 
             self.assertTrue(contract.publication.clawhub.enabled)
+            self.assertEqual(contract.publication.clawhub.native_extensions, ("index.js",))
 
     def test_schema_v3_rejects_missing_provenance_file(self) -> None:
         def modify(raw: dict[str, object]) -> None:

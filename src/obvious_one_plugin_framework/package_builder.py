@@ -23,7 +23,7 @@ from .contract import DistributionContract, require_buildable_contract, validate
 
 MANIFEST_NAME = "CONTENT-MANIFEST.json"
 BOOTSTRAP_SOURCE = Path(__file__).resolve().parent / "templates" / "runtime"
-FORBIDDEN_NAMES = {".env", ".git", "__pycache__", "openclaw.plugin.json"}
+FORBIDDEN_NAMES = {".env", ".git", "__pycache__"}
 SECRET_FRAGMENTS = ("BEGIN PRIVATE KEY", "AWS_SECRET_ACCESS_KEY=", "GH_TOKEN=")
 
 
@@ -124,13 +124,18 @@ def _render_bootstrap(stage: Path) -> dict[str, ResolvedContentPolicy]:
 
 
 def _write_package_json(contract: DistributionContract, stage: Path) -> None:
+    openclaw = {"family": contract.family}
+    if contract.publication is not None and contract.publication.clawhub.enabled:
+        openclaw["extensions"] = [
+            "./" + relative for relative in contract.publication.clawhub.native_extensions
+        ]
     data = {
         "name": contract.package_name,
         "version": contract.version,
         "description": f"Generated OpenClaw bundle for {contract.plugin_id}",
         "repository": f"https://github.com/{contract.release_repository}",
         "license": "MIT",
-        "openclaw": {"family": contract.family},
+        "openclaw": openclaw,
     }
     (stage / "package.json").write_text(
         json.dumps(data, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
@@ -146,6 +151,11 @@ def _audit(stage: Path, contract: DistributionContract) -> None:
         if _is_reparse_or_symlink(candidate):
             raise PackageAuditError("link_forbidden", relative)
         if candidate.name in FORBIDDEN_NAMES:
+            raise PackageAuditError("forbidden_file", relative)
+        if (
+            candidate.name == "openclaw.plugin.json"
+            and (contract.publication is None or not contract.publication.clawhub.enabled)
+        ):
             raise PackageAuditError("forbidden_file", relative)
         if not candidate.is_file():
             continue

@@ -28,6 +28,44 @@ class PackageBuilderTests(unittest.TestCase):
     def contract(self, name: str = "plugin-v3"):
         return load_contract(FIXTURES / name / "distribution.json")
 
+    def native_contract(self):
+        root = self.output / "native-contract"
+        shutil.copytree(FIXTURES / "plugin-v3", root)
+        source = root / "source"
+        (source / "openclaw.plugin.json").write_text(
+            json.dumps(
+                {
+                    "id": "plugin-v3",
+                    "configSchema": {"type": "object", "additionalProperties": False},
+                }
+            ),
+            encoding="utf-8",
+        )
+        (source / "index.js").write_text("export default {};\n", encoding="utf-8")
+        (source / "package.json").write_text(
+            json.dumps(
+                {
+                    "name": "@obvious-one/plugin-v3",
+                    "version": "1.0.0",
+                    "openclaw": {"extensions": ["./index.js"]},
+                }
+            ),
+            encoding="utf-8",
+        )
+        contract_path = root / "distribution.json"
+        raw = json.loads(contract_path.read_text(encoding="utf-8"))
+        raw["include_files"].extend(["openclaw.plugin.json", "index.js"])
+        raw["content_rules"][0]["paths"].extend(
+            ["openclaw.plugin.json", "index.js"]
+        )
+        raw["publication"]["clawhub"] = {
+            "enabled": True,
+            "family": "native-plugin",
+            "native_manifest": "openclaw.plugin.json",
+        }
+        contract_path.write_text(json.dumps(raw), encoding="utf-8")
+        return load_contract(contract_path)
+
     def test_builder_vendors_bootstrap_into_each_plugin(self) -> None:
         result = build_package(self.contract(), self.output / "plugin-v3")
         bootstrap = result.output / "vendor/obvious-one-runtime/obvious_one_runtime/status.py"
@@ -85,6 +123,17 @@ class PackageBuilderTests(unittest.TestCase):
         self.assertEqual(package["version"], "1.0.0")
         self.assertEqual(package["openclaw"]["family"], "bundle-plugin")
         self.assertNotIn("main", package)
+
+    def test_native_clawhub_contract_builds_a_verifiable_native_artifact(self) -> None:
+        contract = self.native_contract()
+
+        result = build_package(contract, self.output / "native-package")
+        package = json.loads((result.output / "package.json").read_text(encoding="utf-8"))
+
+        self.assertTrue((result.output / "openclaw.plugin.json").is_file())
+        self.assertTrue((result.output / "index.js").is_file())
+        self.assertEqual(package["openclaw"]["extensions"], ["./index.js"])
+        self.assertEqual(verify_package(contract, result.output), result)
 
     def test_declared_product_audit_hook_is_enforced(self) -> None:
         contract = self.contract()

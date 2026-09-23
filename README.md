@@ -94,8 +94,9 @@ proposal.
 
 Native ClawHub publication is an explicit, separate contract. Enabling it
 requires an application-root `openclaw.plugin.json` plus a matching
-`package.json` with declared `openclaw.extensions`; a bundle-only package does
-not satisfy that contract.
+`package.json` with declared `openclaw.extensions`. Those native files must be
+selected and rights-classified, and the deterministic builder carries them
+into the verified output; a bundle-only package does not satisfy that contract.
 
 The generic `prepare-marketplace` command treats the marketplace as a read-only
 baseline and writes a separate staged tree. It does not apply or publish the

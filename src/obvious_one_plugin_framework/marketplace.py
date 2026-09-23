@@ -76,6 +76,7 @@ def load_preparation_catalog(path: Path, repository_root: Path) -> PreparationCa
     entries: list[PreparationEntry] = []
     identities: set[str] = set()
     destinations: set[str] = set()
+    destination_parts: list[tuple[str, ...]] = []
     for index, item in enumerate(applications_raw):
         entry = _strict_mapping(item, _ENTRY_KEYS, f"applications[{index}]")
         config_path = _within(repository, entry["application_config"], "application_config")
@@ -103,7 +104,15 @@ def load_preparation_catalog(path: Path, repository_root: Path) -> PreparationCa
             identity = destination.casefold()
             if identity in destinations:
                 raise MarketplaceError("duplicate_marketplace_destination", destination)
+            parts = tuple(part.casefold() for part in PurePosixPath(destination).parts)
+            if any(
+                parts[: len(existing)] == existing
+                or existing[: len(parts)] == parts
+                for existing in destination_parts
+            ):
+                raise MarketplaceError("overlapping_marketplace_destination", destination)
             destinations.add(identity)
+            destination_parts.append(parts)
         entries.append(
             PreparationEntry(
                 application,
@@ -581,13 +590,18 @@ def _validate_separate_roots(repository: Path, baseline: Path, output: Path) -> 
         or repository.is_relative_to(output)
     ):
         raise MarketplaceError("unsafe_marketplace_path")
+    if output.is_relative_to(repository):
+        relative = output.relative_to(repository)
+        if not relative.parts or relative.parts[0].casefold() not in {"dist", ".tmp"}:
+            raise MarketplaceError("unsafe_marketplace_path")
 
 
 def _replace_destination(source: Path, destination: Path) -> None:
+    _reject_links(source)
     if destination.exists():
         shutil.rmtree(destination)
     destination.parent.mkdir(parents=True, exist_ok=True)
-    shutil.copytree(source, destination)
+    shutil.copytree(source, destination, symlinks=True)
 
 
 def _replace_tree_transactionally(stage: Path, output: Path) -> None:
@@ -619,6 +633,9 @@ def _copy_marketplace_tree(source: Path, destination: Path) -> None:
 
 
 def _reject_links(root: Path) -> None:
+    root_attributes = getattr(root.lstat(), "st_file_attributes", 0)
+    if root.is_symlink() or root_attributes & 0x400:
+        raise MarketplaceError("link_forbidden", ".")
     for directory, names, files in os.walk(root, followlinks=False):
         parent = Path(directory)
         for name in (*names, *files):

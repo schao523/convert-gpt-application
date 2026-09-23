@@ -123,6 +123,64 @@ class MarketplaceCiTests(unittest.TestCase):
         with self.assertRaisesRegex(MarketplaceError, "clawhub_native_manifest_required"):
             build_validation_registry(codex, openclaw, plan)
 
+    def test_enabled_native_clawhub_build_passes_generated_verifier(self) -> None:
+        source = self.fixture.modern
+        (source / "openclaw.plugin.json").write_text(
+            json.dumps(
+                {
+                    "id": "modern",
+                    "configSchema": {"type": "object", "additionalProperties": False},
+                }
+            ),
+            encoding="utf-8",
+        )
+        (source / "index.js").write_text("export default {};\n", encoding="utf-8")
+        (source / "package.json").write_text(
+            json.dumps(
+                {
+                    "name": "@example/modern",
+                    "version": "1.2.3",
+                    "openclaw": {"extensions": ["./index.js"]},
+                }
+            ),
+            encoding="utf-8",
+        )
+        contract_path = source / "openclaw" / "distribution.json"
+        raw = json.loads(contract_path.read_text(encoding="utf-8"))
+        raw["include_files"].extend(["openclaw.plugin.json", "index.js"])
+        raw["content_rules"][0]["paths"].extend(
+            ["openclaw.plugin.json", "index.js"]
+        )
+        raw["publication"]["clawhub"] = {
+            "enabled": True,
+            "family": "native-plugin",
+            "native_manifest": "openclaw.plugin.json",
+        }
+        contract_path.write_text(json.dumps(raw), encoding="utf-8")
+        catalog = load_preparation_catalog(
+            self.fixture.catalog_path, self.fixture.repository
+        )
+        prepare_marketplace(catalog, self.fixture.baseline, self.fixture.output)
+
+        completed = subprocess.run(
+            [
+                sys.executable,
+                "-B",
+                str(self.fixture.output / "tools/verify_marketplace.py"),
+                "--registry",
+                str(self.fixture.output / ".obvious-one-validation.json"),
+                "--plugin",
+                "modern",
+                "--json",
+            ],
+            cwd=self.fixture.output,
+            capture_output=True,
+            text=True,
+        )
+
+        self.assertEqual(completed.returncode, 0, completed.stdout + completed.stderr)
+        self.assertEqual(json.loads(completed.stdout)["status"], "PASS")
+
     def test_packaged_verifier_template_is_loaded_from_resources(self) -> None:
         resource = files("obvious_one_plugin_framework").joinpath(
             "templates/marketplace/verify_marketplace.py.template"

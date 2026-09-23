@@ -80,6 +80,7 @@ class PublicationTarget:
     enabled: bool
     family: str | None = None
     native_manifest: str | None = None
+    native_extensions: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -238,8 +239,8 @@ def load_contract(path: Path) -> DistributionContract:
     if family != "bundle-plugin":
         raise ContractError("invalid_family", family)
     include_files = _path_list(raw["include_files"], "include_files")
-    if "openclaw.plugin.json" in include_files:
-        raise ContractError("native_marker_forbidden", "openclaw.plugin.json")
+    include_prefixes = _path_list(raw["include_prefixes"], "include_prefixes")
+    exclude_paths = _path_list(raw["exclude_paths"], "exclude_paths")
     max_total_bytes = raw["max_total_bytes"]
     if not isinstance(max_total_bytes, int) or max_total_bytes <= 0:
         raise ContractError("invalid_size_limit", "max_total_bytes")
@@ -258,6 +259,18 @@ def load_contract(path: Path) -> DistributionContract:
             package_name=package_name,
             version=version,
         )
+        if publication.clawhub.enabled:
+            required_native = (
+                publication.clawhub.native_manifest,
+                *publication.clawhub.native_extensions,
+            )
+            for relative in required_native:
+                if relative is None or not _is_selected(
+                    relative, include_files, include_prefixes, exclude_paths
+                ):
+                    raise ContractError("clawhub_native_file_not_selected", str(relative))
+        elif "openclaw.plugin.json" in include_files:
+            raise ContractError("native_marker_forbidden", "openclaw.plugin.json")
 
     contract = DistributionContract(
         schema_version=schema_version,
@@ -267,8 +280,8 @@ def load_contract(path: Path) -> DistributionContract:
         version=version,
         source_root=source_root,
         include_files=include_files,
-        include_prefixes=_path_list(raw["include_prefixes"], "include_prefixes"),
-        exclude_paths=_path_list(raw["exclude_paths"], "exclude_paths"),
+        include_prefixes=include_prefixes,
+        exclude_paths=exclude_paths,
         max_total_bytes=max_total_bytes,
         release_repository=_text(raw["release_repository"], "release_repository"),
         release_tag_template=_text(raw["release_tag_template"], "release_tag_template"),
@@ -390,7 +403,7 @@ def _parse_publication(
         )
         if not (source_root / native_manifest).is_file():
             raise ContractError("clawhub_native_manifest_missing", native_manifest)
-        _validate_native_clawhub_manifest(
+        extensions = _validate_native_clawhub_manifest(
             source_root,
             native_manifest,
             plugin_id=plugin_id,
@@ -401,6 +414,7 @@ def _parse_publication(
             enabled=True,
             family=family,
             native_manifest=native_manifest,
+            native_extensions=extensions,
         )
     return PublicationProfile(github_marketplace=github, clawhub=clawhub)
 
@@ -412,7 +426,7 @@ def _validate_native_clawhub_manifest(
     plugin_id: str,
     package_name: str,
     version: str,
-) -> None:
+) -> tuple[str, ...]:
     if native_manifest != "openclaw.plugin.json":
         raise ContractError("clawhub_native_manifest_invalid", native_manifest)
     try:
@@ -431,9 +445,28 @@ def _validate_native_clawhub_manifest(
     extensions = openclaw.get("extensions") if isinstance(openclaw, dict) else None
     if not isinstance(extensions, list) or not extensions or not all(isinstance(item, str) for item in extensions):
         raise ContractError("clawhub_native_manifest_invalid", "package.json")
+    normalized_extensions = []
     for item in extensions:
         normalized = item[2:] if item.startswith("./") else item
         relative = _relative(normalized, "package.json.openclaw.extensions")
         extension = (source_root / relative).resolve()
         if not extension.is_relative_to(source_root.resolve()) or not extension.is_file():
             raise ContractError("clawhub_native_manifest_invalid", relative)
+        normalized_extensions.append(relative)
+    if len({item.casefold() for item in normalized_extensions}) != len(normalized_extensions):
+        raise ContractError("clawhub_native_manifest_invalid", "package.json")
+    return tuple(normalized_extensions)
+
+
+def _is_selected(
+    relative: str,
+    include_files: tuple[str, ...],
+    include_prefixes: tuple[str, ...],
+    exclude_paths: tuple[str, ...],
+) -> bool:
+    if relative in exclude_paths:
+        return False
+    return relative in include_files or any(
+        relative == prefix or relative.startswith(prefix + "/")
+        for prefix in include_prefixes
+    )

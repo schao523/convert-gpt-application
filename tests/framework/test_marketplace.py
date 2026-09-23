@@ -12,6 +12,7 @@ from tests.framework.test_verification_config import _make_application, _write_j
 
 from obvious_one_plugin_framework.marketplace import (
     MarketplaceError,
+    _reject_links,
     load_preparation_catalog,
     prepare_marketplace,
     verify_marketplace,
@@ -160,6 +161,14 @@ class MarketplaceTests(unittest.TestCase):
         with self.assertRaisesRegex(MarketplaceError, "catalog_path_escape"):
             load_preparation_catalog(self.catalog_path, self.repository)
 
+    def test_ancestor_and_descendant_destinations_are_rejected(self) -> None:
+        raw = json.loads(self.catalog_path.read_text(encoding="utf-8"))
+        raw["applications"][1]["codex_destination"] = "plugins"
+        _write_json(self.catalog_path, raw)
+
+        with self.assertRaisesRegex(MarketplaceError, "overlapping_marketplace_destination"):
+            load_preparation_catalog(self.catalog_path, self.repository)
+
     def test_windows_root_dot_and_case_equivalent_destinations_are_rejected(self) -> None:
         for unsafe in ("C:/outside-target", "C:\\outside-target", "."):
             with self.subTest(destination=unsafe):
@@ -219,6 +228,8 @@ class MarketplaceTests(unittest.TestCase):
             (self.baseline, self.baseline / "nested"),
             (self.baseline, self.repository),
             (self.repository, self.output),
+            (self.baseline, self.modern),
+            (self.baseline, self.modern / "openclaw"),
         )
         for baseline, output in cases:
             with self.subTest(baseline=baseline, output=output):
@@ -227,6 +238,23 @@ class MarketplaceTests(unittest.TestCase):
                     prepare_marketplace(catalog, baseline, output)
                 if baseline.is_dir():
                     self.assertEqual(self._tree(baseline), before)
+
+    def test_generated_codex_artifact_is_checked_for_links_before_copy(self) -> None:
+        catalog = load_preparation_catalog(self.catalog_path, self.repository)
+
+        def reject_generated(root: Path) -> None:
+            if root.name == "modern" and "codex-marketplace" in root.parts:
+                raise MarketplaceError("link_forbidden", "outside-link")
+            _reject_links(root)
+
+        with patch(
+            "obvious_one_plugin_framework.marketplace._reject_links",
+            side_effect=reject_generated,
+        ):
+            with self.assertRaisesRegex(MarketplaceError, "link_forbidden"):
+                prepare_marketplace(catalog, self.baseline, self.output)
+
+        self.assertFalse(self.output.exists())
 
     def test_output_may_use_repository_owned_dist_root(self) -> None:
         catalog = load_preparation_catalog(self.catalog_path, self.repository)
