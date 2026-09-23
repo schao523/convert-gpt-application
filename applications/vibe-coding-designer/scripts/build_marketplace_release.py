@@ -45,7 +45,7 @@ def _remove_tree(path: Path) -> None:
     def retry(function, value, _error):
         os.chmod(value, stat.S_IWRITE)
         function(value)
-    shutil.rmtree(path, onexc=retry)
+    shutil.rmtree(path, onerror=retry)
 
 
 def _load_audit(source: Path):

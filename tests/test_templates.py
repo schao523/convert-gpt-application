@@ -18,6 +18,15 @@ class PublicationTemplateTests(unittest.TestCase):
             content,
         )
 
+    def test_python_311_sources_do_not_use_rmtree_onexc(self) -> None:
+        offenders = []
+        for path in ROOT.rglob("*.py"):
+            if any(part in {".git", ".tmp", "build", "dist"} for part in path.parts):
+                continue
+            if "on" + "exc=" in path.read_text(encoding="utf-8"):
+                offenders.append(path.relative_to(ROOT).as_posix())
+        self.assertEqual(offenders, [])
+
     def test_expected_publication_templates_exist(self) -> None:
         expected = {
             "github-workflows/release-openclaw.yml.template",

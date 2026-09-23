@@ -110,8 +110,9 @@ def _gate_dict(gate: GateResult) -> dict[str, object]:
 
 def _display_path(path: Path, repository_root: Path) -> str:
     resolved = Path(path).resolve()
-    if resolved.is_relative_to(repository_root):
-        return resolved.relative_to(repository_root).as_posix()
+    resolved_repository = Path(repository_root).resolve()
+    if resolved.is_relative_to(resolved_repository):
+        return resolved.relative_to(resolved_repository).as_posix()
     return resolved.name
 
 

@@ -92,7 +92,7 @@ def _remove_tree(path: Path) -> None:
     def clear_readonly_and_retry(function, value, _error):
         os.chmod(value, stat.S_IWRITE)
         function(value)
-    shutil.rmtree(path, onexc=clear_readonly_and_retry)
+    shutil.rmtree(path, onerror=clear_readonly_and_retry)
 
 
 def build_release(source: Path, destination: Path, version: str) -> ReleaseReport:
