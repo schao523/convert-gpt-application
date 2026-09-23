@@ -349,6 +349,9 @@ def _planned_application_sources(
         overlay = contract.source_root / contract.readme_overlay
         if not overlay.is_file():
             raise PackageAuditError("readme_overlay_missing", contract.readme_overlay)
+        _validate_source_file(
+            contract.source_root, overlay, contract.readme_overlay
+        )
         overlay_policy = source_policies[contract.readme_overlay]
         planned["README.md"] = (
             overlay,
@@ -369,7 +372,14 @@ def _planned_application_sources(
         )
     reserved_folded = {item.casefold() for item in reserved}
     for relative in planned:
-        if relative.casefold() in reserved_folded:
+        folded_relative = relative.casefold()
+        runtime_root = "vendor/obvious-one-runtime"
+        runtime_collision = contract.rag is not None and (
+            folded_relative == runtime_root
+            or folded_relative.startswith(runtime_root + "/")
+            or runtime_root.startswith(folded_relative + "/")
+        )
+        if folded_relative in reserved_folded or runtime_collision:
             raise PackageAuditError("reserved_path_collision", relative)
 
     folded: dict[str, str] = {}

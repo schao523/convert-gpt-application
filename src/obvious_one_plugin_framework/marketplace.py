@@ -663,6 +663,7 @@ def _write_json_file(path: Path, value: object) -> None:
 
 
 def _artifact_identity(root: Path) -> dict[str, object]:
+    _reject_links(root)
     records = []
     for path in sorted(root.rglob("*")):
         if path.is_file():

@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 from hashlib import sha256
 import json
+import os
 from pathlib import Path, PurePosixPath, PureWindowsPath
 import subprocess
 import sys
@@ -55,6 +56,7 @@ def _verify_codex(root, plugin):
 
 
 def _verify_exact_artifact(root, recorded):
+    _reject_links(root)
     records = recorded.get("files")
     if not isinstance(records, list):
         raise ValueError("artifact_registry_invalid")
@@ -75,6 +77,19 @@ def _verify_exact_artifact(root, recorded):
     }
     if any(recorded.get(key) != value for key, value in expected.items()):
         raise ValueError("artifact_registry_mismatch")
+
+
+def _reject_links(root):
+    attributes = getattr(root.lstat(), "st_file_attributes", 0)
+    if root.is_symlink() or attributes & 0x400:
+        raise ValueError("artifact_link_forbidden")
+    for directory, names, files in os.walk(root, followlinks=False):
+        parent = Path(directory)
+        for name in (*names, *files):
+            candidate = parent / name
+            attributes = getattr(candidate.lstat(), "st_file_attributes", 0)
+            if candidate.is_symlink() or attributes & 0x400:
+                raise ValueError("artifact_link_forbidden")
 
 
 def _file_record(path, root, recorded):

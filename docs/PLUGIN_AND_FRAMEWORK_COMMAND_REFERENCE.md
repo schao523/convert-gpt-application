@@ -71,6 +71,9 @@ included rule must cite an approved, non-secret redistribution decision. No
 output directory is created. Missing classification returns `BLOCKED` with the
 relative path and safe candidate classifications; missing or non-approved
 rights evidence returns `BLOCKED` with `rights_unresolved`.
+Overlay files receive the same component-by-component link confinement, and
+application files may not collide with generated metadata or any path in the
+framework-owned `vendor/obvious-one-runtime` namespace.
 
 Create a non-destructive schema-v3 migration proposal for a legacy contract:
 
@@ -204,6 +207,8 @@ framework template. It then parses exactly one result-schema-v1 document per
 plugin; exit code zero alone is never accepted as proof. Git attributes are
 evaluated independently from the working tree, index, and selected commit so
 an unstaged rule cannot mask missing committed policy.
+Artifact identity traversal also rejects links and reparse points before
+reading bytes, both in local orchestration and in the generated verifier.
 
 Every CLI command emits one result-schema-v1 JSON document. Status precedence
 is `FAIL`, `BLOCKED`, then `PASS`; exit codes are 0 for pass, 2 for blocked or

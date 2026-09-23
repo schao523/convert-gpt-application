@@ -241,6 +241,56 @@ class PackageBuilderTests(unittest.TestCase):
         with self.assertRaisesRegex(PackageAuditError, "reserved_path_collision"):
             build_package(collision, self.output / "collision-output")
 
+    def test_readme_overlay_rejects_linked_parent_component(self) -> None:
+        contract = self.contract()
+        source = self.output / "overlay-source"
+        shutil.copytree(contract.source_root, source)
+        (source / "overlay").mkdir()
+        (source / "overlay/README.md").write_text("overlay\n", encoding="utf-8")
+        overlay = replace(
+            contract,
+            source_root=source,
+            readme_overlay="overlay/README.md",
+            content_rules=contract.content_rules + (
+                ContentRule(
+                    "overlay", ("overlay/README.md",), (), "text",
+                    RedistributionEvidence("approved", "docs/source-decisions.md"),
+                ),
+            ),
+        )
+        original = __import__(
+            "obvious_one_plugin_framework.package_builder", fromlist=["_is_reparse_or_symlink"]
+        )._is_reparse_or_symlink
+
+        with patch(
+            "obvious_one_plugin_framework.package_builder._is_reparse_or_symlink",
+            side_effect=lambda path: path.name == "overlay" or original(path),
+        ):
+            with self.assertRaisesRegex(PackageAuditError, "link_forbidden"):
+                preflight_package(overlay)
+
+    def test_application_cannot_occupy_framework_runtime_namespace(self) -> None:
+        contract = self.contract()
+        source = self.output / "runtime-collision-source"
+        shutil.copytree(contract.source_root, source)
+        relative = "vendor/obvious-one-runtime/obvious_one_runtime/extra.py"
+        (source / relative).parent.mkdir(parents=True)
+        (source / relative).write_text("owned = False\n", encoding="utf-8")
+        collision = replace(
+            contract,
+            source_root=source,
+            include_files=contract.include_files + (relative,),
+            content_rules=contract.content_rules + (
+                ContentRule(
+                    "runtime-collision", (relative,), (), "text",
+                    RedistributionEvidence("approved", "docs/source-decisions.md"),
+                ),
+            ),
+        )
+
+        with self.assertRaisesRegex(PackageAuditError, "reserved_path_collision"):
+            preflight_package(collision)
+
     def test_legacy_manifest_remains_verifiable_without_rebuild(self) -> None:
         contract = load_contract(FIXTURES / "plugin-alpha" / "distribution.json")
         output = self.output / "legacy-existing"
