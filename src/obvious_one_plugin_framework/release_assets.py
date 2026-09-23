@@ -9,7 +9,7 @@ import os
 from pathlib import Path, PurePosixPath
 import zipfile
 
-from .contract import AssetGroup, DistributionContract, validate_contract
+from .contract import AssetGroup, DistributionContract, require_buildable_contract, validate_contract
 
 
 ZIP_EPOCH = (1980, 1, 1, 0, 0, 0)
@@ -108,6 +108,7 @@ def build_asset_groups(
     contract: DistributionContract,
     output_dir: Path,
 ) -> tuple[ArchiveRecord, ...]:
+    require_buildable_contract(contract)
     validate_contract(contract, contract.source_root)
     destination = Path(output_dir).resolve()
     destination.mkdir(parents=True, exist_ok=True)

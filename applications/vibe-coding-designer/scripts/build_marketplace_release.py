@@ -21,6 +21,7 @@ ROOT_FILES = {
     "THIRD_PARTY_CONTENT.md", "THIRD_PARTY_NOTICES.md",
 }
 PREFIXES = {".codex-plugin", "docs", "scripts", "skills"}
+EXCLUDED_PATHS = {"docs/marketplace-approved-delta.json"}
 
 
 class ReleaseReport(NamedTuple):
@@ -44,7 +45,7 @@ def _remove_tree(path: Path) -> None:
     def retry(function, value, _error):
         os.chmod(value, stat.S_IWRITE)
         function(value)
-    shutil.rmtree(path, onexc=retry)
+    shutil.rmtree(path, onerror=retry)
 
 
 def _load_audit(source: Path):
@@ -65,6 +66,8 @@ def _public_files(source: Path) -> list[Path]:
         if not candidate.is_file():
             continue
         relative = candidate.relative_to(source)
+        if relative.as_posix() in EXCLUDED_PATHS:
+            continue
         if relative.as_posix() in ROOT_FILES or relative.parts[0] in PREFIXES:
             if "__pycache__" not in relative.parts and candidate.suffix.lower() != ".pyc":
                 files.append(candidate)

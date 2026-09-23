@@ -20,8 +20,12 @@ class AgentsContractTests(unittest.TestCase):
     def test_routes_agents_to_repository_tools_without_a_missing_skill(self) -> None:
         text = AGENTS.read_text(encoding="utf-8")
         for command in (
+            "validate-contract",
+            "migrate-contract",
             "build-package",
             "verify",
+            "prepare-marketplace",
+            "verify-marketplace",
             "build-assets",
             "check-index-reuse",
             "derive-index",
@@ -29,6 +33,12 @@ class AgentsContractTests(unittest.TestCase):
         ):
             self.assertIn(command, text)
         self.assertNotIn("invoke and follow the `convert-gpt-application` skill", text)
+
+    def test_uses_automation_neutral_conversion_roles(self) -> None:
+        text = AGENTS.read_text(encoding="utf-8")
+        self.assertIn("conversion caller", text)
+        self.assertIn("decision owner", text)
+        self.assertNotIn("conversion maintainer", text)
 
     def test_preserves_repository_and_approval_boundaries(self) -> None:
         text = AGENTS.read_text(encoding="utf-8")

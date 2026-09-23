@@ -1,0 +1,73 @@
+{
+  "schema_version": 3,
+  "plugin_id": "plugin-v3",
+  "package_name": "@obvious-one/plugin-v3",
+  "family": "bundle-plugin",
+  "version": "1.0.0",
+  "source_root": "source",
+  "include_files": [
+    ".codex-plugin/plugin.json",
+    "README.md",
+    "assets/logo.bin",
+    "docs/source-decisions.md"
+  ],
+  "include_prefixes": [],
+  "exclude_paths": [],
+  "max_total_bytes": 1048576,
+  "release_repository": "example/plugins",
+  "release_tag_template": "plugin-v3-v{version}",
+  "readme_overlay": null,
+  "audit_hook": null,
+  "rag": {
+    "app_id": "plugin-v3",
+    "namespace": "plugin-v3:docs",
+    "runtime_lock": "runtime-lock.json",
+    "runtime_lock_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "model_manifest": "model-manifest.json",
+    "model_digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "index_manifest": "index-manifest.json",
+    "asset_groups": [
+      {
+        "name": "logo",
+        "archive_name": "plugin-v3-logo-{version}.zip",
+        "source_paths": ["assets/logo.bin"],
+        "install_subdir": "assets"
+      }
+    ]
+  },
+  "content_rules": [
+    {
+      "id": "portable-text",
+      "paths": [
+        ".codex-plugin/plugin.json",
+        "README.md"
+      ],
+      "prefixes": ["docs"],
+      "classification": "text",
+      "redistribution": {
+        "status": "approved",
+        "provenance": "docs/source-decisions.md"
+      }
+    },
+    {
+      "id": "portable-binary",
+      "paths": [],
+      "prefixes": ["assets"],
+      "classification": "binary",
+      "redistribution": {
+        "status": "approved",
+        "provenance": "docs/source-decisions.md"
+      }
+    }
+  ],
+  "publication": {
+    "github_marketplace": {
+      "enabled": true
+    },
+    "clawhub": {
+      "enabled": false,
+      "family": null,
+      "native_manifest": null
+    }
+  }
+}

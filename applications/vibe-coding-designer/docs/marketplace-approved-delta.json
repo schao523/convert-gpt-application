@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "marketplace_commit": "49237aba246857c9112809bc03eb71bf32a21c98",
+  "rationale": {
+    "digest_mismatch": "The schema-v3 distribution manifest records canonical content policy while application behavior and public content remain unchanged.",
+    "missing": "No missing marketplace files are approved.",
+    "unexpected": "Marketplace-only control files are not application artifact inputs."
+  },
+  "codex": {
+    "digest_mismatch": [],
+    "missing": [],
+    "unexpected": []
+  },
+  "openclaw": {
+    "digest_mismatch": [],
+    "missing": [],
+    "unexpected": []
+  }
+}

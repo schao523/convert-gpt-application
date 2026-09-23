@@ -1,0 +1,247 @@
+"""Self-contained validation for an Obvious One marketplace stage."""
+
+from __future__ import annotations
+
+import argparse
+from hashlib import sha256
+import json
+import os
+from pathlib import Path, PurePosixPath, PureWindowsPath
+import subprocess
+import sys
+
+
+def _result(status, code, *, diagnostics=(), evidence=None):
+    return {
+        "result_schema_version": 1,
+        "operation": "verify-marketplace",
+        "status": status,
+        "code": code,
+        "diagnostics": list(diagnostics),
+        "artifacts": [],
+        "mutations": [],
+        "evidence": evidence or {},
+    }
+
+
+def _safe(root, relative):
+    if not isinstance(relative, str) or not relative:
+        raise ValueError("registry_path_escape")
+    posix = PurePosixPath(relative.replace("\\", "/"))
+    windows = PureWindowsPath(relative)
+    if (
+        posix.is_absolute()
+        or windows.is_absolute()
+        or windows.drive
+        or any(part in ("", ".", "..") for part in posix.parts)
+    ):
+        raise ValueError("registry_path_escape")
+    candidate = root / Path(*posix.parts)
+    current = root
+    for part in posix.parts:
+        current = current / part
+        if _path_is_link(current):
+            raise ValueError("artifact_link_forbidden")
+    resolved = candidate.resolve()
+    if not resolved.is_relative_to(root.resolve()):
+        raise ValueError("registry_path_escape")
+    return candidate
+
+
+def _load(path):
+    value = json.loads(path.read_text(encoding="utf-8"))
+    if not isinstance(value, dict):
+        raise ValueError("invalid_registry")
+    return value
+
+
+def _verify_codex(root, plugin):
+    manifest = _load(root / ".codex-plugin" / "plugin.json")
+    if manifest.get("name") != plugin["plugin_id"] or manifest.get("version") != plugin["version"]:
+        raise ValueError("codex_identity_mismatch")
+
+
+def _verify_exact_artifact(root, recorded):
+    _reject_links(root)
+    records = recorded.get("files")
+    if not isinstance(records, list):
+        raise ValueError("artifact_registry_invalid")
+    actual = []
+    for path in sorted(item for item in root.rglob("*") if item.is_file()):
+        data = path.read_bytes()
+        actual.append({
+            "path": path.relative_to(root).as_posix(),
+            "size": len(data),
+            "sha256": sha256(data).hexdigest(),
+        })
+    identity = json.dumps(actual, ensure_ascii=False, separators=(",", ":"), sort_keys=True).encode("utf-8")
+    expected = {
+        "files": actual,
+        "file_count": len(actual),
+        "total_bytes": sum(item["size"] for item in actual),
+        "content_sha256": sha256(identity).hexdigest(),
+    }
+    if any(recorded.get(key) != value for key, value in expected.items()):
+        raise ValueError("artifact_registry_mismatch")
+
+
+def _reject_links(root):
+    if _path_is_link(root):
+        raise ValueError("artifact_link_forbidden")
+    for directory, names, files in os.walk(root, followlinks=False):
+        parent = Path(directory)
+        for name in (*names, *files):
+            candidate = parent / name
+            if _path_is_link(candidate):
+                raise ValueError("artifact_link_forbidden")
+
+
+def _path_is_link(path):
+    try:
+        attributes = getattr(path.lstat(), "st_file_attributes", 0)
+    except FileNotFoundError:
+        return False
+    return path.is_symlink() or bool(attributes & 0x400)
+
+
+def _file_record(path, root, recorded):
+    data = path.read_bytes()
+    result = {
+        "path": path.relative_to(root).as_posix(),
+        "size": len(data),
+        "sha256": sha256(data).hexdigest(),
+    }
+    for key in ("classification", "canonicalization"):
+        if key in recorded:
+            result[key] = recorded[key]
+    return result
+
+
+def _verify_openclaw(root, plugin):
+    manifest_path = root / "CONTENT-MANIFEST.json"
+    manifest = _load(manifest_path)
+    if manifest.get("plugin_id") != plugin["plugin_id"] or manifest.get("version") != plugin["version"]:
+        raise ValueError("openclaw_identity_mismatch")
+    schema = manifest.get("schema_version")
+    if schema not in (1, 2):
+        raise ValueError("content_manifest_invalid")
+    records = manifest.get("files")
+    if not isinstance(records, list):
+        raise ValueError("content_manifest_invalid")
+    by_path = {item.get("path"): item for item in records if isinstance(item, dict)}
+    actual_paths = sorted(
+        path.relative_to(root).as_posix()
+        for path in root.rglob("*")
+        if path.is_file() and path != manifest_path
+    )
+    if sorted(by_path) != actual_paths or len(by_path) != len(records):
+        raise ValueError("content_manifest_mismatch")
+    actual = [_file_record(root / path, root, by_path[path]) for path in actual_paths]
+    identity = json.dumps(actual, ensure_ascii=False, separators=(",", ":"), sort_keys=True).encode("utf-8")
+    expected = {
+        "files": actual,
+        "file_count": len(actual),
+        "total_bytes": sum(item["size"] for item in actual),
+        "content_sha256": sha256(identity).hexdigest(),
+    }
+    if any(manifest.get(key) != value for key, value in expected.items()):
+        raise ValueError("content_manifest_mismatch")
+
+
+def _run_commands(plugin, codex, openclaw):
+    roots = {"codex": codex, "openclaw": openclaw}
+    for command in plugin.get("commands", []):
+        artifact = command.get("artifact")
+        if artifact not in roots or not isinstance(command.get("argv"), list):
+            raise ValueError("registry_command_invalid")
+        values = {"python": sys.executable, "artifact_root": str(roots[artifact])}
+        argv = []
+        for argument in command["argv"]:
+            if not isinstance(argument, str):
+                raise ValueError("registry_command_invalid")
+            expanded = argument
+            for key, value in values.items():
+                expanded = expanded.replace("{" + key + "}", value)
+            if "{" in expanded or "}" in expanded:
+                raise ValueError("registry_command_placeholder")
+            argv.append(expanded)
+        completed = subprocess.run(
+            argv, cwd=roots[artifact], shell=False, timeout=120,
+            check=False, stdin=subprocess.DEVNULL, capture_output=True,
+        )
+        if completed.returncode != 0:
+            raise ValueError("marketplace_command_failed")
+
+
+def _verify_clawhub(root, plugin):
+    clawhub = plugin.get("clawhub", {})
+    state = clawhub.get("state")
+    if state == "NOT APPLICABLE":
+        return
+    if state != "CONFIGURED" or clawhub.get("family") != "native-plugin":
+        raise ValueError("clawhub_contract_invalid")
+    relative = clawhub.get("native_manifest")
+    if relative != "openclaw.plugin.json":
+        raise ValueError("clawhub_native_manifest_invalid")
+    manifest = _load(_safe(root, relative))
+    if manifest.get("id") != plugin["plugin_id"]:
+        raise ValueError("clawhub_native_manifest_invalid")
+    schema = manifest.get("configSchema")
+    if not isinstance(schema, dict) or schema.get("type") != "object":
+        raise ValueError("clawhub_native_manifest_invalid")
+    package = _load(root / "package.json")
+    openclaw = package.get("openclaw")
+    extensions = openclaw.get("extensions") if isinstance(openclaw, dict) else None
+    if not isinstance(extensions, list) or not extensions:
+        raise ValueError("clawhub_native_manifest_invalid")
+    for extension in extensions:
+        if not isinstance(extension, str):
+            raise ValueError("clawhub_native_manifest_invalid")
+        normalized = extension[2:] if extension.startswith("./") else extension
+        if not _safe(root, normalized).is_file():
+            raise ValueError("clawhub_native_manifest_invalid")
+
+
+def main(argv=None):
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--registry", required=True, type=Path)
+    parser.add_argument("--plugin", required=True)
+    parser.add_argument("--json", action="store_true")
+    args = parser.parse_args(argv)
+    try:
+        registry_path = args.registry.resolve()
+        registry = _load(registry_path)
+        matches = [item for item in registry.get("plugins", []) if item.get("plugin_id") == args.plugin]
+        if len(matches) != 1:
+            raise ValueError("registry_plugin_missing_or_duplicate")
+        plugin = matches[0]
+        root = registry_path.parent
+        codex = _safe(root, plugin["codex_path"])
+        openclaw = _safe(root, plugin["openclaw_path"])
+        artifacts = plugin.get("artifacts")
+        if not isinstance(artifacts, dict):
+            raise ValueError("artifact_registry_invalid")
+        _verify_exact_artifact(codex, artifacts.get("codex", {}))
+        _verify_exact_artifact(openclaw, artifacts.get("openclaw", {}))
+        _verify_codex(codex, plugin)
+        _verify_openclaw(openclaw, plugin)
+        _verify_clawhub(openclaw, plugin)
+        _run_commands(plugin, codex, openclaw)
+        result = _result(
+            "PASS", "marketplace_verified",
+            evidence={"plugin_id": args.plugin, "clawhub": plugin.get("clawhub", {}).get("state")},
+        )
+        code = 0
+    except Exception as exc:
+        error = str(exc) if str(exc) else "marketplace_verification_failed"
+        result = _result(
+            "FAIL", error,
+            diagnostics=[{"code": error, "path": None, "message": "verification failed", "candidates": []}],
+        )
+        code = 3
+    sys.stdout.write(json.dumps(result, ensure_ascii=True, indent=2, sort_keys=True) + "\n")
+    return code
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

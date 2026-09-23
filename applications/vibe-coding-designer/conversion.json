@@ -18,13 +18,18 @@
   "verification": {
     "test_directory": "tests",
     "commands": [
-      {"id": "runtime-status", "argv": ["{python}", "-B", "{application_root}/scripts/vibe_designer.py", "status", "--json"]},
+      {"id": "runtime-status", "argv": ["{python}", "-B", "{application_root}/scripts/vibe_designer.py", "status", "--json"], "marketplace_targets": ["codex", "openclaw"]},
       {"id": "design-validator", "argv": ["{python}", "-B", "{application_root}/scripts/vibe_designer.py", "validate-design", "{application_root}/tests/fixtures/cli-design-spec.md", "--json"]},
       {"id": "workflow-validator", "argv": ["{python}", "-B", "{application_root}/scripts/vibe_designer.py", "validate-workflow", "{application_root}/tests/fixtures/workflow-valid.json", "--json"]}
     ],
     "codex_build": {
       "argv": ["{python}", "-B", "{application_root}/scripts/build_marketplace_release.py", "--source", "{application_root}", "--destination", "{diagnostics}/codex-marketplace", "--version", "{version}"],
       "artifact_path": "plugins/{plugin_id}"
+    },
+    "marketplace": {
+      "codex_path": "plugins/{plugin_id}",
+      "openclaw_path": "openclaw/{plugin_id}",
+      "approved_delta": "docs/marketplace-approved-delta.json"
     }
   }
 }

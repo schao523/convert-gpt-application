@@ -5,8 +5,11 @@ from pathlib import Path
 import tempfile
 import unittest
 
+from obvious_one_plugin_framework.marketplace import load_preparation_catalog
+
 
 ROOT = Path(__file__).resolve().parents[1]
+REPOSITORY = ROOT.parents[1]
 
 
 def load_script(name: str):
@@ -19,6 +22,20 @@ def load_script(name: str):
 
 
 class MarketplaceReleaseTests(unittest.TestCase):
+    def test_obvious_one_catalog_defers_cool_migration(self) -> None:
+        catalog = load_preparation_catalog(
+            REPOSITORY / "marketplaces" / "obvious-one.json", REPOSITORY
+        )
+
+        modes = {
+            entry.application.plugin_id: entry.mode
+            for entry in catalog.applications
+        }
+        self.assertEqual(
+            modes,
+            {"cool-bible-tutor": "verify_existing", "vibe-coding-designer": "build"},
+        )
+
     def test_codex_release_is_deterministic_and_allowlisted(self) -> None:
         release = load_script("build_marketplace_release.py")
         with tempfile.TemporaryDirectory() as temp:
@@ -33,6 +50,7 @@ class MarketplaceReleaseTests(unittest.TestCase):
             self.assertFalse((plugin / "tests").exists())
             self.assertFalse((plugin / "conversion.json").exists())
             self.assertFalse((plugin / "openclaw").exists())
+            self.assertFalse((plugin / "docs/marketplace-approved-delta.json").exists())
 
     def test_distribution_audit_rejects_secrets_and_user_paths(self) -> None:
         audit = load_script("distribution_audit.py")

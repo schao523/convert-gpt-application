@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "marketplace_id": "obvious-one",
+  "applications": [
+    {
+      "application_config": "applications/cool-bible-tutor/conversion.json",
+      "distribution_contract": "applications/cool-bible-tutor/openclaw/distribution.json",
+      "codex_destination": "plugins/cool-bible-tutor",
+      "openclaw_destination": "openclaw/cool-bible-tutor",
+      "mode": "verify_existing"
+    },
+    {
+      "application_config": "applications/vibe-coding-designer/conversion.json",
+      "distribution_contract": "applications/vibe-coding-designer/openclaw/distribution.json",
+      "codex_destination": "plugins/vibe-coding-designer",
+      "openclaw_destination": "openclaw/vibe-coding-designer",
+      "mode": "build"
+    }
+  ]
+}

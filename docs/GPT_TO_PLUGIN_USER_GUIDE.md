@@ -36,6 +36,12 @@ The goal is not to copy the Custom GPT into a different folder. The goal is to p
 | Approval of the user experience | Revisions and regression testing |
 | Authorization to publish externally | Release packaging and GitHub publication |
 
+In automation-neutral terms, the person or system invoking the framework is the
+**conversion caller**. The person or organization authorized to decide scope,
+rights, licensing, runtimes, and publication is the **decision owner**. A
+caller may be a coding agent, CI job, script, client, or human; the framework
+does not infer owner approval from caller identity.
+
 ### Decisions you may delegate to Codex
 
 You can normally accept Codex's recommendation for:
@@ -322,6 +328,25 @@ python -B .\scripts\write_extraction_provenance.py `
 The shared marketplace may serve every application, but source labels,
 historical branches, asset roots, and inclusion patterns remain owned by the
 individual application configuration.
+
+New distribution builds use `"schema_version": 3`. Schema v1 and schema v2
+remain readable for legacy verification but return `legacy_contract_read_only`
+if a caller tries to rebuild them. Run `validate-contract` first. For schema v3,
+that command performs the same file-classification, canonicalization, path, and
+rights preflight needed by a build, but writes no package. If migration is
+needed, `migrate-contract` creates a deterministic proposal listing every
+unclassified file and safe candidate decisions. It never guesses rights or
+overwrites the old contract. Missing or non-approved rights evidence is
+`rights_unresolved`, not an implicit exclusion or approval. The decision owner
+reviews the proposal; a later conversion caller records the approved choices
+and validates again.
+
+Marketplace preparation is similarly non-destructive. A catalog entry uses
+`build` for an approved schema-v3 product or `verify_existing` for a published
+legacy artifact. `prepare-marketplace` writes a separate local tree and does
+not apply or publish the delta. `verify-marketplace` then checks the generated
+artifacts and, when requested, exact Git index, commit, and fresh-checkout
+bytes. Publication still requires separate explicit approval.
 
 ### What Codex delivers
 

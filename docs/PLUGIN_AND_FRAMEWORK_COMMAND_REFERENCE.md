@@ -51,6 +51,59 @@ The product launcher pattern is reusable, but every plugin implements only the c
 
 Run these from `D:\GitHub\convert-gpt-application` after the controlled repository extraction is complete.
 
+The framework is non-interactive. A **conversion caller** supplies explicit
+inputs and may be an agent, script, CI job, client, or human. A **decision
+owner** approves product scope, rights, licensing, target runtimes, and
+publication. Caller identity is not evidence of owner approval.
+
+Validate a contract without building:
+
+```powershell
+python -B -m obvious_one_plugin_framework.cli validate-contract `
+  --contract .\applications\<plugin-id>\openclaw\distribution.json `
+  --json
+```
+
+For schema-v3 inputs, validation includes a build preflight: every selected
+file must resolve to exactly one content rule, text must be valid UTF-8 under
+the declared canonicalization, links and paths must remain confined, and every
+included rule must cite an approved, non-secret redistribution decision. No
+output directory is created. Missing classification returns `BLOCKED` with the
+relative path and safe candidate classifications; missing or non-approved
+rights evidence returns `BLOCKED` with `rights_unresolved`.
+Overlay files receive the same component-by-component link confinement, and
+application files may not collide with generated metadata or any path in the
+framework-owned `vendor/obvious-one-runtime` namespace.
+
+Create a non-destructive schema-v3 migration proposal for a legacy contract:
+
+```powershell
+python -B -m obvious_one_plugin_framework.cli migrate-contract `
+  --contract .\applications\<plugin-id>\openclaw\distribution.json `
+  --output .\.tmp\<plugin-id>-schema-v3-proposal.json `
+  --json
+```
+
+New builds require distribution-contract `"schema_version": 3`. Its
+`content_rules` classify every selected file as text or binary and link an
+approved redistribution decision to a provenance file. Its `publication`
+object declares GitHub marketplace and ClawHub separately. Schema v1 and schema
+v2 are readable legacy formats only; build attempts return
+`legacy_contract_read_only`. An incomplete proposal remains `BLOCKED` until the
+decision owner resolves classifications and rights.
+
+When native ClawHub publication is enabled, `family` must be `native-plugin`
+and `native_manifest` must be the application-root `openclaw.plugin.json`.
+That manifest must have the contract plugin ID and an object `configSchema`.
+The application-root `package.json` must match the contract package name and
+version and declare a non-empty `openclaw.extensions` list whose files exist
+inside the application root. The native manifest and every extension must also
+be explicitly selected and covered by approved schema-v3 content rules. The
+builder then includes those native files and writes the matching extensions
+into the generated package metadata, so the staged artifact is the artifact
+that validation checks. A bundle-only README or another arbitrary file is not
+a native manifest.
+
 Build deterministic remote asset archives and their immutable manifest:
 
 ```powershell
@@ -96,6 +149,78 @@ python -B -m obvious_one_plugin_framework.cli derive-index `
 ```
 
 `derive-index` preserves compatible vector blobs but rewrites application and namespace identity. It does not create a runtime-shared content index.
+
+### Local marketplace preparation and verification
+
+Preparation copies a read-only marketplace baseline to a separate staging
+root, rebuilds only schema-v3 `build` entries, and preserves legacy
+`verify_existing` entries:
+
+```powershell
+python -B -m obvious_one_plugin_framework.cli prepare-marketplace `
+  --catalog .\marketplaces\obvious-one.json `
+  --marketplace D:\GitHub\obvious-one-plugins `
+  --output .\dist\marketplace-delta\obvious-one `
+  --json
+```
+
+`prepare-marketplace` does not apply or publish the delta. It writes scoped
+rules such as `/plugins/<plugin-id>/** -text whitespace=cr-at-eol` so committed
+manifest bytes survive Windows, Linux, and macOS checkouts.
+When the output is inside the conversion repository it must be below `dist` or
+`.tmp`; application source, catalog inputs, and overlapping marketplace
+destinations are rejected before staging. Links and Windows reparse points are
+rejected in both copied baseline content and generated artifacts.
+
+Build-mode entries are added to or updated in the staged Codex and OpenClaw
+catalogs while unrelated metadata and every `verify_existing` entry are
+preserved. A legacy artifact with stale paths, sizes, hashes, byte totals, or
+aggregate identity blocks preparation before the previous staged output is
+replaced.
+
+Verify the staged filesystem, then optionally its Git evidence:
+
+```powershell
+python -B -m obvious_one_plugin_framework.cli verify-marketplace --catalog .\marketplaces\obvious-one.json --marketplace .\dist\marketplace-delta\obvious-one --json
+python -B -m obvious_one_plugin_framework.cli verify-marketplace --catalog .\marketplaces\obvious-one.json --marketplace .\dist\marketplace-delta\obvious-one --index --json
+python -B -m obvious_one_plugin_framework.cli verify-marketplace --catalog .\marketplaces\obvious-one.json --marketplace .\dist\marketplace-delta\obvious-one --commit HEAD --json
+python -B -m obvious_one_plugin_framework.cli verify-marketplace --catalog .\marketplaces\obvious-one.json --marketplace .\dist\marketplace-delta\obvious-one --fresh-checkout --json
+```
+
+`--index`, `--commit`, and `--fresh-checkout` are mutually exclusive. Cool
+Bible Tutor remains a legacy `verify_existing` entry in this catalog. Vibe
+Coding Designer is the schema-v3 build canary. Disabled ClawHub publication is
+`NOT APPLICABLE`, not a package failure.
+
+`verify_existing` means byte preservation, not trust in an old manifest. The
+generated marketplace verifier recalculates every legacy manifest path, size,
+and SHA-256 value and fails on stale or line-ending-altered bytes. Commit
+verification also compares the complete scoped tree, so staged deletions and a
+missing commit cannot pass through an empty path set. Per-plugin verifier
+timeouts are reported independently and do not prevent the remaining catalog
+entries from being checked.
+
+Local verification first reconstructs the registry from the trusted
+preparation catalog and staged runtime catalogs, verifies artifact identities,
+and confirms that the staged verifier is canonically identical to the packaged
+framework template. It then parses exactly one result-schema-v1 document per
+plugin; exit code zero alone is never accepted as proof. Git attributes are
+evaluated independently from the working tree, index, and selected commit so
+an unstaged rule cannot mask missing committed policy.
+Artifact identity traversal also rejects links and reparse points before
+reading bytes, both in local orchestration and in the generated verifier.
+
+Every CLI command emits one result-schema-v1 JSON document. Status precedence
+is `FAIL`, `BLOCKED`, then `PASS`; exit codes are 0 for pass, 2 for blocked or
+invocation errors, 3 for verification/build failure, and 4 for local I/O or
+environment failure. Consolidate saved result documents with:
+
+```powershell
+python -B -m obvious_one_plugin_framework.cli report `
+  --inputs .\.tmp\contract.json .\.tmp\marketplace.json `
+  --output .\.tmp\readiness.json `
+  --json
+```
 
 ### Application-aware provenance
 

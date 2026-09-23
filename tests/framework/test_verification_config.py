@@ -140,6 +140,63 @@ class VerificationConfigTests(unittest.TestCase):
                 "plugins/{plugin_id}",
             )
             self.assertIsNone(config.verification.marketplace)
+            self.assertEqual(config.verification.commands[0].marketplace_targets, ())
+
+    def test_marketplace_command_targets_are_explicit_and_portable(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            repository = Path(temp)
+            application = _make_application(repository)
+            data = self._conversion(application)
+            command = data["verification"]["commands"][0]  # type: ignore[index]
+            command["marketplace_targets"] = ["codex", "openclaw"]
+            self._write_conversion(application, data)
+
+            config = self._load(application, repository)
+
+            self.assertEqual(
+                config.verification.commands[0].marketplace_targets,
+                ("codex", "openclaw"),
+            )
+
+    def test_marketplace_command_targets_reject_duplicates_unknown_and_dev_roots(self) -> None:
+        cases = (
+            (["codex", "codex"], ["{python}"]),
+            (["registry"], ["{python}"]),
+            (["codex"], ["{python}", "{repository_root}/script.py"]),
+            (["openclaw"], ["{python}", "{diagnostics}/script.py"]),
+        )
+        for targets, argv in cases:
+            with self.subTest(targets=targets, argv=argv), tempfile.TemporaryDirectory() as temp:
+                repository = Path(temp)
+                application = _make_application(repository)
+                data = self._conversion(application)
+                command = data["verification"]["commands"][0]  # type: ignore[index]
+                command["marketplace_targets"] = targets
+                command["argv"] = argv
+                self._write_conversion(application, data)
+
+                with self.assertRaisesRegex(ValueError, r"conversion\.json.*marketplace"):
+                    self._load(application, repository)
+
+    def test_load_application_config_path_accepts_non_repository_layout(self) -> None:
+        from obvious_one_plugin_framework.verification import load_application_config_path
+
+        with tempfile.TemporaryDirectory() as temp:
+            workspace = Path(temp)
+            conventional = _make_application(workspace, "demo")
+            relocated = workspace / "workspace" / "products" / "demo"
+            relocated.parent.mkdir(parents=True)
+            conventional.rename(relocated)
+            data = json.loads((relocated / "conversion.json").read_text(encoding="utf-8"))
+            data["source_inventory"] = "../../../docs/source.json"
+            self._write_conversion(relocated, data)
+
+            config = load_application_config_path(relocated / "conversion.json", workspace)
+
+            self.assertEqual(config.application_id, "demo")
+            self.assertEqual(config.root, relocated.resolve())
+            with self.assertRaisesRegex(ValueError, "immediate applications child"):
+                self._load(relocated, workspace)
 
     def test_missing_provenance_is_rejected(self) -> None:
         with tempfile.TemporaryDirectory() as temp:

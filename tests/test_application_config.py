@@ -32,6 +32,31 @@ class ApplicationConfigTests(unittest.TestCase):
             )
             self.assertEqual(tracked, "")
 
+    def test_real_marketplace_mappings_and_command_targets_are_explicit(self) -> None:
+        configs = {item.plugin_id: item for item in discover_applications(ROOT)}
+        vibe = configs["vibe-coding-designer"]
+        cool = configs["cool-bible-tutor"]
+
+        self.assertIsNotNone(vibe.verification.marketplace)
+        self.assertEqual(vibe.verification.marketplace.codex_path, "plugins/{plugin_id}")
+        self.assertEqual(vibe.verification.marketplace.openclaw_path, "openclaw/{plugin_id}")
+        self.assertTrue(vibe.verification.marketplace.approved_delta.is_file())
+        vibe_targets = {
+            item.command_id: item.marketplace_targets
+            for item in vibe.verification.commands
+        }
+        self.assertEqual(vibe_targets["runtime-status"], ("codex", "openclaw"))
+        self.assertEqual(vibe_targets["design-validator"], ())
+        self.assertEqual(vibe_targets["workflow-validator"], ())
+
+        cool_targets = {
+            item.command_id: item.marketplace_targets
+            for item in cool.verification.commands
+        }
+        self.assertEqual(cool_targets["distribution-audit"], ("codex", "openclaw"))
+        self.assertEqual(cool_targets["runtime-status"], ("codex", "openclaw"))
+        self.assertEqual(cool_targets["exact-passage"], ("openclaw",))
+
 
 if __name__ == "__main__":
     unittest.main()
