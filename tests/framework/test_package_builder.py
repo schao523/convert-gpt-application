@@ -7,11 +7,13 @@ from pathlib import Path
 import shutil
 import tempfile
 import unittest
+from unittest.mock import patch
 
 from obvious_one_plugin_framework.contract import ContentRule, RedistributionEvidence, load_contract
 from obvious_one_plugin_framework.package_builder import (
     PackageAuditError,
     build_package,
+    preflight_package,
     verify_package,
 )
 
@@ -190,6 +192,54 @@ class PackageBuilderTests(unittest.TestCase):
             build_package(unclassified, target)
 
         self.assertFalse(target.parent.exists())
+
+    def test_selected_file_rejects_linked_parent_component(self) -> None:
+        contract = self.contract()
+        source = self.output / "linked-source"
+        shutil.copytree(contract.source_root, source)
+        (source / "linked").mkdir()
+        (source / "linked/file.txt").write_text("outside\n", encoding="utf-8")
+        linked = replace(
+            contract,
+            source_root=source,
+            include_files=contract.include_files + ("linked/file.txt",),
+            content_rules=contract.content_rules + (
+                ContentRule(
+                    "linked-text", ("linked/file.txt",), (), "text",
+                    RedistributionEvidence("approved", "docs/source-decisions.md"),
+                ),
+            ),
+        )
+        original = __import__(
+            "obvious_one_plugin_framework.package_builder", fromlist=["_is_reparse_or_symlink"]
+        )._is_reparse_or_symlink
+
+        with patch(
+            "obvious_one_plugin_framework.package_builder._is_reparse_or_symlink",
+            side_effect=lambda path: path.name == "linked" or original(path),
+        ):
+            with self.assertRaisesRegex(PackageAuditError, "link_forbidden"):
+                preflight_package(linked)
+
+    def test_application_paths_cannot_collide_with_generated_outputs(self) -> None:
+        contract = self.contract()
+        source = self.output / "collision-source"
+        shutil.copytree(contract.source_root, source)
+        (source / "Package.json").write_text("{}\n", encoding="utf-8")
+        collision = replace(
+            contract,
+            source_root=source,
+            include_files=contract.include_files + ("Package.json",),
+            content_rules=contract.content_rules + (
+                ContentRule(
+                    "collision", ("Package.json",), (), "text",
+                    RedistributionEvidence("approved", "docs/source-decisions.md"),
+                ),
+            ),
+        )
+
+        with self.assertRaisesRegex(PackageAuditError, "reserved_path_collision"):
+            build_package(collision, self.output / "collision-output")
 
     def test_legacy_manifest_remains_verifiable_without_rebuild(self) -> None:
         contract = load_contract(FIXTURES / "plugin-alpha" / "distribution.json")

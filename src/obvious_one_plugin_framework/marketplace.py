@@ -197,7 +197,11 @@ def verify_marketplace(
         "fresh_checkout": "NOT VERIFIED",
     }
     diagnostics = []
-    for entry in catalog.applications:
+    controls_valid = _marketplace_controls_valid(catalog, root, registry_path, verifier)
+    if not controls_valid:
+        gates["filesystem"] = "FAIL"
+        diagnostics.extend(entry.application.plugin_id for entry in catalog.applications)
+    for entry in catalog.applications if controls_valid else ():
         try:
             completed = subprocess.run(
                 [
@@ -225,7 +229,20 @@ def verify_marketplace(
             gates["filesystem"] = "FAIL"
             diagnostics.append(entry.application.plugin_id)
             continue
-        if completed.returncode != 0:
+        try:
+            from .results import operation_result_from_payload
+
+            payload = json.loads(completed.stdout)
+            parsed = operation_result_from_payload(payload)
+            valid_result = (
+                not completed.stderr
+                and parsed.operation == "verify-marketplace"
+                and parsed.status == "PASS"
+                and parsed.code == "marketplace_verified"
+            )
+        except (json.JSONDecodeError, TypeError, ValueError):
+            valid_result = False
+        if completed.returncode != 0 or not valid_result:
             gates["filesystem"] = "FAIL"
             diagnostics.append(entry.application.plugin_id)
 
@@ -261,11 +278,11 @@ def verify_marketplace(
         else:
             git_codes = report.codes
             files_checked = report.files_checked
-            gates["index"] = report.status
+            gates["index"] = report.index_status
             if commit is not None or fresh_checkout:
-                gates["commit"] = report.status
+                gates["commit"] = report.commit_status
             if fresh_checkout:
-                gates["fresh_checkout"] = report.status
+                gates["fresh_checkout"] = report.fresh_checkout_status
 
     failed = gates["filesystem"] == "FAIL" or any(
         value == "FAIL" for value in gates.values()
@@ -365,17 +382,41 @@ def _check_legacy_content_manifest(root: Path, plugin_id: str, version: str) -> 
     records = payload.get("files")
     if not isinstance(records, list):
         raise MarketplaceError("content_manifest_invalid", plugin_id)
-    paths = []
+    by_path: dict[str, dict[str, object]] = {}
     for record in records:
         if not isinstance(record, dict) or not isinstance(record.get("path"), str):
             raise MarketplaceError("content_manifest_invalid", plugin_id)
-        paths.append(_destination(record["path"], "content_manifest_path"))
+        relative = _destination(record["path"], "content_manifest_path")
+        by_path[relative] = record
     actual = sorted(
         path.relative_to(root).as_posix()
         for path in root.rglob("*")
         if path.is_file() and path != manifest_path
     )
-    if len(paths) != len(set(paths)) or sorted(paths) != actual:
+    if len(by_path) != len(records) or sorted(by_path) != actual:
+        raise MarketplaceError("content_manifest_mismatch", plugin_id)
+    actual_records = []
+    for relative in actual:
+        data = (root / relative).read_bytes()
+        record: dict[str, object] = {
+            "path": relative,
+            "size": len(data),
+            "sha256": sha256(data).hexdigest(),
+        }
+        for key in ("classification", "canonicalization"):
+            if key in by_path[relative]:
+                record[key] = by_path[relative][key]
+        actual_records.append(record)
+    identity = json.dumps(
+        actual_records, ensure_ascii=False, separators=(",", ":"), sort_keys=True
+    ).encode("utf-8")
+    expected = {
+        "files": actual_records,
+        "file_count": len(actual_records),
+        "total_bytes": sum(int(item["size"]) for item in actual_records),
+        "content_sha256": sha256(identity).hexdigest(),
+    }
+    if any(payload.get(key) != value for key, value in expected.items()):
         raise MarketplaceError("content_manifest_mismatch", plugin_id)
 
 
@@ -473,7 +514,7 @@ def _write_generated_controls(catalog: PreparationCatalog, stage: Path) -> None:
         (".claude-plugin/marketplace.json", "openclaw/marketplace.json"),
     )
     if codex_path.is_file():
-        codex_catalog: object = codex_path
+        codex_catalog = _load_json_mapping(codex_path)
     else:
         codex_catalog = {
             "plugins": [
@@ -486,7 +527,7 @@ def _write_generated_controls(catalog: PreparationCatalog, stage: Path) -> None:
         }
         _write_json_file(codex_path, codex_catalog)
     if openclaw_path.is_file():
-        openclaw_catalog: object = openclaw_path
+        openclaw_catalog = _load_json_mapping(openclaw_path)
     else:
         openclaw_catalog = {
             "plugins": [
@@ -500,6 +541,62 @@ def _write_generated_controls(catalog: PreparationCatalog, stage: Path) -> None:
         }
         _write_json_file(openclaw_path, openclaw_catalog)
 
+    _update_build_catalogs(catalog, codex_catalog, openclaw_catalog)
+    _write_json_file(codex_path, codex_catalog)
+    _write_json_file(openclaw_path, openclaw_catalog)
+    registry = _expected_registry(catalog, stage, codex_catalog, openclaw_catalog)
+    _write_json_file(stage / ".obvious-one-validation.json", registry)
+    _write_text_file(stage / "tools" / "verify_marketplace.py", render_marketplace_verifier())
+    _write_text_file(stage / ".github" / "workflows" / "validate.yml", render_validation_workflow())
+    _merge_exact_byte_attributes(catalog, stage)
+
+
+def _load_json_mapping(path: Path) -> dict[str, object]:
+    try:
+        value = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeError, json.JSONDecodeError) as exc:
+        raise MarketplaceError("runtime_catalog_invalid") from exc
+    if not isinstance(value, dict):
+        raise MarketplaceError("runtime_catalog_invalid")
+    return value
+
+
+def _update_build_catalogs(
+    catalog: PreparationCatalog,
+    codex: dict[str, object],
+    openclaw: dict[str, object],
+) -> None:
+    codex_records = codex.get("plugins")
+    openclaw_records = openclaw.get("plugins")
+    if not isinstance(codex_records, list) or not isinstance(openclaw_records, list):
+        raise MarketplaceError("runtime_catalog_invalid")
+    for entry in catalog.applications:
+        if entry.mode != "build":
+            continue
+        codex_match = next((item for item in codex_records if isinstance(item, dict) and item.get("name") == entry.application.plugin_id), None)
+        if codex_match is None:
+            codex_match = {"name": entry.application.plugin_id}
+            codex_records.append(codex_match)
+        source = codex_match.get("source")
+        source = dict(source) if isinstance(source, dict) else {}
+        source["path"] = f"./{entry.codex_destination}"
+        codex_match["source"] = source
+        claw_match = next((item for item in openclaw_records if isinstance(item, dict) and item.get("name") == entry.application.plugin_id), None)
+        if claw_match is None:
+            claw_match = {"name": entry.application.plugin_id}
+            openclaw_records.append(claw_match)
+        claw_match["version"] = entry.application.version
+        claw_match["source"] = f"./{entry.openclaw_destination}"
+
+
+def _expected_registry(
+    catalog: PreparationCatalog,
+    stage: Path,
+    codex_catalog: object,
+    openclaw_catalog: object,
+) -> dict[str, object]:
+    from .marketplace_ci import build_validation_registry
+
     registry = build_validation_registry(codex_catalog, openclaw_catalog, catalog)
     entries = {entry.application.plugin_id: entry for entry in catalog.applications}
     for plugin in registry["plugins"]:
@@ -508,10 +605,28 @@ def _write_generated_controls(catalog: PreparationCatalog, stage: Path) -> None:
             "codex": _artifact_identity(_stage_destination(stage, entry.codex_destination)),
             "openclaw": _artifact_identity(_stage_destination(stage, entry.openclaw_destination)),
         }
-    _write_json_file(stage / ".obvious-one-validation.json", registry)
-    _write_text_file(stage / "tools" / "verify_marketplace.py", render_marketplace_verifier())
-    _write_text_file(stage / ".github" / "workflows" / "validate.yml", render_validation_workflow())
-    _merge_exact_byte_attributes(catalog, stage)
+    return registry
+
+
+def _marketplace_controls_valid(
+    catalog: PreparationCatalog,
+    root: Path,
+    registry_path: Path,
+    verifier: Path,
+) -> bool:
+    from .marketplace_ci import render_marketplace_verifier
+
+    try:
+        expected_verifier = render_marketplace_verifier().replace("\r\n", "\n").replace("\r", "\n")
+        observed_verifier = verifier.read_text(encoding="utf-8").replace("\r\n", "\n").replace("\r", "\n")
+        if observed_verifier != expected_verifier:
+            return False
+        codex = _load_json_mapping(_first_catalog(root, (".agents/plugins/marketplace.json", ".codex-plugin/marketplace.json")))
+        openclaw = _load_json_mapping(_first_catalog(root, (".claude-plugin/marketplace.json", "openclaw/marketplace.json")))
+        recorded = _load_json_mapping(registry_path)
+        return recorded == _expected_registry(catalog, root, codex, openclaw)
+    except (MarketplaceError, OSError, UnicodeError):
+        return False
 
 
 def _first_catalog(stage: Path, candidates: tuple[str, ...]) -> Path:

@@ -269,7 +269,7 @@ class MarketplaceTests(unittest.TestCase):
         readme = self.baseline / "openclaw" / "legacy" / "README.md"
         payload = b"legacy\n"
         readme.write_bytes(payload)
-        recorded_payload = b"legacy\r\n"
+        recorded_payload = b"legacy\n"
         records = [
             {
                 "path": "README.md",
@@ -333,6 +333,60 @@ class MarketplaceTests(unittest.TestCase):
         self.assertEqual(result.status, "FAIL")
         self.assertEqual(result.evidence["gates"]["filesystem"], "FAIL")
         self.assertEqual(result.evidence["gates"]["index"], "PASS")
+
+    def test_zero_exit_tampered_verifier_and_registry_are_not_trusted(self) -> None:
+        catalog = load_preparation_catalog(self.catalog_path, self.repository)
+        prepare_marketplace(catalog, self.baseline, self.output)
+        verifier = self.output / "tools/verify_marketplace.py"
+        verifier.write_text("raise SystemExit(0)\n", encoding="utf-8")
+
+        result = verify_marketplace(catalog, self.output)
+
+        self.assertEqual(result.status, "FAIL")
+        self.assertEqual(result.evidence["gates"]["filesystem"], "FAIL")
+
+        prepare_marketplace(catalog, self.baseline, self.output)
+        registry = self.output / ".obvious-one-validation.json"
+        payload = json.loads(registry.read_text(encoding="utf-8"))
+        payload["plugins"][0]["artifacts"]["codex"]["content_sha256"] = "0" * 64
+        _write_json(registry, payload)
+        result = verify_marketplace(catalog, self.output)
+        self.assertEqual(result.status, "FAIL")
+
+    def test_prepare_rejects_stale_legacy_manifest_before_replacement(self) -> None:
+        manifest = self.baseline / "openclaw/legacy/CONTENT-MANIFEST.json"
+        payload = json.loads(manifest.read_text(encoding="utf-8"))
+        payload["files"][0]["sha256"] = "0" * 64
+        _write_json(manifest, payload)
+        catalog = load_preparation_catalog(self.catalog_path, self.repository)
+
+        with self.assertRaisesRegex(MarketplaceError, "content_manifest_mismatch"):
+            prepare_marketplace(catalog, self.baseline, self.output)
+
+        self.assertFalse(self.output.exists())
+
+    def test_build_mode_updates_runtime_catalog_version_and_preserves_legacy(self) -> None:
+        codex_catalog = self.baseline / ".agents/plugins/marketplace.json"
+        openclaw_catalog = self.baseline / ".claude-plugin/marketplace.json"
+        _write_json(codex_catalog, {"plugins": [
+            {"name": "legacy", "source": {"path": "./plugins/legacy"}, "note": "keep"},
+            {"name": "modern", "source": {"path": "./plugins/old"}},
+        ]})
+        _write_json(openclaw_catalog, {"plugins": [
+            {"name": "legacy", "version": "1.2.3", "source": "./openclaw/legacy", "note": "keep"},
+            {"name": "modern", "version": "1.2.2", "source": "./openclaw/old"},
+        ]})
+        catalog = load_preparation_catalog(self.catalog_path, self.repository)
+
+        prepare_marketplace(catalog, self.baseline, self.output)
+
+        codex = json.loads((self.output / ".agents/plugins/marketplace.json").read_text(encoding="utf-8"))
+        openclaw = json.loads((self.output / ".claude-plugin/marketplace.json").read_text(encoding="utf-8"))
+        self.assertEqual(codex["plugins"][0]["note"], "keep")
+        self.assertEqual(codex["plugins"][1]["source"]["path"], "./plugins/modern")
+        self.assertEqual(openclaw["plugins"][0]["note"], "keep")
+        self.assertEqual(openclaw["plugins"][1]["version"], "1.2.3")
+        self.assertEqual(openclaw["plugins"][1]["source"], "./openclaw/modern")
 
     def test_verifier_timeouts_are_isolated_per_plugin(self) -> None:
         catalog = load_preparation_catalog(self.catalog_path, self.repository)

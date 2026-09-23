@@ -221,25 +221,10 @@ class MarketplaceCiTests(unittest.TestCase):
         manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
         manifest["files"][0]["sha256"] = "0" * 64
         manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
-        prepare_marketplace(self.catalog, self.fixture.baseline, self.fixture.output)
-        completed = subprocess.run(
-            [
-                sys.executable,
-                "-B",
-                str(self.fixture.output / "tools/verify_marketplace.py"),
-                "--registry",
-                str(self.fixture.output / ".obvious-one-validation.json"),
-                "--plugin",
-                "legacy",
-                "--json",
-            ],
-            cwd=self.fixture.output,
-            capture_output=True,
-            text=True,
-        )
+        with self.assertRaisesRegex(MarketplaceError, "content_manifest_mismatch"):
+            prepare_marketplace(self.catalog, self.fixture.baseline, self.fixture.output)
 
-        self.assertNotEqual(completed.returncode, 0)
-        self.assertEqual(json.loads(completed.stdout)["code"], "content_manifest_mismatch")
+        self.assertFalse(self.fixture.output.exists())
 
     def test_generated_verifier_rejects_windows_drive_relative_registry_paths(self) -> None:
         prepare_marketplace(self.catalog, self.fixture.baseline, self.fixture.output)

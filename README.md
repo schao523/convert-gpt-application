@@ -102,3 +102,7 @@ The generic `prepare-marketplace` command treats the marketplace as a read-only
 baseline and writes a separate staged tree. It does not apply or publish the
 delta. Use `verify-marketplace` to inspect filesystem, Git index, commit, and
 fresh-checkout evidence before any separately approved publication action.
+Preparation validates complete legacy manifests before replacement, and local
+verification trusts only a registry reconstructed from the catalog plus a
+verifier matching the packaged framework template—not an arbitrary staged
+script or a zero exit code.

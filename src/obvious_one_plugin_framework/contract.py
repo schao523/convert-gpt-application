@@ -350,7 +350,7 @@ def _parse_content_rules(value: Any, source_root: Path) -> tuple[ContentRule, ..
             redistribution_raw["provenance"],
             f"{label}.redistribution.provenance",
         )
-        if not (source_root / provenance).is_file():
+        if not _confined_regular_file(source_root, provenance):
             raise ContractError("rights_unresolved", provenance)
         rules.append(
             ContentRule(
@@ -401,7 +401,7 @@ def _parse_publication(
             native_manifest_raw,
             "publication.clawhub.native_manifest",
         )
-        if not (source_root / native_manifest).is_file():
+        if not _confined_regular_file(source_root, native_manifest):
             raise ContractError("clawhub_native_manifest_missing", native_manifest)
         extensions = _validate_native_clawhub_manifest(
             source_root,
@@ -450,7 +450,7 @@ def _validate_native_clawhub_manifest(
         normalized = item[2:] if item.startswith("./") else item
         relative = _relative(normalized, "package.json.openclaw.extensions")
         extension = (source_root / relative).resolve()
-        if not extension.is_relative_to(source_root.resolve()) or not extension.is_file():
+        if not _confined_regular_file(source_root, relative):
             raise ContractError("clawhub_native_manifest_invalid", relative)
         normalized_extensions.append(relative)
     if len({item.casefold() for item in normalized_extensions}) != len(normalized_extensions):
@@ -470,3 +470,18 @@ def _is_selected(
         relative == prefix or relative.startswith(prefix + "/")
         for prefix in include_prefixes
     )
+
+
+def _confined_regular_file(root: Path, relative: str) -> bool:
+    resolved_root = root.resolve()
+    current = resolved_root
+    try:
+        for part in Path(relative).parts:
+            current = current / part
+            stat_result = current.stat(follow_symlinks=False)
+            if current.is_symlink() or getattr(stat_result, "st_file_attributes", 0) & 0x400:
+                return False
+        resolved = (resolved_root / relative).resolve(strict=True)
+    except OSError:
+        return False
+    return resolved.is_relative_to(resolved_root) and resolved.is_file()

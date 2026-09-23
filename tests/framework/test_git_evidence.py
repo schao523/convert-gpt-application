@@ -133,6 +133,23 @@ class GitEvidenceTests(unittest.TestCase):
         self.assertEqual(report.status, "PASS")
         self.assertEqual(report.codes, ())
 
+    def test_unstaged_attributes_cannot_mask_index_or_commit_evidence(self) -> None:
+        (self.repo / ".gitattributes").write_text(
+            "# rules intentionally absent\n", encoding="utf-8", newline="\n"
+        )
+        _git(self.repo, "add", ".gitattributes")
+        _git(self.repo, "commit", "-m", "remove exact byte rules")
+        (self.repo / ".gitattributes").write_text(
+            exact_byte_attributes(SCOPES), encoding="utf-8", newline="\n"
+        )
+
+        report = verify_git_evidence(self.repo, SCOPES, commit="HEAD")
+
+        self.assertEqual(report.status, "FAIL")
+        self.assertEqual(report.working_status, "PASS")
+        self.assertEqual(report.index_status, "FAIL")
+        self.assertEqual(report.commit_status, "FAIL")
+
     def _tree(self) -> dict[str, bytes]:
         return {
             path.relative_to(self.repo).as_posix(): path.read_bytes()

@@ -169,6 +169,12 @@ When the output is inside the conversion repository it must be below `dist` or
 destinations are rejected before staging. Links and Windows reparse points are
 rejected in both copied baseline content and generated artifacts.
 
+Build-mode entries are added to or updated in the staged Codex and OpenClaw
+catalogs while unrelated metadata and every `verify_existing` entry are
+preserved. A legacy artifact with stale paths, sizes, hashes, byte totals, or
+aggregate identity blocks preparation before the previous staged output is
+replaced.
+
 Verify the staged filesystem, then optionally its Git evidence:
 
 ```powershell
@@ -190,6 +196,14 @@ verification also compares the complete scoped tree, so staged deletions and a
 missing commit cannot pass through an empty path set. Per-plugin verifier
 timeouts are reported independently and do not prevent the remaining catalog
 entries from being checked.
+
+Local verification first reconstructs the registry from the trusted
+preparation catalog and staged runtime catalogs, verifies artifact identities,
+and confirms that the staged verifier is canonically identical to the packaged
+framework template. It then parses exactly one result-schema-v1 document per
+plugin; exit code zero alone is never accepted as proof. Git attributes are
+evaluated independently from the working tree, index, and selected commit so
+an unstaged rule cannot mask missing committed policy.
 
 Every CLI command emits one result-schema-v1 JSON document. Status precedence
 is `FAIL`, `BLOCKED`, then `PASS`; exit codes are 0 for pass, 2 for blocked or

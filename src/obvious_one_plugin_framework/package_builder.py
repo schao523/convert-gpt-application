@@ -82,6 +82,7 @@ def _declared_sources(contract: DistributionContract) -> tuple[tuple[Path, str],
         candidate = contract.source_root / relative
         if not candidate.is_file():
             raise PackageAuditError("included_file_missing", relative)
+        _validate_source_file(contract.source_root, candidate, relative)
         selected[relative] = candidate
     for prefix in contract.include_prefixes:
         base = contract.source_root / prefix
@@ -92,10 +93,26 @@ def _declared_sources(contract: DistributionContract) -> tuple[tuple[Path, str],
             if candidate.is_dir():
                 continue
             if relative not in excluded:
+                _validate_source_file(contract.source_root, candidate, relative)
                 selected[relative] = candidate
     for relative in excluded:
         selected.pop(relative, None)
     return tuple((selected[key], key) for key in sorted(selected))
+
+
+def _validate_source_file(root: Path, candidate: Path, relative: str) -> None:
+    resolved_root = root.resolve()
+    current = resolved_root
+    for part in Path(relative).parts:
+        current = current / part
+        if _is_reparse_or_symlink(current):
+            raise PackageAuditError("link_forbidden", relative)
+    try:
+        resolved = candidate.resolve(strict=True)
+    except OSError as exc:
+        raise PackageAuditError("included_file_missing", relative) from exc
+    if not resolved.is_relative_to(resolved_root) or not resolved.is_file():
+        raise PackageAuditError("source_path_escape", relative)
 
 
 def _copy_file(source: Path, destination: Path, relative: str) -> None:
@@ -342,6 +359,18 @@ def _planned_application_sources(
                 overlay_policy.rule_id,
             ),
         )
+
+    reserved = {"package.json", MANIFEST_NAME}
+    if contract.rag is not None:
+        reserved.update(
+            (Path("vendor/obvious-one-runtime") / source.relative_to(BOOTSTRAP_SOURCE)).as_posix()
+            for source in BOOTSTRAP_SOURCE.rglob("*")
+            if source.is_file()
+        )
+    reserved_folded = {item.casefold() for item in reserved}
+    for relative in planned:
+        if relative.casefold() in reserved_folded:
+            raise PackageAuditError("reserved_path_collision", relative)
 
     folded: dict[str, str] = {}
     for relative in sorted(planned):

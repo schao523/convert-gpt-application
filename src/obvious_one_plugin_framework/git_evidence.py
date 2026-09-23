@@ -14,6 +14,10 @@ class GitEvidenceReport:
     status: str
     codes: tuple[str, ...]
     files_checked: int
+    working_status: str = "NOT VERIFIED"
+    index_status: str = "NOT VERIFIED"
+    commit_status: str = "NOT VERIFIED"
+    fresh_checkout_status: str = "NOT VERIFIED"
 
 
 def exact_byte_attributes(scopes: Sequence[str]) -> str:
@@ -65,8 +69,21 @@ def verify_git_evidence(
                 codes.add("index_blob_mismatch")
 
     checked_paths = tuple(sorted(set(working) | set(stage_zero) | set(committed)))
-    attributes = _attributes(root, checked_paths)
-    if any(not _deterministic_attributes(attributes.get(path)) for path in checked_paths):
+    working_attributes = _attributes(root, checked_paths)
+    index_attributes = _attributes(root, checked_paths, cached=True)
+    working_attributes_ok = all(
+        _deterministic_attributes(working_attributes.get(path)) for path in checked_paths
+    )
+    index_attributes_ok = all(
+        _deterministic_attributes(index_attributes.get(path)) for path in checked_paths
+    )
+    commit_attributes_ok = True
+    if resolved_commit is not None:
+        commit_attributes = _attributes(root, checked_paths, source=resolved_commit)
+        commit_attributes_ok = all(
+            _deterministic_attributes(commit_attributes.get(path)) for path in checked_paths
+        )
+    if not working_attributes_ok or not index_attributes_ok or not commit_attributes_ok:
         codes.add("exact_byte_attribute_missing")
 
     if fresh_checkout:
@@ -75,10 +92,22 @@ def verify_git_evidence(
         elif resolved_commit is not None:
             _verify_fresh_checkout(root, resolved_commit, committed, codes)
 
+    working_failed = bool({"untracked_artifact", "working_tree_mismatch"} & codes) or not working_attributes_ok
+    index_failed = "incomplete_index_entry" in codes or not index_attributes_ok
+    commit_failed = commit is not None and (
+        bool({"commit_not_found", "index_blob_mismatch"} & codes) or not commit_attributes_ok
+    )
+    fresh_failed = fresh_checkout and bool(
+        {"fresh_checkout_commit_required", "fresh_checkout_failed", "fresh_checkout_mismatch"} & codes
+    )
     return GitEvidenceReport(
         status="PASS" if not codes else "FAIL",
         codes=tuple(sorted(codes)),
         files_checked=len(checked_paths),
+        working_status="FAIL" if working_failed else "PASS",
+        index_status="FAIL" if index_failed else "PASS",
+        commit_status=("FAIL" if commit_failed else "PASS") if commit is not None else "NOT VERIFIED",
+        fresh_checkout_status=("FAIL" if fresh_failed else "PASS") if fresh_checkout else "NOT VERIFIED",
     )
 
 
@@ -127,10 +156,21 @@ def _working_files(root: Path, scopes: Sequence[str]) -> dict[str, Path]:
     return files
 
 
-def _attributes(root: Path, paths: Sequence[str]) -> dict[str, tuple[str, str]]:
+def _attributes(
+    root: Path,
+    paths: Sequence[str],
+    *,
+    cached: bool = False,
+    source: str | None = None,
+) -> dict[str, tuple[str, str]]:
     if not paths:
         return {}
-    payload = _git_bytes(root, "check-attr", "-z", "text", "eol", "--", *paths)
+    arguments = ["check-attr", "-z"]
+    if cached:
+        arguments.append("--cached")
+    if source is not None:
+        arguments.append(f"--source={source}")
+    payload = _git_bytes(root, *arguments, "text", "eol", "--", *paths)
     parts = payload.split(b"\0")
     raw: dict[str, dict[str, str]] = {}
     for index in range(0, len(parts) - 2, 3):
