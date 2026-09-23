@@ -871,9 +871,9 @@ After the locally staged delta and its exact Git evidence pass:
 8. install from the GitHub marketplace and run smoke scenarios in new Codex and
    OpenClaw sessions.
 
-A GitHub tag or GitHub Release is not implied by marketplace publication.
-Likewise, ClawHub publication and universal-directory submission are separate
-channels with separate contracts and approvals. When ClawHub is enabled,
+GitHub marketplace publication, a GitHub tag or GitHub Release, ClawHub
+publication, and universal-directory submission are separate channels with
+separate contracts and approvals. When ClawHub is enabled,
 schema v3 requires a compatible native manifest and declared extension files;
 when disabled, the channel is `NOT APPLICABLE` rather than failed.
 

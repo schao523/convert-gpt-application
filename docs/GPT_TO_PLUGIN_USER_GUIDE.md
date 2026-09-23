@@ -6,7 +6,11 @@ This guide is for the owner of a Custom GPT who wants Codex to convert its syste
 
 Codex can perform the source analysis, skill design, implementation, testing, validation, packaging, and marketplace preparation. It should stop and ask you before making consequential product decisions or publishing externally.
 
-For schemas, commands, test implementation, release audits, and other engineering details, use the companion [Plugin Skills Technical Reference](PLUGIN_SKILLS_TECHNICAL_REFERENCE.md).
+For designing, authoring, or reviewing skills and plugin structure, use the
+companion [Plugin Skills Technical Reference](PLUGIN_SKILLS_TECHNICAL_REFERENCE.md).
+For commands, packaging, verification, and marketplace operations, the
+[Plugin and Framework Command Reference](PLUGIN_AND_FRAMEWORK_COMMAND_REFERENCE.md)
+is authoritative.
 
 ## What you will create
 

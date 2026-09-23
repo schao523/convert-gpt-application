@@ -102,21 +102,54 @@ class DocumentationContractTests(unittest.TestCase):
             content,
         )
 
-    def test_guides_preserve_local_staging_and_publication_boundaries(self) -> None:
-        combined = "\n".join(
-            path.read_text(encoding="utf-8")
-            for path in (COMMAND_REFERENCE, USER_GUIDE, TECHNICAL_REFERENCE)
-        )
-        for required in (
-            "catalog-driven CI",
-            "nested Git worktree",
-            "GitHub marketplace publication",
-            "GitHub Release",
-            "ClawHub publication",
-            "universal-directory submission",
-        ):
-            with self.subTest(required=required):
-                self.assertIn(required, combined)
+    def test_owner_and_technical_guides_route_commands_to_command_reference(self) -> None:
+        link = "[Plugin and Framework Command Reference](PLUGIN_AND_FRAMEWORK_COMMAND_REFERENCE.md)"
+        owner = " ".join(USER_GUIDE.read_text(encoding="utf-8").split())
+        technical = " ".join(TECHNICAL_REFERENCE.read_text(encoding="utf-8").split())
+        for content in (owner, technical):
+            self.assertIn(link, content)
+            self.assertIn("authoritative", content.lower())
+            self.assertIn("commands", content.lower())
+            self.assertIn("packaging", content.lower())
+            self.assertIn("verification", content.lower())
+            self.assertIn("marketplace operations", content.lower())
+
+    def test_each_governed_document_preserves_its_publication_boundary(self) -> None:
+        expectations = {
+            AGENTS: (
+                "marketplace mutation",
+                "Git pushes",
+                "GitHub Releases",
+                "ClawHub",
+                "external registry",
+            ),
+            COMMAND_REFERENCE: (
+                "Commands that require explicit approval",
+                "GitHub marketplace",
+                "GitHub Release",
+                "ClawHub",
+                "universal OpenAI directory",
+            ),
+            USER_GUIDE: (
+                "GitHub marketplace publication",
+                "GitHub Release",
+                "ClawHub publication",
+                "universal-directory submission",
+                "separate external actions",
+            ),
+            TECHNICAL_REFERENCE: (
+                "GitHub marketplace publication",
+                "GitHub Release",
+                "ClawHub publication",
+                "universal-directory submission",
+                "separate explicit approval",
+            ),
+        }
+        for path, required_fragments in expectations.items():
+            content = path.read_text(encoding="utf-8")
+            for required in required_fragments:
+                with self.subTest(path=path.name, required=required):
+                    self.assertIn(required, content)
 
 
 if __name__ == "__main__":
