@@ -1,0 +1,89 @@
+{
+  "schema_version": 2,
+  "application_id": "cool-plugin-design-assistant",
+  "plugin_id": "cool-plugin-design-assistant",
+  "source_inventory": "docs/source-inventory.json",
+  "source_location": "conversion.local.json",
+  "coverage_matrix": "tests/coverage-matrix.md",
+  "distribution_contract": "openclaw/distribution.json",
+  "marketplace_repository": "schao523/obvious-one-plugins",
+  "provenance": {
+    "source_repository": "cool-plugin-design-assistant-gpt-source",
+    "incorporated_branches": [],
+    "inventory_rules": [
+      {
+        "root": ".",
+        "classification": "source-only",
+        "include": [
+          "builder_guide.md",
+          "Human-in-the-Loop_Guide.md",
+          "interaction_patterns_guide.md",
+          "knowledge_module_template.md",
+          "modular_design_guide.md",
+          "prompt_refactoring_patterns.md",
+          "Resource Index.md",
+          "resource_binding_patterns.md",
+          "resource_evaluation_guide.md",
+          "resource_types_guide.md",
+          "testing_guide.md",
+          "use_case_brainstorm_guide.md",
+          "酷 GPT 應用設計助理 Pro v2.docx"
+        ]
+      },
+      {
+        "root": ".",
+        "classification": "excluded-source-only",
+        "include": ["ChatGPT Image.png"]
+      },
+      {
+        "root": "Plugin Spec Examples",
+        "classification": "analysis-fixture-only",
+        "include": ["*.pdf"]
+      }
+    ]
+  },
+  "verification": {
+    "test_directory": "tests",
+    "commands": [
+      {
+        "id": "runtime-status",
+        "argv": ["{python}", "-B", "{application_root}/scripts/cool_plugin_design_assistant.py", "status", "--json"],
+        "marketplace_targets": ["codex", "openclaw"]
+      },
+      {
+        "id": "design-validator",
+        "argv": ["{python}", "-B", "{application_root}/scripts/cool_plugin_design_assistant.py", "validate-design", "{application_root}/tests/fixtures/design-statement-valid.md", "{application_root}/tests/fixtures/design-spec-valid.md", "--json"],
+        "marketplace_targets": ["codex", "openclaw"]
+      },
+      {
+        "id": "workflow-validator",
+        "argv": ["{python}", "-B", "{application_root}/scripts/cool_plugin_design_assistant.py", "validate-workflow", "{application_root}/tests/fixtures/workflow-valid.json", "--json"],
+        "marketplace_targets": ["codex", "openclaw"]
+      },
+      {
+        "id": "module-validator",
+        "argv": ["{python}", "-B", "{application_root}/scripts/cool_plugin_design_assistant.py", "validate-modules", "{application_root}/tests/fixtures/modules-valid.json", "--json"],
+        "marketplace_targets": ["codex", "openclaw"]
+      },
+      {
+        "id": "handoff-validator",
+        "argv": ["{python}", "-B", "{application_root}/scripts/cool_plugin_design_assistant.py", "validate-handoff", "{application_root}/tests/fixtures/handoff-valid.json", "--json"],
+        "marketplace_targets": ["codex", "openclaw"]
+      },
+      {
+        "id": "distribution-audit",
+        "argv": ["{python}", "-B", "{application_root}/scripts/cool_plugin_design_assistant.py", "distribution-audit", "{application_root}", "--json"],
+        "marketplace_targets": ["codex", "openclaw"]
+      }
+    ],
+    "codex_build": {
+      "argv": ["{python}", "-B", "{application_root}/scripts/build_marketplace_release.py", "--source", "{application_root}", "--destination", "{diagnostics}/codex-marketplace", "--version", "{version}"],
+      "artifact_path": "plugins/{plugin_id}"
+    },
+    "marketplace": {
+      "codex_path": "plugins/{plugin_id}",
+      "openclaw_path": "openclaw/{plugin_id}",
+      "approved_delta": "docs/marketplace-approved-delta.json"
+    }
+  }
+}

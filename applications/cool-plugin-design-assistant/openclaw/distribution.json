@@ -1,0 +1,52 @@
+{
+  "schema_version": 3,
+  "plugin_id": "cool-plugin-design-assistant",
+  "package_name": "@obvious-one/cool-plugin-design-assistant",
+  "family": "bundle-plugin",
+  "version": "1.0.0",
+  "source_root": "..",
+  "include_files": [
+    ".codex-plugin/plugin.json",
+    "README.md",
+    "DISTRIBUTION.md",
+    "LICENSE",
+    "PRIVACY.md",
+    "SECURITY.md",
+    "THIRD_PARTY_CONTENT.md",
+    "THIRD_PARTY_NOTICES.md"
+  ],
+  "include_prefixes": ["docs", "scripts", "skills"],
+  "exclude_paths": ["docs/marketplace-approved-delta.json"],
+  "max_total_bytes": 2097152,
+  "release_repository": "schao523/obvious-one-plugins",
+  "release_tag_template": "cool-plugin-design-assistant-v{version}",
+  "readme_overlay": "openclaw/README.md",
+  "audit_hook": null,
+  "rag": null,
+  "content_rules": [
+    {
+      "id": "redistributable-text",
+      "paths": [
+        ".codex-plugin/plugin.json",
+        "README.md",
+        "DISTRIBUTION.md",
+        "LICENSE",
+        "PRIVACY.md",
+        "SECURITY.md",
+        "THIRD_PARTY_CONTENT.md",
+        "THIRD_PARTY_NOTICES.md",
+        "openclaw/README.md"
+      ],
+      "prefixes": ["docs", "scripts", "skills"],
+      "classification": "text",
+      "redistribution": {
+        "status": "approved",
+        "provenance": "docs/source-decisions.md"
+      }
+    }
+  ],
+  "publication": {
+    "github_marketplace": {"enabled": true},
+    "clawhub": {"enabled": false, "family": null, "native_manifest": null}
+  }
+}
