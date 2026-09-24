@@ -1,0 +1,6 @@
+interface:
+  display_name: "Create Design Statements"
+  short_description: "Create concise, revisable intent statements for AI applications."
+  default_prompt: "Use $creating-design-statements to create or revise my AI application's Design Statement."
+policy:
+  allow_implicit_invocation: true

@@ -33,6 +33,18 @@ class SkillContractTests(unittest.TestCase):
         ):
             self.assertIn(phrase, text)
 
+    def test_design_statement_is_concise_separate_and_revisable(self) -> None:
+        text = read_skill("creating-design-statements")
+        self.assertIn("audience", text)
+        self.assertIn("context", text)
+        self.assertIn("problem", text)
+        self.assertIn("outcome", text)
+        self.assertIn("draft", text)
+        self.assertIn("approved", text)
+        self.assertIn("separate", text)
+        self.assertIn("inverse of the problem", text)
+        self.assertNotIn("choose the Skill Architecture", text)
+
 
 if __name__ == "__main__":
     unittest.main()
