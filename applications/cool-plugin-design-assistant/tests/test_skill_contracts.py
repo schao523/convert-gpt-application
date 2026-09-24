@@ -62,6 +62,25 @@ class SkillContractTests(unittest.TestCase):
             self.assertIn(phrase, text)
         self.assertIn("Instruction Module is not a Skill", text)
 
+    def test_reference_material_skill_reserves_technical_binding_for_workbench(
+        self,
+    ) -> None:
+        text = read_skill("evaluating-reference-materials")
+        for phrase in (
+            "Reference Material Usage Map",
+            "workflow",
+            "Instruction Module",
+            "decision",
+            "output",
+            "provenance",
+            "rights",
+            "exact quotation",
+            "advisory",
+        ):
+            self.assertIn(phrase, text)
+        for forbidden in ("assign to a Skill", "choose a RAG", "choose runtime storage"):
+            self.assertNotIn(forbidden, text)
+
 
 if __name__ == "__main__":
     unittest.main()

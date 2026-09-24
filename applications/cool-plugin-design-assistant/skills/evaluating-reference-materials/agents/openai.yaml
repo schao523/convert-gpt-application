@@ -1,0 +1,6 @@
+interface:
+  display_name: "Evaluate Reference Materials"
+  short_description: "Evaluate knowledge sources and map their behavioral use."
+  default_prompt: "Use $evaluating-reference-materials to assess my candidate materials and recommend where their knowledge is used."
+policy:
+  allow_implicit_invocation: true

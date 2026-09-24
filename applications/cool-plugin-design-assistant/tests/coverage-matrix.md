@@ -12,8 +12,9 @@
 | INV-008 | `designing-application-workflows-and-instruction-modules` | Workflow, module, interaction, and Workbench-boundary contracts | BEH-006 five-sample clean-context evaluation | STATICALLY VERIFIED |
 | INV-009 | Review and testing Skills | Planned input contracts | BEH-009, BEH-010 | EXPECTED |
 | INV-010 | `guiding-ai-application-design-sessions` | Session state and decision-ledger ownership | BEH-002 contract | STATICALLY VERIFIED |
-| INV-011 | All Skills and validators | Planned evidence contract | BEH-013 | EXPECTED |
+| INV-011 | All Skills and validators | Reference evaluation prohibits invented content, authority, provenance, and rights; remaining evidence contracts pending | BEH-013 | EXPECTED |
 | INV-012 | `creating-application-plugin-design-specifications` | Planned handoff gate | BEH-011 | EXPECTED |
-| INV-013 | All Skills | Traditional Chinese rules in three implemented Skills; remaining Skills pending | BEH-001 five-sample clean-context evaluation | EXPECTED |
+| INV-013 | All Skills | Traditional Chinese rules in four implemented Skills; remaining Skills pending | BEH-001 five-sample clean-context evaluation | EXPECTED |
 | INV-014 | `guiding-ai-application-design-sessions` | Explicit illegal-or-harmful design refusal | BEH-014 contract | STATICALLY VERIFIED |
 | INV-015 | All synthesis Skills | Planned revision points | BEH-003, BEH-007 | EXPECTED |
+| SPEC-REF-001 | `evaluating-reference-materials` | Evaluation inventory and behavior-level usage-map contracts with Workbench binding boundary | Reference pressure scenario, five clean-context samples | STATICALLY VERIFIED |
