@@ -18,9 +18,9 @@ including these two clarifications:
    cover questions, waiting, alternatives, revision, confirmation, progression,
    and stopping behavior.
 
-The written specification itself remains subject to owner review before an
-implementation plan may be approved. This document does not authorize
-implementation or publication.
+The product owner approved this written specification on 2026-09-24. That
+approval authorizes implementation planning. Implementation still requires an
+approved implementation plan, and publication remains separately authorized.
 
 ## 2. Product Identity and Scope
 
