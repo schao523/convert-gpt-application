@@ -2,9 +2,9 @@
 
 ## Current classification
 
-`CONDITIONALLY PORTABLE`
+`PORTABLE`
 
-`CONVERSION COMPLETE — RUNTIME VALIDATION PENDING`
+`READY`
 
 The Codex and OpenClaw distributions contain the same seven portable Skills,
 maintained references, and deterministic validators. No runtime adapter, RAG
@@ -15,10 +15,10 @@ subsystem, model, corpus, database, external service, or credential is required.
 | Gate | Codex | OpenClaw |
 | --- | --- | --- |
 | Shared source and deterministic build | STATICALLY VERIFIED | STATICALLY VERIFIED |
-| Installed discovery | NOT VERIFIED | RUNTIME VERIFIED |
-| Packaged deterministic commands | STATICALLY VERIFIED | RUNTIME VERIFIED |
-| Representative execution | NOT VERIFIED | NOT VERIFIED |
-| Cross-runtime behavioral equivalence | NOT VERIFIED | NOT VERIFIED |
+| Installed discovery | RUNTIME VERIFIED | RUNTIME VERIFIED |
+| Packaged deterministic commands | RUNTIME VERIFIED | RUNTIME VERIFIED |
+| Representative execution | RUNTIME VERIFIED | RUNTIME VERIFIED |
+| Cross-runtime behavioral equivalence | RUNTIME VERIFIED | RUNTIME VERIFIED |
 
 ## Local verification evidence
 
@@ -39,19 +39,28 @@ paths, or credential patterns. The verifier recorded marketplace comparison as
 
 ## Runtime observations
 
-OpenClaw 2026.9.4 installed the generated bundle into the isolated
-`cool-plugin-design-assistant` profile. The plugin was enabled at version 1.0.0,
-and all seven Skills were eligible, model-visible, user-invocable,
-command-visible, and free of missing requirements. The installed launcher
-returned PASS for status, design, workflow, Instruction Module, handoff, and
-coverage checks. A representative conversation could not execute because that
-isolated profile has no route-compatible model authentication; credentials were
-not copied from another profile.
+On 2026-09-24, Codex CLI 0.146.0 installed version 1.0.0 from an isolated local
+marketplace built from the pull-request artifact. `plugin list` discovered and
+enabled the plugin. All seven packaged deterministic commands passed against
+the installed artifact. An ephemeral representative execution loaded the
+installed `creating-design-statements` Skill and, when the desired outcome was
+missing, asked one focused question in Traditional Chinese without inferring an
+inverse.
 
-Codex CLI 0.146.0 did not surface a temporary repo-local marketplace through
-`plugin list`, while the configured `obvious-one` marketplace points to a
-different snapshot. That configured marketplace was not removed or replaced,
-so installed Codex discovery and execution remain `NOT VERIFIED`.
+OpenClaw 2026.9.4 installed the same generated bundle. The plugin was enabled at
+version 1.0.0, and all seven Skills were eligible, model-visible,
+user-invocable, command-visible, and free of missing requirements. The installed
+launcher returned PASS for status, design, workflow, Instruction Module,
+handoff, coverage, and distribution-audit checks. An authenticated
+representative conversation loaded the same Skill and preserved the same
+missing-outcome behavior: it identified the unresolved field, asked exactly one
+focused question in Traditional Chinese, and did not invent the answer.
+
+The two representative executions used the same user scenario and the same
+portable Skill implementation. Their verbosity differed, but the routing,
+question count, language, evidence handling, and wait behavior were
+behaviorally equivalent. No runtime adapter or application-level fork was
+required.
 
 ## Marketplace staging
 
@@ -69,6 +78,5 @@ gate correctly failed because both unpublished plugin destinations are absent
 and `marketplace-approved-delta.json` approves no missing files. This remains an
 unverified publication boundary, not a plugin behavior failure.
 
-The classification can become `PORTABLE` only after installed artifacts are
-discovered and representative commands execute successfully in both runtimes.
-No marketplace mutation, release, or publication has been performed.
+Marketplace publication remains a separate authorization boundary. No public
+marketplace mutation, release, or publication has been performed.
