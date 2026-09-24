@@ -109,6 +109,21 @@ class SkillContractTests(unittest.TestCase):
         self.assertIn("do not redesign", text)
         self.assertIn("do not promise later correction", text)
 
+    def test_test_planning_requires_inputs_and_never_invents_execution(self) -> None:
+        text = read_skill("planning-application-tests-and-improvements")
+        for phrase in (
+            "approved specification",
+            "requirement ID",
+            "observable",
+            "EXPECTED",
+            "STATICALLY VERIFIED",
+            "RUNTIME VERIFIED",
+            "NOT VERIFIED",
+            "supplied results",
+            "versioned",
+        ):
+            self.assertIn(phrase, text)
+
 
 if __name__ == "__main__":
     unittest.main()
