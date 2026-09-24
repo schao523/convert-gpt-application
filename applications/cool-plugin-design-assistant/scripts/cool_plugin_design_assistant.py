@@ -2,7 +2,13 @@
 
 from __future__ import annotations
 
+import argparse
 from collections import Counter, deque
+import importlib.util
+import json
+from pathlib import Path
+import re
+import sys
 from typing import Any
 
 
@@ -51,6 +57,48 @@ MODULE_FIELDS = {
 }
 
 MODULE_TYPES = {"primary-workflow", "intent-triggered", "cross-cutting"}
+
+SKILL_NAMES = [
+    "guiding-ai-application-design-sessions",
+    "creating-design-statements",
+    "designing-application-workflows-and-instruction-modules",
+    "evaluating-reference-materials",
+    "creating-application-plugin-design-specifications",
+    "reviewing-application-implementations",
+    "planning-application-tests-and-improvements",
+]
+
+HANDOFF_FIELDS = {
+    "approved_design_statement",
+    "approved_specification",
+    "workflow_definitions_and_instruction_modules",
+    "reference_material_inventory_evaluation_and_usage_map",
+    "application_invariants_and_hitl_checkpoints",
+    "deterministic_operation_candidates",
+    "tool_data_runtime_and_service_requirements",
+    "acceptance_criteria_and_representative_scenarios",
+    "rights_and_redistribution_decisions",
+    "unresolved_owner_decisions",
+    "explicit_exclusions",
+    "approval",
+}
+
+DESIGN_STATEMENT_HEADINGS = {
+    "audience",
+    "context",
+    "problem",
+    "application role or method",
+    "desired outcome",
+    "style and tone",
+}
+
+SPECIFICATION_DECISION_HEADINGS = {
+    "requirements",
+    "confirmed decisions",
+    "assumptions",
+    "recommendations",
+    "unresolved questions",
+}
 
 
 def _sorted(errors: list[str]) -> list[str]:
@@ -242,3 +290,281 @@ def validate_modules(payload: Any) -> list[str]:
                 errors.append(f"unknown module transition: {label} -> {target}")
 
     return _sorted(errors)
+
+
+def _read_utf8(path: Path, label: str, errors: list[str]) -> str | None:
+    try:
+        return path.read_text(encoding="utf-8")
+    except (OSError, UnicodeError):
+        errors.append(f"{label} must be a readable UTF-8 file")
+        return None
+
+
+def validate_design_artifacts(statement_path: str | Path, specification_path: str | Path) -> list[str]:
+    """Validate distinct Design Statement and 21-section specification files."""
+
+    errors: list[str] = []
+    statement = Path(statement_path)
+    specification = Path(specification_path)
+    try:
+        if statement.resolve() == specification.resolve():
+            errors.append("design statement and specification must be distinct files")
+    except OSError:
+        pass
+
+    statement_text = _read_utf8(statement, "design statement", errors)
+    specification_text = _read_utf8(specification, "design specification", errors)
+
+    if statement_text is not None:
+        headings = {
+            heading.strip().casefold()
+            for heading in re.findall(r"(?m)^##\s+(.+?)\s*$", statement_text)
+        }
+        for heading in DESIGN_STATEMENT_HEADINGS - headings:
+            errors.append(f"design statement missing field: {heading}")
+        if not re.search(r"(?im)^state:\s*(draft|approved)\s*$", statement_text):
+            errors.append("design statement state required")
+
+    if specification_text is not None:
+        section_pattern = re.compile(
+            r"(?m)^(\d+)\.\s+\*\*(.+?)\*\*\s*(?:(?:—|-|:)\s*(.*))?$"
+        )
+        matches = list(section_pattern.finditer(specification_text))
+        numbers: list[int] = []
+        nonempty = True
+        for index, match in enumerate(matches):
+            numbers.append(int(match.group(1)))
+            inline = (match.group(3) or "").strip()
+            body_end = matches[index + 1].start() if index + 1 < len(matches) else len(
+                specification_text
+            )
+            following = specification_text[match.end() : body_end]
+            following = re.split(r"(?m)^##\s+", following, maxsplit=1)[0].strip()
+            if not inline and not following:
+                nonempty = False
+        if numbers != list(range(1, 22)) or not nonempty:
+            errors.append("design specification requires 21 numbered non-empty sections")
+        headings = {
+            heading.strip().casefold()
+            for heading in re.findall(r"(?m)^##\s+(.+?)\s*$", specification_text)
+        }
+        for heading in SPECIFICATION_DECISION_HEADINGS - headings:
+            errors.append(f"design specification missing decision heading: {heading}")
+        if not re.search(r"(?im)^state:\s*(draft|approved)\s*$", specification_text):
+            errors.append("design specification approval state required")
+
+    return _sorted(errors)
+
+
+def validate_handoff(payload: Any) -> list[str]:
+    """Validate an approval-gated, architecture-neutral Workbench handoff."""
+
+    if not isinstance(payload, dict):
+        return ["handoff must be an object"]
+
+    errors: list[str] = []
+    for field in HANDOFF_FIELDS:
+        if field not in payload:
+            errors.append(f"handoff missing field: {field}")
+
+    approval = payload.get("approval")
+    if not isinstance(approval, dict) or approval.get("state") != "approved":
+        errors.append("handoff requires explicit approval")
+
+    for artifact_field in ("approved_design_statement", "approved_specification"):
+        artifact = payload.get(artifact_field)
+        if not isinstance(artifact, dict) or artifact.get("state") != "approved":
+            errors.append(f"handoff requires approved artifact: {artifact_field}")
+
+    unresolved = payload.get("unresolved_owner_decisions")
+    if not isinstance(unresolved, list):
+        errors.append("unresolved owner decisions must be an array")
+    elif unresolved:
+        labels = sorted(str(item) for item in unresolved)
+        errors.append(f"unresolved owner decisions: {', '.join(labels)}")
+
+    if _contains_forbidden_key(payload):
+        errors.append("implementation architecture forbidden")
+
+    return _sorted(errors)
+
+
+def coverage_report(payload: Any) -> dict[str, Any]:
+    """Return coverage only when requirements and mappings are explicit."""
+
+    unavailable = {
+        "status": "NOT VERIFIED",
+        "covered": 0,
+        "total": 0,
+        "percentage": None,
+        "uncovered_ids": [],
+    }
+    if not isinstance(payload, dict):
+        return unavailable
+
+    requirements = payload.get("requirements")
+    mappings = payload.get("mappings")
+    if (
+        not isinstance(requirements, list)
+        or not requirements
+        or not all(isinstance(item, str) and item for item in requirements)
+        or not isinstance(mappings, list)
+        or not mappings
+    ):
+        return unavailable
+
+    ordered_requirements = list(dict.fromkeys(requirements))
+    mapped: set[str] = set()
+    for mapping in mappings:
+        if not isinstance(mapping, dict):
+            continue
+        requirement_id = mapping.get("requirement_id")
+        test_ids = mapping.get("test_ids")
+        if (
+            requirement_id in ordered_requirements
+            and isinstance(test_ids, list)
+            and any(isinstance(test_id, str) and test_id for test_id in test_ids)
+        ):
+            mapped.add(requirement_id)
+
+    covered = len(mapped)
+    total = len(ordered_requirements)
+    uncovered = sorted(set(ordered_requirements) - mapped)
+    return {
+        "status": "PASS",
+        "covered": covered,
+        "total": total,
+        "percentage": round(covered * 100.0 / total, 2),
+        "uncovered_ids": uncovered,
+    }
+
+
+def status() -> dict[str, Any]:
+    """Return static product capability status before runtime verification."""
+
+    return {
+        "status": "PASS",
+        "skills": list(SKILL_NAMES),
+        "rag": "NOT APPLICABLE",
+        "clawhub": "NOT APPLICABLE",
+        "runtime_evidence": {
+            "codex": "NOT VERIFIED",
+            "openclaw": "NOT VERIFIED",
+        },
+    }
+
+
+def _load_json(path: str | Path) -> Any:
+    return json.loads(Path(path).read_text(encoding="utf-8"))
+
+
+def _document(operation: str, result_status: str, errors: list[str], **data: Any) -> dict[str, Any]:
+    return {
+        "status": result_status,
+        "operation": operation,
+        "errors": _sorted(errors),
+        **data,
+    }
+
+
+def _print_document(document: dict[str, Any]) -> None:
+    print(json.dumps(document, ensure_ascii=True, sort_keys=True))
+
+
+class _ArgumentParser(argparse.ArgumentParser):
+    def error(self, message: str) -> None:
+        raise ValueError(message)
+
+
+def _parser() -> argparse.ArgumentParser:
+    parser = _ArgumentParser(prog="cool_plugin_design_assistant.py")
+    commands = parser.add_subparsers(dest="command", required=True)
+
+    def add_json(command: argparse.ArgumentParser) -> None:
+        command.add_argument("--json", action="store_true", help="Emit JSON output")
+
+    add_json(commands.add_parser("status"))
+    design = commands.add_parser("validate-design")
+    design.add_argument("design_statement")
+    design.add_argument("design_specification")
+    add_json(design)
+    for name in ("validate-workflow", "validate-modules", "validate-handoff", "coverage"):
+        command = commands.add_parser(name)
+        command.add_argument("artifact")
+        add_json(command)
+    audit = commands.add_parser("distribution-audit")
+    audit.add_argument("stage", nargs="?", default=str(Path(__file__).resolve().parents[1]))
+    add_json(audit)
+    return parser
+
+
+def _run_distribution_audit(stage: str | Path) -> tuple[str, list[str]]:
+    script = Path(__file__).with_name("distribution_audit.py")
+    if not script.is_file():
+        return "BLOCKED", ["distribution audit unavailable"]
+    spec = importlib.util.spec_from_file_location("distribution_audit", script)
+    if spec is None or spec.loader is None:
+        return "BLOCKED", ["distribution audit unavailable"]
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    errors = module.audit_distribution(Path(stage), None)
+    return ("PASS", []) if not errors else ("FAIL", list(errors))
+
+
+def main(argv: list[str] | None = None) -> int:
+    try:
+        args = _parser().parse_args(argv)
+    except ValueError as exc:
+        _print_document(_document("invocation", "BLOCKED", [str(exc)]))
+        return 2
+
+    operation = args.command
+    try:
+        if operation == "status":
+            data = status()
+            result_status = data.pop("status")
+            document = _document(operation, result_status, [], **data)
+        elif operation == "validate-design":
+            errors = validate_design_artifacts(
+                args.design_statement, args.design_specification
+            )
+            document = _document(operation, "PASS" if not errors else "FAIL", errors)
+        elif operation == "validate-workflow":
+            errors = validate_workflow(_load_json(args.artifact))
+            document = _document(operation, "PASS" if not errors else "FAIL", errors)
+        elif operation == "validate-modules":
+            errors = validate_modules(_load_json(args.artifact))
+            document = _document(operation, "PASS" if not errors else "FAIL", errors)
+        elif operation == "validate-handoff":
+            errors = validate_handoff(_load_json(args.artifact))
+            document = _document(operation, "PASS" if not errors else "FAIL", errors)
+        elif operation == "coverage":
+            report = coverage_report(_load_json(args.artifact))
+            report_status = report.pop("status")
+            result_status = "PASS" if report_status == "PASS" else "BLOCKED"
+            errors = [] if result_status == "PASS" else ["coverage evidence incomplete"]
+            document = _document(
+                operation,
+                result_status,
+                errors,
+                evidence_status=report_status,
+                **report,
+            )
+        elif operation == "distribution-audit":
+            result_status, errors = _run_distribution_audit(args.stage)
+            document = _document(operation, result_status, errors)
+        else:
+            document = _document(operation, "BLOCKED", ["unsupported operation"])
+    except (OSError, UnicodeError, json.JSONDecodeError, ValueError) as exc:
+        document = _document(operation, "BLOCKED", [str(exc)])
+
+    _print_document(document)
+    if document["status"] == "PASS":
+        return 0
+    if document["status"] == "BLOCKED":
+        return 2
+    return 3
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

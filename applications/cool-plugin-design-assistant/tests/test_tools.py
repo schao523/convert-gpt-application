@@ -2,6 +2,8 @@ import copy
 import importlib.util
 import json
 from pathlib import Path
+import subprocess
+import sys
 import unittest
 
 
@@ -114,6 +116,66 @@ class ToolTests(unittest.TestCase):
         broken = {"states": []}
         errors = tool.validate_workflow(broken)
         self.assertEqual(errors, sorted(errors))
+
+    def test_design_validator_requires_distinct_complete_artifacts(self) -> None:
+        statement = ROOT / "tests" / "fixtures" / "design-statement-valid.md"
+        specification = ROOT / "tests" / "fixtures" / "design-spec-valid.md"
+        self.assertEqual(tool.validate_design_artifacts(statement, specification), [])
+        self.assertIn(
+            "design statement and specification must be distinct files",
+            tool.validate_design_artifacts(statement, statement),
+        )
+
+    def test_handoff_validator_requires_approval_and_reports_unresolved_decisions(
+        self,
+    ) -> None:
+        valid = load_fixture("handoff-valid.json")
+        self.assertEqual(tool.validate_handoff(valid), [])
+        broken = copy.deepcopy(valid)
+        broken["approval"]["state"] = "draft"
+        broken["unresolved_owner_decisions"] = ["redistribution"]
+        errors = tool.validate_handoff(broken)
+        self.assertIn("handoff requires explicit approval", errors)
+        self.assertIn("unresolved owner decisions: redistribution", errors)
+
+    def test_handoff_validator_rejects_architecture_fields_recursively(self) -> None:
+        broken = load_fixture("handoff-valid.json")
+        broken["approved_specification"]["implementation"] = {
+            "runtime_adapter": "codex-only"
+        }
+        self.assertIn(
+            "implementation architecture forbidden",
+            tool.validate_handoff(broken),
+        )
+
+    def test_coverage_reports_not_verified_without_explicit_mapping(self) -> None:
+        self.assertEqual(
+            tool.coverage_report({"requirements": ["INV-001"]})["status"],
+            "NOT VERIFIED",
+        )
+        report = tool.coverage_report(load_fixture("coverage-valid.json"))
+        self.assertEqual(report["status"], "PASS")
+        self.assertEqual(report["percentage"], 100.0)
+
+    def test_status_and_cli_use_stable_ascii_result_shape(self) -> None:
+        status = tool.status()
+        self.assertEqual(status["status"], "PASS")
+        self.assertEqual(len(status["skills"]), 7)
+        self.assertEqual(status["rag"], "NOT APPLICABLE")
+        self.assertEqual(status["clawhub"], "NOT APPLICABLE")
+        self.assertEqual(set(status["runtime_evidence"].values()), {"NOT VERIFIED"})
+
+        completed = subprocess.run(
+            [sys.executable, "-B", str(SCRIPT), "status", "--json"],
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+        self.assertEqual(completed.returncode, 0, completed.stderr)
+        document = json.loads(completed.stdout)
+        self.assertEqual(document["operation"], "status")
+        self.assertEqual(document["errors"], [])
+        completed.stdout.encode("ascii")
 
 
 if __name__ == "__main__":

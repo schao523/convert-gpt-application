@@ -1,0 +1,7 @@
+{
+  "requirements": ["INV-001", "INV-002"],
+  "mappings": [
+    {"requirement_id": "INV-001", "test_ids": ["TEST-001"]},
+    {"requirement_id": "INV-002", "test_ids": ["TEST-002"]}
+  ]
+}
