@@ -93,6 +93,22 @@ class SkillContractTests(unittest.TestCase):
         self.assertIn("Application Workbench", skill)
         self.assertIn("must not prescribe", skill)
 
+    def test_implementation_review_requires_both_inputs_and_classifies_findings(
+        self,
+    ) -> None:
+        text = read_skill("reviewing-application-implementations")
+        self.assertIn("approved specification", text)
+        self.assertIn("Application Implementation", text)
+        for classification in (
+            "error",
+            "omission",
+            "optional improvement",
+            "approved deviation",
+        ):
+            self.assertIn(classification, text)
+        self.assertIn("do not redesign", text)
+        self.assertIn("do not promise later correction", text)
+
 
 if __name__ == "__main__":
     unittest.main()
