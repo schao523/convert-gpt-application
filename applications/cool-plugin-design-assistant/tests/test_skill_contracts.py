@@ -1,4 +1,5 @@
 from pathlib import Path
+import re
 import unittest
 
 
@@ -80,6 +81,17 @@ class SkillContractTests(unittest.TestCase):
             self.assertIn(phrase, text)
         for forbidden in ("assign to a Skill", "choose a RAG", "choose runtime storage"):
             self.assertNotIn(forbidden, text)
+
+    def test_specification_has_approved_sections_and_handoff_gate(self) -> None:
+        contract = read_reference(
+            "creating-application-plugin-design-specifications",
+            "specification-contract.md",
+        )
+        self.assertEqual(len(re.findall(r"(?m)^\d+\. \*\*", contract)), 21)
+        skill = read_skill("creating-application-plugin-design-specifications")
+        self.assertIn("explicit user confirmation", skill)
+        self.assertIn("Application Workbench", skill)
+        self.assertIn("must not prescribe", skill)
 
 
 if __name__ == "__main__":
