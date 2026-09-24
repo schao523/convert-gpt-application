@@ -45,6 +45,23 @@ class SkillContractTests(unittest.TestCase):
         self.assertIn("inverse of the problem", text)
         self.assertNotIn("choose the Skill Architecture", text)
 
+    def test_workflow_skill_defines_modules_and_user_interaction_protocols_not_skills(
+        self,
+    ) -> None:
+        text = read_skill("designing-application-workflows-and-instruction-modules")
+        for phrase in (
+            "primary-workflow",
+            "intent-triggered",
+            "cross-cutting",
+            "user-interaction protocol",
+            "transitions",
+            "failure",
+            "completion",
+            "Application Workbench",
+        ):
+            self.assertIn(phrase, text)
+        self.assertIn("Instruction Module is not a Skill", text)
+
 
 if __name__ == "__main__":
     unittest.main()

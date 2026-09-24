@@ -1,0 +1,6 @@
+interface:
+  display_name: "Design Application Workflows and Instruction Modules"
+  short_description: "Design mission workflows, logical modules, and interaction protocols."
+  default_prompt: "Use $designing-application-workflows-and-instruction-modules to design my application's mission workflow and logical modules."
+policy:
+  allow_implicit_invocation: true
