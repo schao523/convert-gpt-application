@@ -93,6 +93,20 @@ class SkillContractTests(unittest.TestCase):
         self.assertIn("Application Workbench", skill)
         self.assertIn("must not prescribe", skill)
 
+    def test_every_design_producing_skill_enforces_the_application_safety_boundary(self) -> None:
+        for name in (
+            "creating-design-statements",
+            "designing-application-workflows-and-instruction-modules",
+            "evaluating-reference-materials",
+            "creating-application-plugin-design-specifications",
+        ):
+            text = read_skill(name)
+            self.assertIn(
+                "Decline assistance that designs an illegal or harmful application.",
+                text,
+                name,
+            )
+
     def test_implementation_review_requires_both_inputs_and_classifies_findings(
         self,
     ) -> None:

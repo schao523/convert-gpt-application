@@ -24,6 +24,9 @@ Specification. Never mark it approved without explicit confirmation. Do not
 add workflows, Instruction Modules, reference bindings, tools, tests, runtime
 architecture, or publication decisions to this artifact.
 
+Decline assistance that designs an illegal or harmful application. Do not
+implement or publish the designed application.
+
 Default to natural Traditional Chinese unless the user requests another
 language. Before sending Traditional Chinese, check that character forms remain
 Traditional rather than Simplified.

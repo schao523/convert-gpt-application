@@ -100,9 +100,67 @@ SPECIFICATION_DECISION_HEADINGS = {
     "unresolved questions",
 }
 
+SPECIFICATION_SECTION_TITLES = (
+    "Application identity and purpose",
+    "Design Statement",
+    "Intended users and contexts",
+    "Application mission and success outcomes",
+    "Scope and exclusions",
+    "Primary mission workflow",
+    "Conditional and alternative workflows",
+    "Instruction Module contracts",
+    "User-intent routing requirements",
+    "User-interaction protocols",
+    "Human-in-the-Loop checkpoints",
+    "Inputs, outputs, and state requirements",
+    "Reference Material requirements and behavior-level usage map",
+    "Deterministic-operation requirements",
+    "Tool, data, runtime, and external-service requirements",
+    "Safety, privacy, and policy boundaries",
+    "Failure, uncertainty, and recovery behavior",
+    "Acceptance criteria",
+    "Representative application tests",
+    "Assumptions, decisions, recommendations, and unresolved questions",
+    "Application Workbench handoff contract",
+)
+
+WORKFLOW_KINDS = {"start", "action", "wait", "failure", "end"}
+
 
 def _sorted(errors: list[str]) -> list[str]:
     return sorted(set(errors))
+
+
+def _is_nonempty_string(value: Any) -> bool:
+    return isinstance(value, str) and bool(value.strip())
+
+
+def _is_string_array(value: Any, *, allow_empty: bool = False) -> bool:
+    return (
+        isinstance(value, list)
+        and (allow_empty or bool(value))
+        and all(_is_nonempty_string(item) for item in value)
+    )
+
+
+def _validate_inputs(value: Any, label: str, errors: list[str]) -> None:
+    if not isinstance(value, dict):
+        errors.append(f"{label} inputs must be an object")
+        return
+    if not _is_string_array(value.get("required")):
+        errors.append(f"{label} inputs required must be a non-empty string array")
+    if not _is_string_array(value.get("optional"), allow_empty=True):
+        errors.append(f"{label} inputs optional must be a string array")
+
+
+def _valid_transitions(value: Any) -> bool:
+    if not isinstance(value, dict):
+        return False
+    return all(
+        _is_nonempty_string(target)
+        or _is_string_array(target)
+        for target in value.values()
+    )
 
 
 def _targets(transitions: Any) -> list[str]:
@@ -140,6 +198,14 @@ def validate_workflow(payload: Any) -> list[str]:
         if field not in payload:
             errors.append(f"workflow missing field: {field}")
 
+    for field in ("workflow_id", "mission_outcome", "start"):
+        if not _is_nonempty_string(payload.get(field)):
+            errors.append(f"workflow field must be a non-empty string: {field}")
+    for field in ("actors", "terminal_states", "hitl_checkpoints", "completion_criteria"):
+        if not _is_string_array(payload.get(field)):
+            errors.append(f"workflow field must be a non-empty string array: {field}")
+    _validate_inputs(payload.get("inputs"), "workflow", errors)
+
     states = payload.get("states")
     if not isinstance(states, list):
         errors.append("workflow states must be an array")
@@ -149,7 +215,7 @@ def validate_workflow(payload: Any) -> list[str]:
     if len(records) != len(states):
         errors.append("workflow state must be an object")
 
-    ids = [state.get("id") for state in records if isinstance(state.get("id"), str)]
+    ids = [state.get("id") for state in records if _is_nonempty_string(state.get("id"))]
     for state_id, count in Counter(ids).items():
         if count > 1:
             errors.append(f"duplicate state id: {state_id}")
@@ -157,6 +223,11 @@ def validate_workflow(payload: Any) -> list[str]:
 
     starts = [state for state in records if state.get("kind") == "start"]
     ends = [state for state in records if state.get("kind") == "end"]
+    failure_ids = {
+        state.get("id")
+        for state in records
+        if state.get("kind") == "failure" and _is_nonempty_string(state.get("id"))
+    }
     if len(starts) != 1:
         errors.append("exactly one start state required")
     if not ends:
@@ -168,26 +239,36 @@ def validate_workflow(payload: Any) -> list[str]:
 
     for index, state in enumerate(records):
         state_id = state.get("id")
-        label = state_id if isinstance(state_id, str) else f"index-{index}"
+        label = state_id if _is_nonempty_string(state_id) else f"index-{index}"
         for field in ("id", "kind", "interaction_protocol", "wait", "transitions"):
             if field not in state:
                 errors.append(f"state {label} missing field: {field}")
-        if not isinstance(state.get("interaction_protocol"), str) or not state.get(
-            "interaction_protocol"
-        ):
+        if not _is_nonempty_string(state.get("id")):
+            errors.append(f"state {label} id must be a non-empty string")
+        if state.get("kind") not in WORKFLOW_KINDS:
+            errors.append(f"state {label} has invalid kind")
+        if not _is_nonempty_string(state.get("interaction_protocol")):
             errors.append(f"state {label} missing interaction protocol")
+        if not isinstance(state.get("wait"), bool):
+            errors.append(f"state {label} wait must be a boolean")
         transitions = state.get("transitions")
         if not isinstance(transitions, dict):
             errors.append(f"state {label} transitions must be an object")
             continue
+        if not _valid_transitions(transitions):
+            errors.append(f"state {label} transitions contain an invalid target")
+            continue
         if "failure" in transitions:
-            failure_path = True
+            failure_path = failure_path or any(
+                target in failure_ids
+                for target in _targets({"failure": transitions["failure"]})
+            )
         if state.get("kind") == "wait" and state.get("wait") is True:
             approval_wait = True
         for target in _targets(transitions):
             if target not in known:
                 errors.append(f"unknown state transition: {label} -> {target}")
-            elif isinstance(state_id, str):
+            elif state_id in graph:
                 graph[state_id].add(target)
 
     if not failure_path:
@@ -216,6 +297,21 @@ def validate_workflow(payload: Any) -> list[str]:
         for state in ends
         if isinstance(state.get("id"), str) and state["id"] in known
     }
+    declared_terminals = payload.get("terminal_states")
+    if _is_string_array(declared_terminals) and set(declared_terminals) != terminal_ids:
+        errors.append("workflow terminal_states must match end states")
+    checkpoints = payload.get("hitl_checkpoints")
+    if _is_string_array(checkpoints):
+        wait_ids = {
+            state.get("id")
+            for state in records
+            if _is_nonempty_string(state.get("id")) and state.get("wait") is True
+        }
+        for checkpoint in checkpoints:
+            if checkpoint not in wait_ids:
+                errors.append(
+                    f"workflow HITL checkpoint must reference a wait state: {checkpoint}"
+                )
     if terminal_ids:
         reverse: dict[str, set[str]] = {state_id: set() for state_id in known}
         for source, targets in graph.items():
@@ -231,11 +327,6 @@ def validate_workflow(payload: Any) -> list[str]:
                     queue.append(source)
         for state_id in known - can_finish:
             errors.append(f"state cannot reach terminal: {state_id}")
-
-    if not isinstance(payload.get("completion_criteria"), list) or not payload.get(
-        "completion_criteria"
-    ):
-        errors.append("completion criteria required")
 
     return _sorted(errors)
 
@@ -262,7 +353,7 @@ def validate_modules(payload: Any) -> list[str]:
     ids = [
         module.get("module_id")
         for module in records
-        if isinstance(module.get("module_id"), str)
+        if _is_nonempty_string(module.get("module_id"))
     ]
     for module_id, count in Counter(ids).items():
         if count > 1:
@@ -271,19 +362,69 @@ def validate_modules(payload: Any) -> list[str]:
 
     for index, module in enumerate(records):
         module_id = module.get("module_id")
-        label = module_id if isinstance(module_id, str) else f"index-{index}"
+        label = module_id if _is_nonempty_string(module_id) else f"index-{index}"
         for field in MODULE_FIELDS:
             if field not in module:
                 errors.append(f"module {label} missing field: {field}")
+        for field in (
+            "module_id",
+            "name",
+            "purpose",
+            "mission_outcome",
+            "trigger",
+            "user_interaction_protocol",
+        ):
+            if not _is_nonempty_string(module.get(field)):
+                errors.append(f"module {label} field must be a non-empty string: {field}")
         classification = module.get("classification")
         if classification not in MODULE_TYPES:
             errors.append(f"module {label} has invalid classification")
         protocol = module.get("user_interaction_protocol")
         if not isinstance(protocol, str) or not protocol:
             errors.append(f"module {label} missing user-interaction protocol")
+        _validate_inputs(module.get("inputs"), f"module {label}", errors)
+        for field in (
+            "preconditions",
+            "procedure",
+            "outputs",
+            "safety_boundaries",
+            "acceptance_criteria",
+        ):
+            if not _is_string_array(module.get(field)):
+                errors.append(
+                    f"module {label} field must be a non-empty string array: {field}"
+                )
+        if not _is_string_array(
+            module.get("reference_material_requirements"), allow_empty=True
+        ):
+            errors.append(
+                f"module {label} field must be a string array: reference_material_requirements"
+            )
+        for field, keys in (
+            ("stop_wait_completion", ("stop", "wait", "completion")),
+            ("error_recovery", ("error", "recovery")),
+        ):
+            value = module.get(field)
+            if not isinstance(value, dict) or not all(
+                _is_nonempty_string(value.get(key)) for key in keys
+            ):
+                key_phrase = (
+                    f"{keys[0]} and {keys[1]}"
+                    if len(keys) == 2
+                    else f"{', '.join(keys[:-1])}, and {keys[-1]}"
+                )
+                errors.append(
+                    f"module {label} {field} requires non-empty {key_phrase}"
+                )
         transitions = module.get("transitions")
         if not isinstance(transitions, dict):
             errors.append(f"module {label} transitions must be an object")
+            continue
+        if not transitions:
+            errors.append(f"module {label} transitions must be a non-empty object")
+            continue
+        if not _valid_transitions(transitions):
+            errors.append(f"module {label} transitions contain an invalid target")
             continue
         for target in _targets(transitions):
             if target not in known:
@@ -322,6 +463,20 @@ def validate_design_artifacts(statement_path: str | Path, specification_path: st
         }
         for heading in DESIGN_STATEMENT_HEADINGS - headings:
             errors.append(f"design statement missing field: {heading}")
+        statement_sections = list(
+            re.finditer(r"(?m)^##\s+(.+?)\s*$", statement_text)
+        )
+        for index, match in enumerate(statement_sections):
+            heading = match.group(1).strip().casefold()
+            if heading not in DESIGN_STATEMENT_HEADINGS:
+                continue
+            end = (
+                statement_sections[index + 1].start()
+                if index + 1 < len(statement_sections)
+                else len(statement_text)
+            )
+            if not statement_text[match.end() : end].strip():
+                errors.append(f"design statement field must be non-empty: {heading}")
         if not re.search(r"(?im)^state:\s*(draft|approved)\s*$", statement_text):
             errors.append("design statement state required")
 
@@ -334,6 +489,13 @@ def validate_design_artifacts(statement_path: str | Path, specification_path: st
         nonempty = True
         for index, match in enumerate(matches):
             numbers.append(int(match.group(1)))
+            number = int(match.group(1))
+            if 1 <= number <= len(SPECIFICATION_SECTION_TITLES):
+                expected = SPECIFICATION_SECTION_TITLES[number - 1]
+                if match.group(2).strip() != expected:
+                    errors.append(
+                        f"design specification section {number} must be: {expected}"
+                    )
             inline = (match.group(3) or "").strip()
             body_end = matches[index + 1].start() if index + 1 < len(matches) else len(
                 specification_text
@@ -370,23 +532,85 @@ def validate_handoff(payload: Any) -> list[str]:
     approval = payload.get("approval")
     if not isinstance(approval, dict) or approval.get("state") != "approved":
         errors.append("handoff requires explicit approval")
+    if isinstance(approval, dict):
+        for field in ("specification_version", "confirmed_by"):
+            if not _is_nonempty_string(approval.get(field)):
+                errors.append(f"handoff approval requires non-empty {field}")
 
     for artifact_field in ("approved_design_statement", "approved_specification"):
         artifact = payload.get(artifact_field)
         if not isinstance(artifact, dict) or artifact.get("state") != "approved":
             errors.append(f"handoff requires approved artifact: {artifact_field}")
+            continue
+        for field in ("id", "version"):
+            if not _is_nonempty_string(artifact.get(field)):
+                errors.append(
+                    f"approved artifact requires non-empty {field}: {artifact_field}"
+                )
+
+    for field in (
+        "workflow_definitions_and_instruction_modules",
+        "application_invariants_and_hitl_checkpoints",
+        "acceptance_criteria_and_representative_scenarios",
+    ):
+        if not _is_string_array(payload.get(field)):
+            errors.append(f"handoff field must be a non-empty string array: {field}")
+    for field in ("deterministic_operation_candidates", "explicit_exclusions"):
+        if not _is_string_array(payload.get(field), allow_empty=True):
+            errors.append(f"handoff field must be a string array: {field}")
+
+    reference_map = payload.get("reference_material_inventory_evaluation_and_usage_map")
+    if not isinstance(reference_map, list) or not all(
+        isinstance(item, dict) and bool(item) for item in reference_map
+    ):
+        errors.append(
+            "handoff reference material inventory, evaluation, and usage map must be an object array"
+        )
+    requirements = payload.get("tool_data_runtime_and_service_requirements")
+    if not isinstance(requirements, dict) or not requirements:
+        errors.append("handoff tool, data, runtime, and service requirements must be a non-empty object")
+    rights = payload.get("rights_and_redistribution_decisions")
+    if not isinstance(rights, dict) or not rights:
+        errors.append("handoff rights and redistribution decisions must be a non-empty object")
 
     unresolved = payload.get("unresolved_owner_decisions")
     if not isinstance(unresolved, list):
         errors.append("unresolved owner decisions must be an array")
-    elif unresolved:
-        labels = sorted(str(item) for item in unresolved)
-        errors.append(f"unresolved owner decisions: {', '.join(labels)}")
+    else:
+        for item in unresolved:
+            if not isinstance(item, dict):
+                errors.append("unresolved owner decision must be an object")
+                continue
+            decision_id = item.get("decision_id")
+            if not _is_nonempty_string(decision_id):
+                errors.append("unresolved owner decision requires non-empty decision_id")
+                decision_id = "unidentified"
+            for field in ("summary", "owner"):
+                if not _is_nonempty_string(item.get(field)):
+                    errors.append(
+                        f"unresolved owner decision {decision_id} requires non-empty {field}"
+                    )
+            if not isinstance(item.get("blocking"), bool):
+                errors.append(
+                    f"unresolved owner decision {decision_id} requires boolean blocking"
+                )
+            elif item["blocking"]:
+                errors.append(f"blocking owner decision: {decision_id}")
 
     if _contains_forbidden_key(payload):
         errors.append("implementation architecture forbidden")
 
     return _sorted(errors)
+
+
+def handoff_gate_state(payload: Any) -> str:
+    """Return the documented Workbench handoff state for a validated payload."""
+
+    if validate_handoff(payload):
+        return "HANDOFF BLOCKED"
+    if payload.get("unresolved_owner_decisions"):
+        return "APPROVED WITH NONBLOCKING DECISIONS"
+    return "READY FOR WORKBENCH"
 
 
 def coverage_report(payload: Any) -> dict[str, Any]:
@@ -444,6 +668,8 @@ def status() -> dict[str, Any]:
 
     return {
         "status": "PASS",
+        "plugin_id": "cool-plugin-design-assistant",
+        "version": "1.0.0",
         "skills": list(SKILL_NAMES),
         "rag": "NOT APPLICABLE",
         "clawhub": "NOT APPLICABLE",
@@ -540,8 +766,14 @@ def main(argv: list[str] | None = None) -> int:
             errors = validate_modules(_load_json(args.artifact))
             document = _document(operation, "PASS" if not errors else "FAIL", errors)
         elif operation == "validate-handoff":
-            errors = validate_handoff(_load_json(args.artifact))
-            document = _document(operation, "PASS" if not errors else "FAIL", errors)
+            payload = _load_json(args.artifact)
+            errors = validate_handoff(payload)
+            document = _document(
+                operation,
+                "PASS" if not errors else "FAIL",
+                errors,
+                gate_state=handoff_gate_state(payload),
+            )
         elif operation == "coverage":
             report = coverage_report(_load_json(args.artifact))
             report_status = report.pop("status")

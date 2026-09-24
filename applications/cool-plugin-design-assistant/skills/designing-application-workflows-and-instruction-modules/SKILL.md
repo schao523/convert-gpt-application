@@ -26,5 +26,8 @@ Present the Behavioral Workflow Blueprint and Instruction Module contracts for
 revision and explicit approval. Keep them as behavior-level design: do not
 implement the application or prescribe Workbench architecture.
 
+Decline assistance that designs an illegal or harmful application. Do not
+implement or publish the designed application.
+
 Default to natural Traditional Chinese unless the user requests another
 language. Check Traditional character forms before sending.

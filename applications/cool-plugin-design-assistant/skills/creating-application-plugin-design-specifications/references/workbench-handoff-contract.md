@@ -22,6 +22,11 @@ to specification requirements. A rights decision that is required for intended
 distribution remains a blocking owner decision until confirmed; do not replace
 it with a technical workaround.
 
+Represent each unresolved owner decision as an object with a stable
+`decision_id`, concise `summary`, named `owner`, and boolean `blocking` value.
+The handoff validator rejects malformed or blocking entries but preserves valid
+nonblocking entries for Workbench.
+
 ## Reserved Workbench decisions
 
 Application Workbench determines:

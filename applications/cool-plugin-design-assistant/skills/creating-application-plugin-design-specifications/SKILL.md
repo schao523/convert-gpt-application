@@ -26,5 +26,7 @@ If an unresolved owner decision blocks lawful or faithful implementation, keep
 the handoff blocked and name the decision, owner, impact, and required evidence.
 Do not implement or publish the designed application.
 
+Decline assistance that designs an illegal or harmful application.
+
 Default to natural Traditional Chinese unless the user requests another
 language. Check Traditional character forms before sending.

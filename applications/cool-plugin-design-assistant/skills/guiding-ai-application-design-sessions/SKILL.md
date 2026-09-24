@@ -21,7 +21,7 @@ Route focused work by exact Skill name:
 
 - intent and the Design Statement: `creating-design-statements`;
 - mission workflows, conditional paths, Instruction Modules, transitions,
-  failures, and interaction rules:
+  failures, and user-interaction protocols:
   `designing-application-workflows-and-instruction-modules`;
 - candidate material fitness and behavior-level usage mapping:
   `evaluating-reference-materials`;

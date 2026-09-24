@@ -2,8 +2,10 @@ from __future__ import annotations
 
 import importlib.util
 from pathlib import Path
+import shutil
 import tempfile
 import unittest
+from unittest import mock
 
 from obvious_one_plugin_framework.marketplace import load_preparation_catalog
 
@@ -57,6 +59,25 @@ class MarketplaceReleaseTests(unittest.TestCase):
             self.assertFalse(
                 (plugin / "docs/marketplace-approved-delta.json").exists()
             )
+
+    def test_codex_release_requires_rights_evidence_before_destination_mutation(self) -> None:
+        release = load_script("build_marketplace_release.py")
+        with tempfile.TemporaryDirectory() as temp:
+            copied_source = Path(temp) / "source"
+            shutil.copytree(ROOT, copied_source)
+            (copied_source / "docs" / "source-decisions.md").unlink()
+            destination = Path(temp) / "marketplace"
+            with self.assertRaisesRegex(ValueError, "rights and provenance evidence missing"):
+                release.build_release(copied_source, destination, "1.0.0")
+            self.assertFalse(destination.exists())
+
+    def test_codex_release_detects_windows_reparse_points(self) -> None:
+        release = load_script("build_marketplace_release.py")
+        candidate = mock.Mock()
+        candidate.is_symlink.return_value = False
+        candidate.stat.return_value.st_file_attributes = 0x400
+        with mock.patch.object(release.os, "name", "nt"):
+            self.assertTrue(release._is_link(candidate))
 
     def test_distribution_audit_rejects_secrets_paths_assets_and_non_allowlisted_files(
         self,

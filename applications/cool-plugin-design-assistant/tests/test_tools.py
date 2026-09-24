@@ -88,6 +88,62 @@ class ToolTests(unittest.TestCase):
             state["transitions"].pop("failure", None)
         self.assertIn("failure path required", tool.validate_workflow(no_failure))
 
+        fake_failure = copy.deepcopy(valid)
+        for state in fake_failure["states"]:
+            if "failure" in state["transitions"]:
+                state["transitions"]["failure"] = "complete"
+        self.assertIn("failure path required", tool.validate_workflow(fake_failure))
+
+    def test_workflow_validator_rejects_empty_wrong_type_and_inconsistent_fields(self) -> None:
+        valid = load_fixture("workflow-valid.json")
+
+        for field in ("workflow_id", "mission_outcome", "start"):
+            broken = copy.deepcopy(valid)
+            broken[field] = None
+            self.assertIn(
+                f"workflow field must be a non-empty string: {field}",
+                tool.validate_workflow(broken),
+            )
+
+        for field in ("actors", "terminal_states", "hitl_checkpoints", "completion_criteria"):
+            broken = copy.deepcopy(valid)
+            broken[field] = []
+            self.assertIn(
+                f"workflow field must be a non-empty string array: {field}",
+                tool.validate_workflow(broken),
+            )
+
+        broken = copy.deepcopy(valid)
+        broken["inputs"] = {"required": [], "optional": [None]}
+        errors = tool.validate_workflow(broken)
+        self.assertIn("workflow inputs required must be a non-empty string array", errors)
+        self.assertIn("workflow inputs optional must be a string array", errors)
+
+        broken = copy.deepcopy(valid)
+        broken["terminal_states"] = ["complete"]
+        self.assertIn(
+            "workflow terminal_states must match end states",
+            tool.validate_workflow(broken),
+        )
+
+        broken = copy.deepcopy(valid)
+        broken["hitl_checkpoints"] = ["analyze"]
+        self.assertIn(
+            "workflow HITL checkpoint must reference a wait state: analyze",
+            tool.validate_workflow(broken),
+        )
+
+        for field, value in (
+            ("id", ""),
+            ("kind", "unknown"),
+            ("interaction_protocol", None),
+            ("wait", "yes"),
+            ("transitions", []),
+        ):
+            broken = copy.deepcopy(valid)
+            broken["states"][0][field] = value
+            self.assertTrue(tool.validate_workflow(broken), field)
+
     def test_module_validator_rejects_unknown_transition_missing_protocol_and_non_object(
         self,
     ) -> None:
@@ -112,6 +168,57 @@ class ToolTests(unittest.TestCase):
         duplicate["modules"].append(copy.deepcopy(duplicate["modules"][0]))
         self.assertIn("duplicate module id: intake", tool.validate_modules(duplicate))
 
+    def test_module_validator_rejects_empty_and_wrong_type_contract_fields(self) -> None:
+        valid = load_fixture("modules-valid.json")
+        string_fields = (
+            "module_id",
+            "name",
+            "purpose",
+            "mission_outcome",
+            "trigger",
+            "user_interaction_protocol",
+        )
+        for field in string_fields:
+            broken = copy.deepcopy(valid)
+            broken["modules"][0][field] = None
+            label = "index-0" if field == "module_id" else "intake"
+            self.assertIn(
+                f"module {label} field must be a non-empty string: {field}",
+                tool.validate_modules(broken),
+            )
+
+        for field in (
+            "preconditions",
+            "procedure",
+            "outputs",
+            "safety_boundaries",
+            "acceptance_criteria",
+        ):
+            broken = copy.deepcopy(valid)
+            broken["modules"][0][field] = []
+            self.assertIn(
+                f"module intake field must be a non-empty string array: {field}",
+                tool.validate_modules(broken),
+            )
+
+        broken = copy.deepcopy(valid)
+        broken["modules"][0]["inputs"] = None
+        broken["modules"][0]["transitions"] = {}
+        broken["modules"][0]["stop_wait_completion"] = {"stop": "", "wait": "", "completion": ""}
+        broken["modules"][0]["error_recovery"] = {"error": "", "recovery": ""}
+        errors = tool.validate_modules(broken)
+        self.assertIn("module intake inputs must be an object", errors)
+        self.assertIn("module intake transitions must be a non-empty object", errors)
+        self.assertIn("module intake stop_wait_completion requires non-empty stop, wait, and completion", errors)
+        self.assertIn("module intake error_recovery requires non-empty error and recovery", errors)
+
+        broken = copy.deepcopy(valid)
+        broken["modules"][0]["reference_material_requirements"] = [None]
+        self.assertIn(
+            "module intake field must be a string array: reference_material_requirements",
+            tool.validate_modules(broken),
+        )
+
     def test_errors_are_sorted_deterministically(self) -> None:
         broken = {"states": []}
         errors = tool.validate_workflow(broken)
@@ -126,6 +233,42 @@ class ToolTests(unittest.TestCase):
             tool.validate_design_artifacts(statement, statement),
         )
 
+    def test_design_validator_requires_canonical_sections_and_nonempty_statement_fields(self) -> None:
+        statement = ROOT / "tests" / "fixtures" / "design-statement-valid.md"
+        specification = ROOT / "tests" / "fixtures" / "design-spec-valid.md"
+        original_statement = statement.read_text(encoding="utf-8")
+        original_specification = specification.read_text(encoding="utf-8")
+
+        import tempfile
+
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            empty_statement = root / "statement.md"
+            empty_statement.write_text(
+                original_statement.replace(
+                    "## Audience\n\nVolunteer event coordinators.",
+                    "## Audience\n\n",
+                ),
+                encoding="utf-8",
+            )
+            self.assertIn(
+                "design statement field must be non-empty: audience",
+                tool.validate_design_artifacts(empty_statement, specification),
+            )
+
+            renamed_specification = root / "specification.md"
+            renamed_specification.write_text(
+                original_specification.replace(
+                    "1. **Application identity and purpose**",
+                    "1. **Different title**",
+                ),
+                encoding="utf-8",
+            )
+            self.assertIn(
+                "design specification section 1 must be: Application identity and purpose",
+                tool.validate_design_artifacts(statement, renamed_specification),
+            )
+
     def test_handoff_validator_requires_approval_and_reports_unresolved_decisions(
         self,
     ) -> None:
@@ -133,10 +276,67 @@ class ToolTests(unittest.TestCase):
         self.assertEqual(tool.validate_handoff(valid), [])
         broken = copy.deepcopy(valid)
         broken["approval"]["state"] = "draft"
-        broken["unresolved_owner_decisions"] = ["redistribution"]
+        broken["unresolved_owner_decisions"] = [
+            {
+                "decision_id": "redistribution",
+                "summary": "Confirm redistribution rights",
+                "owner": "product owner",
+                "blocking": True,
+            }
+        ]
         errors = tool.validate_handoff(broken)
         self.assertIn("handoff requires explicit approval", errors)
-        self.assertIn("unresolved owner decisions: redistribution", errors)
+        self.assertIn("blocking owner decision: redistribution", errors)
+
+    def test_handoff_validator_preserves_nonblocking_decisions_and_gate_state(self) -> None:
+        valid = load_fixture("handoff-valid.json")
+        self.assertEqual(tool.handoff_gate_state(valid), "READY FOR WORKBENCH")
+
+        nonblocking = copy.deepcopy(valid)
+        nonblocking["unresolved_owner_decisions"] = [
+            {
+                "decision_id": "release-timing",
+                "summary": "Choose the later publication date",
+                "owner": "product owner",
+                "blocking": False,
+            }
+        ]
+        self.assertEqual(tool.validate_handoff(nonblocking), [])
+        self.assertEqual(
+            tool.handoff_gate_state(nonblocking),
+            "APPROVED WITH NONBLOCKING DECISIONS",
+        )
+
+        malformed = copy.deepcopy(valid)
+        malformed["unresolved_owner_decisions"] = ["release-timing"]
+        self.assertIn(
+            "unresolved owner decision must be an object",
+            tool.validate_handoff(malformed),
+        )
+        self.assertEqual(tool.handoff_gate_state(malformed), "HANDOFF BLOCKED")
+
+    def test_handoff_validator_rejects_empty_and_wrong_type_package_fields(self) -> None:
+        valid = load_fixture("handoff-valid.json")
+        for field in (
+            "workflow_definitions_and_instruction_modules",
+            "application_invariants_and_hitl_checkpoints",
+            "acceptance_criteria_and_representative_scenarios",
+        ):
+            broken = copy.deepcopy(valid)
+            broken[field] = []
+            self.assertIn(
+                f"handoff field must be a non-empty string array: {field}",
+                tool.validate_handoff(broken),
+            )
+
+        broken = copy.deepcopy(valid)
+        broken["approved_design_statement"]["id"] = ""
+        broken["approval"]["confirmed_by"] = None
+        broken["rights_and_redistribution_decisions"] = {}
+        errors = tool.validate_handoff(broken)
+        self.assertIn("approved artifact requires non-empty id: approved_design_statement", errors)
+        self.assertIn("handoff approval requires non-empty confirmed_by", errors)
+        self.assertIn("handoff rights and redistribution decisions must be a non-empty object", errors)
 
     def test_handoff_validator_rejects_architecture_fields_recursively(self) -> None:
         broken = load_fixture("handoff-valid.json")
@@ -160,6 +360,8 @@ class ToolTests(unittest.TestCase):
     def test_status_and_cli_use_stable_ascii_result_shape(self) -> None:
         status = tool.status()
         self.assertEqual(status["status"], "PASS")
+        self.assertEqual(status["plugin_id"], "cool-plugin-design-assistant")
+        self.assertEqual(status["version"], "1.0.0")
         self.assertEqual(len(status["skills"]), 7)
         self.assertEqual(status["rag"], "NOT APPLICABLE")
         self.assertEqual(status["clawhub"], "NOT APPLICABLE")

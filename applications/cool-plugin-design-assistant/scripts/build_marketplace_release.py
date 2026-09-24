@@ -62,14 +62,22 @@ def _load_audit(source: Path):
         raise ValueError("distribution audit cannot be loaded")
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
-    return module.audit_tree
+    return module
+
+
+def _is_link(path: Path) -> bool:
+    if path.is_symlink():
+        return True
+    if os.name == "nt":
+        return bool(path.stat(follow_symlinks=False).st_file_attributes & 0x400)
+    return False
 
 
 def _public_files(source: Path) -> list[Path]:
     files: list[Path] = []
     for candidate in source.rglob("*"):
         relative = candidate.relative_to(source)
-        if candidate.is_symlink():
+        if _is_link(candidate):
             raise ValueError(f"release source contains link: {relative.as_posix()}")
         if not candidate.is_file():
             continue
@@ -91,6 +99,19 @@ def build_release(source: Path, destination: Path, version: str) -> ReleaseRepor
     if manifest.get("name") != PLUGIN_ID or manifest.get("version") != version:
         raise ValueError("plugin identity or version mismatch")
 
+    rights_evidence = source / "docs" / "source-decisions.md"
+    try:
+        rights_text = rights_evidence.read_text(encoding="utf-8")
+    except (OSError, UnicodeError) as exc:
+        raise ValueError("rights and provenance evidence missing") from exc
+    if not rights_text.strip():
+        raise ValueError("rights and provenance evidence missing")
+
+    audit = _load_audit(source)
+    source_errors = audit.audit_public_source(source)
+    if source_errors:
+        raise ValueError("release source audit failed: " + "; ".join(source_errors))
+
     destination.mkdir(parents=True, exist_ok=True)
     marker = destination / MARKER
     if any(destination.iterdir()) and not marker.is_file():
@@ -107,7 +128,7 @@ def build_release(source: Path, destination: Path, version: str) -> ReleaseRepor
         output.parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(candidate, output)
 
-    errors = _load_audit(source)(staging)
+    errors = audit.audit_tree(staging)
     if errors:
         _remove_tree(staging)
         raise ValueError("distribution audit failed: " + "; ".join(errors))

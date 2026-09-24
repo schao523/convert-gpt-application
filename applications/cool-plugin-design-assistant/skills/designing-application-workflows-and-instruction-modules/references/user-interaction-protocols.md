@@ -19,7 +19,7 @@ Define for each protocol:
 - transition guards and the state preserved across each transition; and
 - when a draft may be generated, revised, finalized, or marked approved.
 
-## Interaction rules
+## Protocol rules
 
 Do not combine unrelated consequential questions merely to appear compliant
 with the numeric limit. Wait after the question or checkpoint. A skip may leave
