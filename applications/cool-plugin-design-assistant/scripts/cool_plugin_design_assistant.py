@@ -32,6 +32,7 @@ WORKFLOW_FIELDS = {
     "states",
     "start",
     "terminal_states",
+    "successful_terminal_states",
     "hitl_checkpoints",
     "completion_criteria",
 }
@@ -201,7 +202,13 @@ def validate_workflow(payload: Any) -> list[str]:
     for field in ("workflow_id", "mission_outcome", "start"):
         if not _is_nonempty_string(payload.get(field)):
             errors.append(f"workflow field must be a non-empty string: {field}")
-    for field in ("actors", "terminal_states", "hitl_checkpoints", "completion_criteria"):
+    for field in (
+        "actors",
+        "terminal_states",
+        "successful_terminal_states",
+        "hitl_checkpoints",
+        "completion_criteria",
+    ):
         if not _is_string_array(payload.get(field)):
             errors.append(f"workflow field must be a non-empty string array: {field}")
     _validate_inputs(payload.get("inputs"), "workflow", errors)
@@ -245,7 +252,8 @@ def validate_workflow(payload: Any) -> list[str]:
                 errors.append(f"state {label} missing field: {field}")
         if not _is_nonempty_string(state.get("id")):
             errors.append(f"state {label} id must be a non-empty string")
-        if state.get("kind") not in WORKFLOW_KINDS:
+        kind = state.get("kind")
+        if not isinstance(kind, str) or kind not in WORKFLOW_KINDS:
             errors.append(f"state {label} has invalid kind")
         if not _is_nonempty_string(state.get("interaction_protocol")):
             errors.append(f"state {label} missing interaction protocol")
@@ -268,7 +276,7 @@ def validate_workflow(payload: Any) -> list[str]:
         for target in _targets(transitions):
             if target not in known:
                 errors.append(f"unknown state transition: {label} -> {target}")
-            elif state_id in graph:
+            elif isinstance(state_id, str) and state_id in graph:
                 graph[state_id].add(target)
 
     if not failure_path:
@@ -300,6 +308,14 @@ def validate_workflow(payload: Any) -> list[str]:
     declared_terminals = payload.get("terminal_states")
     if _is_string_array(declared_terminals) and set(declared_terminals) != terminal_ids:
         errors.append("workflow terminal_states must match end states")
+    declared_successful = payload.get("successful_terminal_states")
+    successful_ids: set[str] = set()
+    if _is_string_array(declared_successful):
+        successful_ids = set(declared_successful)
+        for state_id in successful_ids - terminal_ids:
+            errors.append(
+                f"workflow successful terminal must reference an end state: {state_id}"
+            )
     checkpoints = payload.get("hitl_checkpoints")
     if _is_string_array(checkpoints):
         wait_ids = {
@@ -312,6 +328,26 @@ def validate_workflow(payload: Any) -> list[str]:
                 errors.append(
                     f"workflow HITL checkpoint must reference a wait state: {checkpoint}"
                 )
+            elif isinstance(start_id, str) and successful_ids:
+                reachable_without_checkpoint: set[str] = set()
+                queue = deque([] if start_id == checkpoint else [start_id])
+                while queue:
+                    current = queue.popleft()
+                    if current in reachable_without_checkpoint or current == checkpoint:
+                        continue
+                    reachable_without_checkpoint.add(current)
+                    queue.extend(
+                        sorted(
+                            target
+                            for target in graph.get(current, set())
+                            if target != checkpoint
+                            and target not in reachable_without_checkpoint
+                        )
+                    )
+                if successful_ids & reachable_without_checkpoint:
+                    errors.append(
+                        f"workflow required HITL checkpoint can be bypassed: {checkpoint}"
+                    )
     if terminal_ids:
         reverse: dict[str, set[str]] = {state_id: set() for state_id in known}
         for source, targets in graph.items():
@@ -377,7 +413,7 @@ def validate_modules(payload: Any) -> list[str]:
             if not _is_nonempty_string(module.get(field)):
                 errors.append(f"module {label} field must be a non-empty string: {field}")
         classification = module.get("classification")
-        if classification not in MODULE_TYPES:
+        if not isinstance(classification, str) or classification not in MODULE_TYPES:
             errors.append(f"module {label} has invalid classification")
         protocol = module.get("user_interaction_protocol")
         if not isinstance(protocol, str) or not protocol:
@@ -547,6 +583,18 @@ def validate_handoff(payload: Any) -> list[str]:
                 errors.append(
                     f"approved artifact requires non-empty {field}: {artifact_field}"
                 )
+
+    specification = payload.get("approved_specification")
+    if (
+        isinstance(approval, dict)
+        and isinstance(specification, dict)
+        and _is_nonempty_string(approval.get("specification_version"))
+        and _is_nonempty_string(specification.get("version"))
+        and approval["specification_version"] != specification["version"]
+    ):
+        errors.append(
+            "handoff approval specification_version must match approved specification version"
+        )
 
     for field in (
         "workflow_definitions_and_instruction_modules",

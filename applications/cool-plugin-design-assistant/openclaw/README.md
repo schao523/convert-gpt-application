@@ -10,6 +10,7 @@ owns implementation Skill Architecture and technical Reference Material binding.
 The schema-v3 contract generates a deterministic `package.json` and
 `CONTENT-MANIFEST.json`; the product audit rejects non-text assets, private
 paths, secrets, caches, and files outside the public allowlist. Installed
-OpenClaw discovery and packaged deterministic commands are runtime-verified;
-Codex discovery, representative conversation execution, and cross-runtime
-behavioral equivalence remain pending.
+discovery and packaged deterministic commands are runtime-verified in
+OpenClaw and Codex. The matched Design Statement scenario is runtime-verified;
+the remaining approved representative-scenario suite and full staged
+marketplace delta remain `NOT VERIFIED`, so the conversion is not `READY`.

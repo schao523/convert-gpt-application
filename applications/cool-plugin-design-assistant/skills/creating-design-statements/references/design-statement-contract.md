@@ -29,13 +29,42 @@ restatement or the obvious inverse of the problem as a confirmed outcome. If
 the user has not supplied that success condition, ask for it or label the
 derived value as an assumption inside the Design Statement itself.
 
-## Drafting and comparison
+## Canonical persisted artifact
 
-Prefer one compact paragraph plus the version and state. A structured field
-list is acceptable when it makes an unresolved item clearer. When comparison
-would help, provide two or three materially distinct candidates and briefly
-name the tradeoff; do not multiply cosmetic wording variants. After drafting,
-offer `confirm`, `revise`, `compare`, or `combine`.
+A conversational preview may be one compact paragraph. The version that is
+saved, validated, approved, or handed off uses this canonical persisted
+artifact shape, with every section non-empty:
+
+```markdown
+# Design Statement
+
+Version: v1
+State: draft
+
+## Audience
+...
+
+## Context
+...
+
+## Problem
+...
+
+## Application role or method
+...
+
+## Desired outcome
+...
+
+## Style and tone
+...
+```
+
+Use the English field headings exactly so deterministic validation remains
+portable; write each field value in the user's requested language. When
+comparison helps, provide two or three materially distinct candidates and
+briefly name the tradeoff; do not multiply cosmetic wording variants. After
+drafting, offer `confirm`, `revise`, `compare`, or `combine`.
 
 Only explicit user confirmation changes `state` from `draft` to `approved`.
 Approval applies to the identified version and does not approve a later

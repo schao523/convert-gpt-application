@@ -2,9 +2,9 @@
 
 ## Current classification
 
-`PORTABLE`
+`CONDITIONALLY PORTABLE`
 
-`READY`
+`CONVERSION COMPLETE — RUNTIME VALIDATION PENDING`
 
 The Codex and OpenClaw distributions contain the same seven portable Skills,
 maintained references, and deterministic validators. No runtime adapter, RAG
@@ -17,8 +17,8 @@ subsystem, model, corpus, database, external service, or credential is required.
 | Shared source and deterministic build | STATICALLY VERIFIED | STATICALLY VERIFIED |
 | Installed discovery | RUNTIME VERIFIED | RUNTIME VERIFIED |
 | Packaged deterministic commands | RUNTIME VERIFIED | RUNTIME VERIFIED |
-| Representative execution | RUNTIME VERIFIED | RUNTIME VERIFIED |
-| Cross-runtime behavioral equivalence | RUNTIME VERIFIED | RUNTIME VERIFIED |
+| Approved representative-scenario suite | NOT VERIFIED | NOT VERIFIED |
+| Cross-runtime behavioral equivalence | NOT VERIFIED | NOT VERIFIED |
 
 ## Local verification evidence
 
@@ -56,11 +56,16 @@ representative conversation loaded the same Skill and preserved the same
 missing-outcome behavior: it identified the unresolved field, asked exactly one
 focused question in Traditional Chinese, and did not invent the answer.
 
-The two representative executions used the same user scenario and the same
+The two completed representative executions used the same user scenario and the same
 portable Skill implementation. Their verbosity differed, but the routing,
 question count, language, evidence handling, and wait behavior were
 behaviorally equivalent. No runtime adapter or application-level fork was
-required.
+required for that scenario.
+
+The approved runtime plan additionally requires BEH-006, BEH-008, BEH-011, and
+BEH-013 in both installed runtimes. Those scenarios have not yet been executed,
+so the representative suite and overall cross-runtime equivalence remain `NOT
+VERIFIED`.
 
 ## Marketplace staging
 

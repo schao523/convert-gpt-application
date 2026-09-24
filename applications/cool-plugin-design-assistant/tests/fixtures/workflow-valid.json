@@ -57,6 +57,7 @@
   ],
   "start": "intake",
   "terminal_states": ["complete", "stopped"],
+  "successful_terminal_states": ["complete"],
   "hitl_checkpoints": ["approval"],
   "completion_criteria": ["The user explicitly approves the reviewed plan"]
 }

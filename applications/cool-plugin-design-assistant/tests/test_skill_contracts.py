@@ -46,6 +46,22 @@ class SkillContractTests(unittest.TestCase):
         self.assertIn("inverse of the problem", text)
         self.assertNotIn("choose the Skill Architecture", text)
 
+        contract = read_reference(
+            "creating-design-statements", "design-statement-contract.md"
+        )
+        self.assertIn(
+            "canonical persisted artifact", " ".join(contract.split()).casefold()
+        )
+        for heading in (
+            "## Audience",
+            "## Context",
+            "## Problem",
+            "## Application role or method",
+            "## Desired outcome",
+            "## Style and tone",
+        ):
+            self.assertIn(heading, contract)
+
     def test_workflow_skill_defines_modules_and_user_interaction_protocols_not_skills(
         self,
     ) -> None:
@@ -62,6 +78,19 @@ class SkillContractTests(unittest.TestCase):
         ):
             self.assertIn(phrase, text)
         self.assertIn("Instruction Module is not a Skill", text)
+        contract = read_reference(
+            "designing-application-workflows-and-instruction-modules",
+            "workflow-blueprint-contract.md",
+        )
+        self.assertIn("successful_terminal_states", contract)
+        self.assertIn("required HITL checkpoint", contract)
+        for phrase in (
+            "non-empty string array",
+            "`required`",
+            "`optional`",
+            "literal `failure` transition",
+        ):
+            self.assertIn(phrase, contract)
 
     def test_reference_material_skill_reserves_technical_binding_for_workbench(
         self,

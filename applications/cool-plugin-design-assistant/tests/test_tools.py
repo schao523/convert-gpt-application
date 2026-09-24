@@ -135,7 +135,7 @@ class ToolTests(unittest.TestCase):
 
         for field, value in (
             ("id", ""),
-            ("kind", "unknown"),
+            ("kind", []),
             ("interaction_protocol", None),
             ("wait", "yes"),
             ("transitions", []),
@@ -143,6 +143,18 @@ class ToolTests(unittest.TestCase):
             broken = copy.deepcopy(valid)
             broken["states"][0][field] = value
             self.assertTrue(tool.validate_workflow(broken), field)
+
+    def test_workflow_validator_rejects_success_paths_that_bypass_required_hitl(self) -> None:
+        valid = load_fixture("workflow-valid.json")
+        valid["successful_terminal_states"] = ["complete"]
+        self.assertEqual(tool.validate_workflow(valid), [])
+
+        bypass = copy.deepcopy(valid)
+        bypass["states"][1]["transitions"]["bypass"] = "complete"
+        self.assertIn(
+            "workflow required HITL checkpoint can be bypassed: approval",
+            tool.validate_workflow(bypass),
+        )
 
     def test_module_validator_rejects_unknown_transition_missing_protocol_and_non_object(
         self,
@@ -200,6 +212,13 @@ class ToolTests(unittest.TestCase):
                 f"module intake field must be a non-empty string array: {field}",
                 tool.validate_modules(broken),
             )
+
+        broken = copy.deepcopy(valid)
+        broken["modules"][0]["classification"] = {}
+        self.assertIn(
+            "module intake has invalid classification",
+            tool.validate_modules(broken),
+        )
 
         broken = copy.deepcopy(valid)
         broken["modules"][0]["inputs"] = None
@@ -314,6 +333,43 @@ class ToolTests(unittest.TestCase):
             tool.validate_handoff(malformed),
         )
         self.assertEqual(tool.handoff_gate_state(malformed), "HANDOFF BLOCKED")
+
+    def test_handoff_validator_rejects_approval_for_an_older_specification_version(
+        self,
+    ) -> None:
+        stale = load_fixture("handoff-valid.json")
+        stale["approved_specification"]["version"] = "v2"
+        self.assertIn(
+            "handoff approval specification_version must match approved specification version",
+            tool.validate_handoff(stale),
+        )
+        self.assertEqual(tool.handoff_gate_state(stale), "HANDOFF BLOCKED")
+
+    def test_cli_returns_structured_errors_for_malformed_json_field_types(self) -> None:
+        import tempfile
+
+        cases = []
+        workflow = load_fixture("workflow-valid.json")
+        workflow["states"][0]["kind"] = []
+        cases.append(("validate-workflow", workflow))
+        modules = load_fixture("modules-valid.json")
+        modules["modules"][0]["classification"] = {}
+        cases.append(("validate-modules", modules))
+
+        with tempfile.TemporaryDirectory() as temp:
+            for command, payload in cases:
+                path = Path(temp) / f"{command}.json"
+                path.write_text(json.dumps(payload), encoding="utf-8")
+                completed = subprocess.run(
+                    [sys.executable, "-B", str(SCRIPT), command, str(path), "--json"],
+                    check=False,
+                    capture_output=True,
+                    text=True,
+                )
+                self.assertEqual(completed.returncode, 3, completed.stderr)
+                document = json.loads(completed.stdout)
+                self.assertEqual(document["status"], "FAIL")
+                self.assertTrue(document["errors"])
 
     def test_handoff_validator_rejects_empty_and_wrong_type_package_fields(self) -> None:
         valid = load_fixture("handoff-valid.json")
