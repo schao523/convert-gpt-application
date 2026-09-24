@@ -1,0 +1,6 @@
+interface:
+  display_name: "Create Application Plugin Design Specifications"
+  short_description: "Create complete specifications and approval-gated Workbench handoffs."
+  default_prompt: "Use $creating-application-plugin-design-specifications to create my complete application design specification and prepare its approved Workbench handoff."
+policy:
+  allow_implicit_invocation: true

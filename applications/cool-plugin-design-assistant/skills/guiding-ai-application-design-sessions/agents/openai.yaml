@@ -1,0 +1,6 @@
+interface:
+  display_name: "Guide AI Application Design Sessions"
+  short_description: "Guide phased AI application design with explicit decisions and approvals."
+  default_prompt: "Use $guiding-ai-application-design-sessions to guide my AI application from intent through an approved Workbench handoff."
+policy:
+  allow_implicit_invocation: true

@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "marketplace_commit": "49237aba246857c9112809bc03eb71bf32a21c98",
+  "rationale": {
+    "digest_mismatch": "No digest mismatch is approved for the initial conversion.",
+    "missing": "The plugin is unpublished, so no missing marketplace files are approved.",
+    "unexpected": "Marketplace-only control files are not application artifact inputs."
+  },
+  "codex": {
+    "digest_mismatch": [],
+    "missing": [],
+    "unexpected": []
+  },
+  "openclaw": {
+    "digest_mismatch": [],
+    "missing": [],
+    "unexpected": []
+  }
+}

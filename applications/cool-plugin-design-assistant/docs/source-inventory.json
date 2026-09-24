@@ -1,0 +1,92 @@
+{
+  "application_id": "cool-plugin-design-assistant",
+  "incorporated_branches": [],
+  "marketplace_commit": "49237aba246857c9112809bc03eb71bf32a21c98",
+  "marketplace_repository": "schao523/obvious-one-plugins",
+  "plugin_id": "cool-plugin-design-assistant",
+  "schema_version": 3,
+  "source_inventory": [
+    {
+      "classification": "analysis-fixture-only",
+      "path": "Plugin Spec Examples/Vibe Designer GPT.pdf",
+      "sha256": "a454c5c73e49aa7915845381211d7d83f53d412ee9674f4e4a80a285e071c121"
+    },
+    {
+      "classification": "analysis-fixture-only",
+      "path": "Plugin Spec Examples/酷聖經教師.pdf",
+      "sha256": "f4da7ef2ff8da46f7d8fd902abf1fd7bfb95a8f14f79a4268df427da44293d24"
+    },
+    {
+      "classification": "excluded-source-only",
+      "path": "ChatGPT Image.png",
+      "sha256": "398c9185ac4af6bde985ff0f8c7717c273bc45f47351733e19d6b9bae92739c9"
+    },
+    {
+      "classification": "source-only",
+      "path": "Human-in-the-Loop_Guide.md",
+      "sha256": "490e19be70b1a6886afb4765bae1d1305c0af9a4e3caf7b1e672b6680c8e40a8"
+    },
+    {
+      "classification": "source-only",
+      "path": "Resource Index.md",
+      "sha256": "75b022b3dd00fc33d3a239b057d366b6d48ddcd0888cd3732972892a9f282b8a"
+    },
+    {
+      "classification": "source-only",
+      "path": "builder_guide.md",
+      "sha256": "006d1fb1a7981e7d72aadb158620da8c9d6b74e8b6d83d493b51a1ac014690f5"
+    },
+    {
+      "classification": "source-only",
+      "path": "interaction_patterns_guide.md",
+      "sha256": "fc77d59ecb8cafb7a08f86993050f084daf462630bf7dec97fe86d32e3d8c605"
+    },
+    {
+      "classification": "source-only",
+      "path": "knowledge_module_template.md",
+      "sha256": "dd71beed2b1395c2198903943c0389ed66bf2861753765a678e3815538e58cea"
+    },
+    {
+      "classification": "source-only",
+      "path": "modular_design_guide.md",
+      "sha256": "bb9ef68d14da09a8a5c9fb5b323736747c6f8f136dafc58fe206274cdac44579"
+    },
+    {
+      "classification": "source-only",
+      "path": "prompt_refactoring_patterns.md",
+      "sha256": "eb2fabc97397998366dc76325a54a85230a04ac1e861342ab0f33baea1f63bb7"
+    },
+    {
+      "classification": "source-only",
+      "path": "resource_binding_patterns.md",
+      "sha256": "8e39935ca412fae6369400974a03f9640dbeaa93ba299435015b5a4f8bdd5b4c"
+    },
+    {
+      "classification": "source-only",
+      "path": "resource_evaluation_guide.md",
+      "sha256": "6a75667d514b9a1530f98bd2c654174fc9d333df8ebd4dd0c593b40b063fc8ed"
+    },
+    {
+      "classification": "source-only",
+      "path": "resource_types_guide.md",
+      "sha256": "6e7f9056e194b36f7be5033740d6249699e9ead71458c2847d949f079423af19"
+    },
+    {
+      "classification": "source-only",
+      "path": "testing_guide.md",
+      "sha256": "130d692779c127207d45037748280358e90b637cd2655d5fbc2cc9903982fe45"
+    },
+    {
+      "classification": "source-only",
+      "path": "use_case_brainstorm_guide.md",
+      "sha256": "022854c3dc0b46ab276d6d3c1c7d9af27a03f37c4eda8508a1819557dc1618c7"
+    },
+    {
+      "classification": "source-only",
+      "path": "酷 GPT 應用設計助理 Pro v2.docx",
+      "sha256": "a64f379d4061b0566939cb3feff3587bd69ba4ecb69b8c61be46292f5f3430c8"
+    }
+  ],
+  "source_repository": "cool-plugin-design-assistant-gpt-source",
+  "source_tree_sha256": "b2282b6c875122f7e7db2ead52b9d596783640c37260f36a75c991ea6fbd0f93"
+}

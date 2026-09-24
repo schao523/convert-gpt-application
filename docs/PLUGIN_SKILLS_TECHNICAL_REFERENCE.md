@@ -2,9 +2,17 @@
 
 ## Technical reference for Custom GPT conversion, packaging, testing, and marketplace publication
 
-This technical reference explains how Codex or a plugin developer converts the system instructions and reference documents of a Custom GPT into a reusable plugin of skills, validates the result, packages it safely, and publishes it through a GitHub-hosted marketplace. It is based on the development history of the `cool-bible-tutor` plugin and its Obvious One marketplace release workflow.
+This technical reference explains how Codex or a plugin developer converts the system instructions and reference documents of a Custom GPT into a reusable plugin of skills, validates the result, packages it safely, and prepares it for a GitHub-hosted marketplace. It uses examples from `cool-bible-tutor` and `vibe-coding-designer`, but neither product is a generic template.
 
 If you are the GPT owner and want a guided, nontechnical workflow, begin with the [Custom GPT to Plugin User Guide](GPT_TO_PLUGIN_USER_GUIDE.md). That guide focuses on what you need to prepare, the decisions Codex will ask you to make, example prompts and replies, and the approvals required before building or publishing. Return here only for implementation details, schemas, commands, audits, or troubleshooting.
+
+This file is the specialized reference for designing, authoring, and reviewing
+skills and plugin structure. The
+[Plugin and Framework Command Reference](PLUGIN_AND_FRAMEWORK_COMMAND_REFERENCE.md)
+is authoritative for the current framework CLI, packaging, verification, and
+marketplace operations. The generic framework requires Python 3.11 or newer.
+It uses distribution-contract schema v3 for new builds and the separate
+application-configuration schema v2 for provenance and verification.
 
 This reference assumes a source folder containing some combination of:
 
@@ -54,11 +62,11 @@ Use this lifecycle for a serious conversion:
 8. Author concise `SKILL.md` files and progressively disclosed resources.
 9. Add behavioral, structural, and distribution tests.
 10. Create and validate the plugin manifest.
-11. Produce an allowlisted release tree.
-12. Add the plugin to a repository marketplace.
-13. Install and test the marketplace version in a new task.
-14. Push, tag, document, and maintain the GitHub release.
-15. Optionally submit the plugin to OpenAI's universal directory.
+11. Validate distribution-contract schema v3 and build deterministic artifacts.
+12. Prepare and verify a catalog-driven marketplace delta without mutating the baseline.
+13. Install and test the staged marketplace version in new Codex and OpenClaw sessions.
+14. After explicit approval, publish the reviewed marketplace change and retest it.
+15. Separately authorize any GitHub Release, ClawHub publication, or universal-directory submission.
 
 The order matters. Packaging a monolithic prompt before defining its workflows merely moves the original design problems into a new folder.
 
@@ -564,6 +572,13 @@ The current case-study manifest is [`../applications/cool-bible-tutor/.codex-plu
 
 The source tree and the public release tree should be treated as different products.
 
+Record that boundary in `applications/<plugin-id>/openclaw/distribution.json`.
+New builds require distribution-contract schema v3. Schema v1 and v2 remain
+readable only for legacy verification and return `legacy_contract_read_only`
+when a caller attempts to rebuild them. Use `migrate-contract` to create a
+non-destructive proposal; a decision owner must resolve every classification
+and redistribution decision before the proposal becomes a buildable contract.
+
 ### 11.1 Use an allowlist
 
 An allowlist is safer than copying the source folder and deleting known private files afterward. Permit only intentional release files and directories, such as:
@@ -589,6 +604,13 @@ Reject or exclude:
 - unrelated source documents;
 - unfinished placeholders;
 - broken local links.
+
+Schema-v3 `content_rules` are deny-by-default. Every selected file must match
+exactly one text or binary rule. Text rules declare canonicalization, and every
+included rule cites approved redistribution evidence from an application-owned
+provenance file. Ambiguous classification, missing classification, unsafe
+links, generated-path collisions, or unresolved rights block the build before
+the output directory is changed.
 
 ### 11.2 Audit rights and provenance
 
@@ -620,22 +642,45 @@ Cool Bible Tutor eventually shipped an explicitly approved read-only corpus and 
 
 The case-study audit is [`../applications/cool-bible-tutor/scripts/distribution_audit.py`](../applications/cool-bible-tutor/scripts/distribution_audit.py).
 
-### 11.4 Produce an auditable release manifest
+### 11.4 Validate and build through the generic framework
 
-A release builder should:
+Run the non-interactive preflight before building:
 
-1. validate the source plugin;
-2. verify the requested name and version;
-3. refuse a nonempty unrecognized destination;
-4. stage only allowlisted files;
-5. audit the staged tree;
-6. replace the target atomically;
-7. calculate a SHA-256 digest for every released file;
-8. write a machine-readable release manifest.
+```powershell
+python -B -m obvious_one_plugin_framework.cli validate-contract `
+  --contract .\applications\<plugin-id>\openclaw\distribution.json `
+  --json
+```
 
-The Obvious One case-study builder implements this pattern in [`../applications/cool-bible-tutor/scripts/build_marketplace_release.py`](../applications/cool-bible-tutor/scripts/build_marketplace_release.py). It also uses a destination marker so an automated rebuild cannot overwrite an unrelated nonempty folder.
+If the contract is legacy, create a reviewable proposal rather than editing or
+guessing classifications in place:
 
-## 12. Phase 9: create a GitHub repository marketplace
+```powershell
+python -B -m obvious_one_plugin_framework.cli migrate-contract `
+  --contract .\applications\<plugin-id>\openclaw\distribution.json `
+  --output .\.tmp\<plugin-id>-schema-v3-proposal.json `
+  --json
+```
+
+After approval, build and verify the lightweight OpenClaw artifact:
+
+```powershell
+python -B -m obvious_one_plugin_framework.cli build-package `
+  --contract .\applications\<plugin-id>\openclaw\distribution.json `
+  --output .\dist\openclaw\<plugin-id>
+
+python -B -m obvious_one_plugin_framework.cli verify `
+  --contract .\applications\<plugin-id>\openclaw\distribution.json `
+  --output .\dist\openclaw\<plugin-id>
+```
+
+The builder stages transactionally, validates the post-copy tree, reserves the
+framework runtime namespace, and writes a deterministic content manifest. Each
+CLI invocation emits exactly one ASCII-safe `result-schema-v1` document.
+Clients must parse that result and its status; exit code zero alone is not
+artifact evidence.
+
+## 12. Phase 9: prepare a GitHub repository marketplace
 
 ### 12.1 Recommended marketplace repository layout
 
@@ -650,12 +695,22 @@ my-plugin-marketplace/
 │       │   └── plugin.json
 │       ├── skills/
 │       └── ...
+├── openclaw/
+│   └── my-gpt-plugin/
+├── .obvious-one-validation.json
+├── tools/
+│   └── verify_marketplace.py
+├── .github/
+│   └── workflows/
+│       └── validate.yml
 ├── .release-manifest.json
 ├── README.md
 └── LICENSE
 ```
 
-The Obvious One release workflow stages the plugin at `plugins/cool-bible-tutor/` and records a release manifest at the repository root.
+The Obvious One preparation catalog owns the Codex and OpenClaw destinations
+for every application. The generated registry and verifier make validation
+catalog-driven instead of hard-coding one reference product into CI.
 
 ### 12.2 Create `marketplace.json`
 
@@ -699,48 +754,52 @@ Typical policies are:
 - `installation`: `AVAILABLE`, `NOT_AVAILABLE`, or `INSTALLED_BY_DEFAULT`;
 - `authentication`: `ON_INSTALL` or `ON_USE`.
 
-### 12.3 Scaffold a repository marketplace with the creator
+### 12.3 Declare the preparation catalog
 
-From the marketplace repository root:
+Keep the catalog in the conversion repository, not in product instructions. An
+entry uses `build` for an approved schema-v3 application or `verify_existing`
+for a published legacy artifact whose exact bytes must be preserved. Legacy
+verification is not trust in an old manifest: paths, sizes, SHA-256 values,
+aggregate identity, and complete scoped trees are recalculated.
 
-```powershell
-python <plugin-creator-root>/scripts/create_basic_plugin.py `
-  my-gpt-plugin `
-  --path ./plugins `
-  --marketplace-path ./.agents/plugins/marketplace.json `
-  --marketplace-name my-marketplace `
-  --with-skills `
-  --with-marketplace
-```
+### 12.4 Prepare and verify a local delta
 
-Use `--marketplace-name` only when creating a new marketplace with that intended unique identity. For an existing marketplace, preserve and validate its current name instead of renaming it through a scaffold command.
-
-If the plugin was developed elsewhere, use the same target layout but copy it through an audited release builder rather than an unfiltered recursive copy.
-
-### 12.4 Initialize and publish the GitHub repository
-
-Create the repository without committing private source material:
+Treat the marketplace checkout as a read-only baseline. Prepare a separate
+staging tree:
 
 ```powershell
-git init
-git add .agents/plugins/marketplace.json plugins README.md LICENSE
-git commit -m "release: publish initial plugin marketplace"
-git branch -M main
-git remote add origin https://github.com/<owner>/<marketplace-repo>.git
-git push -u origin main
-git tag v1.0.0
-git push origin v1.0.0
+python -B -m obvious_one_plugin_framework.cli prepare-marketplace `
+  --catalog .\marketplaces\obvious-one.json `
+  --marketplace <clean-marketplace-checkout> `
+  --output .\dist\marketplace-delta\obvious-one `
+  --json
 ```
 
-Before the first push, inspect the staged content:
+Preparation updates only declared destinations, preserves unrelated content,
+reconstructs both runtime catalogs, and generates the self-contained verifier
+and catalog-driven CI workflow. It also writes scoped Git attributes such as
+`-text whitespace=cr-at-eol` so exact manifest bytes survive Windows, Linux,
+and macOS checkouts.
+
+Verify filesystem evidence first, then Git index, commit, and fresh-checkout
+evidence as separate modes:
 
 ```powershell
-git status --short
-git diff --cached --stat
-git diff --cached
+python -B -m obvious_one_plugin_framework.cli verify-marketplace --catalog .\marketplaces\obvious-one.json --marketplace .\dist\marketplace-delta\obvious-one --json
+python -B -m obvious_one_plugin_framework.cli verify-marketplace --catalog .\marketplaces\obvious-one.json --marketplace <external-git-stage> --index --json
+python -B -m obvious_one_plugin_framework.cli verify-marketplace --catalog .\marketplaces\obvious-one.json --marketplace <external-git-stage> --commit HEAD --json
+python -B -m obvious_one_plugin_framework.cli verify-marketplace --catalog .\marketplaces\obvious-one.json --marketplace <external-git-stage> --fresh-checkout --json
 ```
 
-For repositories containing intentional binary assets, also check object sizes before pushing. GitHub rejects ordinary Git objects at or above its enforced per-file limit; large optional models or platform dependencies are usually better downloaded after explicit user consent and verified against pinned manifests.
+Do not create a nested Git worktree under the conversion repository, including
+under `dist` or `.tmp`; repository-boundary tests intentionally reject nested
+`.git` metadata. Use an external temporary Git repository or a platform-managed
+worktree. Preparation never applies or publishes the delta. GitHub marketplace
+publication requires a separate review and explicit approval.
+
+For repositories containing intentional binary assets, also check object sizes
+before publication. Large optional models or platform dependencies are usually
+better downloaded after explicit consent and verified against pinned manifests.
 
 ### 12.5 Document marketplace installation
 
@@ -799,16 +858,24 @@ For the default personal marketplace at `~/.agents/plugins/marketplace.json`, Co
 
 ### 13.2 Publish a real release
 
-For a release:
+After the locally staged delta and its exact Git evidence pass:
 
 1. restore a clean semantic version without a local cache-buster;
-2. run all skill, behavior, plugin, distribution, and release-builder tests;
-3. rebuild the marketplace tree from the audited source;
-4. inspect the release manifest and Git diff;
-5. update changelog or release notes if used;
-6. commit the marketplace update;
-7. create and push the matching Git tag;
-8. install from the GitHub marketplace and run smoke scenarios in a new task.
+2. run all skill, behavior, plugin, distribution, framework, and product tests;
+3. regenerate the marketplace delta from the approved clean baseline;
+4. inspect the manifests, machine-readable results, and exact Git diff;
+5. obtain explicit approval for the specific marketplace mutation;
+6. commit and push a marketplace branch, then let catalog-driven CI validate
+   every registered plugin on its configured operating systems;
+7. merge only after required checks pass;
+8. install from the GitHub marketplace and run smoke scenarios in new Codex and
+   OpenClaw sessions.
+
+GitHub marketplace publication, a GitHub tag or GitHub Release, ClawHub
+publication, and universal-directory submission are separate channels with
+separate contracts and approvals. When ClawHub is enabled,
+schema v3 requires a compatible native manifest and declared extension files;
+when disabled, the channel is `NOT APPLICABLE` rather than failed.
 
 After publishing an update, users can refresh configured marketplaces with:
 
@@ -866,34 +933,43 @@ Use the repository's real test runner. For a Python standard-library suite:
 python -m unittest discover -s ./my-gpt-plugin/tests -p "test_*.py" -v
 ```
 
-### Step 3: validate the plugin manifest and package
+### Step 3: validate the plugin and distribution contract
 
 ```powershell
 python <plugin-creator-root>/scripts/validate_plugin.py ./my-gpt-plugin
-python ./my-gpt-plugin/scripts/distribution_audit.py ./my-gpt-plugin
+python -B -m obvious_one_plugin_framework.cli validate-contract `
+  --contract .\applications\my-gpt-plugin\openclaw\distribution.json `
+  --json
 ```
 
-### Step 4: build the marketplace release
+Run any application-owned distribution audit declared by the product tests, but
+do not substitute it for the generic schema-v3 preflight.
+
+### Step 4: prepare the marketplace delta
 
 ```powershell
-python ./my-gpt-plugin/scripts/build_marketplace_release.py `
-  --source ./my-gpt-plugin `
-  --destination ../my-plugin-marketplace `
-  --version 1.0.0
+python -B -m obvious_one_plugin_framework.cli prepare-marketplace `
+  --catalog .\marketplaces\obvious-one.json `
+  --marketplace <clean-marketplace-checkout> `
+  --output .\dist\marketplace-delta\obvious-one `
+  --json
 ```
 
-### Step 5: inspect the release tree
+### Step 5: verify and inspect the staged tree
 
 ```powershell
-git -C ../my-plugin-marketplace status --short
-git -C ../my-plugin-marketplace diff --stat
-git -C ../my-plugin-marketplace diff
+python -B -m obvious_one_plugin_framework.cli verify-marketplace `
+  --catalog .\marketplaces\obvious-one.json `
+  --marketplace .\dist\marketplace-delta\obvious-one `
+  --json
+
+git diff --no-index -- <clean-marketplace-checkout> .\dist\marketplace-delta\obvious-one
 ```
 
 ### Step 6: test the local marketplace root
 
 ```powershell
-codex plugin marketplace add ../my-plugin-marketplace
+codex plugin marketplace add .\dist\marketplace-delta\obvious-one
 codex plugin marketplace list
 codex plugin add my-gpt-plugin@my-marketplace
 codex plugin list
@@ -906,23 +982,26 @@ Start a new task and run at least:
 - one missing-input request;
 - one pressure or safety-boundary request;
 - one packaged script or asset workflow;
-- one offline or unavailable-dependency scenario, if applicable.
+- one offline or unavailable-dependency scenario, if applicable;
+- the corresponding OpenClaw discovery and representative execution scenario.
 
-### Step 7: commit, push, and retest GitHub installation
+### Step 7: publish only after explicit approval
+
+After approval, apply the reviewed delta on a marketplace feature branch, open
+a pull request, and require the generated catalog-driven CI matrix to pass.
+Merge the marketplace pull request before considering any separately approved
+tag, GitHub Release, ClawHub publication, or universal-directory submission.
+
+Then replace the local marketplace source and install the published plugin:
 
 ```powershell
-git -C ../my-plugin-marketplace add .
-git -C ../my-plugin-marketplace commit -m "release: publish my-gpt-plugin v1.0.0"
-git -C ../my-plugin-marketplace push origin main
-git -C ../my-plugin-marketplace tag v1.0.0
-git -C ../my-plugin-marketplace push origin v1.0.0
-
 codex plugin marketplace remove my-marketplace
 codex plugin marketplace add <owner>/<marketplace-repo> --ref main
 codex plugin add my-gpt-plugin@my-marketplace
 ```
 
-Open a new task and repeat the smoke scenarios. This verifies the repository version rather than the developer's source folder.
+Repeat the Codex and OpenClaw smoke scenarios. This verifies the published
+repository version rather than the developer's source folder.
 
 ## 16. Common failure modes and their corrections
 
@@ -966,7 +1045,9 @@ Open a new task and repeat the smoke scenarios. This verifies the repository ver
 
 **Symptom:** local paths, user content, review databases, credentials, or caches appear in Git.
 
-**Correction:** use an allowlisted release builder, external per-user data directories, a distribution audit, and pre-push staged-tree inspection.
+**Correction:** use schema-v3 `content_rules`, external per-user data
+directories, an application-owned audit, the generic transactional builders,
+and staged-tree inspection.
 
 ### Publishing assets without a rights decision
 
@@ -1055,6 +1136,8 @@ Several broader lessons follow:
 ### Plugin and distribution
 
 - [ ] `.codex-plugin/plugin.json` passes validation.
+- [ ] The distribution contract is schema v3; schema v1/v2 inputs are treated as read-only legacy formats.
+- [ ] Every selected file matches exactly one approved `content_rules` entry.
 - [ ] Plugin folder name, manifest name, and marketplace entry name match.
 - [ ] Version is valid semantic versioning.
 - [ ] Search metadata is accurate and non-sensitive.
@@ -1068,12 +1151,16 @@ Several broader lessons follow:
 ### Marketplace and publication
 
 - [ ] `.agents/plugins/marketplace.json` has a stable unique name.
+- [ ] The preparation catalog contains every intended Codex and OpenClaw artifact exactly once.
+- [ ] `prepare-marketplace` changed only declared destinations in a separate staged tree.
+- [ ] Filesystem, index, commit, and fresh-checkout verification pass as applicable.
+- [ ] Generated catalog-driven CI validates every registered plugin independently.
 - [ ] Every entry contains source, policy, and category.
 - [ ] The GitHub repository contains the release tree, not the private authoring tree.
 - [ ] The staged Git diff has been manually reviewed.
 - [ ] The marketplace is installable from a local root.
 - [ ] The plugin is tested from the installed local marketplace in a new task.
-- [ ] The repository is pushed and tagged.
+- [ ] Any repository push, tag, GitHub Release, ClawHub publication, or universal-directory submission has separate explicit approval.
 - [ ] The marketplace is installable from the GitHub source.
 - [ ] The GitHub-installed plugin is retested in a new task.
 - [ ] Documentation distinguishes repository distribution from universal-directory publication.

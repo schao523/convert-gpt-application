@@ -1,0 +1,6 @@
+interface:
+  display_name: "Review Application Implementations"
+  short_description: "Review Workbench implementations against approved requirements."
+  default_prompt: "Use $reviewing-application-implementations to review my Application Implementation against its approved specification."
+policy:
+  allow_implicit_invocation: true

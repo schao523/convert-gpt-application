@@ -1,0 +1,6 @@
+interface:
+  display_name: "Plan Application Tests and Improvements"
+  short_description: "Plan traceable tests and evidence-backed versioned improvements."
+  default_prompt: "Use $planning-application-tests-and-improvements to plan traceable tests or assess supplied results for my application."
+policy:
+  allow_implicit_invocation: true

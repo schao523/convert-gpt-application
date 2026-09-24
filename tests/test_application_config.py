@@ -36,6 +36,7 @@ class ApplicationConfigTests(unittest.TestCase):
         configs = {item.plugin_id: item for item in discover_applications(ROOT)}
         vibe = configs["vibe-coding-designer"]
         cool = configs["cool-bible-tutor"]
+        assistant = configs["cool-plugin-design-assistant"]
 
         self.assertIsNotNone(vibe.verification.marketplace)
         self.assertEqual(vibe.verification.marketplace.codex_path, "plugins/{plugin_id}")
@@ -56,6 +57,25 @@ class ApplicationConfigTests(unittest.TestCase):
         self.assertEqual(cool_targets["distribution-audit"], ("codex", "openclaw"))
         self.assertEqual(cool_targets["runtime-status"], ("codex", "openclaw"))
         self.assertEqual(cool_targets["exact-passage"], ("openclaw",))
+
+        self.assertIsNotNone(assistant.verification.marketplace)
+        self.assertEqual(
+            assistant.verification.marketplace.codex_path,
+            "plugins/{plugin_id}",
+        )
+        self.assertEqual(
+            assistant.verification.marketplace.openclaw_path,
+            "openclaw/{plugin_id}",
+        )
+        self.assertTrue(assistant.verification.marketplace.approved_delta.is_file())
+        assistant_targets = {
+            item.command_id: item.marketplace_targets
+            for item in assistant.verification.commands
+        }
+        self.assertEqual(len(assistant_targets), 6)
+        self.assertTrue(
+            all(targets == ("codex", "openclaw") for targets in assistant_targets.values())
+        )
 
 
 if __name__ == "__main__":

@@ -1,0 +1,63 @@
+{
+  "workflow_id": "project-planning",
+  "mission_outcome": "A user-reviewed project plan",
+  "actors": ["user", "application"],
+  "inputs": {
+    "required": ["project notes"],
+    "optional": ["constraints"]
+  },
+  "states": [
+    {
+      "id": "intake",
+      "kind": "start",
+      "interaction_protocol": "guided-intake",
+      "wait": false,
+      "transitions": {"success": "analyze", "failure": "recover"}
+    },
+    {
+      "id": "analyze",
+      "kind": "action",
+      "interaction_protocol": "direct-analysis",
+      "wait": false,
+      "transitions": {"success": "approval", "failure": "recover"}
+    },
+    {
+      "id": "approval",
+      "kind": "wait",
+      "interaction_protocol": "explicit-approval",
+      "wait": true,
+      "transitions": {
+        "approved": "complete",
+        "revision": "analyze",
+        "stop": "stopped",
+        "failure": "recover"
+      }
+    },
+    {
+      "id": "recover",
+      "kind": "failure",
+      "interaction_protocol": "recovery-choice",
+      "wait": true,
+      "transitions": {"retry": "intake", "stop": "stopped"}
+    },
+    {
+      "id": "complete",
+      "kind": "end",
+      "interaction_protocol": "completion-summary",
+      "wait": false,
+      "transitions": {}
+    },
+    {
+      "id": "stopped",
+      "kind": "end",
+      "interaction_protocol": "stop-summary",
+      "wait": false,
+      "transitions": {}
+    }
+  ],
+  "start": "intake",
+  "terminal_states": ["complete", "stopped"],
+  "successful_terminal_states": ["complete"],
+  "hitl_checkpoints": ["approval"],
+  "completion_criteria": ["The user explicitly approves the reviewed plan"]
+}
