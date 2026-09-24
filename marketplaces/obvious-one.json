@@ -15,6 +15,13 @@
       "codex_destination": "plugins/vibe-coding-designer",
       "openclaw_destination": "openclaw/vibe-coding-designer",
       "mode": "build"
+    },
+    {
+      "application_config": "applications/cool-plugin-design-assistant/conversion.json",
+      "distribution_contract": "applications/cool-plugin-design-assistant/openclaw/distribution.json",
+      "codex_destination": "plugins/cool-plugin-design-assistant",
+      "openclaw_destination": "openclaw/cool-plugin-design-assistant",
+      "mode": "build"
     }
   ]
 }

@@ -21,7 +21,7 @@
   "release_repository": "schao523/obvious-one-plugins",
   "release_tag_template": "cool-plugin-design-assistant-v{version}",
   "readme_overlay": "openclaw/README.md",
-  "audit_hook": null,
+  "audit_hook": "scripts/distribution_audit.py:audit_distribution",
   "rag": null,
   "content_rules": [
     {

@@ -507,7 +507,11 @@ def _run_distribution_audit(stage: str | Path) -> tuple[str, list[str]]:
         return "BLOCKED", ["distribution audit unavailable"]
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
-    errors = module.audit_distribution(Path(stage), None)
+    root = Path(stage)
+    if (root / "conversion.json").is_file() and hasattr(module, "audit_public_source"):
+        errors = module.audit_public_source(root)
+    else:
+        errors = module.audit_distribution(root, None)
     return ("PASS", []) if not errors else ("FAIL", list(errors))
 
 
