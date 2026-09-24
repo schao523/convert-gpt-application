@@ -12,7 +12,7 @@
 | INV-008 | `designing-application-workflows-and-instruction-modules` | Workflow, module, interaction, and Workbench-boundary contracts | BEH-006 five-sample clean-context evaluation | STATICALLY VERIFIED |
 | INV-009 | Review and testing Skills | Approved-specification and inspectable/supplied-evidence gates in both post-Workbench Skills | BEH-009 and BEH-010 five-sample clean-context evaluations | STATICALLY VERIFIED |
 | INV-010 | `guiding-ai-application-design-sessions` | Session state and decision-ledger ownership | BEH-002 contract | STATICALLY VERIFIED |
-| INV-011 | All Skills and validators | Reference and specification contracts prohibit invented rights or execution evidence; remaining evidence contracts pending | BEH-013 | EXPECTED |
+| INV-011 | All Skills and validators | Reference, specification, review, test, launcher, and distribution contracts require explicit evidence states and prohibit invented rights or execution evidence | BEH-013 contracts plus parsed verifier and artifact-audit results | STATICALLY VERIFIED |
 | INV-012 | `creating-application-plugin-design-specifications` | Complete-version approval gate and blocked/ready handoff states | BEH-011 five-sample clean-context evaluation | STATICALLY VERIFIED |
 | INV-013 | All Skills | Traditional Chinese rule present in all seven Skills | BEH-001 five-sample clean-context evaluation | STATICALLY VERIFIED |
 | INV-014 | `guiding-ai-application-design-sessions` | Explicit illegal-or-harmful design refusal | BEH-014 contract | STATICALLY VERIFIED |
@@ -21,3 +21,5 @@
 | SPEC-HANDOFF-001 | `creating-application-plugin-design-specifications` | Ordered 21-section specification and Workbench-reserved decision contract | Premature-handoff pressure scenario, five clean-context samples | STATICALLY VERIFIED |
 | SPEC-REVIEW-001 | `reviewing-application-implementations` | Two-input review gate, evidence states, and four finding classifications | Missing-specification pressure scenario, five clean-context samples | STATICALLY VERIFIED |
 | SPEC-TEST-001 | `planning-application-tests-and-improvements` | Traceable scenario schema, coverage evidence rules, and versioned patch contract | Unsupported-coverage pressure scenario, five clean-context samples | STATICALLY VERIFIED |
+| DIST-001 | Schema-v3 contract and deterministic builders | Text-only allowlist, product audit hook, no-RAG contract, and catalog registration | Two byte-identical OpenClaw builds plus completed Codex/OpenClaw artifact audits | STATICALLY VERIFIED |
+| RUNTIME-001 | Codex and OpenClaw runtime validation | Both artifacts contain the same seven portable Skills and deterministic commands | Installed discovery, representative execution, and cross-runtime comparison are pending | NOT VERIFIED |
