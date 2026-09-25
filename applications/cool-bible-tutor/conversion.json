@@ -37,7 +37,7 @@
           "{application_root}/scripts/distribution_audit.py",
           "{application_root}"
         ],
-        "marketplace_targets": ["codex", "openclaw"]
+        "marketplace_targets": ["codex"]
       },
       {
         "id": "exact-passage",
