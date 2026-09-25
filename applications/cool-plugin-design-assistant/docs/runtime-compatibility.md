@@ -92,11 +92,11 @@ preserving the audited nested artifact bytes and regenerating its outer content
 manifest from Git blobs; the baseline and public marketplace were not mutated.
 
 After that repair, full catalog preparation and filesystem verification passed
-with no diagnostic plugins. The verified stage identity was
-`c4edf693401d559a40cc627176144a6c02f1526c7c665bc9a44c04a6e01236f0`.
-It includes both Cool Plugin Design Assistant artifacts, the catalog entries,
-the generated verifier and workflow, the legacy verification target, and the
-schema-v3 Vibe Coding Designer build canary.
+with no diagnostic plugins. The generated identity is retained in the external
+verification report rather than embedded here because this document is itself
+part of that identity. The stage includes both Cool Plugin Design Assistant
+artifacts, the catalog entries, the generated verifier and workflow, the legacy
+verification target, and the schema-v3 Vibe Coding Designer build canary.
 
 Git index, commit, fresh-checkout, publication, and post-publication install
 verification remain separate gates. No public marketplace mutation, release,
