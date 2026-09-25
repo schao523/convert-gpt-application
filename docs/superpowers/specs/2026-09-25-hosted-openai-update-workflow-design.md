@@ -14,9 +14,11 @@ This design adds a separate, application-owned `hosted-update-contract-v1` and
 four non-interactive framework commands for planning, validating, building,
 and verifying an upload-ready hosted update ZIP. The verifier simulates the
 hosted overlay operation because omitted baseline files are preserved and file
-deletion is unavailable. The first version stops at a locally verified ZIP. It
+deletion is unavailable. The contract also declares application capabilities,
+their required or optional status, packaged providers, local verification, and
+unavailability policy. The first version stops at a locally verified ZIP. It
 does not authenticate to OpenAI, upload, install, or claim hosted runtime
-validation.
+validation; local execution evidence never upgrades hosted execution evidence.
 
 The new workflow is independent of distribution-contract schema v3. It reuses
 schema-v3 content classification and redistribution evidence for enhanced
@@ -51,6 +53,12 @@ distribution rules.
   Designer the first product canary.
 - **HOU-012:** Remain non-interactive so a future Workbench plugin or other
   client can guide decisions without embedding interaction in the framework.
+- **HOU-013:** Declare every application capability that depends on packaged
+  executables, structured data, hosted-native facilities, or external adapters,
+  including whether it is required or optional and what happens when it is
+  unavailable.
+- **HOU-014:** Keep package-static, local-execution, and hosted-execution
+  evidence separate so local verification cannot imply hosted capability.
 
 ### Non-goals
 
@@ -60,8 +68,8 @@ distribution rules.
 - Treating a locally verified ZIP as hosted runtime evidence or `READY`.
 - Changing distribution-contract schema v3, marketplace preparation, Codex
   packaging, OpenClaw packaging, ClawHub behavior, or RAG contracts.
-- Inferring a skill merge, router, rename, compatibility layer, rights
-  decision, or lineage decision.
+- Inferring a skill merge, router, rename, compatibility layer, rights,
+  lineage, capability requirement, provider, or fallback decision.
 - Committing a downloaded hosted ZIP unless its redistribution has been
   separately approved.
 - Converting the Conversion Workbench itself into a plugin.
@@ -104,17 +112,19 @@ decision. Suggestions do not constitute approval.
 ### Recover from missing decisions
 
 When lineage, classification, rights, mapping, baseline disposition,
-deactivation, or manifest-change approval is missing, the command returns
-`BLOCKED`. Diagnostics contain safe relative paths, stable codes, and candidate
-decisions. The decision owner approves a choice, a conversion caller records
-it in application-owned files, and validation restarts from the beginning.
+deactivation, capability, fallback, or manifest-change approval is missing,
+the command returns `BLOCKED`. Diagnostics contain safe relative paths, stable
+codes, and candidate decisions. The decision owner approves a choice, a
+conversion caller records it in application-owned files, and validation
+restarts from the beginning.
 
 ### Validate without building
 
 The validator parses the approved contract, verifies the exact baseline
 digest and identity, resolves every mapping and disposition, checks referenced
-schema-v3 redistribution evidence, validates target manifests and version
-ordering, and preflights the complete update. It writes no ZIP.
+schema-v3 redistribution evidence, validates target manifests, capability
+contracts, provider artifacts, local-test references, version ordering, and
+preflights the complete update. It writes no ZIP.
 
 ### Build an update ZIP
 
@@ -129,8 +139,9 @@ The verifier extracts neither archive over untrusted paths. It models the
 effective hosted release by applying update members over baseline members in a
 confined temporary root. It checks manifests, presentation metadata, prompts,
 skills, references, indexes, active and dormant paths, application invariants,
-and deterministic rebuild evidence. Success reports an upload-ready local
-artifact while upload and hosted runtime validation remain `NOT VERIFIED`.
+declared capability artifacts, local verification commands, and deterministic
+rebuild evidence. Success reports an upload-ready local artifact while upload,
+installation, and every hosted capability remain `NOT VERIFIED`.
 
 ### Replan after a baseline change
 
@@ -323,7 +334,8 @@ The tracked contract has this top-level shape:
     "expected_skills": [],
     "explicit_only_skills": [],
     "dormant_paths": [],
-    "required_application_tests": []
+    "required_application_tests": [],
+    "capabilities": []
   }
 }
 ```
@@ -360,8 +372,68 @@ proven, the update remains blocked.
 ### Effective-release declaration
 
 The contract records the exact expected active skill names, explicit-only
-skills, dormant paths, and required product-test identifiers. Physical archive
-membership and active behavior are therefore separate declared concepts.
+skills, dormant paths, required product-test identifiers, and capability
+contracts. Physical archive membership, local executability, and hosted
+behavior are therefore separate declared concepts.
+
+### Capability contracts
+
+A capability contract is required when application behavior depends on more
+than portable skill instructions: packaged executable code, exact structured
+data, a hosted-native facility, or an external adapter. Each capability has:
+
+- a unique stable `id`;
+- `requirement`, either `required` or `optional`;
+- `provider_kind`, one of `packaged_executable`, `hosted_native`, or
+  `external_adapter`;
+- `artifact_paths`, listing every file that must exist in the effective release
+  for the declared provider;
+- `local_verification_test`, referencing one declared product-test identifier,
+  or `null` only when no local execution is possible;
+- `hosted_verification`, fixed to `required_after_install` in schema v1; and
+- `on_unavailable`, either `block` or `use_declared_fallback`.
+
+For example, an application whose exact structured retrieval depends on a
+packaged launcher and database can declare:
+
+```json
+{
+  "id": "exact-structured-retrieval",
+  "requirement": "required",
+  "provider_kind": "packaged_executable",
+  "artifact_paths": [
+    "scripts/retrieve.py",
+    "assets/exact-data.sqlite3"
+  ],
+  "local_verification_test": "exact-retrieval-smoke",
+  "hosted_verification": "required_after_install",
+  "on_unavailable": "block"
+}
+```
+
+An optional capability using `use_declared_fallback` also contains a
+`fallback` object with an owner-approved behavior statement and any required
+effective-release paths. A required capability must use `block`; a fallback
+cannot silently substitute for a required invariant. An external adapter must
+name only an application-facing contract here; provider credentials, URLs, and
+machine-specific configuration remain outside the portable contract.
+
+Every declared artifact path must be supplied by an approved mapping or
+preserved baseline member, pass redistribution and secret checks, and remain
+reachable in the effective release. `packaged_executable` requires at least
+one artifact path; provider kinds with no package-owned files use an empty
+array. A named local verification test must be included in
+`required_application_tests`. Missing provider decisions return
+`capability_decision_required`; missing required artifacts return
+`required_capability_artifact_missing`; and a failed local capability test
+returns `capability_local_verification_failed`.
+
+Local verification proves only that the staged effective release can provide
+the capability in the conversion environment. The v1 verifier always reports
+the corresponding hosted capability as `NOT VERIFIED`. A later authenticated
+runtime phase must report an observed unavailable required capability as
+`required_hosted_capability_unavailable`; it may apply a fallback only for an
+optional capability whose exact fallback was approved in this contract.
 
 No database or durable framework state is introduced. Proposals, reports, and
 artifacts are immutable files in caller-selected ignored output roots.
@@ -370,7 +442,9 @@ artifacts are immutable files in caller-selected ignored output roots.
 
 No network service is required. Python 3.11 or newer and ZIP support from the
 standard library are sufficient. Existing product validation commands may
-require their already declared local dependencies.
+require their already declared local dependencies. These conversion-host
+requirements do not assert that the hosted runtime provides the same
+executables, libraries, filesystem access, or services.
 
 The first version has no OpenAI API, browser automation, plugin-creator API,
 credential, upload, install, or read-back integration. A future authenticated
@@ -407,13 +481,16 @@ Detailed workflow:
    distribution contract.
 4. Validate the application-owned same-source lineage decision.
 5. Inventory enhanced and overlay candidates.
-6. Produce or validate exact mappings and baseline dispositions.
+6. Produce or validate exact mappings, baseline dispositions, capability
+   contracts, and optional fallback decisions.
 7. Validate manifests, version ordering, prompts, presentation metadata,
-   rights, classification, expected skills, and size limits.
+   rights, classification, expected skills, capability artifact closure,
+   local-test references, and size limits.
 8. Create the deterministic update archive in a sibling temporary file.
 9. Audit and atomically replace the requested output.
 10. Overlay update members over baseline members in an isolated stage.
-11. Verify the complete effective release and run declared product commands.
+11. Verify the complete effective release, run declared local product commands,
+    and report every hosted capability as `NOT VERIFIED`.
 12. Rebuild independently and compare bytes when deterministic evidence is
     required.
 13. Emit the artifact hash, exact delta, preserved and dormant inventory,
@@ -434,7 +511,8 @@ requires a new plan and renewed decision review.
 - **Maintainability:** contract, inventory, planning, building, and verifying
   remain separate modules with public typed boundaries.
 - **Observability:** results include stable status, code, diagnostics,
-  artifacts, mutations, and per-gate evidence.
+  artifacts, mutations, and separate package-static, local-execution, and
+  hosted-execution evidence for each capability.
 - **Performance:** ZIP inspection and hashing stream members and are linear in
   total input bytes. Configurable byte and member-count limits prevent archive
   expansion abuse.
@@ -533,11 +611,29 @@ errors.
 - **HOU-A22 / HOU-006:** the hosted package identity and approved icon are
   preserved while the hosted version advances.
 
+### Capability-contract acceptance
+
+- **HOU-A23 / HOU-013:** each non-instruction capability has one strict
+  application-owned declaration with a stable identifier, requirement,
+  provider kind, artifact closure, local-test reference, hosted-verification
+  requirement, and unavailability policy.
+- **HOU-A24 / HOU-013:** an unresolved provider or fallback returns
+  `capability_decision_required`, while a missing required provider artifact
+  returns `required_capability_artifact_missing` before output mutation.
+- **HOU-A25 / HOU-013:** a required capability can only block when unavailable;
+  an optional capability can use only its exact approved fallback.
+- **HOU-A26 / HOU-014:** passing a local capability test records local execution
+  evidence without changing hosted execution from `NOT VERIFIED`.
+- **HOU-A27 / HOU-013, HOU-014:** failing a declared local capability test
+  returns `capability_local_verification_failed`, preserves the previous ZIP,
+  and does not emit hosted execution evidence.
+
 ### Required verification
 
 The implementation plan must include:
 
-- focused framework tests for HOU-A01 through HOU-A18;
+- focused framework tests for HOU-A01 through HOU-A18 and HOU-A23 through
+  HOU-A27;
 - Vibe application tests for HOU-A19 through HOU-A22;
 - `python -B -m unittest discover -s .\tests\framework -v`;
 - affected repository-contract tests;
@@ -552,10 +648,11 @@ The first-version completion report uses these evidence states:
 contract                         STATICALLY VERIFIED
 update ZIP build                 STATICALLY VERIFIED
 effective-release simulation     STATICALLY VERIFIED
+local capability execution       STATICALLY VERIFIED or NOT APPLICABLE
+hosted capability execution      NOT VERIFIED
 deterministic bytes              STATICALLY VERIFIED
 hosted upload                    NOT VERIFIED
 hosted installation              NOT VERIFIED
-hosted execution                 NOT VERIFIED
 ```
 
 Local success is `hosted_update_verified`; it is not `READY` and not hosted
@@ -572,6 +669,10 @@ behavioral equivalence.
 - The first version stops at a verified ZIP and performs no upload.
 - Every baseline file has an explicit disposition.
 - Effective-release overlay simulation is mandatory.
+- Capabilities beyond portable instructions have explicit required or optional
+  contracts, provider artifacts, and unavailability policies.
+- Local capability execution and hosted capability execution are separate
+  evidence gates.
 - Decision-related gaps are `BLOCKED`; unsafe or inconsistent bytes are
   `FAIL`.
 - Vibe Coding Designer is the first product canary.
