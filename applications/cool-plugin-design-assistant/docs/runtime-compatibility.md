@@ -2,9 +2,7 @@
 
 ## Current classification
 
-`CONDITIONALLY PORTABLE`
-
-`CONVERSION COMPLETE — RUNTIME VALIDATION PENDING`
+`PORTABLE`
 
 The Codex and OpenClaw distributions contain the same seven portable Skills,
 maintained references, and deterministic validators. No runtime adapter, RAG
@@ -17,8 +15,8 @@ subsystem, model, corpus, database, external service, or credential is required.
 | Shared source and deterministic build | STATICALLY VERIFIED | STATICALLY VERIFIED |
 | Installed discovery | RUNTIME VERIFIED | RUNTIME VERIFIED |
 | Packaged deterministic commands | RUNTIME VERIFIED | RUNTIME VERIFIED |
-| Approved representative-scenario suite | NOT VERIFIED | NOT VERIFIED |
-| Cross-runtime behavioral equivalence | NOT VERIFIED | NOT VERIFIED |
+| Approved representative-scenario suite | RUNTIME VERIFIED | RUNTIME VERIFIED |
+| Cross-runtime behavioral equivalence | RUNTIME VERIFIED | RUNTIME VERIFIED |
 
 ## Local verification evidence
 
@@ -62,26 +60,44 @@ question count, language, evidence handling, and wait behavior were
 behaviorally equivalent. No runtime adapter or application-level fork was
 required for that scenario.
 
-The approved runtime plan additionally requires BEH-006, BEH-008, BEH-011, and
-BEH-013 in both installed runtimes. Those scenarios have not yet been executed,
-so the representative suite and overall cross-runtime equivalence remain `NOT
-VERIFIED`.
+On 2026-09-25, the remaining approved scenarios were executed against exact
+commit `0699c0055361f742a24fa033be3957d86cc6aefb` in both installed runtimes.
+Codex and OpenClaw passed BEH-006, BEH-008, BEH-011, and BEH-013 as well as the
+previously completed BEH-001 scenario. OpenClaw used the generated bundle whose
+content SHA-256 was
+`974ceb052c42f97a1bf3fb9ce620f680984bc5540764cb00cc26455bb8609a46`.
+
+| Compared behavior | Codex | OpenClaw | Result |
+| --- | --- | --- | --- |
+| Missing-outcome question count and wait behavior | One focused question, then wait | One focused question, then wait | Equivalent |
+| Draft and complete-version approval gates | Preserved | Preserved | Equivalent |
+| Instruction Module versus Skill boundary | Preserved | Preserved | Equivalent |
+| Behavioral reference usage versus technical binding | Preserved | Preserved | Equivalent |
+| Unsupported coverage claims | Rejected as `NOT VERIFIED` | Rejected as `NOT VERIFIED` | Equivalent |
+| Packaged launcher outputs | All seven checks passed | All seven checks passed | Equivalent |
+| Installed Skill discovery | Seven portable Skills | Seven portable Skills | Equivalent |
+
+Differences were limited to response length and formatting. The same portable
+Skill implementations preserved the required decisions, gates, evidence
+states, interaction rules, and Workbench boundaries without a runtime adapter
+or application-level fork.
 
 ## Marketplace staging
 
-The baseline marketplace was clean at commit
-`49237aba246857c9112809bc03eb71bf32a21c98`. Full catalog staging stopped with
-`content_manifest_mismatch` before creating an output tree: the pre-existing
-Cool Bible Tutor legacy manifest does not match 24 committed files. The baseline
-was not modified, and this failure is not reclassified as evidence for the new
-plugin. An isolated single-plugin staging harness passed, but it is not the
-approved full-marketplace delta.
+The marketplace baseline began at commit
+`49237aba246857c9112809bc03eb71bf32a21c98`. The first full catalog staging run
+correctly rejected stale committed-byte identities in the pre-existing Cool
+Bible Tutor legacy artifact. The isolated marketplace branch was repaired by
+preserving the audited nested artifact bytes and regenerating its outer content
+manifest from Git blobs; the baseline and public marketplace were not mutated.
 
-A final application-aware comparison against that baseline passed every shared,
-product, command, build, verification, and determinism gate. Its marketplace
-gate correctly failed because both unpublished plugin destinations are absent
-and `marketplace-approved-delta.json` approves no missing files. This remains an
-unverified publication boundary, not a plugin behavior failure.
+After that repair, full catalog preparation and filesystem verification passed
+with no diagnostic plugins. The generated identity is retained in the external
+verification report rather than embedded here because this document is itself
+part of that identity. The stage includes both Cool Plugin Design Assistant
+artifacts, the catalog entries, the generated verifier and workflow, the legacy
+verification target, and the schema-v3 Vibe Coding Designer build canary.
 
-Marketplace publication remains a separate authorization boundary. No public
-marketplace mutation, release, or publication has been performed.
+Git index, commit, fresh-checkout, publication, and post-publication install
+verification remain separate gates. No public marketplace mutation, release,
+or registry submission had been performed when this artifact was built.

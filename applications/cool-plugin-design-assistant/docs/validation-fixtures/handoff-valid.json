@@ -1,0 +1,14 @@
+{
+  "approved_design_statement": {"id": "design-statement", "version": "v1", "state": "approved"},
+  "approved_specification": {"id": "application-specification", "version": "v1", "state": "approved"},
+  "workflow_definitions_and_instruction_modules": ["project-planning"],
+  "reference_material_inventory_evaluation_and_usage_map": [],
+  "application_invariants_and_hitl_checkpoints": ["explicit plan approval"],
+  "deterministic_operation_candidates": ["workflow validation", "module validation"],
+  "tool_data_runtime_and_service_requirements": {"external_services": []},
+  "acceptance_criteria_and_representative_scenarios": ["REQ-001"],
+  "rights_and_redistribution_decisions": {"normalized_derivatives": "approved"},
+  "unresolved_owner_decisions": [],
+  "explicit_exclusions": ["Skill Architecture", "publication"],
+  "approval": {"state": "approved", "specification_version": "v1", "confirmed_by": "owner"}
+}

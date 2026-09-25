@@ -52,22 +52,22 @@
       },
       {
         "id": "design-validator",
-        "argv": ["{python}", "-B", "{application_root}/scripts/cool_plugin_design_assistant.py", "validate-design", "{application_root}/tests/fixtures/design-statement-valid.md", "{application_root}/tests/fixtures/design-spec-valid.md", "--json"],
+        "argv": ["{python}", "-B", "{application_root}/scripts/cool_plugin_design_assistant.py", "validate-design", "{application_root}/docs/validation-fixtures/design-statement-valid.md", "{application_root}/docs/validation-fixtures/design-spec-valid.md", "--json"],
         "marketplace_targets": ["codex", "openclaw"]
       },
       {
         "id": "workflow-validator",
-        "argv": ["{python}", "-B", "{application_root}/scripts/cool_plugin_design_assistant.py", "validate-workflow", "{application_root}/tests/fixtures/workflow-valid.json", "--json"],
+        "argv": ["{python}", "-B", "{application_root}/scripts/cool_plugin_design_assistant.py", "validate-workflow", "{application_root}/docs/validation-fixtures/workflow-valid.json", "--json"],
         "marketplace_targets": ["codex", "openclaw"]
       },
       {
         "id": "module-validator",
-        "argv": ["{python}", "-B", "{application_root}/scripts/cool_plugin_design_assistant.py", "validate-modules", "{application_root}/tests/fixtures/modules-valid.json", "--json"],
+        "argv": ["{python}", "-B", "{application_root}/scripts/cool_plugin_design_assistant.py", "validate-modules", "{application_root}/docs/validation-fixtures/modules-valid.json", "--json"],
         "marketplace_targets": ["codex", "openclaw"]
       },
       {
         "id": "handoff-validator",
-        "argv": ["{python}", "-B", "{application_root}/scripts/cool_plugin_design_assistant.py", "validate-handoff", "{application_root}/tests/fixtures/handoff-valid.json", "--json"],
+        "argv": ["{python}", "-B", "{application_root}/scripts/cool_plugin_design_assistant.py", "validate-handoff", "{application_root}/docs/validation-fixtures/handoff-valid.json", "--json"],
         "marketplace_targets": ["codex", "openclaw"]
       },
       {
