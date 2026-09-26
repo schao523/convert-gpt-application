@@ -67,7 +67,10 @@ def _verify_exact_artifact(root, recorded):
     if not isinstance(records, list):
         raise ValueError("artifact_registry_invalid")
     actual = []
-    for path in sorted(item for item in root.rglob("*") if item.is_file()):
+    for path in sorted(
+        (item for item in root.rglob("*") if item.is_file()),
+        key=lambda candidate: candidate.relative_to(root).as_posix(),
+    ):
         data = path.read_bytes()
         actual.append({
             "path": path.relative_to(root).as_posix(),
