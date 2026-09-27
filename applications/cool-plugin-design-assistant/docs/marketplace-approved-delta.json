@@ -1,18 +1,24 @@
 {
   "schema_version": 1,
-  "marketplace_commit": "49237aba246857c9112809bc03eb71bf32a21c98",
+  "marketplace_commit": "4b4a4f4a9dc48b2a089a76bb1cf8763c56788dff",
   "rationale": {
-    "digest_mismatch": "No digest mismatch is approved for the initial conversion.",
-    "missing": "The plugin is unpublished, so no missing marketplace files are approved.",
+    "digest_mismatch": "Only the post-publication commit binding and publication-status note may differ from the immutable published artifact.",
+    "missing": "No missing files are approved for the published plugin artifacts.",
     "unexpected": "Marketplace-only control files are not application artifact inputs."
   },
   "codex": {
-    "digest_mismatch": [],
+    "digest_mismatch": [
+      "docs/runtime-compatibility.md",
+      "docs/source-inventory.json"
+    ],
     "missing": [],
     "unexpected": []
   },
   "openclaw": {
-    "digest_mismatch": [],
+    "digest_mismatch": [
+      "docs/runtime-compatibility.md",
+      "docs/source-inventory.json"
+    ],
     "missing": [],
     "unexpected": []
   }
