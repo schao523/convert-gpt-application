@@ -95,6 +95,12 @@ from .hosted_identity import (
     inventory_hosted_identity_archive,
     propose_hosted_identity,
 )
+from .hosted_deployment_planner import (
+    HostedDeploymentPlan,
+    HostedDeploymentValidation,
+    plan_hosted_deployment,
+    validate_hosted_deployment,
+)
 
 __all__ = [
     "AssetGroup",
@@ -175,6 +181,10 @@ __all__ = [
     "HostedIdentityInventory",
     "inventory_hosted_identity_archive",
     "propose_hosted_identity",
+    "HostedDeploymentPlan",
+    "HostedDeploymentValidation",
+    "plan_hosted_deployment",
+    "validate_hosted_deployment",
 ]
 
 __version__ = "0.1.0"
