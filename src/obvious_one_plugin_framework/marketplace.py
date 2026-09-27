@@ -580,6 +580,7 @@ def _update_build_catalogs(
         source = codex_match.get("source")
         source = dict(source) if isinstance(source, dict) else {}
         source["path"] = f"./{entry.codex_destination}"
+        source["source"] = "local"
         codex_match["source"] = source
         claw_match = next((item for item in openclaw_records if isinstance(item, dict) and item.get("name") == entry.application.plugin_id), None)
         if claw_match is None:
