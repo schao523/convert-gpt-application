@@ -88,6 +88,13 @@ from .hosted_deployment_contract import (
     load_hosted_deployment_contract,
     load_hosted_identity,
 )
+from .hosted_identity import (
+    ArchiveLimits,
+    HostedIdentityCandidate,
+    HostedIdentityInventory,
+    inventory_hosted_identity_archive,
+    propose_hosted_identity,
+)
 
 __all__ = [
     "AssetGroup",
@@ -163,6 +170,11 @@ __all__ = [
     "HostedIdentityRecord",
     "load_hosted_deployment_contract",
     "load_hosted_identity",
+    "ArchiveLimits",
+    "HostedIdentityCandidate",
+    "HostedIdentityInventory",
+    "inventory_hosted_identity_archive",
+    "propose_hosted_identity",
 ]
 
 __version__ = "0.1.0"
