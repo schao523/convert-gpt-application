@@ -1,0 +1,11 @@
+{
+  "schema_version": 2,
+  "application_id": "hosted-fixture",
+  "plugin_id": "hosted-fixture",
+  "source_repository": "fixture-source",
+  "source_commit": "1111111111111111111111111111111111111111",
+  "marketplace_repository": "example/plugins",
+  "marketplace_commit": "0000000000000000000000000000000000000000",
+  "incorporated_branches": [],
+  "source_inventory": []
+}

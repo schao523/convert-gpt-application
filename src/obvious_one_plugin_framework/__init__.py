@@ -77,6 +77,17 @@ from .results import (
     result_payload,
 )
 from .readiness_report import combine_results, write_result_transactionally
+from .hosted_deployment_contract import (
+    CapabilityContract,
+    CapabilityFallback,
+    ChannelRecord,
+    DeploymentMapping,
+    HostedDeploymentContract,
+    HostedDeploymentError,
+    HostedIdentityRecord,
+    load_hosted_deployment_contract,
+    load_hosted_identity,
+)
 
 __all__ = [
     "AssetGroup",
@@ -143,6 +154,15 @@ __all__ = [
     "result_payload",
     "combine_results",
     "write_result_transactionally",
+    "CapabilityContract",
+    "CapabilityFallback",
+    "ChannelRecord",
+    "DeploymentMapping",
+    "HostedDeploymentContract",
+    "HostedDeploymentError",
+    "HostedIdentityRecord",
+    "load_hosted_deployment_contract",
+    "load_hosted_identity",
 ]
 
 __version__ = "0.1.0"

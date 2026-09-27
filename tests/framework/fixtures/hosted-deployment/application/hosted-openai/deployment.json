@@ -1,0 +1,65 @@
+{
+  "schema_version": 1,
+  "application_id": "hosted-fixture",
+  "operation": "OPENAI_HOSTED_CREATE",
+  "lineage": {
+    "source_inventory": "../docs/source-inventory.json",
+    "canonical_distribution_contract": "../openclaw/distribution.json",
+    "hosted_lineage_decision": "lineage-decision.json"
+  },
+  "identity": {
+    "package_name": "gpt-hosted-fixture",
+    "record": null
+  },
+  "target": {
+    "version": "1.1.0",
+    "archive_name": "gpt-hosted-fixture-1.1.0.zip",
+    "portable_manifest": "adapter/plugin.json",
+    "legacy_manifest": "adapter/.codex-plugin/plugin.json",
+    "max_archive_bytes": 1048576
+  },
+  "content": {
+    "canonical_mappings": [
+      {
+        "id": "demo-skill",
+        "source_kind": "canonical_application",
+        "source": "skills/demo",
+        "target": "skills/demo",
+        "copy_mode": "copy_tree",
+        "classification": "text",
+        "redistribution_reference": "approved-text"
+      }
+    ],
+    "adapter_mappings": [
+      {
+        "id": "portable-manifest",
+        "source_kind": "hosted_adapter",
+        "source": "adapter/plugin.json",
+        "target": "plugin.json",
+        "copy_mode": "copy_file",
+        "classification": "text",
+        "redistribution_reference": "../docs/source-decisions.md"
+      },
+      {
+        "id": "legacy-manifest",
+        "source_kind": "hosted_adapter",
+        "source": "adapter/.codex-plugin/plugin.json",
+        "target": ".codex-plugin/plugin.json",
+        "copy_mode": "copy_file",
+        "classification": "text",
+        "redistribution_reference": "../docs/source-decisions.md"
+      }
+    ]
+  },
+  "validation": {
+    "expected_skills": ["demo"],
+    "explicit_only_skills": [],
+    "required_application_tests": ["fixture-test"],
+    "capabilities": []
+  },
+  "channels": {
+    "openai_hosted": {"status": "UNPUBLISHED", "evidence": "decision-owner declaration"},
+    "obvious_one": {"status": "CURRENT_BY_DECLARATION", "evidence": "approved fixture release"},
+    "openai_public": {"status": "UNPUBLISHED", "evidence": "decision-owner declaration"}
+  }
+}

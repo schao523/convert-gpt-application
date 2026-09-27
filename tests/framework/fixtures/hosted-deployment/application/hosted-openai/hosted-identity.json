@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "application_id": "hosted-fixture",
+  "package_name": "gpt-hosted-fixture",
+  "last_confirmed_version": "1.0.0",
+  "last_confirmed_archive_sha256": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+  "origin": "imported_hosted_archive",
+  "deployment_confirmation": {
+    "status": "owner_confirmed",
+    "recorded_at": "2026-09-25T00:00:00Z",
+    "evidence_reference": "../docs/source-decisions.md"
+  }
+}

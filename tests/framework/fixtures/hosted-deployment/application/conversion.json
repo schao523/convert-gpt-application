@@ -1,0 +1,27 @@
+{
+  "schema_version": 2,
+  "application_id": "hosted-fixture",
+  "plugin_id": "hosted-fixture",
+  "source_inventory": "docs/source-inventory.json",
+  "source_location": "conversion.local.json",
+  "coverage_matrix": "tests/coverage-matrix.md",
+  "distribution_contract": "openclaw/distribution.json",
+  "marketplace_repository": "example/plugins",
+  "provenance": {
+    "source_repository": "fixture-source",
+    "incorporated_branches": [],
+    "inventory_rules": [
+      {"root": ".", "classification": "fixture", "include": ["**/*"]}
+    ]
+  },
+  "verification": {
+    "test_directory": "tests",
+    "commands": [
+      {"id": "fixture-test", "argv": ["{python}", "-c", "print('ok')"]}
+    ],
+    "codex_build": {
+      "argv": ["{python}", "-c", "print('ok')"],
+      "artifact_path": "."
+    }
+  }
+}
