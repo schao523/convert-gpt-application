@@ -55,7 +55,7 @@ class ApplicationConfigTests(unittest.TestCase):
             for item in cool.verification.commands
         }
         self.assertEqual(cool_targets["distribution-audit"], ("codex",))
-        self.assertEqual(cool_targets["runtime-status"], ("codex", "openclaw"))
+        self.assertEqual(cool_targets["runtime-status"], ("codex",))
         self.assertEqual(cool_targets["exact-passage"], ("openclaw",))
 
         self.assertIsNotNone(assistant.verification.marketplace)
