@@ -54,8 +54,8 @@ class ApplicationConfigTests(unittest.TestCase):
             item.command_id: item.marketplace_targets
             for item in cool.verification.commands
         }
-        self.assertEqual(cool_targets["distribution-audit"], ("codex", "openclaw"))
-        self.assertEqual(cool_targets["runtime-status"], ("codex", "openclaw"))
+        self.assertEqual(cool_targets["distribution-audit"], ("codex",))
+        self.assertEqual(cool_targets["runtime-status"], ("codex",))
         self.assertEqual(cool_targets["exact-passage"], ("openclaw",))
 
         self.assertIsNotNone(assistant.verification.marketplace)
@@ -76,6 +76,25 @@ class ApplicationConfigTests(unittest.TestCase):
         self.assertTrue(
             all(targets == ("codex", "openclaw") for targets in assistant_targets.values())
         )
+        assistant_fixture_args = {
+            argument
+            for command in assistant.verification.commands
+            for argument in command.argv
+            if "fixtures/" in argument.replace("\\", "/")
+        }
+        self.assertTrue(assistant_fixture_args)
+        self.assertTrue(
+            all(
+                argument.startswith("{application_root}/docs/validation-fixtures/")
+                for argument in assistant_fixture_args
+            )
+        )
+        for argument in assistant_fixture_args:
+            relative = argument.removeprefix("{application_root}/")
+            self.assertTrue(
+                (assistant.root / Path(relative)).is_file(),
+                relative,
+            )
 
 
 if __name__ == "__main__":

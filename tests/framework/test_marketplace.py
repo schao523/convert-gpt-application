@@ -12,6 +12,7 @@ from tests.framework.test_verification_config import _make_application, _write_j
 
 from obvious_one_plugin_framework.marketplace import (
     MarketplaceError,
+    _artifact_identity,
     _reject_links,
     load_preparation_catalog,
     prepare_marketplace,
@@ -134,6 +135,19 @@ class MarketplaceTests(unittest.TestCase):
                 "content_sha256": sha256(identity).hexdigest(),
                 "files": records,
             },
+        )
+
+    def test_artifact_identity_uses_portable_posix_path_order(self) -> None:
+        artifact = self.root / "portable-order"
+        artifact.mkdir()
+        (artifact / "Z.txt").write_text("upper\n", encoding="utf-8")
+        (artifact / "a.txt").write_text("lower\n", encoding="utf-8")
+
+        identity = _artifact_identity(artifact)
+
+        self.assertEqual(
+            [record["path"] for record in identity["files"]],
+            ["Z.txt", "a.txt"],
         )
 
     def test_build_requires_v3_and_verify_existing_accepts_legacy(self) -> None:
@@ -415,7 +429,9 @@ class MarketplaceTests(unittest.TestCase):
         codex = json.loads((self.output / ".agents/plugins/marketplace.json").read_text(encoding="utf-8"))
         openclaw = json.loads((self.output / ".claude-plugin/marketplace.json").read_text(encoding="utf-8"))
         self.assertEqual(codex["plugins"][0]["note"], "keep")
+        self.assertNotIn("source", codex["plugins"][0]["source"])
         self.assertEqual(codex["plugins"][1]["source"]["path"], "./plugins/modern")
+        self.assertEqual(codex["plugins"][1]["source"]["source"], "local")
         self.assertEqual(openclaw["plugins"][0]["note"], "keep")
         self.assertEqual(openclaw["plugins"][1]["version"], "1.2.3")
         self.assertEqual(openclaw["plugins"][1]["source"], "./openclaw/modern")

@@ -580,6 +580,7 @@ def _update_build_catalogs(
         source = codex_match.get("source")
         source = dict(source) if isinstance(source, dict) else {}
         source["path"] = f"./{entry.codex_destination}"
+        source["source"] = "local"
         codex_match["source"] = source
         claw_match = next((item for item in openclaw_records if isinstance(item, dict) and item.get("name") == entry.application.plugin_id), None)
         if claw_match is None:
@@ -665,7 +666,9 @@ def _write_json_file(path: Path, value: object) -> None:
 def _artifact_identity(root: Path) -> dict[str, object]:
     _reject_links(root)
     records = []
-    for path in sorted(root.rglob("*")):
+    for path in sorted(
+        root.rglob("*"), key=lambda candidate: candidate.relative_to(root).as_posix()
+    ):
         if path.is_file():
             data = path.read_bytes()
             records.append(
