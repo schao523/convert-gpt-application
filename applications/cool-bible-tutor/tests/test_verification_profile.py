@@ -40,6 +40,13 @@ def _clean_environment(prefixes: list[str]) -> dict[str, str]:
 
 
 class CoolBibleTutorVerificationProfileTests(unittest.TestCase):
+    def test_marketplace_commands_only_target_runnable_artifacts(self) -> None:
+        commands = {command["id"]: command for command in _profile()["commands"]}
+
+        self.assertEqual(commands["distribution-audit"]["marketplace_targets"], ["codex"])
+        self.assertEqual(commands["exact-passage"]["marketplace_targets"], ["openclaw"])
+        self.assertEqual(commands["runtime-status"]["marketplace_targets"], ["codex"])
+
     def test_declared_smoke_commands_prove_bundled_runtime_invariants(self) -> None:
         profile = _profile()
         commands = {command["id"]: command for command in profile["commands"]}
