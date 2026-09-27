@@ -37,6 +37,16 @@ from obvious_one_plugin_framework.provenance import (  # noqa: E402
     ProvenanceError,
     validate_provenance,
 )
+from obvious_one_plugin_framework.hosted_deployment_builder import (  # noqa: E402
+    build_hosted_deployment,
+)
+from obvious_one_plugin_framework.hosted_deployment_contract import (  # noqa: E402
+    HostedDeploymentError,
+    load_hosted_deployment_contract,
+)
+from obvious_one_plugin_framework.hosted_deployment_verifier import (  # noqa: E402
+    verify_hosted_deployment,
+)
 
 
 CommandRunner = Callable[..., subprocess.CompletedProcess[str]]
@@ -281,6 +291,42 @@ def _provenance_gate(config: ApplicationConfig, context: RunContext) -> GateResu
     return GateResult("provenance", "PASS", "application provenance is valid")
 
 
+def _hosted_deployment_gate(config: ApplicationConfig, context: RunContext) -> GateResult:
+    contract_path = config.root / "hosted-openai" / "deployment.json"
+    output = context.diagnostics / "applications" / config.application_id / "hosted-deployment"
+    try:
+        contract = load_hosted_deployment_contract(contract_path)
+        build_hosted_deployment(contract, output)
+        result = verify_hosted_deployment(contract, output)
+    except HostedDeploymentError as exc:
+        if exc.code in {
+            "hosted_identity_required",
+            "hosted_lineage_unresolved",
+            "referenced_file_missing",
+        }:
+            return GateResult(
+                "hosted-deployment",
+                "NOT VERIFIED",
+                f"required hosted input is not configured: {exc.code}",
+            )
+        return GateResult("hosted-deployment", "FAIL", exc.code)
+    except OSError:
+        return GateResult("hosted-deployment", "FAIL", "hosted artifact I/O failed")
+    return GateResult(
+        "hosted-deployment",
+        "PASS",
+        "complete hosted archive verified locally",
+        data={
+            "archive_sha256": result.archive_sha256,
+            "artifact_sha256": result.artifact_sha256,
+            "installation": result.installation_status,
+            "marketplace": result.marketplace_status,
+            "public_submission": result.publication_status,
+            "upload": result.upload_status,
+        },
+    )
+
+
 def _git_output(repository: Path, *arguments: str) -> str:
     completed = subprocess.run(
         ["git", "-C", str(repository), *arguments],
@@ -394,6 +440,9 @@ def run_application(config: ApplicationConfig, context: RunContext) -> Applicati
                 log_directory=logs,
             )
         )
+
+    if (config.root / "hosted-openai" / "deployment.json").is_file():
+        gates.append(_hosted_deployment_gate(config, context))
 
     codex_gate = _run_gate(
         context,
@@ -545,11 +594,41 @@ def build_parser() -> argparse.ArgumentParser:
     selection.add_argument("--application", help="verify one application ID")
     parser.add_argument("--marketplace", type=Path)
     parser.add_argument("--provenance", type=Path)
+    parser.add_argument("--list", action="store_true", help="list configured verification gates")
     return parser
+
+
+def _list_gates(repository_root: Path) -> str:
+    lines = [
+        "shared: repository-layout extraction-boundary framework-tests application-config"
+    ]
+    for config in discover_applications(repository_root):
+        gates = [
+            "provenance",
+            "product-tests",
+            *(command.command_id for command in config.verification.commands),
+            "codex-build",
+            "openclaw-build-a",
+            "openclaw-build-b",
+            "openclaw-verify",
+            "openclaw-determinism",
+            "marketplace",
+        ]
+        if (config.root / "hosted-openai" / "deployment.json").is_file():
+            gates.append("hosted-deployment")
+        lines.append(f"{config.application_id}: {' '.join(gates)}")
+    return "\n".join(lines)
 
 
 def main(arguments: Iterable[str] | None = None) -> int:
     options = build_parser().parse_args(arguments)
+    if options.list:
+        try:
+            print(_list_gates(ROOT))
+        except (OSError, VerificationConfigError) as exc:
+            print(f"FAIL {exc}", file=sys.stderr)
+            return 1
+        return 0
     try:
         report = verify(
             repository_root=ROOT,

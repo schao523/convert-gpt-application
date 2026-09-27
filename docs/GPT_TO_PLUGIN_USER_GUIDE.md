@@ -706,6 +706,35 @@ instructions, and release tag before pushing. Do not publish until I
 explicitly approve.
 ```
 
+#### OpenAI-hosted plugin ZIP
+
+Use this when the same canonical converted application should be installed as
+a new OpenAI-hosted plugin or uploaded as a new version of an existing hosted
+plugin. Codex first prepares and verifies a complete ZIP locally; it does not
+upload the archive or mutate the hosted plugin.
+
+For a new hosted plugin, no previous ZIP is required. For an update, Codex needs
+an approved hosted identity record so the package name remains stable and the
+version advances. A downloaded hosted ZIP may be inspected once to propose that
+identity, but the proposal is not approval and the old ZIP does not become a
+build dependency.
+
+Example:
+
+```text
+Prepare and verify a complete OpenAI-hosted update ZIP from the canonical
+converted plugin. Preserve the approved hosted identity, show package-static,
+local-execution, and hosted-execution evidence separately, and stop before
+upload. Do not claim installation, marketplace publication, or public review.
+```
+
+The verified artifact directory contains the upload ZIP and three
+machine-readable reports. `hosted_deployment_verified` means those local bytes
+passed the complete-archive checks. It does not mean the ZIP was uploaded,
+installed, executed successfully on the hosted runtime, listed in a marketplace,
+or approved for public submission. After reviewing the report, you manually use
+the hosted UI's create or “Upload new version” action.
+
 ### Decisions Codex will need
 
 - plugin display name and stable identifier;
@@ -718,6 +747,8 @@ explicitly approve.
 - approved descriptions and starter prompts;
 - privacy, security, support, and terms URLs when applicable;
 - whether this is only GitHub distribution or also intended for OpenAI review.
+- whether the OpenAI-hosted operation is create or update, and, for update,
+  which approved hosted identity record is authoritative;
 
 ### Understand the two publication paths
 
