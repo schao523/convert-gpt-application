@@ -101,6 +101,7 @@ from .hosted_deployment_planner import (
     plan_hosted_deployment,
     validate_hosted_deployment,
 )
+from .hosted_deployment_builder import HostedDeploymentBuild, build_hosted_deployment
 
 __all__ = [
     "AssetGroup",
@@ -185,6 +186,8 @@ __all__ = [
     "HostedDeploymentValidation",
     "plan_hosted_deployment",
     "validate_hosted_deployment",
+    "HostedDeploymentBuild",
+    "build_hosted_deployment",
 ]
 
 __version__ = "0.1.0"
