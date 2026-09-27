@@ -232,7 +232,7 @@ def _expand_mapping(contract: HostedDeploymentContract, mapping: DeploymentMappi
     if mapping.source_kind == "canonical_application":
         root = contract.application_root
     else:
-        root = contract.contract_path.parent
+        root = contract.application_root / "hosted-openai"
     files = _safe_files(root, mapping.source, require_directory=mapping.copy_mode == "copy_tree")
     expanded: list[tuple[str, str, Path]] = []
     for source_relative, source in files:
@@ -257,7 +257,7 @@ def _manifest(path: Path, label: str) -> Mapping[str, object]:
 
 def _adapter_evidence(contract: HostedDeploymentContract, reference: str) -> None:
     text = reference.replace("\\", "/")
-    candidate = (contract.contract_path.parent / text).resolve()
+    candidate = (contract.application_root / "hosted-openai" / text).resolve()
     if not candidate.is_relative_to(contract.application_root) or not candidate.is_file():
         raise HostedDeploymentError("rights_unresolved", reference)
 
@@ -323,7 +323,7 @@ def validate_hosted_deployment(contract: HostedDeploymentContract) -> HostedDepl
         if target not in source_paths:
             code = "portable_manifest_missing" if target == "plugin.json" else "legacy_manifest_missing"
             raise HostedDeploymentError(code)
-        expected = (contract.contract_path.parent / declared_source).resolve()
+        expected = (contract.application_root / "hosted-openai" / declared_source).resolve()
         if source_paths[target].resolve() != expected:
             raise HostedDeploymentError("hosted_manifest_mapping_mismatch", target)
     portable = _manifest(source_paths["plugin.json"], "plugin.json")

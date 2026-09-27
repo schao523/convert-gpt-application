@@ -1,0 +1,12 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "author": {
+    "name": "schao523",
+    "url": "https://github.com/schao523"
+  },
+  "description": "Design implementation-ready general software without assuming a Web GUI.",
+  "license": "MIT",
+  "name": "vibe-coding-designer",
+  "skills": "./skills/",
+  "version": "1.1.0"
+}

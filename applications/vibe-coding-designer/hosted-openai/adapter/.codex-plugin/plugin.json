@@ -1,0 +1,27 @@
+{
+  "author": {
+    "name": "schao523",
+    "url": "https://github.com/schao523"
+  },
+  "description": "Design implementation-ready general software without assuming a Web GUI.",
+  "interface": {
+    "capabilities": [
+      "Interactive",
+      "Read",
+      "Write"
+    ],
+    "category": "Productivity",
+    "defaultPrompt": [
+      "Help me choose the right Vibe Coding Designer skill.",
+      "Design software without assuming a Web GUI."
+    ],
+    "developerName": "schao523",
+    "displayName": "Vibe Coding Designer",
+    "longDescription": "Guides software discovery and produces implementation-ready specifications, workflows, prompts, tests, reviews, and repository packages. Web UI rules apply only when needed.",
+    "shortDescription": "Design GUI or non-GUI software before implementation."
+  },
+  "license": "MIT",
+  "name": "vibe-coding-designer",
+  "skills": "./skills/",
+  "version": "1.1.0"
+}

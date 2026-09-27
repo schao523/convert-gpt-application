@@ -258,6 +258,13 @@ def _reject_sensitive_identity(value: Any) -> None:
             raise HostedDeploymentError("sensitive_identity_field", "absolute_path")
 
 
+def _application_root_for(path: Path) -> Path:
+    return next(
+        (candidate for candidate in path.parents if (candidate / "conversion.json").is_file()),
+        path.parent.parent,
+    )
+
+
 def load_hosted_identity(path: Path) -> HostedIdentityRecord:
     identity_path = Path(path).resolve()
     raw = _load_json(identity_path, "hosted_identity")
@@ -277,7 +284,7 @@ def load_hosted_identity(path: Path) -> HostedIdentityRecord:
     digest = _text(raw["last_confirmed_archive_sha256"], "last_confirmed_archive_sha256").lower()
     if not _DIGEST.fullmatch(digest):
         raise HostedDeploymentError("invalid_digest", "last_confirmed_archive_sha256")
-    application_root = identity_path.parent.parent
+    application_root = _application_root_for(identity_path)
     evidence, _ = _reference(
         confirmation["evidence_reference"],
         "deployment_confirmation.evidence_reference",
@@ -396,7 +403,7 @@ def _validate_lineage(path: Path, application_id: str, application_root: Path) -
 
 def load_hosted_deployment_contract(path: Path) -> HostedDeploymentContract:
     contract_path = Path(path).resolve()
-    application_root = contract_path.parent.parent
+    application_root = _application_root_for(contract_path)
     raw = _load_json(contract_path, "hosted_deployment")
     _only_keys(raw, _ROOT_KEYS, "hosted_deployment")
     if raw["schema_version"] != 1:

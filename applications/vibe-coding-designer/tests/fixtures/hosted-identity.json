@@ -1,0 +1,13 @@
+{
+  "application_id": "vibe-coding-designer",
+  "deployment_confirmation": {
+    "evidence_reference": "../../docs/source-decisions.md",
+    "recorded_at": "2026-09-25T00:00:00Z",
+    "status": "owner_confirmed"
+  },
+  "last_confirmed_archive_sha256": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+  "last_confirmed_version": "0.9.0-experiment.1",
+  "origin": "prior_verified_deployment",
+  "package_name": "vibe-coding-designer",
+  "schema_version": 1
+}

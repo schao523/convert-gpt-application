@@ -1,0 +1,6 @@
+interface:
+  display_name: "Vibe Coding Designer Compatibility"
+  short_description: "Choose a focused Vibe Coding Designer skill."
+  default_prompt: "Use $instructions to choose the appropriate Vibe Coding Designer skill."
+policy:
+  allow_implicit_invocation: false

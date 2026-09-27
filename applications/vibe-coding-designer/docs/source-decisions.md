@@ -19,3 +19,15 @@ The project author stated that the source assets are author-provided and approve
 - example credentials, private paths, review history, local configuration, generated diagnostics, databases, models, and indexes.
 
 No semantic retrieval is needed: the maintained references are small, structured, and linked directly. Exact workflow identifiers and coverage mappings use deterministic JSON validation.
+
+## OpenAI-hosted target adapter
+
+The author-approved hosted adapter is a normalized MIT-licensed derivative of
+the Vibe Coding Designer application. It contains only two target manifests and
+an explicit-only compatibility router with a deterministic lookup index. The
+seven focused skills remain byte-derived from the canonical `skills/` trees.
+
+The create declaration uses the canonical `vibe-coding-designer` package
+identity. Synthetic update identity under `tests/fixtures` is test-owned and is
+not evidence of a live upload. A production hosted identity record may be added
+only after a separately reviewed import proposal and decision-owner approval.
