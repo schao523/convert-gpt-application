@@ -9,6 +9,7 @@ import subprocess
 import tempfile
 import unittest
 from unittest.mock import patch
+import zipfile
 
 from obvious_one_plugin_framework.cli import main
 from obvious_one_plugin_framework.verification import VerificationConfigError
@@ -18,6 +19,7 @@ from tests.framework import test_marketplace as marketplace_fixture
 FIXTURES = Path(__file__).resolve().parent / "fixtures"
 LEGACY = FIXTURES / "plugin-alpha" / "distribution.json"
 V3 = FIXTURES / "plugin-v3" / "distribution.json"
+HOSTED_FIXTURE = FIXTURES / "hosted-deployment" / "application"
 
 
 class FrameworkCliTests(unittest.TestCase):
@@ -25,6 +27,9 @@ class FrameworkCliTests(unittest.TestCase):
         self.temporary = tempfile.TemporaryDirectory()
         self.addCleanup(self.temporary.cleanup)
         self.output = Path(self.temporary.name)
+        self.hosted_application = self.output / "hosted-fixture"
+        shutil.copytree(HOSTED_FIXTURE, self.hosted_application)
+        self.hosted_contract = self.hosted_application / "hosted-openai" / "deployment.json"
 
     def invoke(self, *arguments: str) -> tuple[int, dict[str, object]]:
         stdout = io.StringIO()
@@ -157,6 +162,106 @@ class FrameworkCliTests(unittest.TestCase):
         self.assertEqual(code, 2)
         self.assertEqual(payload["status"], "FAIL")
         self.assertEqual(payload["code"], "invalid_cli_arguments")
+
+    def test_hosted_create_build_emits_one_ascii_safe_result(self) -> None:
+        target = self.output / "hosted"
+        code, payload = self.invoke(
+            "build-hosted-deployment",
+            "--contract", str(self.hosted_contract),
+            "--output", str(target),
+            "--json",
+        )
+        self.assertEqual((code, payload["status"], payload["code"]), (0, "PASS", "hosted_deployment_built"))
+        json.dumps(payload, ensure_ascii=True).encode("cp1252")
+        self.assertEqual(payload["evidence"]["upload_status"], "NOT_PERFORMED")
+        self.assertEqual(payload["evidence"]["installation_status"], "NOT VERIFIED")
+        self.assertTrue((target / "gpt-hosted-fixture-1.1.0.zip").is_file())
+        self.assertTrue(all(not Path(item["path"]).is_absolute() for item in payload["artifacts"]))
+
+    def test_hosted_verify_keeps_local_hosted_and_channel_evidence_separate(self) -> None:
+        target = self.output / "hosted"
+        self.invoke(
+            "build-hosted-deployment", "--contract", str(self.hosted_contract),
+            "--output", str(target),
+        )
+        code, payload = self.invoke(
+            "verify-hosted-deployment", "--contract", str(self.hosted_contract),
+            "--artifact", str(target), "--json",
+        )
+        self.assertEqual((code, payload["status"], payload["code"]), (0, "PASS", "hosted_deployment_verified"))
+        self.assertEqual(payload["evidence"]["channels"]["openai_hosted"], "PENDING_ACTION")
+        self.assertEqual(payload["evidence"]["upload_status"], "NOT_PERFORMED")
+        self.assertEqual(payload["evidence"]["installation_status"], "NOT VERIFIED")
+
+    def test_identity_proposal_is_blocked_but_written_without_interaction(self) -> None:
+        archive = self.output / "hosted.zip"
+        with zipfile.ZipFile(archive, "w") as output:
+            output.writestr("plugin.json", json.dumps({
+                "name": "gpt-hosted-fixture", "version": "1.0.0"
+            }))
+        proposal = self.output / "identity-proposal.json"
+        with patch("builtins.input", side_effect=AssertionError("interactive input forbidden")):
+            code, payload = self.invoke(
+                "import-hosted-identity",
+                "--application", str(self.hosted_application / "conversion.json"),
+                "--archive", str(archive),
+                "--output", str(proposal),
+                "--json",
+            )
+        self.assertEqual((code, payload["status"]), (2, "BLOCKED"))
+        self.assertEqual(payload["code"], "hosted_identity_approval_required")
+        self.assertTrue(proposal.is_file())
+
+    def test_hosted_plan_blocking_and_proposal_collision_are_stable(self) -> None:
+        proposal = self.output / "deployment-proposal.json"
+        code, payload = self.invoke(
+            "plan-hosted-deployment",
+            "--application", str(self.hosted_application / "conversion.json"),
+            "--operation", "OPENAI_HOSTED_UPDATE",
+            "--output", str(proposal),
+            "--json",
+        )
+        self.assertEqual((code, payload["status"], payload["code"]), (
+            2, "BLOCKED", "hosted_deployment_decisions_required"
+        ))
+        self.assertTrue(proposal.is_file())
+        before = proposal.read_bytes()
+        code, payload = self.invoke(
+            "plan-hosted-deployment",
+            "--application", str(self.hosted_application / "conversion.json"),
+            "--operation", "OPENAI_HOSTED_UPDATE",
+            "--output", str(proposal),
+        )
+        self.assertEqual((code, payload["status"], payload["code"]), (
+            3, "FAIL", "hosted_deployment_proposal_exists"
+        ))
+        self.assertEqual(proposal.read_bytes(), before)
+
+    def test_hosted_archive_safety_failure_is_one_safe_result(self) -> None:
+        archive = self.output / "unsafe.zip"
+        with zipfile.ZipFile(archive, "w") as output:
+            output.writestr("../escape.json", "{}")
+        code, payload = self.invoke(
+            "import-hosted-identity",
+            "--application", str(self.hosted_application / "conversion.json"),
+            "--archive", str(archive),
+            "--output", str(self.output / "proposal.json"),
+        )
+        self.assertEqual((code, payload["status"]), (3, "FAIL"))
+        self.assertEqual(payload["code"], "archive_path_escape")
+        self.assertNotIn(str(self.output), json.dumps(payload))
+
+    def test_hosted_validate_and_parser_failures_are_stable(self) -> None:
+        code, payload = self.invoke(
+            "validate-hosted-deployment", "--contract", str(self.hosted_contract), "--json"
+        )
+        self.assertEqual((code, payload["status"], payload["code"]), (
+            0, "PASS", "hosted_deployment_validated"
+        ))
+        code, payload = self.invoke("verify-hosted-deployment", "--contract", str(self.hosted_contract))
+        self.assertEqual((code, payload["status"], payload["code"]), (
+            2, "FAIL", "invalid_cli_arguments"
+        ))
 
     def test_invalid_json_is_fail_with_stable_exit_code(self) -> None:
         invalid = self.output / "invalid.json"
