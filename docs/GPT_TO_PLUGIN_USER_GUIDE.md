@@ -199,6 +199,30 @@ Proceed to ask me the scope and rights questions, but do not build the
 plugin yet.
 ```
 
+### Approve knowledge roles before migrating existing references
+
+Use only two knowledge roles when they are needed:
+
+- **professional knowledge** belongs to a specific skill and must govern that
+  skill when its stated condition applies; and
+- **general knowledge** supplies broader background that one application-owned
+  consultation skill can locate through a topic guide when it materially
+  improves a response.
+
+For existing references in an already converted plugin, the decision owner must
+approve the classification and migration approval explicitly. The framework
+does not infer that every historical `references/` file is professional or
+general knowledge merely because it is packaged.
+
+Before adding `validate-knowledge --require-coverage` to that application's
+verification profile, update the existing coverage matrix with behavioral scenarios
+for every adopted knowledge file. Each professional scenario must
+depend observably on a distinctive rule from its reference. Each general
+scenario must show that the topic guide selected relevant material and that one
+response-owning skill used it. Include unavailable-material and irrelevant-topic
+controls. Static link and index checks are necessary, but they are not proof
+that either runtime applied the material.
+
 ## Stage 2: decide the plugin's scope
 
 ### What you do

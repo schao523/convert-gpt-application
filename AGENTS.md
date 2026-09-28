@@ -153,6 +153,22 @@ Runtime adapters and implementations
 - Treat optional capabilities as optional only when the source behavior permits
   a documented fallback.
 
+## Knowledge Reference Policy
+
+- Keep professional knowledge in the owning skill's `references/` directory,
+  and directly link every such file from that skill's `SKILL.md` at the point
+  where it must be consulted.
+- Keep general knowledge in one application-specific consultation skill with a
+  single `references/knowledge-index.json`; do not create a plugin-root `knowledge/`
+  directory.
+- Require explicit application adoption before reclassifying existing
+  references or adding the knowledge-policy gate to an existing product.
+- Static structure and coverage traceability are not behavioral or runtime
+  evidence. Product-owned scenarios must prove actual use in Codex and
+  OpenClaw before readiness changes.
+- Use `docs/PLUGIN_SKILLS_TECHNICAL_REFERENCE.md` for the topic-guide schema,
+  response ownership, composition, testing, and migration details.
+
 ## Available Repository Tools
 
 ### Creator capabilities

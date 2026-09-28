@@ -69,6 +69,26 @@ commands:
 The full profile contract and legacy compatibility command are documented in
 `docs/PLUGIN_AND_FRAMEWORK_COMMAND_REFERENCE.md`.
 
+## Validate adopted knowledge-reference policies
+
+New conversions may classify skill-local references as professional knowledge
+or place approved general knowledge behind one application-specific topic
+guide. After the application owner approves that classification and its
+coverage matrix traces every knowledge file, run:
+
+```powershell
+python -B -m obvious_one_plugin_framework.cli validate-knowledge `
+  --plugin-root .\applications\<plugin-id> `
+  --coverage-matrix .\applications\<plugin-id>\tests\coverage-matrix.md `
+  --require-coverage `
+  --json
+```
+
+This gate validates package structure, deterministic topic discovery, and
+coverage traceability. It does not prove model consultation, behavioral
+application, installed Codex execution, installed OpenClaw execution, or
+cross-runtime equivalence; those remain product-owned evidence.
+
 ## Distribution contracts and local marketplace staging
 
 New package builds use distribution-contract schema v3:

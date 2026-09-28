@@ -77,6 +77,43 @@ Overlay files receive the same component-by-component link confinement, and
 application files may not collide with generated metadata or any path in the
 framework-owned `vendor/obvious-one-runtime` namespace.
 
+### Validate an adopted knowledge-reference policy
+
+Synopsis:
+
+```text
+validate-knowledge --plugin-root <path> [--coverage-matrix <path>] [--require-coverage]
+```
+
+Run the non-interactive validator against a plugin source root or an unpacked
+generated artifact:
+
+```powershell
+python -B -m obvious_one_plugin_framework.cli validate-knowledge `
+  --plugin-root .\applications\<plugin-id> `
+  --coverage-matrix .\applications\<plugin-id>\tests\coverage-matrix.md `
+  --require-coverage `
+  --json
+```
+
+`--coverage-matrix` must resolve inside the plugin root. `--require-coverage`
+turns an absent or incomplete knowledge-file trace into
+`knowledge_behavior_evidence_missing`; without it, incomplete traceability is
+reported as `NOT VERIFIED`. A valid structure returns
+`knowledge_policy_validated`.
+
+The command checks professional-reference links, the optional general topic
+guide, path confinement, packaged file closure, and coverage-path traceability.
+Successful package structure and deterministic discovery may be
+`STATICALLY VERIFIED`. That state is not proof of consultation or behavioral application.
+The result keeps behavior, installed Codex execution, and
+installed OpenClaw execution `NOT VERIFIED` until product-owned runtime
+scenarios provide that evidence.
+
+Do not add this gate automatically to a historical application. Its decision
+owner first approves the reference classification and behavioral scenarios;
+then the application adds the command to its own verification profile.
+
 Create a non-destructive schema-v3 migration proposal for a legacy contract:
 
 ```powershell
