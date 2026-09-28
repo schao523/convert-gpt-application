@@ -77,6 +77,43 @@ Overlay files receive the same component-by-component link confinement, and
 application files may not collide with generated metadata or any path in the
 framework-owned `vendor/obvious-one-runtime` namespace.
 
+### Validate an adopted knowledge-reference policy
+
+Synopsis:
+
+```text
+validate-knowledge --plugin-root <path> [--coverage-matrix <path>] [--require-coverage]
+```
+
+Run the non-interactive validator against a plugin source root or an unpacked
+generated artifact:
+
+```powershell
+python -B -m obvious_one_plugin_framework.cli validate-knowledge `
+  --plugin-root .\applications\<plugin-id> `
+  --coverage-matrix .\applications\<plugin-id>\tests\coverage-matrix.md `
+  --require-coverage `
+  --json
+```
+
+`--coverage-matrix` must resolve inside the plugin root. `--require-coverage`
+turns an absent or incomplete knowledge-file trace into
+`knowledge_behavior_evidence_missing`; without it, incomplete traceability is
+reported as `NOT VERIFIED`. A valid structure returns
+`knowledge_policy_validated`.
+
+The command checks professional-reference links, the optional general topic
+guide, path confinement, packaged file closure, and coverage-path traceability.
+Successful package structure and deterministic discovery may be
+`STATICALLY VERIFIED`. That state is not proof of consultation or behavioral application.
+The result keeps behavior, installed Codex execution, and
+installed OpenClaw execution `NOT VERIFIED` until product-owned runtime
+scenarios provide that evidence.
+
+Do not add this gate automatically to a historical application. Its decision
+owner first approves the reference classification and behavioral scenarios;
+then the application adds the command to its own verification profile.
+
 Create a non-destructive schema-v3 migration proposal for a legacy contract:
 
 ```powershell
@@ -157,6 +194,65 @@ python -B -m obvious_one_plugin_framework.cli derive-index `
 ```
 
 `derive-index` preserves compatible vector blobs but rewrites application and namespace identity. It does not create a runtime-shared content index.
+
+### OpenAI-hosted complete-archive deployment
+
+The hosted workflow creates a complete upload ZIP from the canonical converted
+application and an application-owned target adapter. It never merges a prior
+hosted ZIP and makes no claim about undocumented retention or deletion during
+installation. All selected canonical files reuse the schema-v3 classification,
+canonicalization, provenance, and redistribution decisions.
+
+Start with a non-destructive proposal. Choose `OPENAI_HOSTED_CREATE` for a new
+hosted plugin or `OPENAI_HOSTED_UPDATE` for a new version of an existing one:
+
+```powershell
+python -B -m obvious_one_plugin_framework.cli plan-hosted-deployment `
+  --application .\applications\<plugin-id>\conversion.json `
+  --operation OPENAI_HOSTED_CREATE `
+  --output .\.tmp\<plugin-id>-hosted-proposal.json `
+  --json
+```
+
+Create mode requires no previous archive or identity record. Update mode
+requires an owner-approved `hosted-identity.json`. When identity must be learned
+from a downloaded hosted ZIP, inventory it once into an unapproved proposal:
+
+```powershell
+python -B -m obvious_one_plugin_framework.cli import-hosted-identity `
+  --application .\applications\<plugin-id>\conversion.json `
+  --archive <downloaded-hosted-plugin.zip> `
+  --output .\.tmp\<plugin-id>-identity-proposal.json `
+  --json
+```
+
+`hosted_identity_approval_required` is intentionally `BLOCKED`. The decision
+owner reviews the package identity, version, hashes, presentation assets, and
+lineage before a separate approved identity record is tracked. The exported ZIP
+is not a recurring build input.
+
+After decisions are recorded, validate, build, and independently verify:
+
+```powershell
+python -B -m obvious_one_plugin_framework.cli validate-hosted-deployment --contract .\applications\<plugin-id>\hosted-openai\deployment.json --json
+python -B -m obvious_one_plugin_framework.cli build-hosted-deployment --contract .\applications\<plugin-id>\hosted-openai\deployment.json --output .\dist\hosted\<plugin-id> --json
+python -B -m obvious_one_plugin_framework.cli verify-hosted-deployment --contract .\applications\<plugin-id>\hosted-openai\deployment.json --artifact .\dist\hosted\<plugin-id> --json
+```
+
+The artifact directory contains exactly the upload ZIP,
+`deployment-manifest.json`, `validation-report.json`, and
+`deployment-report.json`. Verification checks the complete member set,
+manifests, skills, references, JSON assets, deterministic hashes, and declared
+local capability tests. Package-static, local-execution, and hosted-execution
+evidence remain separate. Local success leaves hosted execution and installation
+as `NOT VERIFIED`; upload, marketplace mutation, and public submission remain
+`NOT_PERFORMED`.
+
+The caller manually uploads the ZIP through the hosted product UI. Update
+output instructs uploading a new version to the existing plugin. It does not
+authorize creating a duplicate, publishing to a marketplace, or submitting to
+the public directory. `hosted_deployment_verified` proves the local artifact,
+not hosted execution and not repository-wide `READY` status.
 
 ### Local marketplace preparation and verification
 

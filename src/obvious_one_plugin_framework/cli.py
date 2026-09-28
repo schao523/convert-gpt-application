@@ -11,7 +11,13 @@ import sys
 from .content_policy import ContentPolicyError
 from .contract import ContractError, load_contract
 from .contract_migration import write_migration_proposal
+from .hosted_deployment_builder import build_hosted_deployment
+from .hosted_deployment_contract import HostedDeploymentError, load_hosted_deployment_contract
+from .hosted_deployment_planner import plan_hosted_deployment, validate_hosted_deployment
+from .hosted_deployment_verifier import verify_hosted_deployment
+from .hosted_identity import propose_hosted_identity
 from .index_reuse import IndexReuseError, check_index_reuse, derive_index
+from .knowledge_policy import KnowledgePolicyError, validate_knowledge_policy
 from .marketplace import MarketplaceError, load_preparation_catalog, prepare_marketplace, verify_marketplace
 from .package_builder import PackageAuditError, build_package, preflight_package, verify_package
 from .readiness_report import combine_results, write_result_transactionally
@@ -27,6 +33,12 @@ BLOCKING_CODES = frozenset({
     "rights_unresolved",
     "migration_decisions_required",
     "reembedding_required",
+    "hosted_deployment_decisions_required",
+    "hosted_identity_approval_required",
+    "hosted_identity_required",
+    "hosted_lineage_unresolved",
+    "capability_decision_required",
+    "required_capability_artifact_missing",
 })
 
 
@@ -87,6 +99,35 @@ def _parser() -> argparse.ArgumentParser:
     report.add_argument("--inputs", required=True, nargs="+", type=Path)
     report.add_argument("--output", required=True, type=Path)
     report.add_argument("--json", action="store_true")
+    hosted_plan = commands.add_parser("plan-hosted-deployment")
+    hosted_plan.add_argument("--application", required=True, type=Path)
+    hosted_plan.add_argument(
+        "--operation", required=True,
+        choices=("OPENAI_HOSTED_CREATE", "OPENAI_HOSTED_UPDATE"),
+    )
+    hosted_plan.add_argument("--output", required=True, type=Path)
+    hosted_plan.add_argument("--json", action="store_true")
+    hosted_identity = commands.add_parser("import-hosted-identity")
+    hosted_identity.add_argument("--application", required=True, type=Path)
+    hosted_identity.add_argument("--archive", required=True, type=Path)
+    hosted_identity.add_argument("--output", required=True, type=Path)
+    hosted_identity.add_argument("--json", action="store_true")
+    hosted_validate = commands.add_parser("validate-hosted-deployment")
+    hosted_validate.add_argument("--contract", required=True, type=Path)
+    hosted_validate.add_argument("--json", action="store_true")
+    hosted_build = commands.add_parser("build-hosted-deployment")
+    hosted_build.add_argument("--contract", required=True, type=Path)
+    hosted_build.add_argument("--output", required=True, type=Path)
+    hosted_build.add_argument("--json", action="store_true")
+    hosted_verify = commands.add_parser("verify-hosted-deployment")
+    hosted_verify.add_argument("--contract", required=True, type=Path)
+    hosted_verify.add_argument("--artifact", required=True, type=Path)
+    hosted_verify.add_argument("--json", action="store_true")
+    knowledge = commands.add_parser("validate-knowledge")
+    knowledge.add_argument("--plugin-root", required=True, type=Path)
+    knowledge.add_argument("--coverage-matrix", type=Path)
+    knowledge.add_argument("--require-coverage", action="store_true")
+    knowledge.add_argument("--json", action="store_true")
     return parser
 
 
@@ -123,6 +164,12 @@ def main(argv: list[str] | None = None) -> int:
     except VerificationConfigError:
         result = _failure(operation, "FAIL", "invalid_verification_config")
         exit_code = 2
+    except HostedDeploymentError as exc:
+        result = _typed_failure(operation, exc)
+        exit_code = 2 if result.status == "BLOCKED" else 3
+    except KnowledgePolicyError as exc:
+        result = _typed_failure(operation, exc)
+        exit_code = 3
     except ValueError as exc:
         result = _failure(operation, "FAIL", str(exc).split(":", 1)[0] or "invalid_value")
         exit_code = 2
@@ -142,6 +189,138 @@ def main(argv: list[str] | None = None) -> int:
 
 def _dispatch(arguments: argparse.Namespace) -> OperationResult:
     operation = arguments.command
+    if operation == "validate-knowledge":
+        evidence = validate_knowledge_policy(
+            arguments.plugin_root,
+            arguments.coverage_matrix,
+            arguments.require_coverage,
+        )
+        return OperationResult(
+            operation=operation,
+            status="PASS",
+            code="knowledge_policy_validated",
+            evidence={
+                "behavior": evidence.behavior,
+                "codex_execution": evidence.codex_execution,
+                "consultation_skill": evidence.consultation_skill,
+                "coverage_traceability": evidence.coverage_traceability,
+                "deterministic_discovery": evidence.deterministic_discovery,
+                "general_reference_count": evidence.general_reference_count,
+                "openclaw_execution": evidence.openclaw_execution,
+                "package_structure": evidence.package_structure,
+                "professional_reference_count": evidence.professional_reference_count,
+            },
+        )
+    if operation == "plan-hosted-deployment":
+        return plan_hosted_deployment(arguments.application, arguments.operation, arguments.output)
+    if operation == "import-hosted-identity":
+        return propose_hosted_identity(
+            arguments.application, arguments.archive, arguments.output
+        )
+    if operation in {
+        "validate-hosted-deployment",
+        "build-hosted-deployment",
+        "verify-hosted-deployment",
+    }:
+        contract = load_hosted_deployment_contract(arguments.contract)
+        if operation == "validate-hosted-deployment":
+            validation = validate_hosted_deployment(contract)
+            return OperationResult(
+                operation=operation,
+                status="PASS",
+                code="hosted_deployment_validated",
+                evidence={
+                    "application_id": contract.application_id,
+                    "archive_paths": list(validation.archive_paths),
+                    "capabilities": {
+                        key: {
+                            "hosted_execution": validation.hosted_capabilities[key],
+                            "local_execution": validation.local_capabilities[key],
+                            "package_static": "STATICALLY VERIFIED",
+                        }
+                        for key in sorted(validation.local_capabilities)
+                    },
+                    "channels": dict(sorted(validation.generated_channels.items())),
+                    "member_count": len(validation.archive_paths),
+                    "operation": contract.operation,
+                    "package_name": contract.package_name,
+                    "target_version": contract.target_version,
+                },
+            )
+        if operation == "build-hosted-deployment":
+            existed = arguments.output.exists()
+            built = build_hosted_deployment(contract, arguments.output)
+            evidence: dict[str, object] = {
+                "application_id": contract.application_id,
+                "archive_sha256": built.archive_sha256,
+                "artifact_sha256": built.artifact_sha256,
+                "channels": {
+                    **{key: value.status for key, value in sorted(contract.channels.items())},
+                    "openai_hosted": "PENDING_ACTION",
+                },
+                "installation_status": "NOT VERIFIED",
+                "member_count": built.member_count,
+                "operation": contract.operation,
+                "package_name": contract.package_name,
+                "target_version": contract.target_version,
+                "upload_status": "NOT_PERFORMED",
+            }
+            if contract.operation == "OPENAI_HOSTED_UPDATE":
+                evidence["instruction"] = (
+                    "Upload this complete ZIP as a new version of the existing hosted plugin."
+                )
+            return OperationResult(
+                operation=operation,
+                status="PASS",
+                code="hosted_deployment_built",
+                artifacts=(ArtifactRecord(
+                    contract.archive_name,
+                    "hosted_plugin_archive",
+                    built.archive_sha256,
+                    built.archive_path.stat().st_size,
+                ),),
+                mutations=(MutationRecord(
+                    arguments.output.name,
+                    "replace" if existed else "create",
+                ),),
+                evidence=evidence,
+            )
+        verified = verify_hosted_deployment(contract, arguments.artifact)
+        return OperationResult(
+            operation=operation,
+            status="PASS",
+            code="hosted_deployment_verified",
+            artifacts=(ArtifactRecord(
+                contract.archive_name,
+                "hosted_plugin_archive",
+                verified.archive_sha256,
+                (arguments.artifact / contract.archive_name).stat().st_size,
+            ),),
+            evidence={
+                "application_id": contract.application_id,
+                "archive_paths": list(verified.archive_paths),
+                "archive_sha256": verified.archive_sha256,
+                "artifact_sha256": verified.artifact_sha256,
+                "capabilities": {
+                    key: {
+                        "hosted_execution": value.hosted_execution,
+                        "local_execution": value.local_execution,
+                        "package_static": value.package_static,
+                    }
+                    for key, value in sorted(verified.capabilities.items())
+                },
+                "channels": {
+                    **{key: value.status for key, value in sorted(contract.channels.items())},
+                    "openai_hosted": "PENDING_ACTION",
+                },
+                "gates": dict(sorted(verified.gates.items())),
+                "installation_status": verified.installation_status,
+                "marketplace_status": verified.marketplace_status,
+                "operation": contract.operation,
+                "publication_status": verified.publication_status,
+                "upload_status": verified.upload_status,
+            },
+        )
     if operation in {"prepare-marketplace", "verify-marketplace"}:
         repository = _catalog_repository(arguments.catalog)
         catalog = load_preparation_catalog(arguments.catalog, repository)

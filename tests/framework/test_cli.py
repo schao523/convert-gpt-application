@@ -9,6 +9,7 @@ import subprocess
 import tempfile
 import unittest
 from unittest.mock import patch
+import zipfile
 
 from obvious_one_plugin_framework.cli import main
 from obvious_one_plugin_framework.verification import VerificationConfigError
@@ -18,6 +19,7 @@ from tests.framework import test_marketplace as marketplace_fixture
 FIXTURES = Path(__file__).resolve().parent / "fixtures"
 LEGACY = FIXTURES / "plugin-alpha" / "distribution.json"
 V3 = FIXTURES / "plugin-v3" / "distribution.json"
+HOSTED_FIXTURE = FIXTURES / "hosted-deployment" / "application"
 
 
 class FrameworkCliTests(unittest.TestCase):
@@ -25,12 +27,183 @@ class FrameworkCliTests(unittest.TestCase):
         self.temporary = tempfile.TemporaryDirectory()
         self.addCleanup(self.temporary.cleanup)
         self.output = Path(self.temporary.name)
+        self.hosted_application = self.output / "hosted-fixture"
+        shutil.copytree(HOSTED_FIXTURE, self.hosted_application)
+        self.hosted_contract = self.hosted_application / "hosted-openai" / "deployment.json"
 
     def invoke(self, *arguments: str) -> tuple[int, dict[str, object]]:
         stdout = io.StringIO()
         with contextlib.redirect_stdout(stdout):
             code = main(list(arguments))
         return code, json.loads(stdout.getvalue())
+
+    def knowledge_plugin(self, name: str = "knowledge-plugin") -> Path:
+        root = self.output / name
+        professional = root / "skills" / "designing-systems"
+        (professional / "references").mkdir(parents=True)
+        (professional / "SKILL.md").write_text(
+            "# Designing systems\n\n[Rules](references/rules.md)\n",
+            encoding="utf-8",
+        )
+        (professional / "references" / "rules.md").write_text(
+            "# Rules\n",
+            encoding="utf-8",
+        )
+        general = root / "skills" / "consulting-system-knowledge"
+        (general / "references").mkdir(parents=True)
+        (general / "SKILL.md").write_text(
+            "# Consulting system knowledge\n\n"
+            "[Topic guide](references/knowledge-index.json)\n",
+            encoding="utf-8",
+        )
+        (general / "references" / "architecture-guide.md").write_text(
+            "# Architecture guide\n",
+            encoding="utf-8",
+        )
+        (general / "references" / "knowledge-index.json").write_text(
+            json.dumps(
+                {
+                    "schema_version": 1,
+                    "files": [
+                        {
+                            "path": "architecture-guide.md",
+                            "purpose": "Background architecture guidance.",
+                            "topics": [
+                                {
+                                    "name": "Event-driven architecture",
+                                    "chapters": ["Architecture"],
+                                    "sections": ["Events"],
+                                    "keywords": ["event-driven"],
+                                    "page_ranges": [{"start": 2, "end": 4}],
+                                }
+                            ],
+                        }
+                    ],
+                }
+            ),
+            encoding="utf-8",
+        )
+        matrix = root / "tests" / "coverage-matrix.md"
+        matrix.parent.mkdir()
+        matrix.write_text(
+            "| Knowledge | Scenario |\n"
+            "| --- | --- |\n"
+            "| skills/designing-systems/references/rules.md | professional |\n"
+            "| skills/consulting-system-knowledge/references/architecture-guide.md | general |\n",
+            encoding="utf-8",
+        )
+        return root
+
+    def test_validate_knowledge_emits_separate_static_and_runtime_evidence(self) -> None:
+        root = self.knowledge_plugin()
+
+        code, payload = self.invoke(
+            "validate-knowledge",
+            "--plugin-root", str(root),
+            "--coverage-matrix", str(root / "tests" / "coverage-matrix.md"),
+            "--require-coverage",
+            "--json",
+        )
+
+        self.assertEqual((code, payload["status"], payload["code"]), (0, "PASS", "knowledge_policy_validated"))
+        self.assertEqual(payload["evidence"]["professional_reference_count"], 1)
+        self.assertEqual(payload["evidence"]["general_reference_count"], 1)
+        self.assertEqual(payload["evidence"]["consultation_skill"], "consulting-system-knowledge")
+        self.assertEqual(payload["evidence"]["package_structure"], "STATICALLY VERIFIED")
+        self.assertEqual(payload["evidence"]["deterministic_discovery"], "STATICALLY VERIFIED")
+        self.assertEqual(payload["evidence"]["coverage_traceability"], "STATICALLY VERIFIED")
+        self.assertEqual(payload["evidence"]["behavior"], "NOT VERIFIED")
+        self.assertEqual(payload["evidence"]["codex_execution"], "NOT VERIFIED")
+        self.assertEqual(payload["evidence"]["openclaw_execution"], "NOT VERIFIED")
+
+    def test_validate_knowledge_preserves_topic_failure_code(self) -> None:
+        root = self.knowledge_plugin("invalid-topic")
+        index = root / "skills" / "consulting-system-knowledge" / "references" / "knowledge-index.json"
+        payload = json.loads(index.read_text(encoding="utf-8"))
+        payload["files"][0]["topics"][0]["keywords"] = []
+        index.write_text(json.dumps(payload), encoding="utf-8")
+
+        code, result = self.invoke(
+            "validate-knowledge",
+            "--plugin-root", str(root),
+        )
+
+        self.assertEqual((code, result["status"], result["code"]), (3, "FAIL", "general_knowledge_topic_incomplete"))
+
+    def test_validate_knowledge_rejects_root_knowledge_directory(self) -> None:
+        root = self.knowledge_plugin("root-knowledge")
+        (root / "knowledge").mkdir()
+
+        code, payload = self.invoke(
+            "validate-knowledge",
+            "--plugin-root", str(root),
+        )
+
+        self.assertEqual((code, payload["status"], payload["code"]), (3, "FAIL", "plugin_root_knowledge_directory_forbidden"))
+
+    def test_validate_knowledge_requires_complete_coverage_when_requested(self) -> None:
+        root = self.knowledge_plugin("missing-coverage")
+        matrix = root / "tests" / "coverage-matrix.md"
+        matrix.write_text("# No knowledge rows\n", encoding="utf-8")
+
+        code, payload = self.invoke(
+            "validate-knowledge",
+            "--plugin-root", str(root),
+            "--coverage-matrix", str(matrix),
+            "--require-coverage",
+        )
+
+        self.assertEqual((code, payload["status"], payload["code"]), (3, "FAIL", "knowledge_behavior_evidence_missing"))
+
+    def test_validate_knowledge_rejects_coverage_outside_plugin_boundary(self) -> None:
+        root = self.knowledge_plugin("outside-coverage")
+        outside = self.output / "outside-matrix.md"
+        outside.write_text(
+            "skills/designing-systems/references/rules.md\n"
+            "skills/consulting-system-knowledge/references/architecture-guide.md\n",
+            encoding="utf-8",
+        )
+
+        code, payload = self.invoke(
+            "validate-knowledge",
+            "--plugin-root", str(root),
+            "--coverage-matrix", str(outside),
+        )
+
+        self.assertEqual((code, payload["status"], payload["code"]), (3, "FAIL", "knowledge_behavior_evidence_missing"))
+        self.assertNotIn(str(self.output), json.dumps(payload))
+
+    def test_validate_knowledge_non_ascii_paths_emit_one_ascii_safe_result(self) -> None:
+        root = self.knowledge_plugin("知識外掛")
+        professional = root / "skills" / "designing-systems"
+        source = professional / "references" / "rules.md"
+        target = professional / "references" / "規則.md"
+        source.rename(target)
+        (professional / "SKILL.md").write_text(
+            "# 設計\n\n[規則](references/規則.md)\n",
+            encoding="utf-8",
+        )
+        matrix = root / "tests" / "coverage-matrix.md"
+        matrix.write_text(
+            "skills/designing-systems/references/規則.md\n"
+            "skills/consulting-system-knowledge/references/architecture-guide.md\n",
+            encoding="utf-8",
+        )
+        stdout = io.StringIO()
+
+        with contextlib.redirect_stdout(stdout):
+            code = main([
+                "validate-knowledge",
+                "--plugin-root", str(root),
+                "--coverage-matrix", str(matrix),
+                "--require-coverage",
+            ])
+
+        raw = stdout.getvalue()
+        payload = json.loads(raw)
+        raw.encode("ascii")
+        self.assertEqual((code, payload["status"]), (0, "PASS"))
+        self.assertEqual(raw.count('"result_schema_version"'), 1)
 
     def test_cli_builds_schema_v3_fixture(self) -> None:
         name = "plugin-v3"
@@ -157,6 +330,106 @@ class FrameworkCliTests(unittest.TestCase):
         self.assertEqual(code, 2)
         self.assertEqual(payload["status"], "FAIL")
         self.assertEqual(payload["code"], "invalid_cli_arguments")
+
+    def test_hosted_create_build_emits_one_ascii_safe_result(self) -> None:
+        target = self.output / "hosted"
+        code, payload = self.invoke(
+            "build-hosted-deployment",
+            "--contract", str(self.hosted_contract),
+            "--output", str(target),
+            "--json",
+        )
+        self.assertEqual((code, payload["status"], payload["code"]), (0, "PASS", "hosted_deployment_built"))
+        json.dumps(payload, ensure_ascii=True).encode("cp1252")
+        self.assertEqual(payload["evidence"]["upload_status"], "NOT_PERFORMED")
+        self.assertEqual(payload["evidence"]["installation_status"], "NOT VERIFIED")
+        self.assertTrue((target / "gpt-hosted-fixture-1.1.0.zip").is_file())
+        self.assertTrue(all(not Path(item["path"]).is_absolute() for item in payload["artifacts"]))
+
+    def test_hosted_verify_keeps_local_hosted_and_channel_evidence_separate(self) -> None:
+        target = self.output / "hosted"
+        self.invoke(
+            "build-hosted-deployment", "--contract", str(self.hosted_contract),
+            "--output", str(target),
+        )
+        code, payload = self.invoke(
+            "verify-hosted-deployment", "--contract", str(self.hosted_contract),
+            "--artifact", str(target), "--json",
+        )
+        self.assertEqual((code, payload["status"], payload["code"]), (0, "PASS", "hosted_deployment_verified"))
+        self.assertEqual(payload["evidence"]["channels"]["openai_hosted"], "PENDING_ACTION")
+        self.assertEqual(payload["evidence"]["upload_status"], "NOT_PERFORMED")
+        self.assertEqual(payload["evidence"]["installation_status"], "NOT VERIFIED")
+
+    def test_identity_proposal_is_blocked_but_written_without_interaction(self) -> None:
+        archive = self.output / "hosted.zip"
+        with zipfile.ZipFile(archive, "w") as output:
+            output.writestr("plugin.json", json.dumps({
+                "name": "gpt-hosted-fixture", "version": "1.0.0"
+            }))
+        proposal = self.output / "identity-proposal.json"
+        with patch("builtins.input", side_effect=AssertionError("interactive input forbidden")):
+            code, payload = self.invoke(
+                "import-hosted-identity",
+                "--application", str(self.hosted_application / "conversion.json"),
+                "--archive", str(archive),
+                "--output", str(proposal),
+                "--json",
+            )
+        self.assertEqual((code, payload["status"]), (2, "BLOCKED"))
+        self.assertEqual(payload["code"], "hosted_identity_approval_required")
+        self.assertTrue(proposal.is_file())
+
+    def test_hosted_plan_blocking_and_proposal_collision_are_stable(self) -> None:
+        proposal = self.output / "deployment-proposal.json"
+        code, payload = self.invoke(
+            "plan-hosted-deployment",
+            "--application", str(self.hosted_application / "conversion.json"),
+            "--operation", "OPENAI_HOSTED_UPDATE",
+            "--output", str(proposal),
+            "--json",
+        )
+        self.assertEqual((code, payload["status"], payload["code"]), (
+            2, "BLOCKED", "hosted_deployment_decisions_required"
+        ))
+        self.assertTrue(proposal.is_file())
+        before = proposal.read_bytes()
+        code, payload = self.invoke(
+            "plan-hosted-deployment",
+            "--application", str(self.hosted_application / "conversion.json"),
+            "--operation", "OPENAI_HOSTED_UPDATE",
+            "--output", str(proposal),
+        )
+        self.assertEqual((code, payload["status"], payload["code"]), (
+            3, "FAIL", "hosted_deployment_proposal_exists"
+        ))
+        self.assertEqual(proposal.read_bytes(), before)
+
+    def test_hosted_archive_safety_failure_is_one_safe_result(self) -> None:
+        archive = self.output / "unsafe.zip"
+        with zipfile.ZipFile(archive, "w") as output:
+            output.writestr("../escape.json", "{}")
+        code, payload = self.invoke(
+            "import-hosted-identity",
+            "--application", str(self.hosted_application / "conversion.json"),
+            "--archive", str(archive),
+            "--output", str(self.output / "proposal.json"),
+        )
+        self.assertEqual((code, payload["status"]), (3, "FAIL"))
+        self.assertEqual(payload["code"], "archive_path_escape")
+        self.assertNotIn(str(self.output), json.dumps(payload))
+
+    def test_hosted_validate_and_parser_failures_are_stable(self) -> None:
+        code, payload = self.invoke(
+            "validate-hosted-deployment", "--contract", str(self.hosted_contract), "--json"
+        )
+        self.assertEqual((code, payload["status"], payload["code"]), (
+            0, "PASS", "hosted_deployment_validated"
+        ))
+        code, payload = self.invoke("verify-hosted-deployment", "--contract", str(self.hosted_contract))
+        self.assertEqual((code, payload["status"], payload["code"]), (
+            2, "FAIL", "invalid_cli_arguments"
+        ))
 
     def test_invalid_json_is_fail_with_stable_exit_code(self) -> None:
         invalid = self.output / "invalid.json"

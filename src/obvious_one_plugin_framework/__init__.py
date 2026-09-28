@@ -77,6 +77,47 @@ from .results import (
     result_payload,
 )
 from .readiness_report import combine_results, write_result_transactionally
+from .hosted_deployment_contract import (
+    CapabilityContract,
+    CapabilityFallback,
+    ChannelRecord,
+    DeploymentMapping,
+    HostedDeploymentContract,
+    HostedDeploymentError,
+    HostedIdentityRecord,
+    load_hosted_deployment_contract,
+    load_hosted_identity,
+)
+from .hosted_identity import (
+    ArchiveLimits,
+    HostedIdentityCandidate,
+    HostedIdentityInventory,
+    inventory_hosted_identity_archive,
+    propose_hosted_identity,
+)
+from .hosted_deployment_planner import (
+    HostedDeploymentPlan,
+    HostedDeploymentValidation,
+    plan_hosted_deployment,
+    validate_hosted_deployment,
+)
+from .hosted_deployment_builder import HostedDeploymentBuild, build_hosted_deployment
+from .hosted_deployment_verifier import (
+    CapabilityEvidence,
+    HostedDeploymentVerification,
+    verify_hosted_deployment,
+)
+from .knowledge_policy import (
+    GeneralKnowledgeFile,
+    KnowledgePageRange,
+    KnowledgePolicy,
+    KnowledgePolicyError,
+    KnowledgePolicyEvidence,
+    KnowledgeTopic,
+    ProfessionalKnowledgeFile,
+    discover_knowledge_policy,
+    validate_knowledge_policy,
+)
 
 __all__ = [
     "AssetGroup",
@@ -143,6 +184,38 @@ __all__ = [
     "result_payload",
     "combine_results",
     "write_result_transactionally",
+    "CapabilityContract",
+    "CapabilityFallback",
+    "ChannelRecord",
+    "DeploymentMapping",
+    "HostedDeploymentContract",
+    "HostedDeploymentError",
+    "HostedIdentityRecord",
+    "load_hosted_deployment_contract",
+    "load_hosted_identity",
+    "ArchiveLimits",
+    "HostedIdentityCandidate",
+    "HostedIdentityInventory",
+    "inventory_hosted_identity_archive",
+    "propose_hosted_identity",
+    "HostedDeploymentPlan",
+    "HostedDeploymentValidation",
+    "plan_hosted_deployment",
+    "validate_hosted_deployment",
+    "HostedDeploymentBuild",
+    "build_hosted_deployment",
+    "CapabilityEvidence",
+    "HostedDeploymentVerification",
+    "verify_hosted_deployment",
+    "GeneralKnowledgeFile",
+    "KnowledgePageRange",
+    "KnowledgePolicy",
+    "KnowledgePolicyError",
+    "KnowledgePolicyEvidence",
+    "KnowledgeTopic",
+    "ProfessionalKnowledgeFile",
+    "discover_knowledge_policy",
+    "validate_knowledge_policy",
 ]
 
 __version__ = "0.1.0"

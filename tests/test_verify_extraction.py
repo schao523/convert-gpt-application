@@ -67,6 +67,174 @@ def _fixture_repository(root: Path) -> Path:
 
 
 class VerifierSelectionAndAggregationTests(unittest.TestCase):
+    def context(self, repository: Path) -> RunContext:
+        return RunContext(
+            repository_root=repository,
+            diagnostics=repository / ".tmp" / "verification",
+            python=sys.executable,
+            command_runner=lambda command, **kwargs: subprocess.CompletedProcess(command, 0, "", ""),
+        )
+
+    def add_hosted_contract(
+        self,
+        repository: Path,
+        application_id: str,
+        *,
+        operation: str = "OPENAI_HOSTED_CREATE",
+        include_identity: bool = False,
+    ) -> Path:
+        application = repository / "applications" / application_id
+        docs = application / "docs"
+        docs.mkdir(exist_ok=True)
+        shutil.copy2(repository / "docs" / f"{application_id}-source.json", docs / "source-inventory.json")
+        shutil.copy2(repository / "docs" / "delta.json", docs / "delta.json")
+        conversion_path = application / "conversion.json"
+        conversion = json.loads(conversion_path.read_text(encoding="utf-8"))
+        conversion["source_inventory"] = "docs/source-inventory.json"
+        conversion["verification"]["marketplace"]["approved_delta"] = "docs/delta.json"
+        conversion_path.write_text(json.dumps(conversion), encoding="utf-8")
+
+        hosted = application / "hosted-openai"
+        adapter = hosted / "adapter"
+        (adapter / ".codex-plugin").mkdir(parents=True)
+        for target in (adapter / "plugin.json", adapter / ".codex-plugin" / "plugin.json"):
+            target.write_text(json.dumps({
+                "name": application_id,
+                "version": "1.1.0",
+                "description": "Fixture hosted plugin",
+            }), encoding="utf-8")
+        (hosted / "lineage-decision.json").write_text(json.dumps({
+            "schema_version": 1,
+            "application_id": application_id,
+            "status": "approved",
+            "canonical_source": "canonical_converted_application",
+            "evidence_reference": "../docs/rights.md",
+        }), encoding="utf-8")
+        identity_reference = None
+        if include_identity:
+            identity_reference = "hosted-identity.json"
+            (hosted / identity_reference).write_text(json.dumps({
+                "schema_version": 1,
+                "application_id": application_id,
+                "package_name": application_id,
+                "last_confirmed_version": "1.0.0",
+                "last_confirmed_archive_sha256": "1" * 64,
+                "origin": "prior_verified_deployment",
+                "deployment_confirmation": {
+                    "status": "owner_confirmed",
+                    "recorded_at": "2026-09-25T00:00:00Z",
+                    "evidence_reference": "../docs/rights.md",
+                },
+            }), encoding="utf-8")
+        contract = {
+            "schema_version": 1,
+            "application_id": application_id,
+            "operation": operation,
+            "lineage": {
+                "source_inventory": "../docs/source-inventory.json",
+                "canonical_distribution_contract": "../openclaw/distribution.json",
+                "hosted_lineage_decision": "lineage-decision.json",
+            },
+            "identity": {"package_name": application_id, "record": identity_reference},
+            "target": {
+                "version": "1.1.0",
+                "archive_name": f"{application_id}-1.1.0.zip",
+                "portable_manifest": "adapter/plugin.json",
+                "legacy_manifest": "adapter/.codex-plugin/plugin.json",
+                "max_archive_bytes": 1000000,
+            },
+            "content": {
+                "canonical_mappings": [{
+                    "id": "demo", "source_kind": "canonical_application",
+                    "source": "skills/demo", "target": "skills/demo",
+                    "copy_mode": "copy_tree", "classification": "text",
+                    "redistribution_reference": "fixture-text",
+                }],
+                "adapter_mappings": [
+                    {
+                        "id": "portable", "source_kind": "hosted_adapter",
+                        "source": "adapter/plugin.json", "target": "plugin.json",
+                        "copy_mode": "copy_file", "classification": "text",
+                        "redistribution_reference": "../docs/rights.md",
+                    },
+                    {
+                        "id": "legacy", "source_kind": "hosted_adapter",
+                        "source": "adapter/.codex-plugin/plugin.json",
+                        "target": ".codex-plugin/plugin.json", "copy_mode": "copy_file",
+                        "classification": "text", "redistribution_reference": "../docs/rights.md",
+                    },
+                ],
+            },
+            "validation": {
+                "expected_skills": ["demo"], "explicit_only_skills": [],
+                "required_application_tests": ["smoke"], "capabilities": [],
+            },
+            "channels": {
+                "openai_hosted": {"status": "UNPUBLISHED", "evidence": "fixture declaration"},
+                "obvious_one": {"status": "UNPUBLISHED", "evidence": "fixture declaration"},
+                "openai_public": {"status": "UNPUBLISHED", "evidence": "fixture declaration"},
+            },
+        }
+        path = hosted / "deployment.json"
+        path.write_text(json.dumps(contract), encoding="utf-8")
+        return path
+
+    def test_hosted_gate_runs_only_for_application_that_owns_contract(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            repository = _fixture_repository(Path(temp))
+            self.add_hosted_contract(repository, "plugin-alpha")
+            alpha, beta = verifier.discover_applications(repository)
+            with patch(
+                "scripts.verify_extraction._hosted_deployment_gate",
+                return_value=GateResult("hosted-deployment", "PASS", "verified"),
+            ) as hosted:
+                alpha_result = verifier.run_application(alpha, self.context(repository))
+                beta_result = verifier.run_application(beta, self.context(repository))
+            self.assertEqual(hosted.call_count, 1)
+            self.assertIn("hosted-deployment", [gate.gate_id for gate in alpha_result.gates])
+            self.assertNotIn("hosted-deployment", [gate.gate_id for gate in beta_result.gates])
+
+    def test_local_hosted_gate_does_not_report_external_actions(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            repository = _fixture_repository(Path(temp))
+            self.add_hosted_contract(repository, "plugin-alpha")
+            config = verifier.discover_applications(repository)[0]
+            gate = verifier._hosted_deployment_gate(config, self.context(repository))
+        self.assertEqual(gate.data["upload"], "NOT_PERFORMED")
+        self.assertEqual(gate.data["installation"], "NOT VERIFIED")
+        self.assertEqual(gate.data["marketplace"], "NOT_PERFORMED")
+        self.assertEqual(gate.data["public_submission"], "NOT_PERFORMED")
+
+    def test_create_needs_no_identity_but_update_requires_one(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            repository = _fixture_repository(Path(temp))
+            create = self.add_hosted_contract(repository, "plugin-alpha")
+            config = verifier.discover_applications(repository)[0]
+            self.assertEqual(
+                verifier._hosted_deployment_gate(config, self.context(repository)).state,
+                "PASS",
+            )
+            payload = json.loads(create.read_text(encoding="utf-8"))
+            payload["operation"] = "OPENAI_HOSTED_UPDATE"
+            create.write_text(json.dumps(payload), encoding="utf-8")
+            gate = verifier._hosted_deployment_gate(config, self.context(repository))
+            self.assertEqual(gate.state, "NOT VERIFIED")
+            self.assertIn("identity", gate.detail)
+
+    def test_hosted_failure_for_one_application_does_not_add_gate_to_another(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            repository = _fixture_repository(Path(temp))
+            self.add_hosted_contract(repository, "plugin-alpha")
+            alpha, beta = verifier.discover_applications(repository)
+            with patch(
+                "scripts.verify_extraction._hosted_deployment_gate",
+                return_value=GateResult("hosted-deployment", "FAIL", "failed"),
+            ):
+                alpha_result = verifier.run_application(alpha, self.context(repository))
+                beta_result = verifier.run_application(beta, self.context(repository))
+            self.assertEqual(alpha_result.state, "FAIL")
+            self.assertNotIn("hosted-deployment", [gate.gate_id for gate in beta_result.gates])
+
     def test_shared_gates_do_not_execute_application_provenance_tests(self) -> None:
         commands: list[list[str]] = []
 

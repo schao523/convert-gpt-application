@@ -294,6 +294,67 @@ Use three levels of disclosure:
 
 This matters for both accuracy and context cost. The finished Cool Bible Tutor skills keep their `SKILL.md` entrypoints short—roughly a few dozen lines—while substantial stage-specific material lives in `references/`.
 
+### 6.5 Apply the minimal knowledge-reference convention
+
+Use this convention only after the application decision owner approves the
+knowledge roles. It introduces no plugin-root `knowledge/` directory and no
+new application or distribution schema.
+
+Professional knowledge belongs to the skill whose decisions it governs:
+
+```text
+skills/<domain-skill>/references/
+  <professional-reference>
+```
+
+The owning `SKILL.md` must directly link every professional file and state when
+to consult it. A filename in prose or a code span is not a link. Missing,
+unreadable, or insufficient required material must produce an explicit
+limitation rather than an unsupported substitute.
+
+General knowledge belongs to one application-specific consultation skill:
+
+```text
+skills/consulting-<application-domain>-knowledge/
+  SKILL.md
+  references/
+    knowledge-index.json
+    <general-reference>
+```
+
+The skill name remains application-owned; the literal `consulting-` prefix is
+not required. A plugin has zero or one general knowledge index. The consultation
+skill must directly link the index and selectively read only material relevant
+to the request.
+
+`knowledge-index.json` uses schema version 1. Its root contains
+`schema_version` and `files`. Every file entry contains a unique confined
+relative `path`, a nonempty `purpose`, and one or more `topics`. Every topic
+contains:
+
+- a nonempty `name`;
+- `chapters`, which may be an empty array when unavailable;
+- `sections`, which may be an empty array when unavailable;
+- one or more `keywords`; and
+- `page_ranges`, whose positive integer `start` and `end` values satisfy
+  `start <= end`, or an empty array for short or unpaginated material.
+
+Use physical document pages for `page_ranges`; use chapter or section text to
+disambiguate differing printed labels. Every non-index file below the
+consultation skill's `references/` directory must appear exactly once in the
+index, and every indexed file must be packaged.
+
+One request may use several skills, but only one response owner produces the
+user-facing answer. A consultation skill supplies selected general knowledge
+to that owner; it does not issue a competing answer. When another skill or
+professional reference is a required dependency, route to it explicitly in
+`SKILL.md` rather than relying only on implicit activation.
+
+Run `validate-knowledge` for static closure and deterministic discovery. Keep
+its `STATICALLY VERIFIED` result separate from application-owned behavioral
+scenarios and installed Codex/OpenClaw execution. Existing products adopt this
+gate only after classification approval and coverage-matrix migration.
+
 ## 7. Phase 4: scaffold the plugin
 
 ### 7.1 Recommended plugin tree

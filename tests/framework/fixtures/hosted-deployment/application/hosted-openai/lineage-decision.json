@@ -1,0 +1,7 @@
+{
+  "schema_version": 1,
+  "application_id": "hosted-fixture",
+  "status": "approved",
+  "canonical_source": "canonical_converted_application",
+  "evidence_reference": "../docs/source-decisions.md"
+}

@@ -57,6 +57,17 @@ class PublicationTemplateTests(unittest.TestCase):
         self.assertNotIn("{{PLUGIN_ID}}", content)
         self.assertNotIn("clawhub", content.lower())
 
+    def test_skill_template_routes_knowledge_without_placeholders(self) -> None:
+        content = (TEMPLATES / "skill" / "README.md").read_text(encoding="utf-8")
+        self.assertIn("professional knowledge", content)
+        self.assertIn("general knowledge", content)
+        self.assertIn("knowledge-index.json", content)
+        self.assertIn("Do not create an empty `references/` directory", content)
+        self.assertIn(
+            "Do not create `knowledge-index.json` unless the application has approved general knowledge",
+            content,
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

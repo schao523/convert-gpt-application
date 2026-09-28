@@ -199,6 +199,30 @@ Proceed to ask me the scope and rights questions, but do not build the
 plugin yet.
 ```
 
+### Approve knowledge roles before migrating existing references
+
+Use only two knowledge roles when they are needed:
+
+- **professional knowledge** belongs to a specific skill and must govern that
+  skill when its stated condition applies; and
+- **general knowledge** supplies broader background that one application-owned
+  consultation skill can locate through a topic guide when it materially
+  improves a response.
+
+For existing references in an already converted plugin, the decision owner must
+approve the classification and migration approval explicitly. The framework
+does not infer that every historical `references/` file is professional or
+general knowledge merely because it is packaged.
+
+Before adding `validate-knowledge --require-coverage` to that application's
+verification profile, update the existing coverage matrix with behavioral scenarios
+for every adopted knowledge file. Each professional scenario must
+depend observably on a distinctive rule from its reference. Each general
+scenario must show that the topic guide selected relevant material and that one
+response-owning skill used it. Include unavailable-material and irrelevant-topic
+controls. Static link and index checks are necessary, but they are not proof
+that either runtime applied the material.
+
 ## Stage 2: decide the plugin's scope
 
 ### What you do
@@ -706,6 +730,35 @@ instructions, and release tag before pushing. Do not publish until I
 explicitly approve.
 ```
 
+#### OpenAI-hosted plugin ZIP
+
+Use this when the same canonical converted application should be installed as
+a new OpenAI-hosted plugin or uploaded as a new version of an existing hosted
+plugin. Codex first prepares and verifies a complete ZIP locally; it does not
+upload the archive or mutate the hosted plugin.
+
+For a new hosted plugin, no previous ZIP is required. For an update, Codex needs
+an approved hosted identity record so the package name remains stable and the
+version advances. A downloaded hosted ZIP may be inspected once to propose that
+identity, but the proposal is not approval and the old ZIP does not become a
+build dependency.
+
+Example:
+
+```text
+Prepare and verify a complete OpenAI-hosted update ZIP from the canonical
+converted plugin. Preserve the approved hosted identity, show package-static,
+local-execution, and hosted-execution evidence separately, and stop before
+upload. Do not claim installation, marketplace publication, or public review.
+```
+
+The verified artifact directory contains the upload ZIP and three
+machine-readable reports. `hosted_deployment_verified` means those local bytes
+passed the complete-archive checks. It does not mean the ZIP was uploaded,
+installed, executed successfully on the hosted runtime, listed in a marketplace,
+or approved for public submission. After reviewing the report, you manually use
+the hosted UI's create or “Upload new version” action.
+
 ### Decisions Codex will need
 
 - plugin display name and stable identifier;
@@ -718,6 +771,8 @@ explicitly approve.
 - approved descriptions and starter prompts;
 - privacy, security, support, and terms URLs when applicable;
 - whether this is only GitHub distribution or also intended for OpenAI review.
+- whether the OpenAI-hosted operation is create or update, and, for update,
+  which approved hosted identity record is authoritative;
 
 ### Understand the two publication paths
 

@@ -1,0 +1,7 @@
+{
+  "application_id": "vibe-coding-designer",
+  "canonical_source": "canonical_converted_application",
+  "evidence_reference": "../docs/source-decisions.md",
+  "schema_version": 1,
+  "status": "approved"
+}

@@ -23,3 +23,30 @@ The generated package may share only content-addressed runtimes and embedding mo
 When eligible, `derive-index` copies the source into staging, preserves vector blobs, rewrites all app/namespace identity and provenance for the destination plugin, verifies SQLite integrity and absence of source identity, and atomically activates an independent target index. It never turns the original index into a runtime-shared application content asset.
 
 Product audit hooks should enforce domain-specific provenance and behavior that the generic deny-by-default package audit cannot know. Tests in this directory use only synthetic fixture plugins and must remain network-free.
+
+## Knowledge-reference policy boundary
+
+Knowledge-policy framework tests prove strict topic-guide parsing, confined
+skill-local structure, deterministic discovery, coverage-matrix traceability,
+and the machine-readable result contract. They do not prove that a model
+consulted or applied a reference.
+
+Each adopting product owns behavioral scenarios whose observable results depend
+on distinctive reference content. Product verification also owns installed
+Codex execution, installed OpenClaw execution, and cross-runtime behavioral
+equivalence. Static framework success must leave those evidence states as
+`NOT VERIFIED`.
+
+## Verify OpenAI-hosted deployment support
+
+Hosted framework tests use only synthetic application-owned declarations and
+archives. Run them without a portal login or network access:
+
+```text
+python -B -m unittest tests.framework.test_hosted_deployment_contract tests.framework.test_hosted_identity tests.framework.test_hosted_deployment_planner tests.framework.test_hosted_deployment_validation tests.framework.test_hosted_deployment_builder tests.framework.test_hosted_deployment_verifier tests.framework.test_cli -v
+```
+
+The repository verifier registers `hosted-deployment` only for an application
+that owns `hosted-openai/deployment.json`. A passing local gate records upload,
+marketplace, and public submission as `NOT_PERFORMED` and installation as
+`NOT VERIFIED`; it never borrows evidence from another application.

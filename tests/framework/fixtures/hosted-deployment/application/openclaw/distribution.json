@@ -1,0 +1,36 @@
+{
+  "schema_version": 3,
+  "plugin_id": "hosted-fixture",
+  "package_name": "@example/hosted-fixture",
+  "family": "bundle-plugin",
+  "version": "1.0.0",
+  "source_root": "..",
+  "include_files": [
+    ".codex-plugin/plugin.json",
+    "docs/source-decisions.md"
+  ],
+  "include_prefixes": ["skills"],
+  "exclude_paths": [],
+  "max_total_bytes": 1048576,
+  "release_repository": "example/plugins",
+  "release_tag_template": "hosted-fixture-v{version}",
+  "readme_overlay": null,
+  "audit_hook": null,
+  "rag": null,
+  "content_rules": [
+    {
+      "id": "approved-text",
+      "paths": [".codex-plugin/plugin.json", "docs/source-decisions.md"],
+      "prefixes": ["skills"],
+      "classification": "text",
+      "redistribution": {
+        "status": "approved",
+        "provenance": "docs/source-decisions.md"
+      }
+    }
+  ],
+  "publication": {
+    "github_marketplace": {"enabled": true},
+    "clawhub": {"enabled": false, "family": null, "native_manifest": null}
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "creating-implementation-prompts": "Turn an approved design into a self-contained implementation prompt.",
+  "creating-repo-development-packages": "Package approved design and implementation guidance for repository development.",
+  "creating-software-design-specifications": "Turn confirmed decisions into an implementation-ready software specification.",
+  "designing-data-services-and-workflows": "Define data, service, persistence, API, tool, and workflow contracts.",
+  "guiding-vibe-design-sessions": "Guide product discovery and iterative software-design decisions.",
+  "planning-software-tests": "Create traceable unit, integration, acceptance, and operational test plans.",
+  "reviewing-software-design-specifications": "Review specifications, workflows, prompts, or repository packages for gaps and contradictions."
+}

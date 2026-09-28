@@ -1,0 +1,150 @@
+{
+  "schema_version": 1,
+  "application_id": "vibe-coding-designer",
+  "operation": "OPENAI_HOSTED_UPDATE",
+  "lineage": {
+    "source_inventory": "../../docs/source-inventory.json",
+    "canonical_distribution_contract": "../../openclaw/distribution.json",
+    "hosted_lineage_decision": "../../hosted-openai/lineage-decision.json"
+  },
+  "identity": {
+    "package_name": "vibe-coding-designer",
+    "record": "hosted-identity.json"
+  },
+  "target": {
+    "version": "1.1.0",
+    "archive_name": "vibe-coding-designer-1.1.0.zip",
+    "portable_manifest": "adapter/plugin.json",
+    "legacy_manifest": "adapter/.codex-plugin/plugin.json",
+    "max_archive_bytes": 10000000
+  },
+  "content": {
+    "canonical_mappings": [
+      {
+        "id": "creating-implementation-prompts",
+        "source_kind": "canonical_application",
+        "source": "skills/creating-implementation-prompts",
+        "target": "skills/creating-implementation-prompts",
+        "copy_mode": "copy_tree",
+        "classification": "text",
+        "redistribution_reference": "redistributable-text"
+      },
+      {
+        "id": "creating-repo-development-packages",
+        "source_kind": "canonical_application",
+        "source": "skills/creating-repo-development-packages",
+        "target": "skills/creating-repo-development-packages",
+        "copy_mode": "copy_tree",
+        "classification": "text",
+        "redistribution_reference": "redistributable-text"
+      },
+      {
+        "id": "creating-software-design-specifications",
+        "source_kind": "canonical_application",
+        "source": "skills/creating-software-design-specifications",
+        "target": "skills/creating-software-design-specifications",
+        "copy_mode": "copy_tree",
+        "classification": "text",
+        "redistribution_reference": "redistributable-text"
+      },
+      {
+        "id": "designing-data-services-and-workflows",
+        "source_kind": "canonical_application",
+        "source": "skills/designing-data-services-and-workflows",
+        "target": "skills/designing-data-services-and-workflows",
+        "copy_mode": "copy_tree",
+        "classification": "text",
+        "redistribution_reference": "redistributable-text"
+      },
+      {
+        "id": "guiding-vibe-design-sessions",
+        "source_kind": "canonical_application",
+        "source": "skills/guiding-vibe-design-sessions",
+        "target": "skills/guiding-vibe-design-sessions",
+        "copy_mode": "copy_tree",
+        "classification": "text",
+        "redistribution_reference": "redistributable-text"
+      },
+      {
+        "id": "planning-software-tests",
+        "source_kind": "canonical_application",
+        "source": "skills/planning-software-tests",
+        "target": "skills/planning-software-tests",
+        "copy_mode": "copy_tree",
+        "classification": "text",
+        "redistribution_reference": "redistributable-text"
+      },
+      {
+        "id": "reviewing-software-design-specifications",
+        "source_kind": "canonical_application",
+        "source": "skills/reviewing-software-design-specifications",
+        "target": "skills/reviewing-software-design-specifications",
+        "copy_mode": "copy_tree",
+        "classification": "text",
+        "redistribution_reference": "redistributable-text"
+      }
+    ],
+    "adapter_mappings": [
+      {
+        "id": "portable-manifest",
+        "source_kind": "hosted_adapter",
+        "source": "adapter/plugin.json",
+        "target": "plugin.json",
+        "copy_mode": "copy_file",
+        "classification": "text",
+        "redistribution_reference": "../docs/source-decisions.md"
+      },
+      {
+        "id": "legacy-manifest",
+        "source_kind": "hosted_adapter",
+        "source": "adapter/.codex-plugin/plugin.json",
+        "target": ".codex-plugin/plugin.json",
+        "copy_mode": "copy_file",
+        "classification": "text",
+        "redistribution_reference": "../docs/source-decisions.md"
+      },
+      {
+        "id": "compatibility-router",
+        "source_kind": "hosted_adapter",
+        "source": "adapter/skills/instructions",
+        "target": "skills/instructions",
+        "copy_mode": "copy_tree",
+        "classification": "text",
+        "redistribution_reference": "../docs/source-decisions.md"
+      }
+    ]
+  },
+  "validation": {
+    "expected_skills": [
+      "creating-implementation-prompts",
+      "creating-repo-development-packages",
+      "creating-software-design-specifications",
+      "designing-data-services-and-workflows",
+      "guiding-vibe-design-sessions",
+      "instructions",
+      "planning-software-tests",
+      "reviewing-software-design-specifications"
+    ],
+    "explicit_only_skills": ["instructions"],
+    "required_application_tests": [
+      "runtime-status",
+      "design-validator",
+      "workflow-validator"
+    ],
+    "capabilities": []
+  },
+  "channels": {
+    "openai_hosted": {
+      "status": "CURRENT_BY_DECLARATION",
+      "evidence": "synthetic test-owned identity evidence"
+    },
+    "obvious_one": {
+      "status": "CURRENT_BY_DECLARATION",
+      "evidence": "approved Vibe Coding Designer marketplace release record"
+    },
+    "openai_public": {
+      "status": "UNPUBLISHED",
+      "evidence": "decision-owner declaration"
+    }
+  }
+}

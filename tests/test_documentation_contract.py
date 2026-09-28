@@ -151,6 +151,62 @@ class DocumentationContractTests(unittest.TestCase):
                 with self.subTest(path=path.name, required=required):
                     self.assertIn(required, content)
 
+    def test_documents_knowledge_policy_command_and_evidence_limit(self) -> None:
+        command = COMMAND_REFERENCE.read_text(encoding="utf-8")
+        readme = README.read_text(encoding="utf-8")
+        syntax = (
+            "validate-knowledge --plugin-root <path> "
+            "[--coverage-matrix <path>] [--require-coverage]"
+        )
+        self.assertIn(syntax, command)
+        self.assertIn("knowledge_policy_validated", command)
+        self.assertIn("STATICALLY VERIFIED", command)
+        self.assertIn("behavioral application", command)
+        self.assertIn("NOT VERIFIED", command)
+        self.assertIn("validate-knowledge", readme)
+
+    def test_technical_reference_defines_minimal_knowledge_convention(self) -> None:
+        content = TECHNICAL_REFERENCE.read_text(encoding="utf-8")
+        for required in (
+            "skills/<domain-skill>/references/",
+            "knowledge-index.json",
+            "purpose",
+            "topics",
+            "chapters",
+            "sections",
+            "keywords",
+            "page_ranges",
+            "directly link",
+            "response owner",
+            "plugin-root `knowledge/`",
+            "one general knowledge index",
+        ):
+            with self.subTest(required=required):
+                self.assertIn(required, content)
+
+    def test_owner_guide_requires_knowledge_migration_approval_and_behavior(self) -> None:
+        content = USER_GUIDE.read_text(encoding="utf-8")
+        for required in (
+            "professional knowledge",
+            "general knowledge",
+            "existing references",
+            "decision owner",
+            "migration approval",
+            "behavioral scenarios",
+            "validate-knowledge --require-coverage",
+        ):
+            with self.subTest(required=required):
+                self.assertIn(required, content)
+
+    def test_agents_routes_nonnegotiable_knowledge_rules(self) -> None:
+        content = AGENTS.read_text(encoding="utf-8")
+        self.assertIn("Knowledge Reference Policy", content)
+        self.assertIn("professional knowledge", content)
+        self.assertIn("general knowledge", content)
+        self.assertIn("plugin-root `knowledge/`", content)
+        self.assertIn("explicit application adoption", content)
+        self.assertIn("PLUGIN_SKILLS_TECHNICAL_REFERENCE.md", content)
+
 
 if __name__ == "__main__":
     unittest.main()
