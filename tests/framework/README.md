@@ -24,6 +24,19 @@ When eligible, `derive-index` copies the source into staging, preserves vector b
 
 Product audit hooks should enforce domain-specific provenance and behavior that the generic deny-by-default package audit cannot know. Tests in this directory use only synthetic fixture plugins and must remain network-free.
 
+## Knowledge-reference policy boundary
+
+Knowledge-policy framework tests prove strict topic-guide parsing, confined
+skill-local structure, deterministic discovery, coverage-matrix traceability,
+and the machine-readable result contract. They do not prove that a model
+consulted or applied a reference.
+
+Each adopting product owns behavioral scenarios whose observable results depend
+on distinctive reference content. Product verification also owns installed
+Codex execution, installed OpenClaw execution, and cross-runtime behavioral
+equivalence. Static framework success must leave those evidence states as
+`NOT VERIFIED`.
+
 ## Verify OpenAI-hosted deployment support
 
 Hosted framework tests use only synthetic application-owned declarations and

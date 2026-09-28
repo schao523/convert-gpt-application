@@ -17,6 +17,7 @@ from .hosted_deployment_planner import plan_hosted_deployment, validate_hosted_d
 from .hosted_deployment_verifier import verify_hosted_deployment
 from .hosted_identity import propose_hosted_identity
 from .index_reuse import IndexReuseError, check_index_reuse, derive_index
+from .knowledge_policy import KnowledgePolicyError, validate_knowledge_policy
 from .marketplace import MarketplaceError, load_preparation_catalog, prepare_marketplace, verify_marketplace
 from .package_builder import PackageAuditError, build_package, preflight_package, verify_package
 from .readiness_report import combine_results, write_result_transactionally
@@ -122,6 +123,11 @@ def _parser() -> argparse.ArgumentParser:
     hosted_verify.add_argument("--contract", required=True, type=Path)
     hosted_verify.add_argument("--artifact", required=True, type=Path)
     hosted_verify.add_argument("--json", action="store_true")
+    knowledge = commands.add_parser("validate-knowledge")
+    knowledge.add_argument("--plugin-root", required=True, type=Path)
+    knowledge.add_argument("--coverage-matrix", type=Path)
+    knowledge.add_argument("--require-coverage", action="store_true")
+    knowledge.add_argument("--json", action="store_true")
     return parser
 
 
@@ -161,6 +167,9 @@ def main(argv: list[str] | None = None) -> int:
     except HostedDeploymentError as exc:
         result = _typed_failure(operation, exc)
         exit_code = 2 if result.status == "BLOCKED" else 3
+    except KnowledgePolicyError as exc:
+        result = _typed_failure(operation, exc)
+        exit_code = 3
     except ValueError as exc:
         result = _failure(operation, "FAIL", str(exc).split(":", 1)[0] or "invalid_value")
         exit_code = 2
@@ -180,6 +189,28 @@ def main(argv: list[str] | None = None) -> int:
 
 def _dispatch(arguments: argparse.Namespace) -> OperationResult:
     operation = arguments.command
+    if operation == "validate-knowledge":
+        evidence = validate_knowledge_policy(
+            arguments.plugin_root,
+            arguments.coverage_matrix,
+            arguments.require_coverage,
+        )
+        return OperationResult(
+            operation=operation,
+            status="PASS",
+            code="knowledge_policy_validated",
+            evidence={
+                "behavior": evidence.behavior,
+                "codex_execution": evidence.codex_execution,
+                "consultation_skill": evidence.consultation_skill,
+                "coverage_traceability": evidence.coverage_traceability,
+                "deterministic_discovery": evidence.deterministic_discovery,
+                "general_reference_count": evidence.general_reference_count,
+                "openclaw_execution": evidence.openclaw_execution,
+                "package_structure": evidence.package_structure,
+                "professional_reference_count": evidence.professional_reference_count,
+            },
+        )
     if operation == "plan-hosted-deployment":
         return plan_hosted_deployment(arguments.application, arguments.operation, arguments.output)
     if operation == "import-hosted-identity":

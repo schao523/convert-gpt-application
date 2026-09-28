@@ -37,6 +37,174 @@ class FrameworkCliTests(unittest.TestCase):
             code = main(list(arguments))
         return code, json.loads(stdout.getvalue())
 
+    def knowledge_plugin(self, name: str = "knowledge-plugin") -> Path:
+        root = self.output / name
+        professional = root / "skills" / "designing-systems"
+        (professional / "references").mkdir(parents=True)
+        (professional / "SKILL.md").write_text(
+            "# Designing systems\n\n[Rules](references/rules.md)\n",
+            encoding="utf-8",
+        )
+        (professional / "references" / "rules.md").write_text(
+            "# Rules\n",
+            encoding="utf-8",
+        )
+        general = root / "skills" / "consulting-system-knowledge"
+        (general / "references").mkdir(parents=True)
+        (general / "SKILL.md").write_text(
+            "# Consulting system knowledge\n\n"
+            "[Topic guide](references/knowledge-index.json)\n",
+            encoding="utf-8",
+        )
+        (general / "references" / "architecture-guide.md").write_text(
+            "# Architecture guide\n",
+            encoding="utf-8",
+        )
+        (general / "references" / "knowledge-index.json").write_text(
+            json.dumps(
+                {
+                    "schema_version": 1,
+                    "files": [
+                        {
+                            "path": "architecture-guide.md",
+                            "purpose": "Background architecture guidance.",
+                            "topics": [
+                                {
+                                    "name": "Event-driven architecture",
+                                    "chapters": ["Architecture"],
+                                    "sections": ["Events"],
+                                    "keywords": ["event-driven"],
+                                    "page_ranges": [{"start": 2, "end": 4}],
+                                }
+                            ],
+                        }
+                    ],
+                }
+            ),
+            encoding="utf-8",
+        )
+        matrix = root / "tests" / "coverage-matrix.md"
+        matrix.parent.mkdir()
+        matrix.write_text(
+            "| Knowledge | Scenario |\n"
+            "| --- | --- |\n"
+            "| skills/designing-systems/references/rules.md | professional |\n"
+            "| skills/consulting-system-knowledge/references/architecture-guide.md | general |\n",
+            encoding="utf-8",
+        )
+        return root
+
+    def test_validate_knowledge_emits_separate_static_and_runtime_evidence(self) -> None:
+        root = self.knowledge_plugin()
+
+        code, payload = self.invoke(
+            "validate-knowledge",
+            "--plugin-root", str(root),
+            "--coverage-matrix", str(root / "tests" / "coverage-matrix.md"),
+            "--require-coverage",
+            "--json",
+        )
+
+        self.assertEqual((code, payload["status"], payload["code"]), (0, "PASS", "knowledge_policy_validated"))
+        self.assertEqual(payload["evidence"]["professional_reference_count"], 1)
+        self.assertEqual(payload["evidence"]["general_reference_count"], 1)
+        self.assertEqual(payload["evidence"]["consultation_skill"], "consulting-system-knowledge")
+        self.assertEqual(payload["evidence"]["package_structure"], "STATICALLY VERIFIED")
+        self.assertEqual(payload["evidence"]["deterministic_discovery"], "STATICALLY VERIFIED")
+        self.assertEqual(payload["evidence"]["coverage_traceability"], "STATICALLY VERIFIED")
+        self.assertEqual(payload["evidence"]["behavior"], "NOT VERIFIED")
+        self.assertEqual(payload["evidence"]["codex_execution"], "NOT VERIFIED")
+        self.assertEqual(payload["evidence"]["openclaw_execution"], "NOT VERIFIED")
+
+    def test_validate_knowledge_preserves_topic_failure_code(self) -> None:
+        root = self.knowledge_plugin("invalid-topic")
+        index = root / "skills" / "consulting-system-knowledge" / "references" / "knowledge-index.json"
+        payload = json.loads(index.read_text(encoding="utf-8"))
+        payload["files"][0]["topics"][0]["keywords"] = []
+        index.write_text(json.dumps(payload), encoding="utf-8")
+
+        code, result = self.invoke(
+            "validate-knowledge",
+            "--plugin-root", str(root),
+        )
+
+        self.assertEqual((code, result["status"], result["code"]), (3, "FAIL", "general_knowledge_topic_incomplete"))
+
+    def test_validate_knowledge_rejects_root_knowledge_directory(self) -> None:
+        root = self.knowledge_plugin("root-knowledge")
+        (root / "knowledge").mkdir()
+
+        code, payload = self.invoke(
+            "validate-knowledge",
+            "--plugin-root", str(root),
+        )
+
+        self.assertEqual((code, payload["status"], payload["code"]), (3, "FAIL", "plugin_root_knowledge_directory_forbidden"))
+
+    def test_validate_knowledge_requires_complete_coverage_when_requested(self) -> None:
+        root = self.knowledge_plugin("missing-coverage")
+        matrix = root / "tests" / "coverage-matrix.md"
+        matrix.write_text("# No knowledge rows\n", encoding="utf-8")
+
+        code, payload = self.invoke(
+            "validate-knowledge",
+            "--plugin-root", str(root),
+            "--coverage-matrix", str(matrix),
+            "--require-coverage",
+        )
+
+        self.assertEqual((code, payload["status"], payload["code"]), (3, "FAIL", "knowledge_behavior_evidence_missing"))
+
+    def test_validate_knowledge_rejects_coverage_outside_plugin_boundary(self) -> None:
+        root = self.knowledge_plugin("outside-coverage")
+        outside = self.output / "outside-matrix.md"
+        outside.write_text(
+            "skills/designing-systems/references/rules.md\n"
+            "skills/consulting-system-knowledge/references/architecture-guide.md\n",
+            encoding="utf-8",
+        )
+
+        code, payload = self.invoke(
+            "validate-knowledge",
+            "--plugin-root", str(root),
+            "--coverage-matrix", str(outside),
+        )
+
+        self.assertEqual((code, payload["status"], payload["code"]), (3, "FAIL", "knowledge_behavior_evidence_missing"))
+        self.assertNotIn(str(self.output), json.dumps(payload))
+
+    def test_validate_knowledge_non_ascii_paths_emit_one_ascii_safe_result(self) -> None:
+        root = self.knowledge_plugin("知識外掛")
+        professional = root / "skills" / "designing-systems"
+        source = professional / "references" / "rules.md"
+        target = professional / "references" / "規則.md"
+        source.rename(target)
+        (professional / "SKILL.md").write_text(
+            "# 設計\n\n[規則](references/規則.md)\n",
+            encoding="utf-8",
+        )
+        matrix = root / "tests" / "coverage-matrix.md"
+        matrix.write_text(
+            "skills/designing-systems/references/規則.md\n"
+            "skills/consulting-system-knowledge/references/architecture-guide.md\n",
+            encoding="utf-8",
+        )
+        stdout = io.StringIO()
+
+        with contextlib.redirect_stdout(stdout):
+            code = main([
+                "validate-knowledge",
+                "--plugin-root", str(root),
+                "--coverage-matrix", str(matrix),
+                "--require-coverage",
+            ])
+
+        raw = stdout.getvalue()
+        payload = json.loads(raw)
+        raw.encode("ascii")
+        self.assertEqual((code, payload["status"]), (0, "PASS"))
+        self.assertEqual(raw.count('"result_schema_version"'), 1)
+
     def test_cli_builds_schema_v3_fixture(self) -> None:
         name = "plugin-v3"
         code, payload = self.invoke(
