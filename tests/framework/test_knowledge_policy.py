@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 import tempfile
 import unittest
 from pathlib import Path
@@ -8,6 +9,7 @@ from pathlib import Path
 from obvious_one_plugin_framework.knowledge_policy import (
     KnowledgePolicyError,
     discover_knowledge_policy,
+    validate_knowledge_policy,
 )
 
 
@@ -314,6 +316,255 @@ class KnowledgePolicyParserTests(unittest.TestCase):
                 "skills/consulting-product-knowledge/references/knowledge-index.json",
             ),
         )
+
+
+class KnowledgePolicyValidationTests(unittest.TestCase):
+    def setUp(self) -> None:
+        self.temporary = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temporary.cleanup)
+        self.plugin_root = Path(self.temporary.name) / "plugin"
+        self.plugin_root.mkdir()
+
+    def _skill(self, name: str, instructions: str = "") -> Path:
+        skill = self.plugin_root / "skills" / name
+        (skill / "references").mkdir(parents=True)
+        (skill / "SKILL.md").write_text(
+            f"# {name}\n\n{instructions}",
+            encoding="utf-8",
+        )
+        return skill
+
+    @staticmethod
+    def _valid_index(path: str = "architecture-guide.md") -> dict[str, object]:
+        return KnowledgePolicyParserTests._valid_index(path)
+
+    def _write_index(self, skill: Path, payload: object) -> None:
+        (skill / "references" / "knowledge-index.json").write_text(
+            json.dumps(payload),
+            encoding="utf-8",
+        )
+
+    def _assert_error(self, code: str, action) -> KnowledgePolicyError:
+        with self.assertRaises(KnowledgePolicyError) as captured:
+            action()
+        self.assertEqual(captured.exception.code, code)
+        return captured.exception
+
+    def test_accepts_inline_and_reference_definition_links(self) -> None:
+        skill = self._skill(
+            "designing-systems",
+            "Use [core rules](references/core.md).\n"
+            "Consult [nested rules][nested].\n\n"
+            "[nested]: references/nested/rules.md\n",
+        )
+        (skill / "references" / "core.md").write_text("Core\n", encoding="utf-8")
+        nested = skill / "references" / "nested"
+        nested.mkdir()
+        (nested / "rules.md").write_text("Nested\n", encoding="utf-8")
+
+        evidence = validate_knowledge_policy(self.plugin_root)
+
+        self.assertEqual(evidence.professional_reference_count, 2)
+        self.assertEqual(evidence.general_reference_count, 0)
+        self.assertEqual(evidence.package_structure, "STATICALLY VERIFIED")
+        self.assertEqual(evidence.deterministic_discovery, "NOT APPLICABLE")
+        self.assertEqual(evidence.coverage_traceability, "NOT VERIFIED")
+        self.assertEqual(evidence.behavior, "NOT VERIFIED")
+        self.assertEqual(evidence.codex_execution, "NOT VERIFIED")
+        self.assertEqual(evidence.openclaw_execution, "NOT VERIFIED")
+
+    def test_bare_or_code_spanned_filename_is_not_a_direct_link(self) -> None:
+        for position, instructions in enumerate(
+            ("Read references/rules.md.\n", "Read `references/rules.md`.\n")
+        ):
+            with self.subTest(instructions=instructions):
+                root = Path(self.temporary.name) / f"bare-{position}"
+                root.mkdir()
+                previous = self.plugin_root
+                self.plugin_root = root
+                try:
+                    skill = self._skill("designing-systems", instructions)
+                    (skill / "references" / "rules.md").write_text(
+                        "Rules\n", encoding="utf-8"
+                    )
+                    self._assert_error(
+                        "professional_reference_unlinked",
+                        lambda: validate_knowledge_policy(root),
+                    )
+                finally:
+                    self.plugin_root = previous
+
+    def test_rejects_missing_broken_and_escaping_local_links(self) -> None:
+        cases = {
+            "missing": "[missing](references/missing.md)",
+            "broken": "[readme](README.md)",
+            "escaping": "[outside](../outside.md)",
+            "windows_drive": "[outside](C:/outside.md)",
+            "network_absolute": "[outside](//server/share/outside.md)",
+        }
+        for name, instructions in cases.items():
+            with self.subTest(name=name):
+                root = Path(self.temporary.name) / name
+                root.mkdir()
+                previous = self.plugin_root
+                self.plugin_root = root
+                try:
+                    self._skill("designing-systems", instructions)
+                    self._assert_error(
+                        "professional_reference_missing",
+                        lambda: validate_knowledge_policy(root),
+                    )
+                finally:
+                    self.plugin_root = previous
+
+    def test_rejects_symlinked_professional_reference(self) -> None:
+        skill = self._skill(
+            "designing-systems",
+            "[rules](references/rules.md)\n",
+        )
+        outside = Path(self.temporary.name) / "outside.md"
+        outside.write_text("Outside\n", encoding="utf-8")
+        link = skill / "references" / "rules.md"
+        try:
+            os.symlink(outside, link)
+        except OSError as error:
+            self.skipTest(f"file symlinks are unavailable: {error}")
+
+        self._assert_error(
+            "professional_reference_missing",
+            lambda: validate_knowledge_policy(self.plugin_root),
+        )
+
+    def test_rejects_casefold_professional_path_aliases(self) -> None:
+        skill = self._skill(
+            "designing-systems",
+            "[upper](references/Rule.md)\n[lower](references/rule.md)\n",
+        )
+        upper = skill / "references" / "Rule.md"
+        lower = skill / "references" / "rule.md"
+        upper.write_text("Upper\n", encoding="utf-8")
+        lower.write_text("Lower\n", encoding="utf-8")
+        if len(list((skill / "references").glob("*.md"))) != 2:
+            self.skipTest("filesystem is case-insensitive")
+
+        self._assert_error(
+            "professional_reference_path_collision",
+            lambda: validate_knowledge_policy(self.plugin_root),
+        )
+
+    def test_rejects_missing_indexed_general_file(self) -> None:
+        skill = self._skill(
+            "consulting-product-knowledge",
+            "[topic guide](references/knowledge-index.json)\n",
+        )
+        self._write_index(skill, self._valid_index())
+
+        self._assert_error(
+            "general_knowledge_index_path_missing",
+            lambda: validate_knowledge_policy(self.plugin_root),
+        )
+
+    def test_rejects_unindexed_general_file(self) -> None:
+        skill = self._skill(
+            "consulting-product-knowledge",
+            "[topic guide](references/knowledge-index.json)\n",
+        )
+        (skill / "references" / "architecture-guide.md").write_text(
+            "Guide\n", encoding="utf-8"
+        )
+        (skill / "references" / "orphan.md").write_text("Orphan\n", encoding="utf-8")
+        self._write_index(skill, self._valid_index())
+
+        self._assert_error(
+            "general_knowledge_file_unindexed",
+            lambda: validate_knowledge_policy(self.plugin_root),
+        )
+
+    def test_rejects_consultation_skill_that_does_not_link_index(self) -> None:
+        skill = self._skill("consulting-product-knowledge", "Use the topic guide.\n")
+        (skill / "references" / "architecture-guide.md").write_text(
+            "Guide\n", encoding="utf-8"
+        )
+        self._write_index(skill, self._valid_index())
+
+        self._assert_error(
+            "general_knowledge_index_invalid",
+            lambda: validate_knowledge_policy(self.plugin_root),
+        )
+
+    def test_accepts_nested_indexed_general_file(self) -> None:
+        skill = self._skill(
+            "consulting-product-knowledge",
+            "[topic guide](references/knowledge-index.json)\n",
+        )
+        nested = skill / "references" / "architecture"
+        nested.mkdir()
+        (nested / "guide.md").write_text("Guide\n", encoding="utf-8")
+        self._write_index(skill, self._valid_index("architecture/guide.md"))
+
+        evidence = validate_knowledge_policy(self.plugin_root)
+
+        self.assertEqual(evidence.general_reference_count, 1)
+        self.assertEqual(evidence.consultation_skill, "consulting-product-knowledge")
+        self.assertEqual(evidence.deterministic_discovery, "STATICALLY VERIFIED")
+
+    def test_rejects_plugin_root_knowledge_directory(self) -> None:
+        (self.plugin_root / "knowledge").mkdir()
+
+        self._assert_error(
+            "plugin_root_knowledge_directory_forbidden",
+            lambda: validate_knowledge_policy(self.plugin_root),
+        )
+
+    def test_coverage_traceability_is_separate_from_behavior(self) -> None:
+        skill = self._skill(
+            "designing-systems",
+            "[rules](references/rules.md)\n",
+        )
+        (skill / "references" / "rules.md").write_text("Rules\n", encoding="utf-8")
+        matrix = self.plugin_root / "tests" / "coverage-matrix.md"
+        matrix.parent.mkdir()
+        matrix.write_text(
+            "| Knowledge file | Scenario |\n"
+            "| --- | --- |\n"
+            "| skills/designing-systems/references/rules.md | distinctive rule |\n",
+            encoding="utf-8",
+        )
+
+        absent = validate_knowledge_policy(self.plugin_root)
+        present = validate_knowledge_policy(self.plugin_root, matrix)
+
+        self.assertEqual(absent.coverage_traceability, "NOT VERIFIED")
+        self.assertEqual(present.coverage_traceability, "STATICALLY VERIFIED")
+        self.assertEqual(present.behavior, "NOT VERIFIED")
+
+    def test_required_coverage_rejects_missing_knowledge_path(self) -> None:
+        skill = self._skill(
+            "designing-systems",
+            "[rules](references/rules.md)\n",
+        )
+        (skill / "references" / "rules.md").write_text("Rules\n", encoding="utf-8")
+        matrix = self.plugin_root / "tests" / "coverage-matrix.md"
+        matrix.parent.mkdir()
+        matrix.write_text("# Coverage\n", encoding="utf-8")
+
+        with self.assertRaisesRegex(
+            KnowledgePolicyError,
+            "knowledge_behavior_evidence_missing",
+        ):
+            validate_knowledge_policy(
+                self.plugin_root,
+                matrix,
+                require_coverage=True,
+            )
+
+    def test_no_knowledge_has_not_applicable_coverage(self) -> None:
+        evidence = validate_knowledge_policy(
+            self.plugin_root,
+            require_coverage=True,
+        )
+
+        self.assertEqual(evidence.coverage_traceability, "NOT APPLICABLE")
 
 
 if __name__ == "__main__":

@@ -116,6 +116,7 @@ from .knowledge_policy import (
     KnowledgeTopic,
     ProfessionalKnowledgeFile,
     discover_knowledge_policy,
+    validate_knowledge_policy,
 )
 
 __all__ = [
@@ -214,6 +215,7 @@ __all__ = [
     "KnowledgeTopic",
     "ProfessionalKnowledgeFile",
     "discover_knowledge_policy",
+    "validate_knowledge_policy",
 ]
 
 __version__ = "0.1.0"

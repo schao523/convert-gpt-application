@@ -4,9 +4,11 @@ from __future__ import annotations
 
 import json
 import re
+import stat
 from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
 from typing import Any
+from urllib.parse import unquote, urlsplit
 
 
 _INDEX_NAME = "knowledge-index.json"
@@ -21,6 +23,14 @@ _TOPIC_KEYS = {
 }
 _PAGE_RANGE_KEYS = {"start", "end"}
 _WINDOWS_DRIVE = re.compile(r"^[A-Za-z]:")
+_INLINE_LINK = re.compile(
+    r"!?\[[^\]]*\]\(\s*(?:<(?P<angle>[^>]+)>|(?P<plain>[^\s)]+))"
+)
+_REFERENCE_DEFINITION = re.compile(
+    r"^\s*\[(?P<label>[^\]]+)\]:\s*(?:<(?P<angle>[^>]+)>|(?P<plain>\S+))",
+    re.MULTILINE,
+)
+_REFERENCE_USE = re.compile(r"(?<!!)\[[^\]]+\]\[(?P<label>[^\]]+)\]")
 
 
 class KnowledgePolicyError(ValueError):
@@ -408,4 +418,376 @@ def discover_knowledge_policy(plugin_root: Path) -> KnowledgePolicy:
         professional_files=tuple(professional),
         general_files=general_files,
         consultation_skill=consultation_skill,
+    )
+
+
+def _is_within(path: Path, boundary: Path) -> bool:
+    try:
+        path.relative_to(boundary)
+    except ValueError:
+        return False
+    return True
+
+
+def _ensure_regular_confined_file(
+    path: Path,
+    boundary: Path,
+    *,
+    code: str,
+    display_path: str,
+) -> None:
+    try:
+        relative = path.relative_to(boundary)
+    except ValueError as error:
+        raise KnowledgePolicyError(
+            code,
+            f"path escapes its owning skill: {display_path}",
+            (display_path,),
+        ) from error
+    current = boundary
+    for part in relative.parts:
+        current = current / part
+        if current.is_symlink():
+            raise KnowledgePolicyError(
+                code,
+                f"linked paths are not knowledge files: {display_path}",
+                (display_path,),
+            )
+    try:
+        metadata = path.lstat()
+        resolved = path.resolve(strict=True)
+        resolved_boundary = boundary.resolve(strict=True)
+    except OSError as error:
+        raise KnowledgePolicyError(
+            code,
+            f"knowledge path is missing or unreadable: {display_path}",
+            (display_path,),
+        ) from error
+    if not stat.S_ISREG(metadata.st_mode) or not _is_within(resolved, resolved_boundary):
+        raise KnowledgePolicyError(
+            code,
+            f"knowledge path is not a confined regular file: {display_path}",
+            (display_path,),
+        )
+
+
+def _markdown_targets(text: str) -> tuple[str, ...]:
+    targets = [
+        match.group("angle") or match.group("plain")
+        for match in _INLINE_LINK.finditer(text)
+    ]
+    definitions = {
+        match.group("label").strip().casefold(): match.group("angle")
+        or match.group("plain")
+        for match in _REFERENCE_DEFINITION.finditer(text)
+    }
+    for match in _REFERENCE_USE.finditer(text):
+        target = definitions.get(match.group("label").strip().casefold())
+        if target is not None:
+            targets.append(target)
+    return tuple(targets)
+
+
+def _resolve_local_markdown_target(
+    target: str,
+    *,
+    markdown_path: Path,
+    skill_root: Path,
+) -> Path | None:
+    decoded_target = unquote(target)
+    display = f"{markdown_path.name} -> {decoded_target}"
+    if (
+        "\\" in decoded_target
+        or _WINDOWS_DRIVE.match(decoded_target)
+        or decoded_target.startswith("/")
+    ):
+        raise KnowledgePolicyError(
+            "professional_reference_missing",
+            f"local Markdown link is not portable: {display}",
+            (display,),
+        )
+    parsed = urlsplit(target)
+    if parsed.scheme or parsed.netloc:
+        return None
+    if not parsed.path:
+        return None
+    decoded = unquote(parsed.path)
+    display = f"{markdown_path.name} -> {decoded}"
+    candidate_path = Path(decoded)
+    if candidate_path.is_absolute():
+        raise KnowledgePolicyError(
+            "professional_reference_missing",
+            f"local Markdown link is absolute: {display}",
+            (display,),
+        )
+    unresolved = markdown_path.parent / candidate_path
+    try:
+        lexical = Path(*PurePosixPath(decoded).parts)
+        normalized = markdown_path.parent.joinpath(lexical)
+        normalized.resolve(strict=False).relative_to(skill_root.resolve(strict=True))
+    except (OSError, ValueError) as error:
+        raise KnowledgePolicyError(
+            "professional_reference_missing",
+            f"local Markdown link escapes its owning skill: {display}",
+            (display,),
+        ) from error
+    _ensure_regular_confined_file(
+        unresolved,
+        skill_root,
+        code="professional_reference_missing",
+        display_path=display,
+    )
+    return unresolved
+
+
+def _skill_markdown_links(skill_root: Path) -> tuple[str, ...]:
+    skill_file = skill_root / "SKILL.md"
+    if not skill_file.is_file() or skill_file.is_symlink():
+        return ()
+    direct_targets: list[str] = []
+    markdown_files = tuple(
+        sorted(
+            (path for path in skill_root.rglob("*.md") if path.is_file()),
+            key=lambda path: (
+                path.relative_to(skill_root).as_posix().casefold(),
+                path.relative_to(skill_root).as_posix(),
+            ),
+        )
+    )
+    for markdown in markdown_files:
+        try:
+            text = markdown.read_text(encoding="utf-8")
+        except (OSError, UnicodeError) as error:
+            display = markdown.relative_to(skill_root).as_posix()
+            raise KnowledgePolicyError(
+                "professional_reference_missing",
+                f"Markdown file is not readable UTF-8: {display}",
+                (display,),
+            ) from error
+        for target in _markdown_targets(text):
+            resolved = _resolve_local_markdown_target(
+                target,
+                markdown_path=markdown,
+                skill_root=skill_root,
+            )
+            if resolved is not None and markdown == skill_file:
+                direct_targets.append(resolved.relative_to(skill_root).as_posix())
+    return tuple(sorted(set(direct_targets), key=lambda item: (item.casefold(), item)))
+
+
+def _validate_professional_references(
+    root: Path,
+    policy: KnowledgePolicy,
+) -> None:
+    folded: dict[str, str] = {}
+    links_by_skill: dict[str, tuple[str, ...]] = {}
+    for reference in policy.professional_files:
+        previous = folded.get(reference.path.casefold())
+        if previous is not None:
+            raise KnowledgePolicyError(
+                "professional_reference_path_collision",
+                f"professional reference paths collide: {previous!r} and {reference.path!r}",
+                (previous, reference.path),
+            )
+        folded[reference.path.casefold()] = reference.path
+        skill_root = root / "skills" / reference.skill_name
+        _ensure_regular_confined_file(
+            root / Path(*PurePosixPath(reference.path).parts),
+            skill_root,
+            code="professional_reference_missing",
+            display_path=reference.path,
+        )
+        links = links_by_skill.setdefault(
+            reference.skill_name,
+            _skill_markdown_links(skill_root),
+        )
+        relative_to_skill = PurePosixPath(reference.path).relative_to(
+            PurePosixPath("skills") / reference.skill_name
+        ).as_posix()
+        if relative_to_skill not in links:
+            raise KnowledgePolicyError(
+                "professional_reference_unlinked",
+                f"professional reference is not directly linked from SKILL.md: {reference.path}",
+                (reference.path,),
+            )
+
+    for skill in sorted(
+        (root / "skills").iterdir() if (root / "skills").is_dir() else (),
+        key=lambda path: (path.name.casefold(), path.name),
+    ):
+        if skill.is_dir() and skill.name != policy.consultation_skill:
+            links_by_skill.setdefault(skill.name, _skill_markdown_links(skill))
+
+
+def _validate_general_references(root: Path, policy: KnowledgePolicy) -> None:
+    if policy.consultation_skill is None:
+        return
+    skill_root = root / "skills" / policy.consultation_skill
+    references = skill_root / "references"
+    index = references / _INDEX_NAME
+    index_display = _relative_path(root, index)
+    _ensure_regular_confined_file(
+        index,
+        skill_root,
+        code="general_knowledge_index_invalid",
+        display_path=index_display,
+    )
+    direct_links = _skill_markdown_links(skill_root)
+    if f"references/{_INDEX_NAME}" not in direct_links:
+        raise KnowledgePolicyError(
+            "general_knowledge_index_invalid",
+            "the consultation SKILL.md must directly link knowledge-index.json",
+            (index_display,),
+        )
+
+    actual: dict[str, str] = {}
+    for path in sorted(
+        (candidate for candidate in references.rglob("*") if candidate.is_file()),
+        key=lambda candidate: (
+            candidate.relative_to(references).as_posix().casefold(),
+            candidate.relative_to(references).as_posix(),
+        ),
+    ):
+        relative = path.relative_to(references).as_posix()
+        if relative == _INDEX_NAME:
+            continue
+        _ensure_regular_confined_file(
+            path,
+            references,
+            code="general_knowledge_index_path_missing",
+            display_path=relative,
+        )
+        folded = relative.casefold()
+        if folded in actual:
+            raise KnowledgePolicyError(
+                "general_knowledge_index_invalid",
+                f"general knowledge paths collide: {actual[folded]!r} and {relative!r}",
+                (actual[folded], relative),
+            )
+        actual[folded] = relative
+
+    indexed = {item.path.casefold(): item.path for item in policy.general_files}
+    missing = tuple(
+        indexed[key]
+        for key in sorted(indexed)
+        if key not in actual or actual[key] != indexed[key]
+    )
+    if missing:
+        raise KnowledgePolicyError(
+            "general_knowledge_index_path_missing",
+            "one or more indexed general knowledge files are missing",
+            missing,
+        )
+    unindexed = tuple(
+        actual[key]
+        for key in sorted(actual)
+        if key not in indexed or indexed[key] != actual[key]
+    )
+    if unindexed:
+        raise KnowledgePolicyError(
+            "general_knowledge_file_unindexed",
+            "one or more general knowledge files are not indexed",
+            unindexed,
+        )
+
+
+def _knowledge_paths(policy: KnowledgePolicy) -> tuple[str, ...]:
+    paths = [item.path for item in policy.professional_files]
+    if policy.consultation_skill is not None:
+        prefix = f"skills/{policy.consultation_skill}/references"
+        paths.extend(f"{prefix}/{item.path}" for item in policy.general_files)
+    return tuple(sorted(paths, key=lambda item: (item.casefold(), item)))
+
+
+def _coverage_state(
+    root: Path,
+    policy: KnowledgePolicy,
+    coverage_matrix: Path | None,
+    require_coverage: bool,
+) -> str:
+    knowledge_paths = _knowledge_paths(policy)
+    if not knowledge_paths:
+        return "NOT APPLICABLE"
+    if coverage_matrix is None:
+        if require_coverage:
+            raise KnowledgePolicyError(
+                "knowledge_behavior_evidence_missing",
+                "coverage matrix is required for knowledge references",
+                knowledge_paths,
+            )
+        return "NOT VERIFIED"
+
+    matrix = Path(coverage_matrix)
+    try:
+        resolved_root = root.resolve(strict=True)
+        resolved_matrix = matrix.resolve(strict=True)
+        resolved_matrix.relative_to(resolved_root)
+        if matrix.is_symlink() or not matrix.is_file():
+            raise OSError("coverage matrix is not a regular file")
+        text = matrix.read_text(encoding="utf-8")
+    except (OSError, UnicodeError, ValueError) as error:
+        raise KnowledgePolicyError(
+            "knowledge_behavior_evidence_missing",
+            "coverage matrix is missing, unreadable, or outside the plugin root",
+        ) from error
+
+    missing = tuple(
+        path
+        for path in knowledge_paths
+        if re.search(
+            rf"(?<![\w./-]){re.escape(path)}(?![\w./-])",
+            text,
+        )
+        is None
+    )
+    if missing and require_coverage:
+        raise KnowledgePolicyError(
+            "knowledge_behavior_evidence_missing",
+            "coverage matrix does not trace every knowledge file",
+            missing,
+        )
+    return "STATICALLY VERIFIED" if not missing else "NOT VERIFIED"
+
+
+def validate_knowledge_policy(
+    plugin_root: Path,
+    coverage_matrix: Path | None = None,
+    require_coverage: bool = False,
+) -> KnowledgePolicyEvidence:
+    """Validate knowledge structure and report static evidence only."""
+
+    root = Path(plugin_root)
+    if not root.is_dir():
+        raise KnowledgePolicyError(
+            "knowledge_plugin_root_invalid",
+            "plugin root must be an existing directory",
+        )
+    forbidden = root / "knowledge"
+    if forbidden.exists() or forbidden.is_symlink():
+        raise KnowledgePolicyError(
+            "plugin_root_knowledge_directory_forbidden",
+            "plugin-root knowledge directories are not supported",
+            ("knowledge",),
+        )
+
+    policy = discover_knowledge_policy(root)
+    _validate_professional_references(root, policy)
+    _validate_general_references(root, policy)
+    return KnowledgePolicyEvidence(
+        professional_reference_count=len(policy.professional_files),
+        general_reference_count=len(policy.general_files),
+        consultation_skill=policy.consultation_skill,
+        package_structure="STATICALLY VERIFIED",
+        deterministic_discovery=(
+            "STATICALLY VERIFIED" if policy.general_files else "NOT APPLICABLE"
+        ),
+        coverage_traceability=_coverage_state(
+            root,
+            policy,
+            coverage_matrix,
+            require_coverage,
+        ),
+        behavior="NOT VERIFIED",
+        codex_execution="NOT VERIFIED",
+        openclaw_execution="NOT VERIFIED",
     )
