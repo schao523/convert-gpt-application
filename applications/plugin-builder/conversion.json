@@ -1,0 +1,40 @@
+{
+  "schema_version": 2,
+  "application_id": "plugin-builder",
+  "plugin_id": "plugin-builder",
+  "source_inventory": "docs/source-inventory.json",
+  "source_location": "conversion.local.json",
+  "coverage_matrix": "tests/coverage-matrix.md",
+  "distribution_contract": "openclaw/distribution.json",
+  "marketplace_repository": "NOT_AUTHORIZED_PHASE_ONE",
+  "provenance": {
+    "source_repository": "plugin-builder-approved-handoff-v1.0",
+    "incorporated_branches": [],
+    "inventory_rules": [
+      {
+        "root": ".",
+        "classification": "approved-design-source-only",
+        "include": ["*"]
+      }
+    ]
+  },
+  "verification": {
+    "test_directory": "tests",
+    "commands": [
+      {
+        "id": "runtime-status",
+        "argv": ["{python}", "-B", "{application_root}/scripts/plugin_builder.py", "status", "--json"],
+        "marketplace_targets": ["codex"]
+      },
+      {
+        "id": "session-validator",
+        "argv": ["{python}", "-B", "{application_root}/scripts/plugin_builder.py", "validate-session", "{application_root}/tests/fixtures/session-valid.json", "--json"],
+        "marketplace_targets": ["codex"]
+      }
+    ],
+    "codex_build": {
+      "argv": ["{python}", "-B", "{application_root}/scripts/build_marketplace_release.py", "--source", "{application_root}", "--destination", "{diagnostics}/codex-marketplace", "--version", "{version}"],
+      "artifact_path": "plugins/{plugin_id}"
+    }
+  }
+}

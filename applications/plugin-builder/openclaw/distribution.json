@@ -1,0 +1,51 @@
+{
+  "schema_version": 3,
+  "plugin_id": "plugin-builder",
+  "package_name": "@obvious-one/plugin-builder",
+  "family": "bundle-plugin",
+  "version": "0.1.0",
+  "source_root": "..",
+  "include_files": [
+    ".codex-plugin/plugin.json",
+    "README.md",
+    "DISTRIBUTION.md",
+    "LICENSE",
+    "PRIVACY.md",
+    "SECURITY.md",
+    "THIRD_PARTY_CONTENT.md",
+    "THIRD_PARTY_NOTICES.md"
+  ],
+  "include_prefixes": ["scripts", "skills"],
+  "exclude_paths": [],
+  "max_total_bytes": 2097152,
+  "release_repository": "NOT_AUTHORIZED_PHASE_ONE",
+  "release_tag_template": "plugin-builder-v{version}",
+  "readme_overlay": null,
+  "audit_hook": null,
+  "rag": null,
+  "content_rules": [
+    {
+      "id": "application-authored-text",
+      "paths": [
+        ".codex-plugin/plugin.json",
+        "README.md",
+        "DISTRIBUTION.md",
+        "LICENSE",
+        "PRIVACY.md",
+        "SECURITY.md",
+        "THIRD_PARTY_CONTENT.md",
+        "THIRD_PARTY_NOTICES.md"
+      ],
+      "prefixes": ["scripts", "skills"],
+      "classification": "text",
+      "redistribution": {
+        "status": "approved",
+        "provenance": "docs/source-decisions.md"
+      }
+    }
+  ],
+  "publication": {
+    "github_marketplace": {"enabled": false},
+    "clawhub": {"enabled": false, "family": null, "native_manifest": null}
+  }
+}
