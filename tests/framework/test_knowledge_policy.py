@@ -5,6 +5,7 @@ import os
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 from obvious_one_plugin_framework.knowledge_policy import (
     KnowledgePolicyError,
@@ -401,6 +402,7 @@ class KnowledgePolicyValidationTests(unittest.TestCase):
             "escaping": "[outside](../outside.md)",
             "windows_drive": "[outside](C:/outside.md)",
             "network_absolute": "[outside](//server/share/outside.md)",
+            "file_uri": "[outside](file:///C:/outside.md)",
         }
         for name, instructions in cases.items():
             with self.subTest(name=name):
@@ -416,6 +418,25 @@ class KnowledgePolicyValidationTests(unittest.TestCase):
                     )
                 finally:
                     self.plugin_root = previous
+
+    def test_rejects_linked_skill_root_before_discovery(self) -> None:
+        skill = self._skill(
+            "designing-systems",
+            "[rules](references/rules.md)\n",
+        )
+        (skill / "references" / "rules.md").write_text(
+            "Rules\n", encoding="utf-8"
+        )
+        original = Path.is_symlink
+
+        def simulated_link(path: Path) -> bool:
+            return path == skill or original(path)
+
+        with patch.object(Path, "is_symlink", autospec=True, side_effect=simulated_link):
+            self._assert_error(
+                "knowledge_plugin_root_invalid",
+                lambda: validate_knowledge_policy(self.plugin_root),
+            )
 
     def test_rejects_symlinked_professional_reference(self) -> None:
         skill = self._skill(

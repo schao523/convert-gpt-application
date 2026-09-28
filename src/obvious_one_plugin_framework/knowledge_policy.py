@@ -429,6 +429,55 @@ def _is_within(path: Path, boundary: Path) -> bool:
     return True
 
 
+def _is_link_or_reparse(path: Path) -> bool:
+    """Return whether *path* aliases another filesystem location."""
+
+    try:
+        metadata = path.lstat()
+    except OSError:
+        return False
+    reparse_flag = getattr(stat, "FILE_ATTRIBUTE_REPARSE_POINT", 0x400)
+    file_attributes = getattr(metadata, "st_file_attributes", 0)
+    return path.is_symlink() or bool(file_attributes & reparse_flag)
+
+
+def _validate_discovery_roots(root: Path) -> None:
+    if _is_link_or_reparse(root):
+        raise KnowledgePolicyError(
+            "knowledge_plugin_root_invalid",
+            "plugin root must not be a linked or reparse path",
+        )
+    skills_root = root / "skills"
+    if not skills_root.exists():
+        return
+    if _is_link_or_reparse(skills_root):
+        raise KnowledgePolicyError(
+            "knowledge_plugin_root_invalid",
+            "skills root must not be a linked or reparse path",
+            ("skills",),
+        )
+    try:
+        skills = tuple(path for path in skills_root.iterdir() if path.is_dir())
+    except OSError as error:
+        raise KnowledgePolicyError(
+            "knowledge_plugin_root_invalid",
+            "skills root is unreadable",
+            ("skills",),
+        ) from error
+    linked = tuple(
+        sorted(
+            (_relative_path(root, path) for path in skills if _is_link_or_reparse(path)),
+            key=lambda item: (item.casefold(), item),
+        )
+    )
+    if linked:
+        raise KnowledgePolicyError(
+            "knowledge_plugin_root_invalid",
+            "skill directories must not be linked or reparse paths",
+            linked,
+        )
+
+
 def _ensure_regular_confined_file(
     path: Path,
     boundary: Path,
@@ -447,7 +496,7 @@ def _ensure_regular_confined_file(
     current = boundary
     for part in relative.parts:
         current = current / part
-        if current.is_symlink():
+        if _is_link_or_reparse(current):
             raise KnowledgePolicyError(
                 code,
                 f"linked paths are not knowledge files: {display_path}",
@@ -507,6 +556,12 @@ def _resolve_local_markdown_target(
             (display,),
         )
     parsed = urlsplit(target)
+    if parsed.scheme.casefold() == "file":
+        raise KnowledgePolicyError(
+            "professional_reference_missing",
+            f"local Markdown link uses a file URI: {display}",
+            (display,),
+        )
     if parsed.scheme or parsed.netloc:
         return None
     if not parsed.path:
@@ -542,7 +597,7 @@ def _resolve_local_markdown_target(
 
 def _skill_markdown_links(skill_root: Path) -> tuple[str, ...]:
     skill_file = skill_root / "SKILL.md"
-    if not skill_file.is_file() or skill_file.is_symlink():
+    if not skill_file.is_file() or _is_link_or_reparse(skill_file):
         return ()
     direct_targets: list[str] = []
     markdown_files = tuple(
@@ -722,7 +777,7 @@ def _coverage_state(
         resolved_root = root.resolve(strict=True)
         resolved_matrix = matrix.resolve(strict=True)
         resolved_matrix.relative_to(resolved_root)
-        if matrix.is_symlink() or not matrix.is_file():
+        if _is_link_or_reparse(matrix) or not matrix.is_file():
             raise OSError("coverage matrix is not a regular file")
         text = matrix.read_text(encoding="utf-8")
     except (OSError, UnicodeError, ValueError) as error:
@@ -762,8 +817,9 @@ def validate_knowledge_policy(
             "knowledge_plugin_root_invalid",
             "plugin root must be an existing directory",
         )
+    _validate_discovery_roots(root)
     forbidden = root / "knowledge"
-    if forbidden.exists() or forbidden.is_symlink():
+    if forbidden.exists() or _is_link_or_reparse(forbidden):
         raise KnowledgePolicyError(
             "plugin_root_knowledge_directory_forbidden",
             "plugin-root knowledge directories are not supported",
