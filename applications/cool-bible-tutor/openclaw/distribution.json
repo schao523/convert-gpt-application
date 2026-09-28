@@ -1,5 +1,5 @@
 {
-  "schema_version": 1,
+  "schema_version": 3,
   "plugin_id": "cool-bible-tutor",
   "package_name": "@obvious-one/cool-bible-tutor",
   "family": "bundle-plugin",
@@ -70,5 +70,67 @@
         "install_subdir": "source-assets"
       }
     ]
+  },
+  "content_rules": [
+    {
+      "id": "product-text",
+      "paths": [
+        ".codex-plugin/plugin.json",
+        ".gitattributes",
+        "README.md",
+        "DISTRIBUTION.md",
+        "LICENSE",
+        "PRIVACY.md",
+        "SECURITY.md",
+        "THIRD_PARTY_CONTENT.md",
+        "THIRD_PARTY_NOTICES.md",
+        "openclaw/README.md"
+      ],
+      "prefixes": ["docs", "scripts", "skills"],
+      "classification": "text",
+      "redistribution": {
+        "status": "approved",
+        "provenance": "LICENSE"
+      }
+    },
+    {
+      "id": "approved-asset-metadata",
+      "paths": [
+        "assets/openclaw/remote-assets.json",
+        "assets/openclaw/runtime-compatibility.json",
+        "assets/rag/bge-large-zh-v1.5-model-manifest.json",
+        "assets/rag/cuv-rag-runtime-manifest.json",
+        "vendor/rag-runtime/model-manifest.json",
+        "vendor/rag-runtime/requirements-rag.in",
+        "vendor/rag-runtime/requirements-rag.lock",
+        "vendor/rag-runtime/runtime-lock.json",
+        "vendor/rag-subsystem/manifest.json"
+      ],
+      "prefixes": [],
+      "classification": "text",
+      "redistribution": {
+        "status": "approved",
+        "provenance": "THIRD_PARTY_CONTENT.md"
+      }
+    },
+    {
+      "id": "approved-binary-assets",
+      "paths": [
+        "assets/scripture/cuv-approved-gaps.json",
+        "assets/scripture/cuv-runtime-manifest.json",
+        "assets/scripture/cuv.sqlite3",
+        "vendor/rag-subsystem/rag_subsystem-0.2.1-py3-none-any.whl"
+      ],
+      "prefixes": [],
+      "classification": "binary",
+      "redistribution": {
+        "status": "approved",
+        "provenance": "THIRD_PARTY_CONTENT.md"
+      }
+    }
+  ],
+  "publication": {
+    "github_marketplace": {"enabled": true},
+    "clawhub": {"enabled": false, "family": null, "native_manifest": null}
   }
 }

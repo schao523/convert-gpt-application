@@ -297,9 +297,10 @@ python -B -m obvious_one_plugin_framework.cli verify-marketplace --catalog .\mar
 ```
 
 `--index`, `--commit`, and `--fresh-checkout` are mutually exclusive. Cool
-Bible Tutor remains a legacy `verify_existing` entry in this catalog. Vibe
-Coding Designer is the schema-v3 build canary. Disabled ClawHub publication is
-`NOT APPLICABLE`, not a package failure.
+Bible Tutor, Vibe Coding Designer, and Cool Plugin Design Assistant are
+schema-v3 `build` entries in this catalog. The generic `verify_existing` mode
+remains available for cataloged legacy artifacts that have not yet migrated.
+Disabled ClawHub publication is `NOT APPLICABLE`, not a package failure.
 
 `verify_existing` means byte preservation, not trust in an old manifest. The
 generated marketplace verifier recalculates every legacy manifest path, size,
