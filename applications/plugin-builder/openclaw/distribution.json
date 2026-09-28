@@ -13,7 +13,9 @@
     "PRIVACY.md",
     "SECURITY.md",
     "THIRD_PARTY_CONTENT.md",
-    "THIRD_PARTY_NOTICES.md"
+    "THIRD_PARTY_NOTICES.md",
+    "docs/application-invariants.md",
+    "docs/runtime-compatibility.md"
   ],
   "include_prefixes": ["scripts", "skills"],
   "exclude_paths": [],
@@ -21,7 +23,7 @@
   "release_repository": "NOT_AUTHORIZED_PHASE_ONE",
   "release_tag_template": "plugin-builder-v{version}",
   "readme_overlay": null,
-  "audit_hook": null,
+  "audit_hook": "scripts/distribution_audit.py:audit_distribution",
   "rag": null,
   "content_rules": [
     {
@@ -34,7 +36,9 @@
         "PRIVACY.md",
         "SECURITY.md",
         "THIRD_PARTY_CONTENT.md",
-        "THIRD_PARTY_NOTICES.md"
+        "THIRD_PARTY_NOTICES.md",
+        "docs/application-invariants.md",
+        "docs/runtime-compatibility.md"
       ],
       "prefixes": ["scripts", "skills"],
       "classification": "text",
