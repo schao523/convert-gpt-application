@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "files": [
+    {
+      "path": "architecture-guide.md",
+      "purpose": "Synthetic background for comparing event-driven designs.",
+      "topics": [
+        {
+          "name": "Event-driven architecture",
+          "chapters": [
+            "System architecture"
+          ],
+          "sections": [
+            "Delivery and failure handling"
+          ],
+          "keywords": [
+            "event-driven",
+            "idempotency"
+          ],
+          "page_ranges": [
+            {
+              "start": 2,
+              "end": 3
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

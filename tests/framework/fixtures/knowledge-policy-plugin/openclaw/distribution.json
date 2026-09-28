@@ -1,0 +1,51 @@
+{
+  "schema_version": 3,
+  "plugin_id": "knowledge-policy-plugin",
+  "package_name": "@obvious-one/knowledge-policy-plugin",
+  "family": "bundle-plugin",
+  "version": "1.0.0",
+  "source_root": "..",
+  "include_files": [
+    ".codex-plugin/plugin.json",
+    "README.md",
+    "docs/source-decisions.md"
+  ],
+  "include_prefixes": [
+    "skills"
+  ],
+  "exclude_paths": [],
+  "max_total_bytes": 1048576,
+  "release_repository": "example/knowledge-policy-plugin",
+  "release_tag_template": "knowledge-policy-plugin-v{version}",
+  "readme_overlay": null,
+  "audit_hook": null,
+  "rag": null,
+  "content_rules": [
+    {
+      "id": "portable-text",
+      "paths": [
+        ".codex-plugin/plugin.json",
+        "README.md",
+        "docs/source-decisions.md"
+      ],
+      "prefixes": [
+        "skills"
+      ],
+      "classification": "text",
+      "redistribution": {
+        "status": "approved",
+        "provenance": "docs/source-decisions.md"
+      }
+    }
+  ],
+  "publication": {
+    "github_marketplace": {
+      "enabled": false
+    },
+    "clawhub": {
+      "enabled": false,
+      "family": null,
+      "native_manifest": null
+    }
+  }
+}
