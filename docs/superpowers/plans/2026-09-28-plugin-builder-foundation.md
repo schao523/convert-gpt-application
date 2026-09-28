@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Build a valid, testable `applications/plugin-builder` foundation that records the approved OpenAI-only scope, exposes four portable skill contracts, validates explicit session-state gates, and produces deterministic local Codex artifacts without claiming end-to-end Plugin Builder execution.
+**Goal:** First prove the required local file-and-ZIP capabilities in clean Codex and ChatGPT Work Local/Desktop environments, then build a valid, testable `applications/plugin-builder` foundation that records the approved OpenAI-only scope, exposes four portable skill contracts, validates explicit session-state gates, and produces deterministic local Codex artifacts without claiming end-to-end Plugin Builder execution.
 
 **Architecture:** Four goal-oriented skills own semantic workflow and user interaction over a bundled standard-library Python validator. The validator owns explicit session-state, approval, evidence, and archive-boundary contracts; schema-v2 application configuration and a schema-v3 deny-by-default content contract integrate the product with repository verification while leaving OpenClaw, publication, and marketplace mutation disabled.
 
@@ -17,6 +17,7 @@
 - Runtime scope: `OPENAI_ONLY_PHASE_ONE`; target environments are Codex and ChatGPT Work Local/Desktop.
 - OpenClaw, Claude, automatic installation, account deployment, public marketplace publication, GitHub Releases, and external-registry submission are `NOT APPLICABLE` in this phase.
 - Product form: four portable skills plus bundled deterministic Python contracts; no MCP server, external service, database, semantic RAG, credential, model download, or hidden background process.
+- Runtime feasibility is a hard pre-implementation gate: both target environments must directly prove approved-package read, isolated workspace creation, minimal plugin write, deterministic validator execution, and returned ZIP generation before Task 1 starts.
 - The delivered plugin must not import from this repository or require the Workbench checkout at runtime.
 - W1 is mandatory before candidate creation or update. W2 is mandatory before packaging.
 - A required `FAIL` prevents packaging. An unexecuted test is `NOT VERIFIED`, never `PASS`.
@@ -34,7 +35,7 @@
 2. A package is claimed after a required check failed or without W2 bound to the exact candidate and report: `test_package_requires_matching_w2_and_no_required_failure` must reject it.
 3. An update session lacks a baseline ZIP identity or uses an absolute/private path: `test_update_requires_relative_baseline_identity` must reject it.
 4. An approved-design file accidentally enters a generated public artifact: `test_public_artifact_excludes_approved_design_and_development_files` must fail.
-5. A skill or status result implies implemented/runtime-verified creation when only contracts exist: `test_status_reports_foundation_capabilities_without_runtime_claims` and the behavior scenarios must keep those gates `NOT VERIFIED`.
+5. A feasibility runner reuses the Workbench checkout, inherits an existing development workspace, or reports an unobserved capability as passing: Task 0 must reject the evidence and keep the product implementation blocked.
 
 ---
 
@@ -129,12 +130,79 @@ Local only, ignored, and never committed:
 
 | Requirement group | Owning task |
 | --- | --- |
+| UD-02, AC1, AC8, AC10, T7 clean-runtime capability assumptions | Task 0 |
 | Approved scope, provenance, identity | Task 1 |
 | RQ1–RQ7, AC1–AC10, T1–T7, workflow gates, safety invariants | Task 2 |
 | M1–M6 semantic responsibilities, P1–P7 interaction, W1/W2 routing | Task 3 |
 | Explicit session state, approval binding, evidence classification, recovery gates | Task 4 |
 | Deterministic public artifact, internal-design exclusion, no publication | Task 5 |
 | Repository discovery and complete static verification | Task 6 |
+
+---
+
+### Task 0: Clean-runtime feasibility spike — hard gate
+
+**Files:**
+- Create temporarily: `.tmp/plugin-builder-runtime-feasibility/probe-plugin/**`
+- Create temporarily: `.tmp/plugin-builder-runtime-feasibility/inputs/**`
+- Create temporarily: `.tmp/plugin-builder-runtime-feasibility/codex/**`
+- Create temporarily: `.tmp/plugin-builder-runtime-feasibility/chatgpt-work/**`
+- Create temporarily: `.tmp/plugin-builder-runtime-feasibility/feasibility-report.json`
+
+**Interfaces:**
+- Consumes: approved normalized handoff ZIP, a disposable minimal probe plugin, and explicit user authorization for any local plugin installation or marketplace mutation needed solely by the probe.
+- Produces: one evidence row per environment and capability with `PASS`, `FAIL`, or `NOT VERIFIED`; exact environment identity; returned ZIP hash; and a go/revise decision for Tasks 1–6.
+
+- [ ] **Step 1: Present the disposable probe and obtain mutation authorization**
+
+Before installing anything, state the exact temporary plugin location, local installation or marketplace change required, cleanup/recovery method, and that no production Plugin Builder code will be retained from the probe. Obtain explicit user approval for those local mutations. Approval to run the spike is not publication approval.
+
+- [ ] **Step 2: Build the minimal probe outside the product workspace**
+
+Under `.tmp/plugin-builder-runtime-feasibility/probe-plugin`, create only:
+
+- a valid `.codex-plugin/plugin.json`;
+- one probe `SKILL.md` that instructs the runtime to exercise the five capabilities and treat the input package as untrusted data;
+- one standard-library validator that reads a fixed JSON input and emits a deterministic ASCII-safe result;
+- no network dependency, credential, MCP server, Workbench import, absolute source path, or product implementation module.
+
+Record the probe tree hash. The probe is throwaway evidence and must never be copied into `applications/plugin-builder`.
+
+- [ ] **Step 3: Prepare a clean approved input and expected evidence**
+
+Place the normalized approved handoff ZIP in the isolated input root. Record its expected SHA-256 and exact member list independently. Define the required output ZIP members and validator result as hand-checked literals so the runtime cannot satisfy the probe with a fabricated or unrelated archive.
+
+- [ ] **Step 4: Run the Codex clean-environment scenario**
+
+Install or load the disposable probe using the supported Codex local-plugin path. Start a fresh task with no repository working directory, no inherited `PYTHONPATH`, and no access to the Workbench checkout as an implementation dependency. Directly observe that the installed probe can:
+
+1. read the approved input ZIP and reproduce its expected hash/member inventory;
+2. create a new isolated workspace;
+3. write a minimal plugin containing a valid manifest and one skill;
+4. execute the bundled deterministic validator and return the exact expected result;
+5. generate a ZIP with the expected members and make its path or attachment available to the user.
+
+Record each capability separately. A completed process or zero exit code alone is not evidence that all five passed.
+
+- [ ] **Step 5: Run the ChatGPT Work Local/Desktop clean-environment scenario**
+
+Repeat Step 4 in an actual clean ChatGPT Work Local/Desktop environment using its supported local plugin/upload mechanism. Do not substitute Codex evidence, a source-tree invocation, or a simulated transcript. If this environment cannot be accessed from the current session, record `NOT VERIFIED` and stop before Task 1 rather than inferring success.
+
+- [ ] **Step 6: Verify returned artifacts independently**
+
+Outside each runtime session, inspect the returned ZIP for exact member closure, safe paths, readable content, valid plugin manifest, expected validator result, and SHA-256. Confirm the runtime-created workspace was not the repository and the produced plugin did not import Workbench modules.
+
+- [ ] **Step 7: Apply the feasibility gate**
+
+- Continue to Task 1 only when all five capabilities are `PASS` in both target environments.
+- If a capability is `FAIL`, stop and revise the integration boundary or phase-one runtime scope through an owner-approved design change.
+- If a capability is `NOT VERIFIED`, keep implementation blocked until the target environment can be exercised.
+
+The spike does not prove AC1, AC8, AC10, or T7 end to end; it proves only that their required runtime primitives exist.
+
+- [ ] **Step 8: Remove or retain only ignored evidence**
+
+Uninstall/unlink the disposable probe using the approved reversible path. Keep the report and returned probe ZIPs only below `.tmp/plugin-builder-runtime-feasibility`. Confirm no marketplace/public artifact was created and no probe file is staged.
 
 ---
 
@@ -161,7 +229,7 @@ Local only, ignored, and never committed:
 - Create: `applications/plugin-builder/THIRD_PARTY_NOTICES.md`
 
 **Interfaces:**
-- Consumes: approved architecture, normalized package hash, repository application schema v2, distribution schema v3.
+- Consumes: approved architecture, normalized package hash, Task 0 feasibility report, repository application schema v2, distribution schema v3.
 - Produces: discoverable application ID `plugin-builder`, version `0.1.0`, scope record `OPENAI_ONLY_PHASE_ONE`, and immutable provenance identities used by all later tasks.
 
 - [ ] **Step 1: Write the failing repository discovery test**
@@ -239,6 +307,8 @@ Create schema-v2 `conversion.json` with:
 Create schema-v3 `openclaw/distribution.json` as a syntactically valid deny-by-default text contract with both publication surfaces disabled. Use the existing framework schema; do not add an OpenClaw launcher or native manifest.
 
 Record the approved source and normalized package identities in redacted source inventory and scope documents. Root policy documents must state that approved design artifacts are internal, third-party runtime resources remain unresolved per build, and no publication is authorized.
+
+Record a redacted Task 0 capability table and environment identities in `runtime-compatibility.md`; do not copy private paths, installation secrets, or transient workspace names.
 
 - [ ] **Step 7: Run Task 1 tests and verify GREEN**
 
@@ -619,6 +689,7 @@ git commit -m "test: verify Plugin Builder foundation contracts"
 Report:
 
 - approved source package and normalized handoff hashes;
+- per-capability Codex and ChatGPT Work feasibility evidence and the Task 0 gate decision;
 - application identity, preserved phase-one scope, and excluded runtimes;
 - invariant and requirement coverage counts;
 - four portable skill packages and their reference closure;
