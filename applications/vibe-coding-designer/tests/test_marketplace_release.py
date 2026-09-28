@@ -22,7 +22,7 @@ def load_script(name: str):
 
 
 class MarketplaceReleaseTests(unittest.TestCase):
-    def test_obvious_one_catalog_preserves_vibe_and_legacy_modes(self) -> None:
+    def test_obvious_one_catalog_builds_vibe_and_cool(self) -> None:
         catalog = load_preparation_catalog(
             REPOSITORY / "marketplaces" / "obvious-one.json", REPOSITORY
         )
@@ -31,7 +31,7 @@ class MarketplaceReleaseTests(unittest.TestCase):
             entry.application.plugin_id: entry.mode
             for entry in catalog.applications
         }
-        self.assertEqual(modes["cool-bible-tutor"], "verify_existing")
+        self.assertEqual(modes["cool-bible-tutor"], "build")
         self.assertEqual(modes["vibe-coding-designer"], "build")
 
     def test_codex_release_is_deterministic_and_allowlisted(self) -> None:

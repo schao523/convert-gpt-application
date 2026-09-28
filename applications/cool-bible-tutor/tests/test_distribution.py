@@ -32,8 +32,15 @@ def load_audit_module():
 class DistributionAuditTests(unittest.TestCase):
     def test_approved_openclaw_distribution_identity(self) -> None:
         contract = load_contract(PLUGIN / "openclaw" / "distribution.json")
+        self.assertEqual(contract.schema_version, 3)
         self.assertEqual(contract.version, "2.4.6")
         self.assertEqual(contract.package_name, "@obvious-one/cool-bible-tutor")
+        self.assertEqual(
+            {rule.classification for rule in contract.content_rules},
+            {"text", "binary"},
+        )
+        self.assertTrue(contract.publication.github_marketplace.enabled)
+        self.assertFalse(contract.publication.clawhub.enabled)
         self.assertEqual(contract.rag.app_id, "cool-bible-tutor")
         self.assertEqual(
             contract.rag.namespace,
