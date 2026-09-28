@@ -7,7 +7,7 @@
       "distribution_contract": "applications/cool-bible-tutor/openclaw/distribution.json",
       "codex_destination": "plugins/cool-bible-tutor",
       "openclaw_destination": "openclaw/cool-bible-tutor",
-      "mode": "verify_existing"
+      "mode": "build"
     },
     {
       "application_config": "applications/vibe-coding-designer/conversion.json",

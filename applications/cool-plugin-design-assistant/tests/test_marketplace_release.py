@@ -24,14 +24,14 @@ def load_script(name: str):
 
 
 class MarketplaceReleaseTests(unittest.TestCase):
-    def test_obvious_one_catalog_registers_this_application_and_preserves_existing_modes(self) -> None:
+    def test_obvious_one_catalog_builds_all_registered_applications(self) -> None:
         catalog = load_preparation_catalog(
             REPOSITORY / "marketplaces" / "obvious-one.json", REPOSITORY
         )
         modes = {
             entry.application.plugin_id: entry.mode for entry in catalog.applications
         }
-        self.assertEqual(modes["cool-bible-tutor"], "verify_existing")
+        self.assertEqual(modes["cool-bible-tutor"], "build")
         self.assertEqual(modes["vibe-coding-designer"], "build")
         self.assertEqual(modes["cool-plugin-design-assistant"], "build")
 
