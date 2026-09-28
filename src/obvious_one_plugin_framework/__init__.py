@@ -107,6 +107,16 @@ from .hosted_deployment_verifier import (
     HostedDeploymentVerification,
     verify_hosted_deployment,
 )
+from .knowledge_policy import (
+    GeneralKnowledgeFile,
+    KnowledgePageRange,
+    KnowledgePolicy,
+    KnowledgePolicyError,
+    KnowledgePolicyEvidence,
+    KnowledgeTopic,
+    ProfessionalKnowledgeFile,
+    discover_knowledge_policy,
+)
 
 __all__ = [
     "AssetGroup",
@@ -196,6 +206,14 @@ __all__ = [
     "CapabilityEvidence",
     "HostedDeploymentVerification",
     "verify_hosted_deployment",
+    "GeneralKnowledgeFile",
+    "KnowledgePageRange",
+    "KnowledgePolicy",
+    "KnowledgePolicyError",
+    "KnowledgePolicyEvidence",
+    "KnowledgeTopic",
+    "ProfessionalKnowledgeFile",
+    "discover_knowledge_policy",
 ]
 
 __version__ = "0.1.0"
