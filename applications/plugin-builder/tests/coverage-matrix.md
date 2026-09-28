@@ -34,3 +34,4 @@ Each approved requirement and representative test appears exactly once in the ID
 | RUNTIME-CLAUDE | Claude | Excluded phase-one runtime | NOT APPLICABLE |
 | STRUCT-SKILLS | Four portable skill contracts | Discovery, frontmatter, direct-reference closure, and semantic contract parser tests | STATICALLY VERIFIED |
 | BEHAVIOR-SCENARIOS | T1/T3, T4, and T5/T6 planned inputs | Target-runtime forward execution | NOT VERIFIED |
+| CONTRACT-SESSION | W1/W2, hashes, evidence, paths, and failure gates | Deterministic API and subprocess CLI tests | STATICALLY VERIFIED |
