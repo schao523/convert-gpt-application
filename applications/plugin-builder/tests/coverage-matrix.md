@@ -32,3 +32,5 @@ Each approved requirement and representative test appears exactly once in the ID
 | RUNTIME-WORK | ChatGPT Work Local/Desktop | Task 0 filesystem/ZIP primitive probe | RUNTIME VERIFIED |
 | RUNTIME-OPENCLAW | OpenClaw | Excluded phase-one runtime | NOT APPLICABLE |
 | RUNTIME-CLAUDE | Claude | Excluded phase-one runtime | NOT APPLICABLE |
+| STRUCT-SKILLS | Four portable skill contracts | Discovery, frontmatter, direct-reference closure, and semantic contract parser tests | STATICALLY VERIFIED |
+| BEHAVIOR-SCENARIOS | T1/T3, T4, and T5/T6 planned inputs | Target-runtime forward execution | NOT VERIFIED |
