@@ -13,7 +13,7 @@
     "inventory_rules": [
       {
         "root": ".",
-        "classification": "approved-design-source-only",
+        "classification": "approved-design-internal",
         "include": ["*"]
       }
     ]

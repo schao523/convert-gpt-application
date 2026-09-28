@@ -1,7 +1,9 @@
 import json
 from pathlib import Path, PurePosixPath
 import re
+import subprocess
 import unittest
+import hashlib
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -24,6 +26,10 @@ class ConversionContractTests(unittest.TestCase):
         self.assertEqual(config["schema_version"], 2)
         self.assertEqual(config["application_id"], "plugin-builder")
         self.assertEqual(config["plugin_id"], "plugin-builder")
+        self.assertEqual(
+            config["provenance"]["inventory_rules"][0]["classification"],
+            "approved-design-internal",
+        )
         self.assertEqual(manifest["name"], "plugin-builder")
         self.assertEqual(manifest["version"], "0.1.0")
 
@@ -50,6 +56,84 @@ class ConversionContractTests(unittest.TestCase):
         self.assertIn("| OpenClaw | NOT APPLICABLE |", runtime)
         self.assertIn("| Codex | RUNTIME VERIFIED |", runtime)
         self.assertIn("| ChatGPT Work Local/Desktop | RUNTIME VERIFIED |", runtime)
+
+    def test_approved_design_snapshot_matches_normalized_manifest(self) -> None:
+        approved = ROOT / "docs/approved-design"
+        package_manifest = json.loads(
+            (approved / "package-manifest.json").read_text(encoding="utf-8")
+        )
+        inventory = load_json("docs/source-inventory.json")
+        inventory_hashes = {
+            item["path"]: item["sha256"] for item in inventory["source_inventory"]
+        }
+        declared = {
+            item["file"]: item["sha256"] for item in package_manifest["artifacts"]
+        }
+        declared[package_manifest["canonical_handoff"]["file"]] = package_manifest[
+            "canonical_handoff"
+        ]["sha256"]
+        declared.update(
+            {item["file"]: item["sha256"] for item in package_manifest["supporting_files"]}
+        )
+
+        files = sorted(path.name for path in approved.iterdir() if path.is_file())
+        self.assertEqual(set(files), set(inventory_hashes))
+        self.assertEqual(set(files) - {"package-manifest.json"}, set(declared))
+        for filename in files:
+            digest = hashlib.sha256((approved / filename).read_bytes()).hexdigest()
+            self.assertEqual(digest, inventory_hashes[filename], filename)
+            if filename in declared:
+                self.assertEqual(digest, declared[filename], filename)
+
+        self.assertEqual(
+            package_manifest["gate"], "APPROVED WITH NONBLOCKING DECISIONS"
+        )
+        self.assertEqual(
+            package_manifest["source_archive_sha256"], SOURCE_PACKAGE_SHA256
+        )
+        self.assertEqual(package_manifest["normalization"], "format-only")
+        self.assertFalse((approved / "handoff_manifest.json").exists())
+
+        for filename in files:
+            relative = (approved / filename).relative_to(ROOT).as_posix()
+            attribute = subprocess.check_output(
+                ["git", "check-attr", "text", "--", relative],
+                cwd=ROOT,
+                text=True,
+            ).strip()
+            self.assertTrue(attribute.endswith("text: unset"), attribute)
+
+    def test_requirement_coverage_matrix_is_complete_and_honest(self) -> None:
+        matrix = (ROOT / "tests/coverage-matrix.md").read_text(encoding="utf-8")
+        expected_ids = {
+            *(f"RQ{index}" for index in range(1, 8)),
+            *(f"AC{index}" for index in range(1, 11)),
+            *(f"T{index}" for index in range(1, 8)),
+        }
+        rows: dict[str, list[str]] = {}
+        for line in matrix.splitlines():
+            if not line.startswith("|"):
+                continue
+            cells = [cell.strip() for cell in line.strip().strip("|").split("|")]
+            if cells and cells[0] in expected_ids:
+                self.assertNotIn(cells[0], rows, cells[0])
+                rows[cells[0]] = cells
+
+        self.assertEqual(set(rows), expected_ids)
+        allowed_states = {
+            "EXPECTED",
+            "STATICALLY VERIFIED",
+            "RUNTIME VERIFIED",
+            "NOT VERIFIED",
+        }
+        for requirement_id, cells in rows.items():
+            self.assertEqual(len(cells), 4, requirement_id)
+            self.assertTrue(cells[1], requirement_id)
+            self.assertTrue(cells[2], requirement_id)
+            self.assertIn(cells[3], allowed_states, requirement_id)
+
+        self.assertIn("| RUNTIME-OPENCLAW | OpenClaw | Excluded phase-one runtime | NOT APPLICABLE |", matrix)
+        self.assertIn("| RUNTIME-CLAUDE | Claude | Excluded phase-one runtime | NOT APPLICABLE |", matrix)
 
 
 if __name__ == "__main__":
