@@ -30,8 +30,13 @@ Each approved requirement and representative test appears exactly once in the ID
 | T7 | guiding-plugin-builder-sessions + runtime adapters | Clean Codex and Work Local/Desktop create/update demonstration | NOT VERIFIED |
 | RUNTIME-CODEX | Codex | Task 0 filesystem/ZIP primitive probe | RUNTIME VERIFIED |
 | RUNTIME-WORK | ChatGPT Work Local/Desktop | Task 0 filesystem/ZIP primitive probe | RUNTIME VERIFIED |
+| RUNTIME-CODEX-APPLICATION | Codex installed Plugin Builder | Representative T1–T7 execution from the generated artifact | NOT VERIFIED |
+| RUNTIME-WORK-APPLICATION | ChatGPT Work Local/Desktop Plugin Builder | Representative T1–T7 execution from the generated artifact | NOT VERIFIED |
 | RUNTIME-OPENCLAW | OpenClaw | Excluded phase-one runtime | NOT APPLICABLE |
 | RUNTIME-CLAUDE | Claude | Excluded phase-one runtime | NOT APPLICABLE |
 | STRUCT-SKILLS | Four portable skill contracts | Discovery, frontmatter, direct-reference closure, and semantic contract parser tests | STATICALLY VERIFIED |
 | BEHAVIOR-SCENARIOS | T1/T3, T4, and T5/T6 planned inputs | Target-runtime forward execution | NOT VERIFIED |
 | CONTRACT-SESSION | W1/W2, hashes, evidence, paths, and failure gates | Deterministic API and subprocess CLI tests | STATICALLY VERIFIED |
+| CONTRACT-DISTRIBUTION | Deny-by-default content contract | Schema-v3 validation, product audit, exact selection, and two-build package identity | STATICALLY VERIFIED |
+| ARTIFACT-CODEX | Generated local Codex artifact | Exact manifest closure, plugin validation, exclusions, and two-build manifest identity | STATICALLY VERIFIED |
+| REPOSITORY-DISCOVERY | Application configuration | Repository discovery and configured command-path tests | STATICALLY VERIFIED |
