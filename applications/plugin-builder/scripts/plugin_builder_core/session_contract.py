@@ -78,10 +78,11 @@ def _validate_identity(
     return item
 
 
-def _validate_requirements(errors: list[str], value: object) -> None:
+def _validate_requirements(errors: list[str], value: object) -> dict[str, bool]:
+    registered: dict[str, bool] = {}
     if not isinstance(value, list):
         errors.append("requirements.invalid_list")
-        return
+        return registered
     seen: set[str] = set()
     for index, entry in enumerate(value):
         label = f"requirements[{index}]"
@@ -98,13 +99,23 @@ def _validate_requirements(errors: list[str], value: object) -> None:
             seen.add(requirement_id)
         if not isinstance(item.get("owner"), str) or not item["owner"]:
             errors.append(f"{label}.owner.invalid")
-        if item.get("evidence") not in EVIDENCE_STATES:
+        evidence = item.get("evidence")
+        if not isinstance(evidence, str) or evidence not in EVIDENCE_STATES:
             errors.append(f"{label}.evidence.unsupported")
-        if type(item.get("required")) is not bool:
+        required = item.get("required")
+        if type(required) is not bool:
             errors.append(f"{label}.required.invalid")
+        elif isinstance(requirement_id, str) and requirement_id and requirement_id not in registered:
+            registered[requirement_id] = required
+    return registered
 
 
-def _validate_verification(errors: list[str], value: object, candidate: dict[str, Any] | None) -> dict[str, Any] | None:
+def _validate_verification(
+    errors: list[str],
+    value: object,
+    candidate: dict[str, Any] | None,
+    requirements: dict[str, bool],
+) -> dict[str, Any] | None:
     item = _mapping(value)
     if item is None or set(item) != {"sha256", "candidate_sha256", "results"}:
         errors.append("verification.invalid_object")
@@ -118,6 +129,9 @@ def _validate_verification(errors: list[str], value: object, candidate: dict[str
     results = item.get("results")
     if not isinstance(results, list):
         errors.append("verification.results.invalid_list")
+        for requirement_id, required in requirements.items():
+            if required:
+                errors.append(f"verification.missing_required_result:{requirement_id}")
         return item
     seen: set[str] = set()
     for index, entry in enumerate(results):
@@ -133,10 +147,20 @@ def _validate_verification(errors: list[str], value: object, candidate: dict[str
             errors.append(f"verification.results.duplicate_id:{result_id}")
         else:
             seen.add(result_id)
-        if type(result.get("required")) is not bool:
+        required = result.get("required")
+        if type(required) is not bool:
             errors.append(f"{label}.required.invalid")
-        if result.get("state") not in EVIDENCE_STATES:
+        elif isinstance(result_id, str) and result_id:
+            if result_id not in requirements:
+                errors.append(f"{label}.unknown_requirement")
+            elif required != requirements[result_id]:
+                errors.append(f"{label}.required_mismatch")
+        state = result.get("state")
+        if not isinstance(state, str) or state not in EVIDENCE_STATES:
             errors.append(f"{label}.state.unsupported")
+    for requirement_id, required in requirements.items():
+        if required and requirement_id not in seen:
+            errors.append(f"verification.missing_required_result:{requirement_id}")
     return item
 
 
@@ -165,9 +189,11 @@ def validate_session(payload: object) -> list[str]:
 
     if session.get("schema_version") != 1:
         errors.append("schema_version.unsupported")
-    if session.get("operation") not in OPERATIONS:
+    operation = session.get("operation")
+    if not isinstance(operation, str) or operation not in OPERATIONS:
         errors.append("operation.unsupported")
-    if session.get("stage") not in STAGES:
+    stage = session.get("stage")
+    if not isinstance(stage, str) or stage not in STAGES:
         errors.append("stage.unsupported")
     if not _relative_posix(session.get("workspace_path")):
         errors.append("workspace_path.invalid_relative_posix_path")
@@ -175,7 +201,7 @@ def validate_session(payload: object) -> list[str]:
         errors.append("approved_spec_sha256.invalid")
     if not _sha256(session.get("plan_sha256")):
         errors.append("plan_sha256.invalid")
-    _validate_requirements(errors, session.get("requirements"))
+    requirements = _validate_requirements(errors, session.get("requirements"))
 
     baseline = None
     if session.get("operation") == "update" and session.get("baseline") is None:
@@ -209,7 +235,9 @@ def validate_session(payload: object) -> list[str]:
     if session.get("verification") is not None:
         if candidate is None:
             errors.append("verification.requires_candidate")
-        verification = _validate_verification(errors, session["verification"], candidate)
+        verification = _validate_verification(
+            errors, session["verification"], candidate, requirements
+        )
 
     w2 = session.get("w2")
     w2_approved = _approval(w2, {"approved", "candidate_sha256", "verification_sha256"})
@@ -231,6 +259,7 @@ def validate_session(payload: object) -> list[str]:
             elif item["verification_sha256"] != verification.get("sha256"):
                 errors.append("w2.verification_sha256_mismatch")
 
+    package = None
     if session.get("package") is not None:
         package = _validate_identity(
             errors,
@@ -239,7 +268,7 @@ def validate_session(payload: object) -> list[str]:
             require_path=True,
             extra_keys={"candidate_sha256", "verification_sha256"},
         )
-        if session.get("stage") not in {"S5", "E1"}:
+        if not isinstance(stage, str) or stage not in {"S5", "E1"}:
             errors.append("package.invalid_stage")
         if not w1_approved:
             errors.append("package.requires_approved_w1")
@@ -255,6 +284,30 @@ def validate_session(payload: object) -> list[str]:
             errors.append("package.candidate_sha256_mismatch")
         if package is not None and verification is not None and package.get("verification_sha256") != verification.get("sha256"):
             errors.append("package.verification_sha256_mismatch")
+
+    w1_bound = (
+        w1_approved
+        and _mapping(w1) is not None
+        and _mapping(w1).get("plan_sha256") == session.get("plan_sha256")
+    )
+    stage_requirements = {
+        "approved_w1": {"S3", "S4", "W2", "S5", "E1"},
+        "candidate": {"S4", "W2", "S5", "E1"},
+        "verification": {"W2", "S5", "E1"},
+        "approved_w2": {"S5", "E1"},
+        "package": {"E1"},
+    }
+    prerequisites = {
+        "approved_w1": w1_bound,
+        "candidate": candidate is not None,
+        "verification": verification is not None,
+        "approved_w2": w2_approved,
+        "package": package is not None,
+    }
+    if isinstance(stage, str) and stage in STAGES:
+        for prerequisite, stages in stage_requirements.items():
+            if stage in stages and not prerequisites[prerequisite]:
+                errors.append(f"stage.{stage}.requires_{prerequisite}")
 
     return sorted(set(errors))
 

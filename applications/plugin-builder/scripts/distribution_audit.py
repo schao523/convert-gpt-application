@@ -24,7 +24,8 @@ PUBLIC_DOCS = {
     "docs/application-invariants.md",
     "docs/runtime-compatibility.md",
 }
-PREFIXES = {".codex-plugin", "scripts", "skills"}
+PREFIXES = {"scripts", "skills"}
+MANIFEST_FILE = ".codex-plugin/plugin.json"
 FORBIDDEN_NAMES = {
     ".env",
     ".git",
@@ -87,6 +88,7 @@ def _allowed(relative: Path) -> bool:
     return (
         raw in ROOT_FILES
         or raw in PUBLIC_DOCS
+        or raw == MANIFEST_FILE
         or bool(relative.parts and relative.parts[0] in PREFIXES)
     )
 

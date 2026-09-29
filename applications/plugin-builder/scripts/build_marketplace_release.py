@@ -30,7 +30,8 @@ PUBLIC_DOCS = {
     "docs/application-invariants.md",
     "docs/runtime-compatibility.md",
 }
-PREFIXES = {".codex-plugin", "scripts", "skills"}
+PREFIXES = {"scripts", "skills"}
+MANIFEST_FILE = ".codex-plugin/plugin.json"
 
 
 class ReleaseReport(NamedTuple):
@@ -84,6 +85,7 @@ def _allowed(relative: Path) -> bool:
     return (
         raw in ROOT_FILES
         or raw in PUBLIC_DOCS
+        or raw == MANIFEST_FILE
         or bool(relative.parts and relative.parts[0] in PREFIXES)
     )
 
@@ -138,6 +140,8 @@ def _install_transactionally(staged_plugin: Path, staged_manifest: Path, destina
     backup_manifest = staged_plugin.parent / ".previous-release-manifest.json"
     plugin_backed_up = False
     manifest_backed_up = False
+    plugin_installed = False
+    manifest_installed = False
     try:
         if target.exists():
             os.replace(target, backup_plugin)
@@ -146,10 +150,14 @@ def _install_transactionally(staged_plugin: Path, staged_manifest: Path, destina
             os.replace(release_manifest, backup_manifest)
             manifest_backed_up = True
         os.replace(staged_plugin, target)
+        plugin_installed = True
         os.replace(staged_manifest, release_manifest)
+        manifest_installed = True
     except Exception:
-        _remove_path(target)
-        _remove_path(release_manifest)
+        if plugin_installed:
+            _remove_path(target)
+        if manifest_installed:
+            _remove_path(release_manifest)
         if plugin_backed_up:
             os.replace(backup_plugin, target)
         if manifest_backed_up:

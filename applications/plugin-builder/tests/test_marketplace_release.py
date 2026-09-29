@@ -7,6 +7,7 @@ from pathlib import Path
 import shutil
 import tempfile
 import unittest
+from unittest import mock
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -145,6 +146,52 @@ class MarketplaceReleaseTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "source audit failed"):
                 release.build_release(copied, destination, "0.1.0")
             self.assertEqual(tree_identity(destination), before)
+
+    def test_each_transaction_move_failure_preserves_previous_release(self) -> None:
+        release = load_release()
+        for failing_move in range(1, 5):
+            with self.subTest(failing_move=failing_move), tempfile.TemporaryDirectory(
+                dir=TEMP_ROOT
+            ) as temp:
+                destination = Path(temp) / "marketplace"
+                release.build_release(ROOT, destination, "0.1.0")
+                before = tree_identity(destination)
+                real_replace = release.os.replace
+                call_count = 0
+
+                def fail_one_move(source, target):
+                    nonlocal call_count
+                    call_count += 1
+                    if call_count == failing_move:
+                        raise PermissionError(f"injected move failure {failing_move}")
+                    return real_replace(source, target)
+
+                with mock.patch.object(release.os, "replace", side_effect=fail_one_move):
+                    with self.assertRaisesRegex(
+                        PermissionError, f"injected move failure {failing_move}"
+                    ):
+                        release.build_release(ROOT, destination, "0.1.0")
+
+                self.assertEqual(tree_identity(destination), before)
+
+    def test_undeclared_codex_metadata_is_not_packaged(self) -> None:
+        release = load_release()
+        with tempfile.TemporaryDirectory(dir=TEMP_ROOT) as temp:
+            temp_root = Path(temp)
+            copied = temp_root / "source"
+            shutil.copytree(ROOT, copied)
+            private = copied / ".codex-plugin" / "private-notes.md"
+            private.write_text("internal notes\n", encoding="utf-8")
+            destination = temp_root / "marketplace"
+
+            report = release.build_release(copied, destination, "0.1.0")
+
+            self.assertNotIn(
+                "plugins/plugin-builder/.codex-plugin/private-notes.md", report.paths
+            )
+            self.assertFalse(
+                (destination / "plugins/plugin-builder/.codex-plugin/private-notes.md").exists()
+            )
 
     def test_release_requires_rights_evidence_before_mutation(self) -> None:
         release = load_release()

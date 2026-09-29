@@ -29,7 +29,7 @@ On 2026-09-29, the repository-local foundation produced the following evidence:
 
 | Gate | Command or observation | Result |
 | --- | --- | --- |
-| Product contracts | `python -B -m unittest discover -s applications/plugin-builder/tests -v` | PASS: 33 tests; one native-symlink test skipped because Windows lacks the required privilege, with reparse classification covered separately |
+| Product contracts | `python -B -m unittest discover -s applications/plugin-builder/tests -v` | PASS: 38 tests; one native-symlink test skipped because Windows lacks the required privilege, with reparse classification covered separately |
 | Repository discovery | `python -B -m unittest tests.test_application_config -v` | PASS: 4 tests |
 | Plugin structure | bundled `validate_plugin.py applications/plugin-builder` | PASS |
 | Skill structure | bundled `quick_validate.py` for each of four skills | PASS: 4 of 4 |

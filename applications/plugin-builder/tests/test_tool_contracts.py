@@ -48,6 +48,14 @@ def w1_waiting_create() -> dict:
 
 def package_ready() -> dict:
     payload = w1_waiting_create()
+    payload["requirements"].append(
+        {
+            "id": "AC6",
+            "owner": "verifying-and-packaging-plugins",
+            "evidence": "NOT VERIFIED",
+            "required": False,
+        }
+    )
     payload.update(
         {
             "stage": "S5",
@@ -141,6 +149,46 @@ class SessionContractTests(unittest.TestCase):
         errors = validate_session(payload)
         self.assertIn("w2.requires_candidate", errors)
         self.assertIn("w2.requires_verification", errors)
+
+    def test_stage_cannot_bypass_approval_and_artifact_prerequisites(self) -> None:
+        expected_errors = {
+            "S3": {"stage.S3.requires_approved_w1"},
+            "S5": {
+                "stage.S5.requires_approved_w1",
+                "stage.S5.requires_candidate",
+                "stage.S5.requires_verification",
+                "stage.S5.requires_approved_w2",
+            },
+            "E1": {
+                "stage.E1.requires_approved_w1",
+                "stage.E1.requires_candidate",
+                "stage.E1.requires_verification",
+                "stage.E1.requires_approved_w2",
+                "stage.E1.requires_package",
+            },
+        }
+        for stage, expected in expected_errors.items():
+            with self.subTest(stage=stage):
+                payload = w1_waiting_create()
+                payload["stage"] = stage
+                errors = validate_session(payload)
+                self.assertTrue(expected <= set(errors), errors)
+                self.assertEqual(session_gate_state(payload), "INVALID")
+
+    def test_verification_covers_registered_required_results_and_requiredness(self) -> None:
+        missing = package_ready()
+        missing["verification"]["results"] = []
+        self.assertIn(
+            "verification.missing_required_result:RQ1", validate_session(missing)
+        )
+        self.assertEqual(session_gate_state(missing), "INVALID")
+
+        downgraded = package_ready()
+        downgraded["verification"]["results"][0]["required"] = False
+        downgraded["verification"]["results"][0]["state"] = "FAIL"
+        errors = validate_session(downgraded)
+        self.assertIn("verification.results[0].required_mismatch", errors)
+        self.assertEqual(session_gate_state(downgraded), "INVALID")
 
     def test_package_hash_bindings_match_candidate_and_report(self) -> None:
         payload = package_ready()
@@ -259,6 +307,26 @@ class CliContractTests(unittest.TestCase):
             self.assertEqual(invalid_document["status"], "FAIL")
             self.assertEqual(invalid_document["gate"], "INVALID")
             self.assertEqual(invalid_document["errors"], sorted(invalid_document["errors"]))
+
+    def test_malformed_enum_types_return_one_structured_failure(self) -> None:
+        payload = package_ready()
+        payload["operation"] = []
+        payload["stage"] = []
+        payload["requirements"][0]["evidence"] = {}
+        payload["verification"]["results"][0]["state"] = []
+        with tempfile.TemporaryDirectory() as temporary:
+            path = Path(temporary) / "malformed.json"
+            path.write_text(json.dumps(payload), encoding="utf-8")
+            completed = self.run_cli("validate-session", str(path), "--json")
+
+        self.assertEqual(completed.returncode, 3)
+        document = self.assert_ascii_document(completed)
+        self.assertEqual(document["status"], "FAIL")
+        self.assertEqual(document["gate"], "INVALID")
+        self.assertIn("operation.unsupported", document["errors"])
+        self.assertIn("stage.unsupported", document["errors"])
+        self.assertIn("requirements[0].evidence.unsupported", document["errors"])
+        self.assertIn("verification.results[0].state.unsupported", document["errors"])
 
 
 if __name__ == "__main__":
