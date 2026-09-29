@@ -1,0 +1,15 @@
+{
+  "approval": {
+    "confirmed_by": "fixture decision owner",
+    "evidence": "fixture approval record",
+    "specification_version": "v1.0",
+    "state": "approved"
+  },
+  "approved_specification": {
+    "file": "Design_APPROVED.md",
+    "id": "SPEC-v1.0",
+    "state": "approved",
+    "version": "v1.0"
+  },
+  "unresolved_owner_decisions": []
+}

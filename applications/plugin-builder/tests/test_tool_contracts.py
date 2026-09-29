@@ -89,7 +89,62 @@ def package_ready() -> dict:
     return payload
 
 
+def inspected_v2() -> dict:
+    return {
+        "schema_version": 2,
+        "operation": "create",
+        "stage": "S2",
+        "workspace_path": ".",
+        "approved_spec_sha256": HASH_A,
+        "inspection": {
+            "path": "inspection.json",
+            "sha256": HASH_B,
+            "package_sha256": HASH_C,
+            "baseline_sha256": None,
+        },
+        "pending_decisions": [],
+        "requirements": [
+            {"id": "RQ1", "required": True, "source_paths": ["input/Design.md"]}
+        ],
+        "baseline": None,
+        "plan": None,
+        "w1": None,
+        "candidate": None,
+        "verification": None,
+        "w2": None,
+        "package": None,
+    }
+
+
 class SessionContractTests(unittest.TestCase):
+    def test_valid_v2_inspected_session(self) -> None:
+        payload = inspected_v2()
+        self.assertEqual(validate_session(payload), [])
+        self.assertEqual(session_gate_state(payload), "PLANNING")
+
+    def test_v2_rejects_unsafe_inspection_and_impossible_stage(self) -> None:
+        payload = inspected_v2()
+        payload["inspection"]["path"] = "../inspection.json"
+        payload["stage"] = "S3"
+        errors = validate_session(payload)
+        self.assertIn("inspection.path.invalid_relative_posix_path", errors)
+        self.assertIn("stage.S3.requires_plan", errors)
+        self.assertIn("stage.S3.requires_approved_w1", errors)
+
+    def test_v2_rejects_unknown_keys_and_stale_baseline_binding(self) -> None:
+        payload = inspected_v2()
+        payload["surprise"] = True
+        payload["operation"] = "update"
+        payload["inspection"]["baseline_sha256"] = HASH_A
+        payload["baseline"] = {
+            "path": "baseline",
+            "sha256": HASH_B,
+            "manifest_sha256": HASH_C,
+        }
+        errors = validate_session(payload)
+        self.assertIn("session.unknown_key:surprise", errors)
+        self.assertIn("inspection.baseline_sha256_mismatch", errors)
+
     def test_valid_w1_waiting_create_session(self) -> None:
         payload = w1_waiting_create()
         self.assertEqual(validate_session(payload), [])

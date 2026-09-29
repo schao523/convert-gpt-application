@@ -175,8 +175,8 @@ def _has_required_failure(verification: dict[str, Any] | None) -> bool:
     )
 
 
-def validate_session(payload: object) -> list[str]:
-    """Return every session contract error in deterministic order."""
+def _validate_v1(payload: object) -> list[str]:
+    """Return every legacy session-v1 contract error."""
 
     session = _mapping(payload)
     if session is None:
@@ -310,6 +310,252 @@ def validate_session(payload: object) -> list[str]:
                 errors.append(f"stage.{stage}.requires_{prerequisite}")
 
     return sorted(set(errors))
+
+
+_V2_ROOT_KEYS = {
+    "schema_version",
+    "operation",
+    "stage",
+    "workspace_path",
+    "approved_spec_sha256",
+    "inspection",
+    "pending_decisions",
+    "requirements",
+    "baseline",
+    "plan",
+    "w1",
+    "candidate",
+    "verification",
+    "w2",
+    "package",
+}
+
+
+def _v2_path(value: object, *, allow_dot: bool = False) -> bool:
+    if allow_dot and value == ".":
+        return True
+    return _relative_posix(value)
+
+
+def _v2_exact_identity(
+    errors: list[str],
+    value: object,
+    label: str,
+    keys: set[str],
+) -> dict[str, Any] | None:
+    item = _mapping(value)
+    if item is None or set(item) != keys:
+        errors.append(f"{label}.invalid_object")
+        return item
+    if "path" in keys and not _v2_path(item.get("path")):
+        errors.append(f"{label}.path.invalid_relative_posix_path")
+    for key in sorted(key for key in keys if key.endswith("sha256")):
+        if not _sha256(item.get(key)):
+            errors.append(f"{label}.{key}.invalid")
+    return item
+
+
+def _validate_v2_requirements(errors: list[str], value: object) -> set[str]:
+    if not isinstance(value, list):
+        errors.append("requirements.invalid_list")
+        return set()
+    seen: set[str] = set()
+    for index, entry in enumerate(value):
+        label = f"requirements[{index}]"
+        item = _mapping(entry)
+        if item is None or set(item) != {"id", "required", "source_paths"}:
+            errors.append(f"{label}.invalid_object")
+            continue
+        identifier = item.get("id")
+        if not isinstance(identifier, str) or not identifier:
+            errors.append(f"{label}.id.invalid")
+        elif identifier in seen:
+            errors.append(f"requirements.duplicate_id:{identifier}")
+        else:
+            seen.add(identifier)
+        if type(item.get("required")) is not bool:
+            errors.append(f"{label}.required.invalid")
+        paths = item.get("source_paths")
+        if not isinstance(paths, list) or not paths:
+            errors.append(f"{label}.source_paths.invalid_list")
+        elif any(not _v2_path(path) for path in paths):
+            errors.append(f"{label}.source_paths.invalid_relative_posix_path")
+    return seen
+
+
+def _validate_v2(payload: object) -> list[str]:
+    session = _mapping(payload)
+    if session is None:
+        return ["session.invalid_object"]
+    errors: list[str] = []
+    for key in sorted(_V2_ROOT_KEYS - set(session)):
+        errors.append(f"{key}.required")
+    for key in sorted(set(session) - _V2_ROOT_KEYS):
+        errors.append(f"session.unknown_key:{key}")
+    if session.get("schema_version") != 2:
+        errors.append("schema_version.unsupported")
+    operation = session.get("operation")
+    if not isinstance(operation, str) or operation not in OPERATIONS:
+        errors.append("operation.unsupported")
+    stage = session.get("stage")
+    if not isinstance(stage, str) or stage not in STAGES:
+        errors.append("stage.unsupported")
+    if not _v2_path(session.get("workspace_path"), allow_dot=True):
+        errors.append("workspace_path.invalid_relative_posix_path")
+    if not _sha256(session.get("approved_spec_sha256")):
+        errors.append("approved_spec_sha256.invalid")
+
+    inspection = _mapping(session.get("inspection"))
+    if inspection is None or set(inspection) != {"path", "sha256", "package_sha256", "baseline_sha256"}:
+        errors.append("inspection.invalid_object")
+    else:
+        if not _v2_path(inspection.get("path")):
+            errors.append("inspection.path.invalid_relative_posix_path")
+        for key in ("sha256", "package_sha256"):
+            if not _sha256(inspection.get(key)):
+                errors.append(f"inspection.{key}.invalid")
+        if inspection.get("baseline_sha256") is not None and not _sha256(inspection.get("baseline_sha256")):
+            errors.append("inspection.baseline_sha256.invalid")
+
+    pending = session.get("pending_decisions")
+    if not isinstance(pending, list):
+        errors.append("pending_decisions.invalid_list")
+    else:
+        seen_decisions: set[str] = set()
+        for index, entry in enumerate(pending):
+            label = f"pending_decisions[{index}]"
+            item = _mapping(entry)
+            if item is None or set(item) != {"blocking", "id", "owner", "summary"}:
+                errors.append(f"{label}.invalid_object")
+                continue
+            identifier = item.get("id")
+            if not isinstance(identifier, str) or not identifier:
+                errors.append(f"{label}.id.invalid")
+            elif identifier in seen_decisions:
+                errors.append(f"pending_decisions.duplicate_id:{identifier}")
+            else:
+                seen_decisions.add(identifier)
+            if type(item.get("blocking")) is not bool:
+                errors.append(f"{label}.blocking.invalid")
+            for key in ("owner", "summary"):
+                if not isinstance(item.get(key), str) or not item[key]:
+                    errors.append(f"{label}.{key}.invalid")
+    _validate_v2_requirements(errors, session.get("requirements"))
+
+    baseline = None
+    if session.get("baseline") is not None:
+        baseline = _v2_exact_identity(
+            errors, session["baseline"], "baseline", {"path", "sha256", "manifest_sha256"}
+        )
+    if operation == "update" and baseline is None:
+        errors.append("baseline.required_for_update")
+    if operation == "create" and baseline is not None:
+        errors.append("baseline.forbidden_for_create")
+    if inspection is not None:
+        bound = inspection.get("baseline_sha256")
+        actual = baseline.get("sha256") if baseline is not None else None
+        if bound != actual:
+            errors.append("inspection.baseline_sha256_mismatch")
+
+    plan = None
+    if session.get("plan") is not None:
+        plan = _v2_exact_identity(errors, session["plan"], "plan", {"path", "sha256", "tools_sha256"})
+    w1 = None
+    if session.get("w1") is not None:
+        item = _mapping(session["w1"])
+        keys = {"approved", "confirmed_by", "evidence", "plan_sha256", "tools_sha256"}
+        if item is None or set(item) != keys or item.get("approved") is not True:
+            errors.append("w1.invalid_approval")
+        else:
+            w1 = item
+            for key in ("plan_sha256", "tools_sha256"):
+                if not _sha256(item.get(key)):
+                    errors.append(f"w1.{key}.invalid")
+            for key in ("confirmed_by", "evidence"):
+                if not isinstance(item.get(key), str) or not item[key]:
+                    errors.append(f"w1.{key}.invalid")
+            if plan is not None and item.get("plan_sha256") != plan.get("sha256"):
+                errors.append("w1.plan_sha256_mismatch")
+            if plan is not None and item.get("tools_sha256") != plan.get("tools_sha256"):
+                errors.append("w1.tools_sha256_mismatch")
+
+    candidate = None
+    if session.get("candidate") is not None:
+        candidate = _v2_exact_identity(
+            errors,
+            session["candidate"],
+            "candidate",
+            {"path", "sha256", "plan_sha256", "manifest_sha256"},
+        )
+        if candidate is not None and plan is not None and candidate.get("plan_sha256") != plan.get("sha256"):
+            errors.append("candidate.plan_sha256_mismatch")
+
+    verification = None
+    if session.get("verification") is not None:
+        item = _mapping(session["verification"])
+        if item is None or set(item) != {"path", "sha256", "candidate_sha256", "results"}:
+            errors.append("verification.invalid_object")
+        else:
+            verification = item
+            if not _v2_path(item.get("path")):
+                errors.append("verification.path.invalid_relative_posix_path")
+            for key in ("sha256", "candidate_sha256"):
+                if not _sha256(item.get(key)):
+                    errors.append(f"verification.{key}.invalid")
+            if candidate is not None and item.get("candidate_sha256") != candidate.get("sha256"):
+                errors.append("verification.candidate_sha256_mismatch")
+            if not isinstance(item.get("results"), list):
+                errors.append("verification.results.invalid_list")
+
+    w2 = None
+    if session.get("w2") is not None:
+        item = _mapping(session["w2"])
+        keys = {"approved", "candidate_sha256", "verification_sha256", "confirmed_by", "evidence"}
+        if item is None or set(item) != keys or item.get("approved") is not True:
+            errors.append("w2.invalid_approval")
+        else:
+            w2 = item
+            for key in ("candidate_sha256", "verification_sha256"):
+                if not _sha256(item.get(key)):
+                    errors.append(f"w2.{key}.invalid")
+            if candidate is not None and item.get("candidate_sha256") != candidate.get("sha256"):
+                errors.append("w2.candidate_sha256_mismatch")
+            if verification is not None and item.get("verification_sha256") != verification.get("sha256"):
+                errors.append("w2.verification_sha256_mismatch")
+
+    package = None
+    if session.get("package") is not None:
+        package = _v2_exact_identity(
+            errors,
+            session["package"],
+            "package",
+            {"path", "sha256", "candidate_sha256", "verification_sha256", "member_manifest_sha256"},
+        )
+
+    if isinstance(stage, str) and stage in STAGES:
+        required = {
+            "W1": ((plan, "plan"),),
+            "S3": ((plan, "plan"), (w1, "approved_w1")),
+            "S4": ((plan, "plan"), (w1, "approved_w1"), (candidate, "candidate")),
+            "W2": ((candidate, "candidate"), (verification, "verification")),
+            "S5": ((candidate, "candidate"), (verification, "verification"), (w2, "approved_w2")),
+            "E1": ((candidate, "candidate"), (verification, "verification"), (w2, "approved_w2"), (package, "package")),
+        }
+        for value, label in required.get(stage, ()):
+            if value is None:
+                errors.append(f"stage.{stage}.requires_{label}")
+    return sorted(set(errors))
+
+
+def validate_session(payload: object) -> list[str]:
+    """Return every session contract error in deterministic order."""
+
+    session = _mapping(payload)
+    if session is None:
+        return ["session.invalid_object"]
+    if session.get("schema_version") == 2:
+        return _validate_v2(session)
+    return _validate_v1(session)
 
 
 def session_gate_state(payload: object) -> str:

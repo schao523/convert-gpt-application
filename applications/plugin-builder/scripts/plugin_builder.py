@@ -9,6 +9,7 @@ from pathlib import Path
 import sys
 
 from plugin_builder_core.result import operation_document
+from plugin_builder_core.inspection import inspect_design_package
 from plugin_builder_core.session_contract import session_gate_state, validate_session
 
 
@@ -34,6 +35,12 @@ def _parser() -> argparse.ArgumentParser:
     validate = subparsers.add_parser("validate-session")
     validate.add_argument("session", type=Path)
     validate.add_argument("--json", action="store_true", required=True)
+    inspect = subparsers.add_parser("inspect")
+    inspect.add_argument("design_package", type=Path)
+    inspect.add_argument("--workspace", type=Path, required=True)
+    inspect.add_argument("--operation", choices=("create", "update"), required=True)
+    inspect.add_argument("--baseline", type=Path)
+    inspect.add_argument("--json", action="store_true", required=True)
     return parser
 
 
@@ -42,6 +49,29 @@ def main(argv: list[str] | None = None) -> int:
     if arguments.command == "status":
         _emit(operation_document("status", "PASS", [], capabilities=CAPABILITIES))
         return 0
+
+    if arguments.command == "inspect":
+        try:
+            outcome = inspect_design_package(
+                arguments.design_package,
+                arguments.workspace,
+                arguments.operation,
+                arguments.baseline,
+            )
+        except OSError:
+            _emit(operation_document("inspect", "FAIL", ["inspection.local_io_failure"], stage="F1"))
+            return 4
+        _emit(
+            operation_document(
+                "inspect",
+                outcome.status,
+                list(outcome.errors),
+                stage=outcome.stage,
+                inspection_sha256=outcome.inspection_sha256,
+                session_sha256=outcome.session_sha256,
+            )
+        )
+        return 0 if outcome.status == "PASS" else 2 if outcome.status == "BLOCKED" else 3
 
     try:
         payload = json.loads(arguments.session.read_text(encoding="utf-8"))

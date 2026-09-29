@@ -28,6 +28,8 @@ EXPECTED_SOURCE_PATHS = {
     "scripts/distribution_audit.py",
     "scripts/plugin_builder.py",
     "scripts/plugin_builder_core/__init__.py",
+    "scripts/plugin_builder_core/bootstrap.py",
+    "scripts/plugin_builder_core/inspection.py",
     "scripts/plugin_builder_core/result.py",
     "scripts/plugin_builder_core/session_contract.py",
     "skills/building-and-updating-plugins/SKILL.md",
