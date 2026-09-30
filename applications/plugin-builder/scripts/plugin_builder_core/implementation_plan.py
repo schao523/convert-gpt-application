@@ -195,10 +195,20 @@ def compile_plan(inspection: object, proposal: object, output: Path) -> PlanOutc
     derived_paths = {
         f"skills/{name}/agents/openai.yaml" for name in skill_names
     } | {"PLUGIN-BUILDER-MANIFEST.json"}
+    if proposal_payload.get("operation") == "update":
+        derived_paths.add("PLUGIN-BUILDER-CHANGES.json")
+    expected_paths: set[str] = set()
     if not isinstance(expected, list) or any(not _safe_path(item) for item in expected):
         errors.append("plan.expected_members_invalid")
-    elif set(expected) != recipe_paths | derived_paths or len(expected) != len(recipe_paths | derived_paths):
-        errors.append("plan.expected_members_mismatch")
+    else:
+        expected_paths = set(expected)
+        minimum = recipe_paths | derived_paths
+        if len(expected) != len(expected_paths) or (
+            proposal_payload.get("operation") == "create" and expected_paths != minimum
+        ) or (
+            proposal_payload.get("operation") == "update" and not minimum.issubset(expected_paths)
+        ):
+            errors.append("plan.expected_members_mismatch")
 
     checks = proposal_payload.get("checks")
     if not isinstance(checks, list):
@@ -225,7 +235,10 @@ def compile_plan(inspection: object, proposal: object, output: Path) -> PlanOutc
     tool_ids: set[str] = set()
     for tool in tools:
         tool_errors, tool_blockers = validate_tool_contract(
-            tool, requirement_ids=inspected_requirements, skill_names=skill_names, recipe_paths=recipe_paths
+            tool,
+            requirement_ids=inspected_requirements,
+            skill_names=skill_names,
+            recipe_paths=expected_paths if proposal_payload.get("operation") == "update" else recipe_paths,
         )
         errors.extend(tool_errors)
         blockers.extend(tool_blockers)

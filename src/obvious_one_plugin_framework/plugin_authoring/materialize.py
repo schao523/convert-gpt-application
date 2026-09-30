@@ -6,6 +6,7 @@ from hashlib import sha256
 import json
 import os
 from pathlib import Path, PurePosixPath
+import shutil
 import tempfile
 from typing import Any, Iterable, Mapping
 
@@ -138,5 +139,42 @@ def materialize_files(
             target = stage.joinpath(*PurePosixPath(path).parts)
             target.parent.mkdir(parents=True, exist_ok=True)
             target.write_bytes(payload)
+        _replace(stage, output, temporary)
+    return tree_manifest(output)
+
+
+def overlay_files(
+    baseline: Path,
+    recipes: Iterable[Mapping[str, Any]],
+    source_root: Path,
+    destination: Path,
+    *,
+    remove: Iterable[str] = (),
+) -> tuple[TreeMember, ...]:
+    """Copy a validated baseline byte-for-byte, then apply an approved delta."""
+
+    baseline_root = Path(baseline).absolute()
+    if not baseline_root.is_dir() or _is_link_or_reparse(baseline_root):
+        raise PluginAuthoringError("overlay_baseline_invalid")
+    output = Path(destination).absolute()
+    output.parent.mkdir(parents=True, exist_ok=True)
+    recipe_list = list(recipes)
+    removals = sorted({_safe_path(path, "overlay_remove_path_invalid") for path in remove})
+    with tempfile.TemporaryDirectory(dir=output.parent, prefix=f".{output.name}.overlay-") as name:
+        temporary = Path(name)
+        stage = temporary / "candidate"
+        shutil.copytree(baseline_root, stage, copy_function=shutil.copy2)
+        delta = temporary / "delta"
+        materialize_files(recipe_list, Path(source_root), delta)
+        for member in tree_manifest(delta):
+            source = delta.joinpath(*PurePosixPath(member.path).parts)
+            target = stage.joinpath(*PurePosixPath(member.path).parts)
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_bytes(source.read_bytes())
+        for path in removals:
+            target = stage.joinpath(*PurePosixPath(path).parts)
+            if target.is_dir():
+                raise PluginAuthoringError("overlay_remove_not_file", path)
+            target.unlink(missing_ok=True)
         _replace(stage, output, temporary)
     return tree_manifest(output)

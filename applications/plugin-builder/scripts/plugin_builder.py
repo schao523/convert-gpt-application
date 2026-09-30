@@ -17,6 +17,7 @@ from plugin_builder_core.implementation_plan import (
     write_bytes_transactionally,
 )
 from plugin_builder_core.candidate import build_candidate
+from plugin_builder_core.update import resolve_update_member
 from plugin_builder_core.session_contract import session_gate_state, validate_session
 
 
@@ -60,6 +61,12 @@ def _parser() -> argparse.ArgumentParser:
     build = subparsers.add_parser("build")
     build.add_argument("--session", type=Path, required=True)
     build.add_argument("--json", action="store_true", required=True)
+    resolve = subparsers.add_parser("resolve-update")
+    resolve.add_argument("--session", type=Path, required=True)
+    resolve.add_argument("--member", required=True)
+    resolve.add_argument("--decision", choices=("keep", "replace", "remove"), required=True)
+    resolve.add_argument("--evidence", required=True)
+    resolve.add_argument("--json", action="store_true", required=True)
     return parser
 
 
@@ -138,6 +145,16 @@ def main(argv: list[str] | None = None) -> int:
             manifest_sha256=outcome.manifest_sha256,
         ))
         return 0 if outcome.status == "PASS" else 2 if outcome.status == "BLOCKED" else 3
+
+    if arguments.command == "resolve-update":
+        outcome = resolve_update_member(
+            arguments.session, arguments.member, arguments.decision, arguments.evidence
+        )
+        _emit(operation_document(
+            "resolve-update", outcome.status, list(outcome.errors),
+            member=outcome.member, decision=outcome.decision,
+        ))
+        return 0 if outcome.status == "PASS" else 3
 
     try:
         payload = json.loads(arguments.session.read_text(encoding="utf-8"))

@@ -36,13 +36,18 @@ def approve_w1(session_path: Path, confirmed_by: str, evidence: str) -> tuple[st
     requirements = {item.get("id") for item in plan.get("requirements", []) if isinstance(item, dict)}
     skills = {item.get("name") for item in plan.get("skills", []) if isinstance(item, dict)}
     recipes = {item.get("path") for item in plan.get("files", []) if isinstance(item, dict)}
+    available_paths = (
+        set(plan.get("expected_members", []))
+        if plan.get("operation") == "update"
+        else recipes
+    )
     blockers: list[str] = []
     for tool in tools:
         tool_errors, tool_blockers = validate_tool_contract(
             tool,
             requirement_ids={item for item in requirements if isinstance(item, str)},
             skill_names={item for item in skills if isinstance(item, str)},
-            recipe_paths={item for item in recipes if isinstance(item, str)},
+            recipe_paths={item for item in available_paths if isinstance(item, str)},
         )
         errors.extend(tool_errors)
         blockers.extend(tool_blockers)

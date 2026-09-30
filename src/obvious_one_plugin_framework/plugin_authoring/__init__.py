@@ -16,7 +16,7 @@ from .validation import (
     validate_skill_tree,
 )
 from .tools import ApplicationToolContract, validate_application_tool_contract
-from .materialize import materialize_files
+from .materialize import materialize_files, overlay_files
 
 __all__ = [
     "ArchiveInventory",
@@ -36,4 +36,5 @@ __all__ = [
     "ApplicationToolContract",
     "validate_application_tool_contract",
     "materialize_files",
+    "overlay_files",
 ]

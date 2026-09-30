@@ -36,6 +36,8 @@ EXPECTED_SOURCE_PATHS = {
     "scripts/plugin_builder_core/result.py",
     "scripts/plugin_builder_core/session_contract.py",
     "scripts/plugin_builder_core/tool_contract.py",
+    "scripts/plugin_builder_core/update.py",
+    "scripts/plugin_builder_core/update_candidate.py",
     "skills/building-and-updating-plugins/SKILL.md",
     "skills/building-and-updating-plugins/agents/openai.yaml",
     "skills/building-and-updating-plugins/references/candidate-and-update-contract.md",

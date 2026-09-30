@@ -58,8 +58,12 @@ def build_candidate(session_path: Path) -> CandidateOutcome:
     session, error = _load(session_file, "build.session_invalid")
     if error is not None or session is None:
         return CandidateOutcome("FAIL", (error or "build.session_invalid",))
-    if session.get("schema_version") != 2 or session.get("operation") != "create":
-        return CandidateOutcome("FAIL", ("build.create_session_required",))
+    if session.get("schema_version") != 2 or session.get("operation") not in {"create", "update"}:
+        return CandidateOutcome("FAIL", ("build.session_required",))
+    if session.get("operation") == "update":
+        from .update_candidate import build_update_candidate
+
+        return build_update_candidate(session_file)
     plan_identity = session.get("plan")
     w1 = session.get("w1")
     if not isinstance(plan_identity, dict) or not isinstance(w1, dict) or w1.get("approved") is not True:
