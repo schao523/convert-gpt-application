@@ -60,6 +60,10 @@ def build_candidate(session_path: Path) -> CandidateOutcome:
         return CandidateOutcome("FAIL", (error or "build.session_invalid",))
     if session.get("schema_version") != 2 or session.get("operation") not in {"create", "update"}:
         return CandidateOutcome("FAIL", ("build.session_required",))
+    if session.get("stage") == "E2":
+        return CandidateOutcome("BLOCKED", ("build.session_cancelled",))
+    if session.get("stage") == "H1":
+        return CandidateOutcome("BLOCKED", ("build.session_paused",))
     if session.get("operation") == "update":
         from .update_candidate import build_update_candidate
 

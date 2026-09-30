@@ -40,3 +40,21 @@ Each approved requirement and representative test appears exactly once in the ID
 | CONTRACT-DISTRIBUTION | Deny-by-default content contract | Schema-v3 validation, product audit, exact selection, and two-build package identity | STATICALLY VERIFIED |
 | ARTIFACT-CODEX | Generated local Codex artifact | Exact manifest closure, plugin validation, exclusions, and two-build manifest identity | STATICALLY VERIFIED |
 | REPOSITORY-DISCOVERY | Application configuration | Repository discovery and configured command-path tests | STATICALLY VERIFIED |
+
+## Phase-two design-to-implementation review
+
+| Concern | Implementation | Direct evidence | Remaining state |
+| --- | --- | --- | --- |
+| RQ1–RQ7 and AC1–AC10 | Four workflow skills, `plugin_builder_core`, and explicit CLI orchestration | Rows above; product T1–T7 and standalone-artifact tests | Repository/local artifact `RUNTIME VERIFIED`; installed runtimes `NOT VERIFIED` |
+| T1–T7 | `test_end_to_end_scenarios.py` and `test_standalone_artifact.py` | 13-scenario completion suite plus full product suite | Installed Codex/Work replay `NOT VERIFIED` |
+| INV-PB-001–INV-PB-013 | `docs/application-invariants.md`, session, approval, candidate, verification, packaging, and tool services | Product contracts and full repository verifier | Installed-runtime rows remain `NOT VERIFIED` |
+| S0–S5, W1, W2, H1, E1–E3, F1–F3 | `session_contract.py`, `session_state.py`, and CLI commands | Session-contract, pause/resume/cancel, failure, and recovery tests | Direct installed-runtime interaction `NOT VERIFIED` |
+| W1/W2 approval gates | `approvals.py`, plan/tool hashes, candidate/report hashes | Planning, candidate, verification, and packaging tests | No remaining repository gap |
+| Failure routes | Inspection, planning, build, verification, packaging result documents | T3, T4, T5, malformed-input and transaction-failure tests | Runtime-specific environment failures require target evidence |
+| Reference policy | Direct SKILL.md links and candidate materialization | Skill contract, Creator validation, and reference-closure tests | No remaining repository gap |
+| Application-tool contracts and bindings | `tool_contract.py`, plan compiler, candidate manifest, tool verifier | Bundled, framework, runtime-native, and MCP tests | Runtime-native/MCP execution `NOT VERIFIED` without target capability/auth |
+| Dependencies, permissions, and configuration | Tool v1 contract plus W1 identity | Contract-negative tests and generated-candidate audits | Owner-configured external services `NOT VERIFIED` |
+| Update preservation | `update.py`, `update_candidate.py`, change manifest | T4 and update preservation/tool-binding tests | No remaining repository gap |
+| Distribution and publication | Deny-by-default audit, deterministic ZIP, manual delivery | Two-build identity, exact-member checks, extracted artifact validation | Publication `NOT PERFORMED`; OpenClaw/Claude `NOT APPLICABLE` |
+
+The installed-runtime contract is `tests/runtime/T1-T7-runtime-scenarios.md`, with results constrained by `tests/runtime/runtime-result-schema.json`. Until a conforming target-runtime result is returned, classification is `CONDITIONALLY PORTABLE`, never `READY`.

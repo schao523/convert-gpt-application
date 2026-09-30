@@ -139,6 +139,14 @@ def inspect_design_package(
         pass
     else:
         return InspectionOutcome("FAIL", "F1", ("package.inside_workspace",))
+    if destination.exists():
+        if not destination.is_dir():
+            return InspectionOutcome("FAIL", "F1", ("workspace.invalid",))
+        try:
+            if next(destination.iterdir(), None) is not None:
+                return InspectionOutcome("BLOCKED", "F1", ("workspace.nonempty",))
+        except OSError:
+            return InspectionOutcome("FAIL", "F1", ("workspace.unreadable",))
     destination.parent.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory(dir=destination.parent, prefix=f".{destination.name}.inspect-") as name:
         temporary = Path(name)

@@ -43,3 +43,9 @@ The configured verifier's schema-v3 bundle construction is package-contract evid
 The CLI commands are `status`, `validate-session`, `inspect`, `plan`, `approve-w1`, `resolve-update`, `build`, `verify`, `approve-w2`, `package`, `pause`, `resume`, and `cancel`; each operational command emits one machine-readable result document. Installed-plugin discovery and installed representative execution remain `NOT VERIFIED`.
 
 No marketplace installation, publication, or release is authorized or recorded for Plugin Builder.
+
+## Installed-runtime completion boundary
+
+The exact replay contract is tracked at `tests/runtime/T1-T7-runtime-scenarios.md` with a machine-checkable result schema. A self-contained runtime kit and deterministic installable ZIP are generated under `dist/plugin-builder` for decision-owner testing. This development task can verify the generated artifact in an isolated clean process, but it cannot infer installed plugin discovery or ChatGPT Work execution from that local copy.
+
+Current compatibility classification: `CONDITIONALLY PORTABLE`. Current completion state: `CONVERSION COMPLETE — RUNTIME VALIDATION PENDING`. Codex installed-plugin and ChatGPT Work Local/Desktop application rows stay `NOT VERIFIED`; runtime-native and MCP tool execution also stays `NOT VERIFIED` unless the named capability or service is actually authorized and observed. Publication remains `NOT PERFORMED`.

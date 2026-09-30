@@ -61,6 +61,8 @@ def package_candidate(session_path: Path) -> PackageOutcome:
         return PackageOutcome("FAIL", ("package.session_invalid",))
     if not isinstance(session.get("w2"), dict) or session["w2"].get("approved") is not True:
         return PackageOutcome("BLOCKED", ("package.w2_required",))
+    if session.get("stage") in {"H1", "E2"}:
+        return PackageOutcome("BLOCKED", ("package.session_inactive",))
     candidate_id = session.get("candidate")
     verification_id = session.get("verification")
     if not isinstance(candidate_id, dict) or not isinstance(verification_id, dict):
@@ -94,6 +96,16 @@ def package_candidate(session_path: Path) -> PackageOutcome:
     plugin = _load(candidate / ".codex-plugin/plugin.json")
     if report is None or manifest is None or plugin is None:
         return PackageOutcome("FAIL", ("package.input_manifest_invalid",))
+    if any(item.get("required") is True and item.get("state") != "PASS" for item in report.get("checks", [])):
+        return PackageOutcome("BLOCKED", ("package.required_check_incomplete",))
+    plan_identity = session.get("plan") or {}
+    plan_path = root / str(plan_identity.get("path", ""))
+    try:
+        plan_hash = sha256(plan_path.read_bytes()).hexdigest()
+    except OSError:
+        plan_hash = ""
+    if plan_hash != plan_identity.get("sha256") or plan_hash != (session.get("w1") or {}).get("plan_sha256") or plan_hash != candidate_id.get("plan_sha256") or plan_hash != manifest.get("plan_sha256"):
+        return PackageOutcome("BLOCKED", ("package.plan_sha256_mismatch",))
     name = plugin.get("name")
     if not isinstance(name, str) or not name or any(character not in "abcdefghijklmnopqrstuvwxyz0123456789-" for character in name):
         return PackageOutcome("FAIL", ("package.plugin_name_invalid",))

@@ -126,6 +126,10 @@ def main(argv: list[str] | None = None) -> int:
         if not isinstance(session, dict) or session.get("schema_version") != 2 or not isinstance(session.get("inspection"), dict):
             _emit(operation_document("plan", "FAIL", ["session.v2_inspection_required"], stage="F1"))
             return 3
+        if session.get("stage") in {"F1", "H1", "E2"}:
+            code = "plan.inspection_blocked" if session.get("stage") == "F1" else "plan.session_inactive"
+            _emit(operation_document("plan", "BLOCKED", [code], stage=session.get("stage")))
+            return 2
         root = arguments.session.parent
         inspection_path = root / session["inspection"].get("path", "")
         output = root / "implementation-plan.json"

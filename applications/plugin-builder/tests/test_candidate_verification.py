@@ -107,6 +107,7 @@ class CandidateVerificationTests(unittest.TestCase):
         def mutate(proposal):
             check = next(item for item in proposal["checks"] if item["id"] == "normalize-self-test")
             check["argv"] = ["definitely-missing-executable"]
+            proposal["tools"][0]["verification"]["argv"] = ["definitely-missing-executable"]
         workspace = self._workspace(mutate)
         self._verify(workspace)
         check = next(item for item in self._report(workspace)["checks"] if item["id"] == "normalize-self-test")

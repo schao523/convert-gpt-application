@@ -94,6 +94,8 @@ def approve_w2(session_path: Path, confirmed_by: str, evidence: str) -> tuple[st
     verification = session.get("verification") if isinstance(session, dict) else None
     if not isinstance(candidate, dict) or not isinstance(verification, dict):
         return "BLOCKED", ["w2.verification_required"], {}
+    if session.get("stage") in {"H1", "E2"}:
+        return "BLOCKED", ["w2.session_inactive"], {}
     from .bootstrap import plugin_authoring
 
     candidate_root = path.parent / str(candidate.get("path", ""))
@@ -115,8 +117,19 @@ def approve_w2(session_path: Path, confirmed_by: str, evidence: str) -> tuple[st
             errors.append("w2.report_candidate_mismatch")
         if any(item.get("required") is True and item.get("state") == "FAIL" for item in report.get("requirements", [])):
             errors.append("w2.required_failure")
+        if any(item.get("required") is True and item.get("state") != "PASS" for item in report.get("checks", [])):
+            errors.append("w2.required_check_incomplete")
         if any(item.get("required") is True and item.get("state") != "PASS" and (item.get("fallback") or {}).get("policy") == "BLOCK" for item in report.get("tools", [])):
             errors.append("w2.required_tool_evidence_missing")
+    plan_identity = session.get("plan") or {}
+    plan_path = path.parent / str(plan_identity.get("path", ""))
+    try:
+        plan_bytes = plan_path.read_bytes()
+    except OSError:
+        plan_bytes = b""
+    plan_hash = sha256(plan_bytes).hexdigest()
+    if plan_hash != plan_identity.get("sha256") or plan_hash != (session.get("w1") or {}).get("plan_sha256") or plan_hash != candidate.get("plan_sha256"):
+        errors.append("w2.plan_sha256_mismatch")
     if errors:
         session["w2"] = None
         session["package"] = None

@@ -57,6 +57,9 @@ class CandidateApplicationToolTests(unittest.TestCase):
 
     def test_mcp_adapter_emits_manifest_without_credentials(self) -> None:
         def mutate(proposal: dict) -> None:
+            proposal["checks"] = [item for item in proposal["checks"] if item["id"] != "normalize-self-test"]
+            for requirement in proposal["requirements"]:
+                requirement["evidence_targets"] = [item for item in requirement["evidence_targets"] if item != "normalize-self-test"]
             tool = proposal["tools"][0]
             tool.update({
                 "implementation_kind": "MCP_ADAPTER",
@@ -80,6 +83,9 @@ class CandidateApplicationToolTests(unittest.TestCase):
 
     def test_required_runtime_native_capability_without_fallback_blocks_build(self) -> None:
         def mutate(proposal: dict) -> None:
+            proposal["checks"] = [item for item in proposal["checks"] if item["id"] != "normalize-self-test"]
+            for requirement in proposal["requirements"]:
+                requirement["evidence_targets"] = [item for item in requirement["evidence_targets"] if item != "normalize-self-test"]
             tool = proposal["tools"][0]
             tool.update({
                 "implementation_kind": "RUNTIME_NATIVE",

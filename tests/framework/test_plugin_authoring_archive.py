@@ -162,5 +162,19 @@ class PluginAuthoringArchiveTests(unittest.TestCase):
                 self.assertEqual((info.external_attr >> 16) & 0o777, 0o644)
 
 
+    def test_inventory_rejects_portable_unicode_trailing_dot_reserved_and_prefix_aliases(self) -> None:
+        cases = [
+            [("café.txt", b"a"), ("café.txt", b"b")],
+            [("a.txt", b"a"), ("a.txt.", b"b")],
+            [("DIR", b"a"), ("dir/file.txt", b"b")],
+            [("CON.txt", b"a")],
+        ]
+        for index, members in enumerate(cases):
+            with self.subTest(index=index):
+                archive = self.write_zip(f"portable-alias-{index}.zip", members)
+                with self.assertRaises(PluginAuthoringError):
+                    inventory_archive(archive)
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -10,12 +10,14 @@ import re
 import shutil
 import stat
 import tempfile
+import unicodedata
 import zipfile
 
 
 _SUPPORTED_COMPRESSION = frozenset({zipfile.ZIP_STORED, zipfile.ZIP_DEFLATED})
 _WINDOWS_DRIVE = re.compile(r"^[A-Za-z]:")
 _CHUNK_SIZE = 1024 * 1024
+_WINDOWS_RESERVED = {"CON", "PRN", "AUX", "NUL", *(f"COM{i}" for i in range(1, 10)), *(f"LPT{i}" for i in range(1, 10))}
 
 
 class PluginAuthoringError(ValueError):
@@ -82,6 +84,16 @@ def _normal_member_name(raw_name: str) -> str:
     return path.as_posix()
 
 
+def _portable_parts(name: str) -> tuple[str, ...]:
+    result = []
+    for part in PurePosixPath(name).parts:
+        normalized = unicodedata.normalize("NFC", part).rstrip(" .")
+        if not normalized or normalized.split(".", 1)[0].upper() in _WINDOWS_RESERVED:
+            raise PluginAuthoringError("archive_portable_name_invalid", name)
+        result.append(normalized.casefold())
+    return tuple(result)
+
+
 def _is_link(info: zipfile.ZipInfo) -> bool:
     unix_mode = (info.external_attr >> 16) & 0xFFFF
     if info.create_system == 3 and stat.S_IFMT(unix_mode) == stat.S_IFLNK:
@@ -107,7 +119,9 @@ def _validated_infos(
     if len(infos) > limits.max_members:
         raise PluginAuthoringError("archive_member_limit")
     normalized: dict[str, tuple[str, zipfile.ZipInfo]] = {}
-    casefolded: dict[str, str] = {}
+    portable_names: dict[tuple[str, ...], str] = {}
+    portable_files: set[tuple[str, ...]] = set()
+    portable_prefixes: dict[tuple[str, ...], tuple[str, ...]] = {}
     file_paths: set[str] = set()
     directory_paths: set[str] = set()
     total = 0
@@ -118,11 +132,24 @@ def _validated_infos(
         if existing is not None:
             code = "archive_alias_collision" if existing[0] != raw_name else "archive_duplicate_member"
             raise PluginAuthoringError(code, name)
-        folded = name.casefold()
-        if folded in casefolded:
+        portable = _portable_parts(name)
+        raw_parts = PurePosixPath(name).parts
+        if portable in portable_names:
             raise PluginAuthoringError("archive_casefold_collision", name)
+        for index in range(1, len(portable) + 1):
+            logical_prefix = portable[:index]
+            raw_prefix = raw_parts[:index]
+            prior = portable_prefixes.get(logical_prefix)
+            if prior is not None and prior != raw_prefix:
+                raise PluginAuthoringError("archive_casefold_collision", name)
+            portable_prefixes[logical_prefix] = raw_prefix
+        for existing in portable_files:
+            if portable[:len(existing)] == existing or (not info.is_dir() and existing[:len(portable)] == portable):
+                raise PluginAuthoringError("archive_path_collision", name)
         normalized[name] = (raw_name, info)
-        casefolded[folded] = name
+        portable_names[portable] = name
+        if not info.is_dir():
+            portable_files.add(portable)
         if info.flag_bits & 0x1:
             raise PluginAuthoringError("archive_encrypted_member", name)
         if _is_link(info):

@@ -93,9 +93,9 @@
     {
       "path": "tools/normalize.py",
       "classification": "generated_text",
-      "source_sha256": "715e0de4e0d79e8c5493b9418158974174f9969b1036bf00bfb63942b376adcb",
+      "source_sha256": "b4e1e4cda3a068491025a691234c9200ff50808d1afdb5b472a8dc144fe54f18",
       "redistribution": {"state": "APPROVED", "evidence": "generated for this plugin"},
-      "inline_text": "import json\nimport sys\nif __name__ == '__main__':\n    print(json.dumps({'status': 'PASS', 'argv': sys.argv[1:]}, sort_keys=True))\n",
+      "inline_text": "import json\nimport sys\nif __name__ == '__main__':\n    value = json.load(sys.stdin)\n    print(json.dumps({'normalized': value['text'].strip()}, sort_keys=True))\n",
       "requirement_ids": ["RQ1"]
     }
   ],

@@ -68,6 +68,16 @@ def _load(value: object, code: str) -> tuple[dict[str, Any] | None, list[str]]:
     return (payload, []) if isinstance(payload, dict) else (None, [code])
 
 
+def _json_strings(value: object) -> set[str]:
+    if isinstance(value, str):
+        return {value}
+    if isinstance(value, list):
+        return set().union(*(_json_strings(item) for item in value), set())
+    if isinstance(value, dict):
+        return set().union(*(_json_strings(item) for item in value.values()), set())
+    return set()
+
+
 def compile_plan(inspection: object, proposal: object, output: Path) -> PlanOutcome:
     inspection_payload, errors = _load(inspection, "inspection.invalid_json")
     proposal_payload, proposal_errors = _load(proposal, "proposal.invalid_json")
@@ -187,9 +197,17 @@ def compile_plan(inspection: object, proposal: object, output: Path) -> PlanOutc
         skill_recipe = recipes_by_path.get(f"{skill_prefix}/SKILL.md")
         skill_text = skill_recipe.get("inline_text") if isinstance(skill_recipe, dict) else None
         target = f"references/{reference_name}"
-        if not isinstance(skill_text, str) or (
-            f"]({target})" not in skill_text and f"](<{target}>)" not in skill_text
-        ):
+        directly_routed = isinstance(skill_text, str) and (
+            f"]({target})" in skill_text or f"](<{target}>)" in skill_text
+        )
+        index_target = "references/knowledge-index.json"
+        index_recipe = recipes_by_path.get(f"{skill_prefix}/{index_target}")
+        index_linked = isinstance(skill_text, str) and (
+            f"]({index_target})" in skill_text or f"](<{index_target}>)" in skill_text
+        )
+        index_values = _json_strings(index_recipe.get("inline_json")) if isinstance(index_recipe, dict) else set()
+        indexed = index_linked and any(value in {reference_name, target} or value.endswith(f"/{reference_name}") for value in index_values)
+        if not directly_routed and not indexed:
             errors.append(f"plan.reference_unrouted:{path}")
     expected = proposal_payload.get("expected_members")
     derived_paths = {
@@ -214,12 +232,21 @@ def compile_plan(inspection: object, proposal: object, output: Path) -> PlanOutc
     if not isinstance(checks, list):
         errors.append("plan.checks_invalid")
         checks = []
+    check_ids: set[str] = set()
+    checks_by_id: dict[str, dict[str, Any]] = {}
     for item in checks:
         if not isinstance(item, dict) or item.get("kind") not in _CHECK_KINDS:
             errors.append("plan.check_invalid")
             continue
         if type(item.get("required")) is not bool or not isinstance(item.get("id"), str):
             errors.append("plan.check_invalid")
+        elif item["id"] in check_ids:
+            errors.append(f"plan.check_duplicate:{item['id']}")
+        else:
+            check_ids.add(item["id"])
+            checks_by_id[item["id"]] = item
+        if item.get("required") is True and not item.get("requirement_ids"):
+            errors.append(f"plan.check_requirement_missing:{item.get('id', '')}")
         if any(req not in inspected_requirements for req in item.get("requirement_ids", [])):
             errors.append(f"plan.check_requirement_unknown:{item.get('id', '')}")
         if item.get("kind") == "PYTHON_ARGV":
@@ -246,6 +273,36 @@ def compile_plan(inspection: object, proposal: object, output: Path) -> PlanOutc
             if tool["id"] in tool_ids:
                 errors.append(f"tool.duplicate_id:{tool['id']}")
             tool_ids.add(tool["id"])
+
+    tool_commands = {
+        tuple((tool.get("verification") or {}).get("argv", [])): tool
+        for tool in tools if isinstance(tool, dict) and isinstance(tool.get("verification"), dict)
+    }
+    for item in checks:
+        if isinstance(item, dict) and item.get("kind") == "PYTHON_ARGV":
+            bound_tool = tool_commands.get(tuple(item.get("argv", [])))
+            if bound_tool is None:
+                errors.append(f"plan.check_tool_unbound:{item.get('id', '')}")
+            elif not set(item.get("requirement_ids", [])).issubset(set(bound_tool.get("requirement_ids", []))):
+                errors.append(f"plan.check_tool_requirement_mismatch:{item.get('id', '')}")
+
+    evidence_ids = check_ids | tool_ids
+    for requirement in proposed_requirements:
+        if not isinstance(requirement, dict) or not isinstance(requirement.get("id"), str):
+            continue
+        identifier = requirement["id"]
+        for path in requirement.get("implementation_paths", []):
+            if path not in expected_paths:
+                errors.append(f"plan.requirement_implementation_unknown:{identifier}:{path}")
+        for target in requirement.get("evidence_targets", []):
+            if target not in evidence_ids:
+                errors.append(f"plan.requirement_evidence_unknown:{identifier}:{target}")
+                continue
+            owner = checks_by_id.get(target)
+            if owner is None:
+                owner = next((tool for tool in tools if isinstance(tool, dict) and tool.get("id") == target), None)
+            if isinstance(owner, dict) and identifier not in owner.get("requirement_ids", []):
+                errors.append(f"plan.requirement_evidence_unowned:{identifier}:{target}")
 
     if errors:
         return PlanOutcome("FAIL", tuple(sorted(set(errors))), tuple(sorted(set(blockers))))
