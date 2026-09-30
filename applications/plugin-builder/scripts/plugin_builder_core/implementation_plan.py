@@ -152,20 +152,33 @@ def compile_plan(inspection: object, proposal: object, output: Path) -> PlanOutc
         recipe_paths.add(path)
         recipes_by_path[path] = item
         origins = [key for key in ("inline_text", "inline_json", "source_path") if key in item]
-        allowed = {"path", "requirement_ids", *origins}
-        if "rights" in item:
-            allowed.add("rights")
+        allowed = {
+            "path", "requirement_ids", "classification", "source_sha256",
+            "redistribution", *origins,
+        }
         if set(item) != allowed or len(origins) != 1:
             errors.append(f"plan.file_origin_invalid:{path}")
         if any(req not in inspected_requirements for req in item.get("requirement_ids", [])):
             errors.append(f"plan.file_requirement_unknown:{path}")
+        redistribution = item.get("redistribution")
+        if (
+            not isinstance(redistribution, dict)
+            or set(redistribution) != {"state", "evidence"}
+            or redistribution.get("state") != "APPROVED"
+            or not redistribution.get("evidence")
+        ):
+            errors.append(f"plan.file_rights_unapproved:{path}")
+        expected_classification = {
+            "inline_text": "generated_text",
+            "inline_json": "generated_json",
+            "source_path": "approved_source",
+        }.get(origins[0] if len(origins) == 1 else "")
+        if item.get("classification") != expected_classification:
+            errors.append(f"plan.file_classification_invalid:{path}")
         if "source_path" in item:
             source_path = item["source_path"]
             if not _safe_path(source_path) or not (workspace_root / Path(*PurePosixPath(source_path).parts)).is_file():
                 errors.append(f"plan.file_source_missing:{path}")
-            rights = item.get("rights")
-            if not isinstance(rights, dict) or rights.get("state") != "APPROVED_FOR_DISTRIBUTION" or not rights.get("evidence"):
-                errors.append(f"plan.file_rights_unapproved:{path}")
     for path, item in recipes_by_path.items():
         marker = "/references/"
         if marker not in path or "source_path" not in item:
@@ -179,9 +192,12 @@ def compile_plan(inspection: object, proposal: object, output: Path) -> PlanOutc
         ):
             errors.append(f"plan.reference_unrouted:{path}")
     expected = proposal_payload.get("expected_members")
+    derived_paths = {
+        f"skills/{name}/agents/openai.yaml" for name in skill_names
+    } | {"PLUGIN-BUILDER-MANIFEST.json"}
     if not isinstance(expected, list) or any(not _safe_path(item) for item in expected):
         errors.append("plan.expected_members_invalid")
-    elif set(expected) != recipe_paths or len(expected) != len(recipe_paths):
+    elif set(expected) != recipe_paths | derived_paths or len(expected) != len(recipe_paths | derived_paths):
         errors.append("plan.expected_members_mismatch")
 
     checks = proposal_payload.get("checks")

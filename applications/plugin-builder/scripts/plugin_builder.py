@@ -16,6 +16,7 @@ from plugin_builder_core.implementation_plan import (
     compile_plan,
     write_bytes_transactionally,
 )
+from plugin_builder_core.candidate import build_candidate
 from plugin_builder_core.session_contract import session_gate_state, validate_session
 
 
@@ -56,6 +57,9 @@ def _parser() -> argparse.ArgumentParser:
     approve.add_argument("--confirmed-by", required=True)
     approve.add_argument("--evidence", required=True)
     approve.add_argument("--json", action="store_true", required=True)
+    build = subparsers.add_parser("build")
+    build.add_argument("--session", type=Path, required=True)
+    build.add_argument("--json", action="store_true", required=True)
     return parser
 
 
@@ -124,6 +128,16 @@ def main(argv: list[str] | None = None) -> int:
         status, errors, data = approve_w1(arguments.session, arguments.confirmed_by, arguments.evidence)
         _emit(operation_document("approve-w1", status, errors, stage="S3" if status == "PASS" else "W1", **data))
         return 0 if status == "PASS" else 2 if status == "BLOCKED" else 3
+
+    if arguments.command == "build":
+        outcome = build_candidate(arguments.session)
+        _emit(operation_document(
+            "build", outcome.status, list(outcome.errors),
+            stage="S4" if outcome.status == "PASS" else "S3",
+            candidate_sha256=outcome.candidate_sha256,
+            manifest_sha256=outcome.manifest_sha256,
+        ))
+        return 0 if outcome.status == "PASS" else 2 if outcome.status == "BLOCKED" else 3
 
     try:
         payload = json.loads(arguments.session.read_text(encoding="utf-8"))

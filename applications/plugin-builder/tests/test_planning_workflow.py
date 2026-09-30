@@ -136,7 +136,7 @@ class PlanningWorkflowTests(unittest.TestCase):
     def test_plan_rejects_unrouted_or_unapproved_reference(self) -> None:
         payload = self.proposal()
         reference = next(item for item in payload["files"] if "/references/" in item["path"])
-        reference["rights"]["state"] = "UNRESOLVED"
+        reference["redistribution"]["state"] = "UNRESOLVED"
         skill = next(item for item in payload["files"] if item["path"] == "skills/answering-structured-requests/SKILL.md")
         skill["inline_text"] = skill["inline_text"].replace(
             "Read [the approved method](references/Reference.md), then ", ""

@@ -15,6 +15,8 @@ from .validation import (
     validate_reference_closure,
     validate_skill_tree,
 )
+from .tools import ApplicationToolContract, validate_application_tool_contract
+from .materialize import materialize_files
 
 __all__ = [
     "ArchiveInventory",
@@ -31,4 +33,7 @@ __all__ = [
     "validate_plugin_tree",
     "validate_reference_closure",
     "validate_skill_tree",
+    "ApplicationToolContract",
+    "validate_application_tool_contract",
+    "materialize_files",
 ]

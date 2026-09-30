@@ -45,6 +45,9 @@
   "files": [
     {
       "path": ".codex-plugin/plugin.json",
+      "classification": "generated_json",
+      "source_sha256": "fd9dadd74f531c8dfd9a63b7cfb75d496fb242a0f0c4737378404bbec365f451",
+      "redistribution": {"state": "APPROVED", "evidence": "generated for this plugin"},
       "inline_json": {
         "name": "sample-plugin",
         "version": "1.0.0",
@@ -65,24 +68,34 @@
     },
     {
       "path": "skills/answering-structured-requests/SKILL.md",
+      "classification": "generated_text",
+      "source_sha256": "eefa26f5b10d77e91a4d1eed1b956c89de73ef4ba3886fc543e8f2b9ba206160",
+      "redistribution": {"state": "APPROVED", "evidence": "generated for this plugin"},
       "inline_text": "---\nname: answering-structured-requests\ndescription: Answer structured user requests using the approved method.\n---\n\n# Answering structured requests\n\nRead [the approved method](references/Reference.md), then invoke the `normalize-input` application tool.\n",
       "requirement_ids": ["RQ1"]
     },
     {
       "path": "skills/answering-structured-requests/references/Reference.md",
+      "classification": "approved_source",
+      "source_sha256": "6f40ff0bc95d7e03248b5ca370998159f36ab0dcf9a7c170d887d1202ff4a0fd",
+      "redistribution": {"state": "APPROVED", "evidence": "fixture owner approval"},
       "source_path": "input/Reference.md",
-      "rights": {"state": "APPROVED_FOR_DISTRIBUTION", "evidence": "fixture owner approval"},
       "requirement_ids": ["RQ1"]
     },
     {
       "path": "skills/checking-traceability/SKILL.md",
+      "classification": "generated_text",
+      "source_sha256": "45d4a9bbb506ed5b4dea62e46c10251f2b148802b965a09d59ab0095de0965fc",
+      "redistribution": {"state": "APPROVED", "evidence": "generated for this plugin"},
       "inline_text": "---\nname: checking-traceability\ndescription: Check that generated answers retain requirement traceability.\n---\n\n# Checking traceability\n\nConfirm every output maps to its approved requirement.\n",
       "requirement_ids": ["AC1"]
     },
     {
       "path": "tools/normalize.py",
+      "classification": "generated_text",
+      "source_sha256": "715e0de4e0d79e8c5493b9418158974174f9969b1036bf00bfb63942b376adcb",
+      "redistribution": {"state": "APPROVED", "evidence": "generated for this plugin"},
       "inline_text": "import json\nimport sys\nif __name__ == '__main__':\n    print(json.dumps({'status': 'PASS', 'argv': sys.argv[1:]}, sort_keys=True))\n",
-      "rights": {"state": "APPROVED_FOR_DISTRIBUTION", "evidence": "generated for this plugin"},
       "requirement_ids": ["RQ1"]
     }
   ],
@@ -105,6 +118,11 @@
       "fallback": {"policy": "BLOCK", "description": "Normalization is required."},
       "verification": {"kind": "PYTHON_ARGV", "argv": ["python", "tools/normalize.py", "--self-test"], "network": false},
       "redistribution": {"state": "APPROVED", "evidence": "generated for this plugin"}
+      ,"execution": {"argv": ["python", "tools/normalize.py"], "clean_environment": true, "timeout_seconds": 30}
+      ,"fixtures": {"input": {"text": " A "}, "output": {"normalized": "A"}}
+      ,"runtime_capability": null
+      ,"adapter": null
+      ,"mcp": null
     }
   ],
   "implementation_decisions": {
@@ -121,8 +139,11 @@
   "expected_members": [
     ".codex-plugin/plugin.json",
     "skills/answering-structured-requests/SKILL.md",
+    "skills/answering-structured-requests/agents/openai.yaml",
     "skills/answering-structured-requests/references/Reference.md",
     "skills/checking-traceability/SKILL.md",
-    "tools/normalize.py"
+    "skills/checking-traceability/agents/openai.yaml",
+    "tools/normalize.py",
+    "PLUGIN-BUILDER-MANIFEST.json"
   ]
 }
