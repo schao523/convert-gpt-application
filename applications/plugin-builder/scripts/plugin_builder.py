@@ -21,12 +21,13 @@ from plugin_builder_core.implementation_plan import (
 from plugin_builder_core.candidate import build_candidate
 from plugin_builder_core.update import resolve_update_member
 from plugin_builder_core.session_contract import session_gate_state, validate_session
+from plugin_builder_core.session_state import change_session_state
 
 
 CAPABILITIES = {
     "session_contract": "STATICALLY VERIFIED",
-    "candidate_build": "NOT VERIFIED",
-    "package_build": "NOT VERIFIED",
+    "candidate_build": "RUNTIME VERIFIED",
+    "package_build": "RUNTIME VERIFIED",
     "codex_execution": "NOT VERIFIED",
     "chatgpt_work_execution": "NOT VERIFIED",
     "openclaw_execution": "NOT APPLICABLE",
@@ -80,6 +81,10 @@ def _parser() -> argparse.ArgumentParser:
     resolve.add_argument("--decision", choices=("keep", "replace", "remove"), required=True)
     resolve.add_argument("--evidence", required=True)
     resolve.add_argument("--json", action="store_true", required=True)
+    for command in ("pause", "resume", "cancel"):
+        lifecycle = subparsers.add_parser(command)
+        lifecycle.add_argument("--session", type=Path, required=True)
+        lifecycle.add_argument("--json", action="store_true", required=True)
     return parser
 
 
@@ -183,6 +188,13 @@ def main(argv: list[str] | None = None) -> int:
             member=outcome.member, decision=outcome.decision,
         ))
         return 0 if outcome.status == "PASS" else 3
+
+    if arguments.command in {"pause", "resume", "cancel"}:
+        outcome = change_session_state(arguments.session, arguments.command)
+        _emit(operation_document(
+            arguments.command, outcome.status, list(outcome.errors), stage=outcome.stage
+        ))
+        return 0 if outcome.status == "PASS" else 2 if outcome.status == "BLOCKED" else 3
 
     try:
         payload = json.loads(arguments.session.read_text(encoding="utf-8"))

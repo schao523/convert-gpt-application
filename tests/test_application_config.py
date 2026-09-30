@@ -107,7 +107,13 @@ class ApplicationConfigTests(unittest.TestCase):
                 command.command_id: command.marketplace_targets
                 for command in builder.verification.commands
             },
-            {"runtime-status": ("codex",), "session-validator": ("codex",)},
+            {
+                "runtime-status": ("codex",),
+                "session-validator": ("codex",),
+                "create-smoke": ("codex",),
+                "update-smoke": ("codex",),
+                "bundled-local-tool-smoke": ("codex",),
+            },
         )
 
 

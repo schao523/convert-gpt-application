@@ -11,4 +11,6 @@ Read [the input and plan contract](references/input-and-plan-contract.md) before
 
 Create a requirement-to-implementation-to-verification map using [the requirement coverage contract](references/requirement-coverage-contract.md). Record whether each capability should be reused, adapted, bundled, or left unresolved, with concrete evidence.
 
+Compile the proposal with `plan`. Summarize requirements, application tools, unresolved decisions, and verification evidence in plain language, then record the owner's decision with `approve-w1`; never tell the owner to hand-edit a plan or session file.
+
 Present a plain-language plan for W1. Do not create or update the candidate until W1 is explicitly approved.

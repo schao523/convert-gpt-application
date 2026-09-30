@@ -16,9 +16,11 @@ EXPECTED_SKILLS = {
     },
     "building-and-updating-plugins": {
         "references/candidate-and-update-contract.md",
+        "references/application-tool-contract.md",
     },
     "verifying-and-packaging-plugins": {
         "references/evidence-and-package-contract.md",
+        "references/tool-evidence-contract.md",
     },
 }
 
@@ -133,6 +135,22 @@ class SkillContractTests(unittest.TestCase):
             "RUNTIME VERIFIED",
         ):
             self.assertNotIn(forbidden.casefold(), combined.casefold())
+
+    def test_stage_skills_route_to_concrete_cli_and_tool_references(self) -> None:
+        guiding = read_skill("guiding-plugin-builder-sessions")
+        planning = read_skill("planning-plugin-implementations")
+        building = read_skill("building-and-updating-plugins")
+        verifying = read_skill("verifying-and-packaging-plugins")
+        for command in ("inspect", "pause", "resume", "cancel"):
+            self.assertIn(f"`{command}`", guiding)
+        for command in ("plan", "approve-w1"):
+            self.assertIn(f"`{command}`", planning)
+        for command in ("resolve-update", "build"):
+            self.assertIn(f"`{command}`", building)
+        for command in ("verify", "approve-w2", "package"):
+            self.assertIn(f"`{command}`", verifying)
+        self.assertIn("application-tool-contract.md", building)
+        self.assertIn("tool-evidence-contract.md", verifying)
 
 
 if __name__ == "__main__":

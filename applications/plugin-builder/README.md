@@ -8,8 +8,8 @@ Approved design files are internal implementation inputs and are not selected fo
 
 The local distribution contract explicitly selects the plugin manifest, root policy files, portable skills, deterministic scripts, application invariants, and runtime compatibility record. It rejects secrets, private paths, links or reparse points, unsafe attachments, caches, broken relative documentation links, and unfinished scaffold markers.
 
-## Foundation status
+## Implementation status
 
-Repository discovery, plugin and skill structure, session-state contracts, deny-by-default distribution, and deterministic local artifact construction are statically verified. The implemented product CLI is intentionally limited to `status --json` and `validate-session <session.json> --json`.
+The product CLI now implements approved-package inspection, planning, W1 approval, create/update candidate construction, explicit update resolution, deterministic verification, W2 approval, final ZIP packaging, and thin pause/resume/cancel operations. Application-oriented tools are explicit plan objects: bundled local and framework tools can execute under constrained direct-argument validation, while runtime-native and MCP adapters retain honest `NOT VERIFIED` evidence until their target environment is available.
 
-Representative create/update behavior, candidate construction, final ZIP generation through the Plugin Builder workflow, and installed execution in Codex and ChatGPT Work Local/Desktop remain `NOT VERIFIED`. This foundation is not `READY`, is not classified as `PORTABLE`, and has not been published.
+Repository-local T1–T6 scenarios and T7 execution from a generated standalone Codex artifact are runtime verified. The generated artifact vendors only the portable authoring runtime it needs and runs create and update workflows without repository imports. Installed Plugin Builder discovery and representative execution in Codex and ChatGPT Work Local/Desktop remain `NOT VERIFIED`; therefore this implementation is not `READY` and has not been published.

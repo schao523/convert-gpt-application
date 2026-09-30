@@ -135,6 +135,14 @@ class ConversionContractTests(unittest.TestCase):
         self.assertIn("| RUNTIME-OPENCLAW | OpenClaw | Excluded phase-one runtime | NOT APPLICABLE |", matrix)
         self.assertIn("| RUNTIME-CLAUDE | Claude | Excluded phase-one runtime | NOT APPLICABLE |", matrix)
 
+    def test_configured_verification_registers_phase_two_smokes(self) -> None:
+        config = load_json("conversion.json")
+        command_ids = {item["id"] for item in config["verification"]["commands"]}
+        self.assertEqual(
+            command_ids,
+            {"runtime-status", "session-validator", "create-smoke", "update-smoke", "bundled-local-tool-smoke"},
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

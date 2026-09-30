@@ -9,6 +9,8 @@
 | UNEXPLAINED_UPDATE_CONTENT | PRESERVE_AND_WAIT |
 | OUTPUT | CANDIDATE_NOT_FINAL_ZIP |
 
+Use `resolve-update` to record an explicit keep, replace, or remove decision for every unexplained baseline member, then use `build`. Application-tool files and bindings follow the same preservation rules as skills and references; an unchanged tool is byte-preserved, while a changed contract requires a newly approved W1 identity.
+
 Create a new isolated workspace and record its relative session identity. Never use the Workbench checkout as a runtime dependency.
 
 For ZIP input, normalize separators and reject absolute paths, `..`, device paths, symlinks, duplicate normalized names, and case-fold collisions before extraction. Refuse an existing nonempty output unless it carries the expected session marker and the operation explicitly permits replacement.

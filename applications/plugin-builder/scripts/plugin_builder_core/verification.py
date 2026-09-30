@@ -105,7 +105,12 @@ def verify_candidate(session_path: Path) -> VerificationOutcome:
     for requirement in plan.get("requirements", []):
         identifier = requirement["id"]
         states = [item["state"] for item in checks if identifier in item["requirement_ids"]]
-        states += [item["state"] for item in tool_results if identifier in item["requirement_ids"]]
+        states += [
+            item["state"]
+            for item in tool_results
+            if identifier in item["requirement_ids"]
+            and (item["required"] or item["state"] == "FAIL")
+        ]
         state = "FAIL" if "FAIL" in states else "NOT VERIFIED" if "NOT VERIFIED" in states else "PASS" if states else "NOT VERIFIED"
         requirements.append({"id": identifier, "required": True, "state": state})
     blocked_tool = any(

@@ -332,8 +332,8 @@ class CliContractTests(unittest.TestCase):
             document["capabilities"],
             {
                 "session_contract": "STATICALLY VERIFIED",
-                "candidate_build": "NOT VERIFIED",
-                "package_build": "NOT VERIFIED",
+                "candidate_build": "RUNTIME VERIFIED",
+                "package_build": "RUNTIME VERIFIED",
                 "codex_execution": "NOT VERIFIED",
                 "chatgpt_work_execution": "NOT VERIFIED",
                 "openclaw_execution": "NOT APPLICABLE",

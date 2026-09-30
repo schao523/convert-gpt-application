@@ -26,6 +26,15 @@ PUBLIC_DOCS = {
 }
 PREFIXES = {"scripts", "skills"}
 MANIFEST_FILE = ".codex-plugin/plugin.json"
+VENDOR_FILES = {
+    "scripts/vendor/obvious_one_plugin_framework/__init__.py",
+    "scripts/vendor/obvious_one_plugin_framework/plugin_authoring/__init__.py",
+    "scripts/vendor/obvious_one_plugin_framework/plugin_authoring/archive.py",
+    "scripts/vendor/obvious_one_plugin_framework/plugin_authoring/identity.py",
+    "scripts/vendor/obvious_one_plugin_framework/plugin_authoring/materialize.py",
+    "scripts/vendor/obvious_one_plugin_framework/plugin_authoring/tools.py",
+    "scripts/vendor/obvious_one_plugin_framework/plugin_authoring/validation.py",
+}
 FORBIDDEN_NAMES = {
     ".env",
     ".git",
@@ -85,6 +94,8 @@ def _is_link(path: Path) -> bool:
 
 def _allowed(relative: Path) -> bool:
     raw = relative.as_posix()
+    if raw.startswith("scripts/vendor/"):
+        return raw in VENDOR_FILES
     return (
         raw in ROOT_FILES
         or raw in PUBLIC_DOCS
