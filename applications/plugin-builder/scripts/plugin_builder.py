@@ -10,7 +10,8 @@ import sys
 
 from plugin_builder_core.result import operation_document
 from plugin_builder_core.inspection import inspect_design_package
-from plugin_builder_core.approvals import approve_w1
+from plugin_builder_core.approvals import approve_w1, approve_w2
+from plugin_builder_core.verification import verify_candidate
 from plugin_builder_core.implementation_plan import (
     canonical_bytes,
     compile_plan,
@@ -61,6 +62,14 @@ def _parser() -> argparse.ArgumentParser:
     build = subparsers.add_parser("build")
     build.add_argument("--session", type=Path, required=True)
     build.add_argument("--json", action="store_true", required=True)
+    verify = subparsers.add_parser("verify")
+    verify.add_argument("--session", type=Path, required=True)
+    verify.add_argument("--json", action="store_true", required=True)
+    approve2 = subparsers.add_parser("approve-w2")
+    approve2.add_argument("--session", type=Path, required=True)
+    approve2.add_argument("--confirmed-by", required=True)
+    approve2.add_argument("--evidence", required=True)
+    approve2.add_argument("--json", action="store_true", required=True)
     resolve = subparsers.add_parser("resolve-update")
     resolve.add_argument("--session", type=Path, required=True)
     resolve.add_argument("--member", required=True)
@@ -145,6 +154,16 @@ def main(argv: list[str] | None = None) -> int:
             manifest_sha256=outcome.manifest_sha256,
         ))
         return 0 if outcome.status == "PASS" else 2 if outcome.status == "BLOCKED" else 3
+
+    if arguments.command == "verify":
+        outcome = verify_candidate(arguments.session)
+        _emit(operation_document("verify", outcome.status, list(outcome.errors), report_sha256=outcome.report_sha256, stage="W2"))
+        return 0 if outcome.status == "PASS" else 2 if outcome.status == "BLOCKED" else 3
+
+    if arguments.command == "approve-w2":
+        status, errors, data = approve_w2(arguments.session, arguments.confirmed_by, arguments.evidence)
+        _emit(operation_document("approve-w2", status, errors, stage="S5" if status == "PASS" else "W2", **data))
+        return 0 if status == "PASS" else 2 if status == "BLOCKED" else 3
 
     if arguments.command == "resolve-update":
         outcome = resolve_update_member(

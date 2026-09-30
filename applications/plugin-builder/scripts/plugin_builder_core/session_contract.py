@@ -355,11 +355,12 @@ def _v2_exact_identity(
     return item
 
 
-def _validate_v2_requirements(errors: list[str], value: object) -> set[str]:
+def _validate_v2_requirements(errors: list[str], value: object) -> dict[str, bool]:
     if not isinstance(value, list):
         errors.append("requirements.invalid_list")
-        return set()
+        return {}
     seen: set[str] = set()
+    registered: dict[str, bool] = {}
     for index, entry in enumerate(value):
         label = f"requirements[{index}]"
         item = _mapping(entry)
@@ -375,12 +376,41 @@ def _validate_v2_requirements(errors: list[str], value: object) -> set[str]:
             seen.add(identifier)
         if type(item.get("required")) is not bool:
             errors.append(f"{label}.required.invalid")
+        elif isinstance(identifier, str) and identifier and identifier not in registered:
+            registered[identifier] = item["required"]
         paths = item.get("source_paths")
         if not isinstance(paths, list) or not paths:
             errors.append(f"{label}.source_paths.invalid_list")
         elif any(not _v2_path(path) for path in paths):
             errors.append(f"{label}.source_paths.invalid_relative_posix_path")
-    return seen
+    return registered
+
+
+def _validate_v2_results(errors: list[str], value: object, requirements: dict[str, bool]) -> None:
+    if not isinstance(value, list):
+        errors.append("verification.results.invalid_list")
+        return
+    seen: set[str] = set()
+    for index, entry in enumerate(value):
+        label = f"verification.results[{index}]"
+        item = _mapping(entry)
+        if item is None or set(item) != {"id", "required", "state"}:
+            errors.append(f"{label}.invalid_object")
+            continue
+        identifier = item.get("id")
+        if not isinstance(identifier, str) or identifier not in requirements:
+            errors.append(f"{label}.unknown_requirement")
+            continue
+        if identifier in seen:
+            errors.append(f"verification.results.duplicate_id:{identifier}")
+        seen.add(identifier)
+        if item.get("required") is not requirements[identifier]:
+            errors.append(f"{label}.required_mismatch")
+        if item.get("state") not in EVIDENCE_STATES:
+            errors.append(f"{label}.state.unsupported")
+    for identifier, required in requirements.items():
+        if required and identifier not in seen:
+            errors.append(f"verification.missing_required_result:{identifier}")
 
 
 def _validate_v2(payload: object) -> list[str]:
@@ -440,7 +470,7 @@ def _validate_v2(payload: object) -> list[str]:
             for key in ("owner", "summary"):
                 if not isinstance(item.get(key), str) or not item[key]:
                     errors.append(f"{label}.{key}.invalid")
-    _validate_v2_requirements(errors, session.get("requirements"))
+    requirements = _validate_v2_requirements(errors, session.get("requirements"))
 
     baseline = None
     if session.get("baseline") is not None:
@@ -504,8 +534,7 @@ def _validate_v2(payload: object) -> list[str]:
                     errors.append(f"verification.{key}.invalid")
             if candidate is not None and item.get("candidate_sha256") != candidate.get("sha256"):
                 errors.append("verification.candidate_sha256_mismatch")
-            if not isinstance(item.get("results"), list):
-                errors.append("verification.results.invalid_list")
+            _validate_v2_results(errors, item.get("results"), requirements)
 
     w2 = None
     if session.get("w2") is not None:
