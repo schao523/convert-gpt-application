@@ -1,0 +1,128 @@
+{
+  "schema": "plugin-builder-plan-proposal-v1",
+  "operation": "create",
+  "plugin": {
+    "name": "sample-plugin",
+    "version": "1.0.0",
+    "description": "Answer structured requests with traceable output.",
+    "author": {"name": "Example Developer"},
+    "interface": {
+      "displayName": "Sample Plugin",
+      "shortDescription": "Answer structured requests.",
+      "longDescription": "Answer structured requests and report requirement traceability.",
+      "developerName": "Example Developer",
+      "category": "Productivity",
+      "capabilities": ["Interactive", "Read"],
+      "defaultPrompt": "Help me answer this structured request."
+    }
+  },
+  "requirements": [
+    {
+      "id": "AC1",
+      "owner_skill": "checking-traceability",
+      "implementation_paths": ["skills/checking-traceability/SKILL.md"],
+      "evidence_targets": ["skill-structure", "requirement-coverage"]
+    },
+    {
+      "id": "RQ1",
+      "owner_skill": "answering-structured-requests",
+      "implementation_paths": ["skills/answering-structured-requests/SKILL.md", "tools/normalize.py"],
+      "evidence_targets": ["plugin-structure", "normalize-self-test"]
+    }
+  ],
+  "skills": [
+    {
+      "name": "answering-structured-requests",
+      "description": "Answer structured user requests using the approved method.",
+      "requirement_ids": ["RQ1"]
+    },
+    {
+      "name": "checking-traceability",
+      "description": "Check that generated answers retain requirement traceability.",
+      "requirement_ids": ["AC1"]
+    }
+  ],
+  "files": [
+    {
+      "path": ".codex-plugin/plugin.json",
+      "inline_json": {
+        "name": "sample-plugin",
+        "version": "1.0.0",
+        "description": "Answer structured requests with traceable output.",
+        "author": {"name": "Example Developer"},
+        "skills": "./skills/",
+        "interface": {
+          "displayName": "Sample Plugin",
+          "shortDescription": "Answer structured requests.",
+          "longDescription": "Answer structured requests and report requirement traceability.",
+          "developerName": "Example Developer",
+          "category": "Productivity",
+          "capabilities": ["Interactive", "Read"],
+          "defaultPrompt": "Help me answer this structured request."
+        }
+      },
+      "requirement_ids": ["RQ1"]
+    },
+    {
+      "path": "skills/answering-structured-requests/SKILL.md",
+      "inline_text": "---\nname: answering-structured-requests\ndescription: Answer structured user requests using the approved method.\n---\n\n# Answering structured requests\n\nRead [the approved method](references/Reference.md), then invoke the `normalize-input` application tool.\n",
+      "requirement_ids": ["RQ1"]
+    },
+    {
+      "path": "skills/answering-structured-requests/references/Reference.md",
+      "source_path": "input/Reference.md",
+      "rights": {"state": "APPROVED_FOR_DISTRIBUTION", "evidence": "fixture owner approval"},
+      "requirement_ids": ["RQ1"]
+    },
+    {
+      "path": "skills/checking-traceability/SKILL.md",
+      "inline_text": "---\nname: checking-traceability\ndescription: Check that generated answers retain requirement traceability.\n---\n\n# Checking traceability\n\nConfirm every output maps to its approved requirement.\n",
+      "requirement_ids": ["AC1"]
+    },
+    {
+      "path": "tools/normalize.py",
+      "inline_text": "import json\nimport sys\nif __name__ == '__main__':\n    print(json.dumps({'status': 'PASS', 'argv': sys.argv[1:]}, sort_keys=True))\n",
+      "rights": {"state": "APPROVED_FOR_DISTRIBUTION", "evidence": "generated for this plugin"},
+      "requirement_ids": ["RQ1"]
+    }
+  ],
+  "tools": [
+    {
+      "schema": "plugin-builder-application-tool-v1",
+      "id": "normalize-input",
+      "required": true,
+      "implementation_kind": "BUNDLED_LOCAL",
+      "requirement_ids": ["RQ1"],
+      "skill_bindings": ["answering-structured-requests"],
+      "files": ["tools/normalize.py"],
+      "input_schema": {"type": "object", "properties": {"text": {"type": "string"}}, "required": ["text"]},
+      "output_schema": {"type": "object", "properties": {"normalized": {"type": "string"}}, "required": ["normalized"]},
+      "side_effects": [],
+      "permissions": ["workspace:read"],
+      "runtime_targets": ["ChatGPT Work Local/Desktop", "Codex"],
+      "dependencies": [],
+      "configuration": {"authentication": "NOT_REQUIRED", "setup": "BUNDLED"},
+      "fallback": {"policy": "BLOCK", "description": "Normalization is required."},
+      "verification": {"kind": "PYTHON_ARGV", "argv": ["python", "tools/normalize.py", "--self-test"], "network": false},
+      "redistribution": {"state": "APPROVED", "evidence": "generated for this plugin"}
+    }
+  ],
+  "implementation_decisions": {
+    "reuse": ["portable plugin validators"],
+    "bundle": ["tools/normalize.py"],
+    "validation": ["plugin structure", "skill structure", "normalize self-test"]
+  },
+  "checks": [
+    {"id": "plugin-structure", "kind": "PLUGIN_STRUCTURE", "required": true, "requirement_ids": ["RQ1"]},
+    {"id": "skill-structure", "kind": "SKILL_STRUCTURE", "required": true, "requirement_ids": ["AC1", "RQ1"]},
+    {"id": "requirement-coverage", "kind": "REQUIREMENT_COVERAGE", "required": true, "requirement_ids": ["AC1", "RQ1"]},
+    {"id": "normalize-self-test", "kind": "PYTHON_ARGV", "required": true, "requirement_ids": ["RQ1"], "argv": ["python", "tools/normalize.py", "--self-test"]}
+  ],
+  "expected_members": [
+    ".codex-plugin/plugin.json",
+    "skills/answering-structured-requests/SKILL.md",
+    "skills/answering-structured-requests/references/Reference.md",
+    "skills/checking-traceability/SKILL.md",
+    "tools/normalize.py"
+  ]
+}

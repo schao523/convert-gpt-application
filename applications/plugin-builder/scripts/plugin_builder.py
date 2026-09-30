@@ -10,6 +10,12 @@ import sys
 
 from plugin_builder_core.result import operation_document
 from plugin_builder_core.inspection import inspect_design_package
+from plugin_builder_core.approvals import approve_w1
+from plugin_builder_core.implementation_plan import (
+    canonical_bytes,
+    compile_plan,
+    write_bytes_transactionally,
+)
 from plugin_builder_core.session_contract import session_gate_state, validate_session
 
 
@@ -41,6 +47,15 @@ def _parser() -> argparse.ArgumentParser:
     inspect.add_argument("--operation", choices=("create", "update"), required=True)
     inspect.add_argument("--baseline", type=Path)
     inspect.add_argument("--json", action="store_true", required=True)
+    plan = subparsers.add_parser("plan")
+    plan.add_argument("--session", type=Path, required=True)
+    plan.add_argument("--proposal", type=Path, required=True)
+    plan.add_argument("--json", action="store_true", required=True)
+    approve = subparsers.add_parser("approve-w1")
+    approve.add_argument("--session", type=Path, required=True)
+    approve.add_argument("--confirmed-by", required=True)
+    approve.add_argument("--evidence", required=True)
+    approve.add_argument("--json", action="store_true", required=True)
     return parser
 
 
@@ -72,6 +87,43 @@ def main(argv: list[str] | None = None) -> int:
             )
         )
         return 0 if outcome.status == "PASS" else 2 if outcome.status == "BLOCKED" else 3
+
+    if arguments.command == "plan":
+        try:
+            session = json.loads(arguments.session.read_text(encoding="utf-8"))
+        except (OSError, UnicodeError, json.JSONDecodeError):
+            _emit(operation_document("plan", "FAIL", ["session_input.invalid_json"], stage="F1"))
+            return 3
+        if not isinstance(session, dict) or session.get("schema_version") != 2 or not isinstance(session.get("inspection"), dict):
+            _emit(operation_document("plan", "FAIL", ["session.v2_inspection_required"], stage="F1"))
+            return 3
+        root = arguments.session.parent
+        inspection_path = root / session["inspection"].get("path", "")
+        output = root / "implementation-plan.json"
+        outcome = compile_plan(inspection_path, arguments.proposal, output)
+        if outcome.status != "FAIL":
+            session["plan"] = {
+                "path": "implementation-plan.json",
+                "sha256": outcome.plan_sha256,
+                "tools_sha256": outcome.tools_sha256,
+            }
+            for key in ("w1", "candidate", "verification", "w2", "package"):
+                session[key] = None
+            session["stage"] = "W1"
+            write_bytes_transactionally(arguments.session, canonical_bytes(session))
+        errors = [*outcome.errors, *outcome.blockers]
+        _emit(operation_document(
+            "plan", outcome.status, errors,
+            stage="W1" if outcome.status != "FAIL" else "F1",
+            plan_sha256=outcome.plan_sha256,
+            tools_sha256=outcome.tools_sha256,
+        ))
+        return 0 if outcome.status == "PASS" else 2 if outcome.status == "BLOCKED" else 3
+
+    if arguments.command == "approve-w1":
+        status, errors, data = approve_w1(arguments.session, arguments.confirmed_by, arguments.evidence)
+        _emit(operation_document("approve-w1", status, errors, stage="S3" if status == "PASS" else "W1", **data))
+        return 0 if status == "PASS" else 2 if status == "BLOCKED" else 3
 
     try:
         payload = json.loads(arguments.session.read_text(encoding="utf-8"))
