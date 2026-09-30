@@ -33,6 +33,7 @@ EXPECTED_SOURCE_PATHS = {
     "scripts/plugin_builder_core/candidate.py",
     "scripts/plugin_builder_core/implementation_plan.py",
     "scripts/plugin_builder_core/inspection.py",
+    "scripts/plugin_builder_core/packaging.py",
     "scripts/plugin_builder_core/result.py",
     "scripts/plugin_builder_core/session_contract.py",
     "scripts/plugin_builder_core/tool_contract.py",

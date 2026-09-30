@@ -12,6 +12,7 @@ from plugin_builder_core.result import operation_document
 from plugin_builder_core.inspection import inspect_design_package
 from plugin_builder_core.approvals import approve_w1, approve_w2
 from plugin_builder_core.verification import verify_candidate
+from plugin_builder_core.packaging import package_candidate
 from plugin_builder_core.implementation_plan import (
     canonical_bytes,
     compile_plan,
@@ -70,6 +71,9 @@ def _parser() -> argparse.ArgumentParser:
     approve2.add_argument("--confirmed-by", required=True)
     approve2.add_argument("--evidence", required=True)
     approve2.add_argument("--json", action="store_true", required=True)
+    package = subparsers.add_parser("package")
+    package.add_argument("--session", type=Path, required=True)
+    package.add_argument("--json", action="store_true", required=True)
     resolve = subparsers.add_parser("resolve-update")
     resolve.add_argument("--session", type=Path, required=True)
     resolve.add_argument("--member", required=True)
@@ -164,6 +168,11 @@ def main(argv: list[str] | None = None) -> int:
         status, errors, data = approve_w2(arguments.session, arguments.confirmed_by, arguments.evidence)
         _emit(operation_document("approve-w2", status, errors, stage="S5" if status == "PASS" else "W2", **data))
         return 0 if status == "PASS" else 2 if status == "BLOCKED" else 3
+
+    if arguments.command == "package":
+        outcome = package_candidate(arguments.session)
+        _emit(operation_document("package", outcome.status, list(outcome.errors), package_sha256=outcome.package_sha256, path=outcome.path, stage="E1"))
+        return 0 if outcome.status == "PASS" else 2 if outcome.status == "BLOCKED" else 3
 
     if arguments.command == "resolve-update":
         outcome = resolve_update_member(
