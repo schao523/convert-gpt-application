@@ -109,6 +109,21 @@ def _artifact_records(legacy: dict[str, Any], inventory) -> tuple[list[dict[str,
         if not isinstance(artifact, dict):
             diagnostics.append("legacy.artifact_invalid")
             continue
+        identifier = artifact.get("artifact_id")
+        provenance = artifact.get("provenance")
+        state = artifact.get("state")
+        version = artifact.get("version")
+        if not isinstance(identifier, str) or not identifier.strip():
+            diagnostics.append("legacy.artifact_id_invalid")
+        if not isinstance(provenance, str) or not provenance.strip():
+            diagnostics.append(f"legacy.artifact_provenance_invalid:{identifier or ''}")
+        if not isinstance(state, str) or not state.strip():
+            diagnostics.append(f"legacy.artifact_state_invalid:{identifier or ''}")
+        if not isinstance(version, str) or not version.strip():
+            diagnostics.append(f"legacy.artifact_version_invalid:{identifier or ''}")
+        role = _role(artifact.get("relation"))
+        if not role:
+            diagnostics.append(f"legacy.artifact_relation_invalid:{identifier or ''}")
         declared = _safe_declared_path(artifact.get("path"))
         if declared is None:
             diagnostics.append(f"legacy.artifact_path_invalid:{artifact.get('artifact_id', '')}")
@@ -128,16 +143,15 @@ def _artifact_records(legacy: dict[str, Any], inventory) -> tuple[list[dict[str,
                 continue
             seen.add(folded)
             relative = member.path[len(path) + 1:] if prefix else ""
-            identifier = str(artifact.get("artifact_id", ""))
             record: dict[str, Any] = {
                 "file": member.path,
                 "id": identifier if not relative else f"{identifier}/{relative}",
-                "provenance": artifact.get("provenance", ""),
-                "role": _role(artifact.get("relation")),
+                "provenance": provenance,
+                "role": role,
                 "sha256": member.sha256,
                 "size": member.size,
-                "state": artifact.get("state", ""),
-                "version": artifact.get("version", ""),
+                "state": state,
+                "version": version,
             }
             if "requirements" in artifact:
                 record["requirements"] = artifact["requirements"]
@@ -222,18 +236,27 @@ def normalize_handoff_archive(
             authorities = [item for item in records if item["role"] == "approved_specification"]
             if len(authorities) != 1:
                 diagnostics.append("normalization.authoritative_specification_required")
+            else:
+                if authorities[0].get("state") != "approved":
+                    diagnostics.append("legacy.artifact_authority_state_invalid")
+                if authorities[0].get("version") != legacy.get("specification_version"):
+                    diagnostics.append("legacy.artifact_authority_version_mismatch")
             decisions = legacy.get("unresolved_owner_decisions", [])
             normalized_decisions = []
-            if isinstance(decisions, list):
+            if not isinstance(decisions, list):
+                diagnostics.append("legacy.owner_decisions_invalid")
+            else:
                 for item in decisions:
-                    if isinstance(item, dict):
-                        normalized_decisions.append({
-                            "blocking": item.get("blocking") is True,
-                            "decision_id": str(item.get("decision_id", "")),
-                            "impact": str(item.get("impact", "")),
-                            "owner": str(item.get("owner", "")),
-                            "summary": str(item.get("summary", "")),
-                        })
+                    valid = (
+                        isinstance(item, dict)
+                        and set(item) == {"blocking", "decision_id", "impact", "owner", "summary"}
+                        and type(item.get("blocking")) is bool
+                        and all(isinstance(item.get(key), str) and item[key].strip() for key in ("decision_id", "impact", "owner", "summary"))
+                    )
+                    if not valid:
+                        diagnostics.append("legacy.owner_decision_invalid")
+                        continue
+                    normalized_decisions.append({key: item[key] for key in ("blocking", "decision_id", "impact", "owner", "summary")})
             approval_evidence = legacy.get("approval_evidence")
             approved = (
                 legacy.get("specification_state") == "approved"
@@ -241,6 +264,7 @@ def normalize_handoff_archive(
                 and isinstance(legacy.get("gate_result"), str) and legacy["gate_result"].startswith("APPROVED")
                 and len(authorities) == 1
                 and authorities[0].get("version") == legacy.get("specification_version")
+                and authorities[0].get("state") == "approved"
                 and not any(item["blocking"] for item in normalized_decisions)
                 and not diagnostics
             )

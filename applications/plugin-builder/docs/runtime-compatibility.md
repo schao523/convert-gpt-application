@@ -30,11 +30,11 @@ The repository-local implementation directly exercises T1–T6, pause/resume/can
 
 | Gate | Command or observation | Result |
 | --- | --- | --- |
-| Product contracts | `python -B -m unittest discover -s applications/plugin-builder/tests -v` | PASS: 146 tests; one native-symlink test skipped because Windows lacks the required privilege, with reparse classification covered separately |
+| Product contracts | `python -B -m unittest discover -s applications/plugin-builder/tests -v` | PASS: 151 tests; one native-symlink test skipped because Windows lacks the required privilege, with reparse classification covered separately |
 | Repository discovery | `python -B -m unittest tests.test_application_config tests.test_agents_contract -v` | PASS: 10 tests |
 | Plugin structure | framework `validate_plugin_tree` on source and extracted install artifact, plus installed Plugin Creator 0.1.22 package-format review | PASS: both executable validations returned no issues; the Plugin Creator review is a static contract review, not a separate executable validator |
 | Skill structure | installed Skill Creator `quick_validate.py` for each of four source skills and each extracted-artifact skill | PASS: 8 of 8 |
-| Framework | `python -B -m unittest discover -s tests/framework -v` | PASS: 301 tests; 2 platform skips |
+| Framework | `python -B -m unittest discover -s tests/framework -v` | PASS: 302 tests; 2 platform skips |
 | Configured verification | `python -B scripts/verify_extraction.py --application plugin-builder` | PASS: provenance, product commands, local Codex build, deterministic schema-v3 package builds, verification, and repository gates |
 | Generated Codex artifact | two isolated `build_marketplace_release.py` builds, deterministic portable-envelope ZIP/runtime-kit construction, extracted plugin/skill validation, and T7 | PASS: 55 members under one `plugin-builder/` directory, synchronized root and compatibility manifests, no forbidden internal members, byte-identical install ZIP/normalized fixture/report/runtime kit, standalone create/update execution |
 | Generated create/update plugins | extracted T7-style create and update ZIPs validated with framework `validate_plugin_tree` and installed Skill Creator `quick_validate.py` | PASS: both plugin trees returned no issues and both generated skills passed |
@@ -47,6 +47,6 @@ No marketplace installation, publication, or release is authorized or recorded f
 
 ## Installed-runtime completion boundary
 
-The exact replay contract is tracked at `tests/runtime/T1-T7-runtime-scenarios.md` with a machine-checkable result schema. A self-contained runtime kit and deterministic installable ZIP are generated under `dist/plugin-builder` for decision-owner testing. This development task can verify the generated artifact in an isolated clean process, but it cannot infer installed plugin discovery or ChatGPT Work execution from that local copy.
+The exact replay contract is tracked at `tests/runtime/T1-T7-runtime-scenarios.md` with a machine-checkable result schema. A self-contained runtime kit and deterministic installable ZIP are generated under `dist/plugin-builder` for decision-owner testing. The kit includes raw legacy and canonical handoffs, exact T3/T5/T6 proposals, and a deterministic helper that derives the T4 baseline and update plan from the T2 ZIP. This development task can verify the generated artifact in an isolated clean process, but it cannot infer installed plugin discovery or ChatGPT Work execution from that local copy.
 
 Current compatibility classification: `CONDITIONALLY PORTABLE`. Current completion state: `CONVERSION COMPLETE — RUNTIME VALIDATION PENDING`. Codex installed-plugin and ChatGPT Work Local/Desktop application rows stay `NOT VERIFIED`; runtime-native and MCP tool execution also stays `NOT VERIFIED` unless the named capability or service is actually authorized and observed. Publication remains `NOT PERFORMED`.

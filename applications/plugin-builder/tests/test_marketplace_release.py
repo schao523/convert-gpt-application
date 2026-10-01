@@ -132,6 +132,23 @@ class MarketplaceReleaseTests(unittest.TestCase):
                 release.build_release(copied, destination, "9.9.9")
             self.assertFalse(destination.exists())
 
+    def test_release_applies_full_manifest_pair_validation_before_mutation(self) -> None:
+        release = load_release()
+        with tempfile.TemporaryDirectory(dir=TEMP_ROOT) as temp:
+            temp_root = Path(temp)
+            copied = temp_root / "source"
+            shutil.copytree(ROOT, copied)
+            destination = temp_root / "marketplace"
+            manifest_path = copied / ".codex-plugin" / "plugin.json"
+            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+            manifest["author"] = {"name": "Different Author"}
+            manifest["mcpServers"] = {"undeclared": {}}
+            manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+
+            with self.assertRaisesRegex(ValueError, "manifest pair validation failed"):
+                release.build_release(copied, destination, "0.1.1")
+            self.assertFalse(destination.exists())
+
             manifest_path = copied / ".codex-plugin" / "plugin.json"
             manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
             manifest["name"] = "wrong-plugin"

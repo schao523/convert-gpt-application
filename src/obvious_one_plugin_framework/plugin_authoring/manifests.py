@@ -37,6 +37,7 @@ _INTERFACE_KEYS = (
     "longDescription",
     "shortDescription",
 )
+_OVERLAY_KEYS = set(_COMMON_KEYS) | {"interface", "skills"}
 
 
 @dataclass(frozen=True)
@@ -96,6 +97,8 @@ def manifest_pair_mismatches(
     overlay: Mapping[str, Any],
 ) -> tuple[str, ...]:
     mismatches: set[str] = set()
+    for key in set(overlay) - _OVERLAY_KEYS:
+        mismatches.add(f"overlay.{key}")
     try:
         interface = _portable_interface(portable)
     except PluginAuthoringError:

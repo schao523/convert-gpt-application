@@ -3,7 +3,11 @@ from __future__ import annotations
 import json
 from pathlib import Path
 import re
+import subprocess
+import sys
+import tempfile
 import unittest
+import zipfile
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -30,6 +34,29 @@ class RuntimeEvidenceContractTests(unittest.TestCase):
         states = set(schema["$defs"]["evidence_state"]["enum"])
         self.assertEqual(states, {"EXPECTED", "STATICALLY VERIFIED", "RUNTIME VERIFIED", "NOT VERIFIED", "NOT APPLICABLE"})
         self.assertEqual(schema["properties"]["scenarios"]["minItems"], 7)
+
+    def test_runtime_scenario_preparer_emits_exact_t3_t4_t5_t6_inputs(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            baseline = root / "t2.zip"
+            with zipfile.ZipFile(baseline, "w") as archive:
+                archive.writestr("sample-plugin/plugin.json", "{}")
+            completed = subprocess.run(
+                [sys.executable, "-B", str(RUNTIME / "prepare-runtime-scenarios.py"),
+                 "--base-plan", str(ROOT / "tests/fixtures/plan-create.json"),
+                 "--baseline", str(baseline), "--output", str(root / "out")],
+                capture_output=True, text=True, encoding="utf-8", check=False,
+            )
+            self.assertEqual(completed.returncode, 0, completed.stderr)
+            self.assertEqual(json.loads(completed.stdout)["status"], "PASS")
+            expected = {
+                "t3-unresolved-plan.json", "t4-update-baseline.zip", "t4-update-plan.json",
+                "t5-failing-tool-plan.json", "t6-runtime-native-plan.json",
+            }
+            self.assertEqual({item.name for item in (root / "out").iterdir()}, expected)
+            self.assertEqual(json.loads((root / "out/t4-update-plan.json").read_text())["operation"], "update")
+            with zipfile.ZipFile(root / "out/t4-update-baseline.zip") as archive:
+                self.assertEqual(archive.read("sample-plugin/owner-notes.txt"), b"owner bytes\x00preserved")
 
     def test_pending_installed_runtime_evidence_is_not_upgraded(self) -> None:
         compatibility = (ROOT / "docs/runtime-compatibility.md").read_text(encoding="utf-8")

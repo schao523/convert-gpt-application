@@ -169,8 +169,12 @@ def build_runtime_evidence_bundle(result_path: Path, evidence_root: Path, destin
             for digest in sorted(required):
                 source = indexed[digest][0]
                 relative = f"evidence/{source.name}"
-                shutil.copyfile(source, stage / relative)
-                evidence_records.append({"path": relative, "sha256": digest, "size": source.stat().st_size})
+                staged = stage / relative
+                shutil.copyfile(source, staged)
+                staged_bytes = staged.read_bytes()
+                if sha256(staged_bytes).hexdigest() != digest:
+                    return EvidenceBundleOutcome("FAIL", (f"evidence.digest_mismatch:{digest}",))
+                evidence_records.append({"path": relative, "sha256": digest, "size": len(staged_bytes)})
             result_relative = f"results/{result_digest}.json"
             (stage / result_relative).write_bytes(result_bytes)
             index = {

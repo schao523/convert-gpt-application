@@ -11,8 +11,15 @@ import os
 from pathlib import Path
 import shutil
 import stat
+import sys
 from tempfile import TemporaryDirectory
 from typing import NamedTuple
+
+_SCRIPTS_ROOT = Path(__file__).resolve().parent
+if str(_SCRIPTS_ROOT) not in sys.path:
+    sys.path.insert(0, str(_SCRIPTS_ROOT))
+
+from plugin_builder_core.bootstrap import plugin_authoring
 
 
 PLUGIN_ID = "plugin-builder"
@@ -180,6 +187,12 @@ def build_release(source: Path, destination: Path, version: str) -> ReleaseRepor
         or portable.get("extensions", {}).get("com.openai", {}).get("interface") != manifest.get("interface")
     ):
         raise ValueError("plugin identity or version mismatch")
+    manifest_issues = plugin_authoring.validate_manifest_pair(source)
+    if manifest_issues:
+        details = ", ".join(
+            f"{item.code}:{item.path}:{item.detail}" for item in manifest_issues
+        )
+        raise ValueError(f"manifest pair validation failed: {details}")
 
     rights_evidence = source / "docs" / "source-decisions.md"
     try:

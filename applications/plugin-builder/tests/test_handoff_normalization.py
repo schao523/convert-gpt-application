@@ -103,6 +103,30 @@ class HandoffNormalizationTests(unittest.TestCase):
         outcome = self.normalize(self.legacy_source(mutate))
         self.assertEqual(outcome.status, "BLOCKED")
 
+    def test_malformed_authority_metadata_never_establishes_approval(self) -> None:
+        mutations = (
+            lambda payload, source: payload["included_artifacts"][0].__setitem__("artifact_id", ""),
+            lambda payload, source: payload["included_artifacts"][0].__setitem__("provenance", ""),
+            lambda payload, source: payload["included_artifacts"][0].__setitem__("state", "draft"),
+            lambda payload, source: payload["included_artifacts"][0].__setitem__("version", 11),
+        )
+        for index, mutate in enumerate(mutations):
+            with self.subTest(index=index):
+                outcome = self.normalize(self.legacy_source(mutate), f"bad-authority-{index}")
+                self.assertEqual(outcome.status, "BLOCKED")
+                self.assertTrue(any("artifact_" in item for item in outcome.diagnostics))
+
+    def test_malformed_owner_decisions_never_default_to_non_blocking(self) -> None:
+        malformed = ("not-a-list", ["not-an-object"], [{"decision_id": "D1", "blocking": "false"}])
+        for index, decisions in enumerate(malformed):
+            with self.subTest(index=index):
+                outcome = self.normalize(
+                    self.legacy_source(lambda payload, source, value=decisions: payload.__setitem__("unresolved_owner_decisions", value)),
+                    f"bad-decisions-{index}",
+                )
+                self.assertEqual(outcome.status, "BLOCKED")
+                self.assertTrue(any("owner_decision" in item for item in outcome.diagnostics))
+
     def test_filename_approved_does_not_establish_approval(self) -> None:
         outcome = self.normalize(self.legacy_source(lambda payload, source: payload.__setitem__("specification_state", "draft")))
         self.assertEqual(outcome.status, "BLOCKED")

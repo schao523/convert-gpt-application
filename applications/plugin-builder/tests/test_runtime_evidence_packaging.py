@@ -7,6 +7,7 @@ import sys
 import subprocess
 import tempfile
 import unittest
+from unittest import mock
 import zipfile
 
 
@@ -91,6 +92,19 @@ class RuntimeEvidencePackagingTests(unittest.TestCase):
         self.assertEqual(build_runtime_evidence_bundle(self.result, self.evidence, first).status, "PASS")
         self.assertEqual(build_runtime_evidence_bundle(self.result, self.evidence, second).status, "PASS")
         self.assertEqual(first.read_bytes(), second.read_bytes())
+
+    def test_source_replacement_during_copy_cannot_produce_a_false_pass(self) -> None:
+        real_copy = __import__("shutil").copyfile
+
+        def replace_then_copy(source, destination):
+            Path(source).write_bytes(b"replacement after validation\n")
+            return real_copy(source, destination)
+
+        with mock.patch("plugin_builder_core.evidence.shutil.copyfile", side_effect=replace_then_copy):
+            outcome = build_runtime_evidence_bundle(self.result, self.evidence, self.root / "raced.zip")
+        self.assertEqual(outcome.status, "FAIL")
+        self.assertIn(f"evidence.digest_mismatch:{self.digest}", outcome.errors)
+        self.assertFalse((self.root / "raced.zip").exists())
 
     def test_failed_rebuild_preserves_previous_valid_bundle(self) -> None:
         destination = self.root / "bundle.zip"
