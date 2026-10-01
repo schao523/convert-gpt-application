@@ -9,9 +9,19 @@ from .archive import (
     inventory_archive,
 )
 from .identity import TreeMember, tree_manifest, tree_sha256, write_deterministic_zip
+from .manifests import (
+    PORTABLE_PLUGIN_SCHEMA,
+    ManifestPairIdentity,
+    legacy_overlay_from_portable,
+    manifest_pair_mismatches,
+    materialize_manifest_pair,
+    portable_manifest_from_legacy,
+)
 from .validation import (
     ValidationIssue,
+    validate_manifest_pair,
     validate_plugin_tree,
+    validate_portable_manifest,
     validate_reference_closure,
     validate_skill_tree,
 )
@@ -29,8 +39,16 @@ __all__ = [
     "tree_manifest",
     "tree_sha256",
     "write_deterministic_zip",
+    "PORTABLE_PLUGIN_SCHEMA",
+    "ManifestPairIdentity",
+    "legacy_overlay_from_portable",
+    "manifest_pair_mismatches",
+    "materialize_manifest_pair",
+    "portable_manifest_from_legacy",
     "ValidationIssue",
+    "validate_manifest_pair",
     "validate_plugin_tree",
+    "validate_portable_manifest",
     "validate_reference_closure",
     "validate_skill_tree",
     "ApplicationToolContract",

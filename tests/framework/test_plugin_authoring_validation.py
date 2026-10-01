@@ -39,26 +39,43 @@ class PluginAuthoringValidationTests(unittest.TestCase):
 
     def valid_manifest(self) -> dict[str, object]:
         return {
+            "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
             "name": "sample-plugin",
             "version": "1.2.3",
             "description": "A portable sample plugin.",
             "author": {"name": "Example Developer"},
-            "skills": "./skills/",
-            "interface": {
-                "displayName": "Sample Plugin",
-                "shortDescription": "A portable sample.",
-                "longDescription": "A portable sample plugin used to exercise the authoring contract.",
-                "developerName": "Example Developer",
-                "category": "Productivity",
-                "capabilities": ["Interactive", "Read"],
-                "defaultPrompt": "Help me use the sample plugin.",
-                "iconSmall": "./assets/icon-small.png",
+            "extensions": {
+                "com.openai": {
+                    "interface": {
+                        "displayName": "Sample Plugin",
+                        "shortDescription": "Portable sample",
+                        "longDescription": "A portable sample plugin used to exercise the authoring contract.",
+                        "developerName": "Example Developer",
+                        "category": "Productivity",
+                        "capabilities": ["Interactive", "Read"],
+                        "defaultPrompt": "Help me use the sample plugin.",
+                        "iconSmall": "./assets/icon-small.png",
+                    }
+                }
             },
         }
 
     def test_plugin_validator_matches_creator_contract_for_supported_shape(self) -> None:
         manifest = self.valid_manifest()
-        self.write(".codex-plugin/plugin.json", json.dumps(manifest))
+        self.write("plugin.json", json.dumps(manifest))
+        self.write(
+            ".codex-plugin/plugin.json",
+            json.dumps(
+                {
+                    "name": manifest["name"],
+                    "version": manifest["version"],
+                    "description": manifest["description"],
+                    "author": manifest["author"],
+                    "skills": "./skills/",
+                    "interface": manifest["extensions"]["com.openai"]["interface"],  # type: ignore[index]
+                }
+            ),
+        )
         self.write("assets/icon-small.png", "image")
         self.write_skill("first-skill", "Perform the first supported user workflow.")
         self.write_skill("second-skill", "Perform the second supported user workflow.")
@@ -66,11 +83,11 @@ class PluginAuthoringValidationTests(unittest.TestCase):
         self.assertEqual(validate_plugin_tree(self.root), ())
 
         manifest["surprise"] = True
-        manifest["interface"]["iconSmall"] = "C:/private/icon.png"  # type: ignore[index]
-        self.write(".codex-plugin/plugin.json", json.dumps(manifest))
+        manifest["extensions"]["com.openai"]["interface"]["iconSmall"] = "C:/private/icon.png"  # type: ignore[index]
+        self.write("plugin.json", json.dumps(manifest))
         issues = validate_plugin_tree(self.root)
-        self.assertIn("plugin_manifest_unknown_key", self.codes(issues))
-        self.assertIn("plugin_asset_path_invalid", self.codes(issues))
+        self.assertIn("portable_manifest_unknown_key", self.codes(issues))
+        self.assertIn("portable_asset_path_invalid", self.codes(issues))
 
     def test_skill_validator_rejects_invalid_frontmatter_and_placeholders(self) -> None:
         self.write(

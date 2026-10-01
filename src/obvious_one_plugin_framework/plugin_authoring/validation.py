@@ -8,21 +8,28 @@ from pathlib import Path, PurePosixPath
 import re
 from urllib.parse import unquote, urlsplit
 
+from .manifests import PORTABLE_PLUGIN_SCHEMA, manifest_pair_mismatches
 
-_PLUGIN_KEYS = {
-    "apps",
+
+_PORTABLE_PLUGIN_KEYS = {
+    "$schema",
     "author",
+    "brandColor",
+    "brandColorDark",
+    "composerIcon",
+    "composerIconDark",
     "description",
+    "extensions",
     "homepage",
-    "interface",
     "keywords",
     "license",
-    "mcpServers",
+    "logo",
+    "logoDark",
     "name",
     "repository",
-    "skills",
     "version",
 }
+_PORTABLE_FORBIDDEN_KEYS = {"apps", "interface", "mcpServers", "skills"}
 _INTERFACE_KEYS = {
     "capabilities",
     "category",
@@ -162,32 +169,48 @@ def validate_skill_tree(root: Path) -> tuple[ValidationIssue, ...]:
     return _sorted_unique(issues)
 
 
-def _validate_manifest(root: Path) -> list[ValidationIssue]:
-    issues: list[ValidationIssue] = []
-    path = root / ".codex-plugin" / "plugin.json"
-    relative = ".codex-plugin/plugin.json"
+def _load_manifest(path: Path, relative: str, missing: str, invalid: str) -> tuple[dict[str, object] | None, list[ValidationIssue]]:
     try:
         payload = json.loads(path.read_text(encoding="utf-8"))
     except FileNotFoundError:
-        return [_issue("plugin_manifest_missing", relative)]
+        return None, [_issue(missing, relative)]
     except (OSError, UnicodeError, json.JSONDecodeError):
-        return [_issue("plugin_manifest_invalid", relative)]
+        return None, [_issue(invalid, relative)]
     if not isinstance(payload, dict):
-        return [_issue("plugin_manifest_invalid", relative)]
-    for unknown in sorted(set(payload) - _PLUGIN_KEYS):
-        issues.append(_issue("plugin_manifest_unknown_key", relative, unknown))
-    for required in ("name", "version", "description", "author", "skills", "interface"):
+        return None, [_issue(invalid, relative)]
+    return payload, []
+
+
+def validate_portable_manifest(root: Path) -> tuple[ValidationIssue, ...]:
+    issues: list[ValidationIssue] = []
+    plugin_root = Path(root)
+    relative = "plugin.json"
+    payload, load_issues = _load_manifest(
+        plugin_root / relative,
+        relative,
+        "portable_manifest_missing",
+        "portable_manifest_invalid",
+    )
+    if payload is None:
+        return tuple(load_issues)
+    for forbidden in sorted(set(payload) & _PORTABLE_FORBIDDEN_KEYS):
+        issues.append(_issue("portable_manifest_forbidden_key", relative, forbidden))
+    for unknown in sorted(set(payload) - _PORTABLE_PLUGIN_KEYS - _PORTABLE_FORBIDDEN_KEYS):
+        issues.append(_issue("portable_manifest_unknown_key", relative, unknown))
+    if payload.get("$schema") != PORTABLE_PLUGIN_SCHEMA:
+        issues.append(_issue("portable_manifest_schema_invalid", relative))
+    for required in ("name", "version", "description", "author", "extensions"):
         if required not in payload:
-            issues.append(_issue("plugin_manifest_required_key_missing", relative, required))
+            issues.append(_issue("portable_manifest_required_key_missing", relative, required))
     name = payload.get("name")
     if not isinstance(name, str) or len(name) > 64 or _NAME.fullmatch(name) is None:
-        issues.append(_issue("plugin_name_invalid", relative))
+        issues.append(_issue("portable_name_invalid", relative))
     version = payload.get("version")
     if not isinstance(version, str) or _SEMVER.fullmatch(version) is None:
-        issues.append(_issue("plugin_version_invalid", relative))
+        issues.append(_issue("portable_version_invalid", relative))
     description = payload.get("description")
     if not isinstance(description, str) or not description.strip():
-        issues.append(_issue("plugin_description_invalid", relative))
+        issues.append(_issue("portable_description_invalid", relative))
     author = payload.get("author")
     if not (
         isinstance(author, dict)
@@ -195,31 +218,77 @@ def _validate_manifest(root: Path) -> list[ValidationIssue]:
         and isinstance(author.get("name"), str)
         and author["name"].strip()
     ):
-        issues.append(_issue("plugin_author_invalid", relative))
-    if payload.get("skills") != "./skills/":
-        issues.append(_issue("plugin_skills_path_invalid", relative))
-    interface = payload.get("interface")
+        issues.append(_issue("portable_author_invalid", relative))
+    extensions = payload.get("extensions")
+    if not isinstance(extensions, dict) or not isinstance(extensions.get("com.openai"), dict):
+        issues.append(_issue("portable_openai_extension_missing", relative))
+        return _sorted_unique(issues)
+    interface = extensions["com.openai"].get("interface")
     if not isinstance(interface, dict):
-        issues.append(_issue("plugin_interface_invalid", relative))
-        return issues
+        issues.append(_issue("portable_interface_invalid", relative))
+        return _sorted_unique(issues)
     for unknown in sorted(set(interface) - _INTERFACE_KEYS):
-        issues.append(_issue("plugin_interface_unknown_key", relative, unknown))
+        issues.append(_issue("portable_interface_unknown_key", relative, unknown))
     for required in sorted(_REQUIRED_INTERFACE_KEYS):
         value = interface.get(required)
         if required == "capabilities":
             if not isinstance(value, list) or not value or any(not isinstance(item, str) or not item for item in value):
-                issues.append(_issue("plugin_interface_invalid", relative, required))
+                issues.append(_issue("portable_interface_invalid", relative, required))
+        elif required == "defaultPrompt":
+            valid_prompt = isinstance(value, str) and bool(value.strip())
+            valid_prompts = (
+                isinstance(value, list)
+                and 1 <= len(value) <= 3
+                and all(isinstance(item, str) and item.strip() for item in value)
+            )
+            if not valid_prompt and not valid_prompts:
+                issues.append(_issue("portable_interface_invalid", relative, required))
         elif not isinstance(value, str) or not value.strip():
-            issues.append(_issue("plugin_interface_invalid", relative, required))
+            issues.append(_issue("portable_interface_invalid", relative, required))
+    short = interface.get("shortDescription")
+    if isinstance(short, str) and len(short) > 30:
+        issues.append(_issue("portable_short_description_too_long", relative))
     for key in ("iconSmall", "iconLarge"):
         if key not in interface:
             continue
         safe = _safe_relative_path(interface[key])
-        if safe is None or not (root / Path(*PurePosixPath(safe).parts)).is_file():
-            issues.append(_issue("plugin_asset_path_invalid", relative, key))
+        if safe is None or not (plugin_root / Path(*PurePosixPath(safe).parts)).is_file():
+            issues.append(_issue("portable_asset_path_invalid", relative, key))
+    for key in ("logo", "logoDark", "composerIcon", "composerIconDark"):
+        if key not in payload:
+            continue
+        safe = _safe_relative_path(payload[key])
+        if safe is None or not (plugin_root / Path(*PurePosixPath(safe).parts)).is_file():
+            issues.append(_issue("portable_asset_path_invalid", relative, key))
     if _UNFINISHED.search(json.dumps(payload, ensure_ascii=False)):
         issues.append(_issue("unfinished_scaffold_marker", relative))
-    return issues
+    return _sorted_unique(issues)
+
+
+def validate_manifest_pair(root: Path) -> tuple[ValidationIssue, ...]:
+    plugin_root = Path(root)
+    issues = list(validate_portable_manifest(plugin_root))
+    overlay_path = plugin_root / ".codex-plugin" / "plugin.json"
+    if not overlay_path.exists():
+        return _sorted_unique(issues)
+    portable, portable_issues = _load_manifest(
+        plugin_root / "plugin.json",
+        "plugin.json",
+        "portable_manifest_missing",
+        "portable_manifest_invalid",
+    )
+    overlay, overlay_issues = _load_manifest(
+        overlay_path,
+        ".codex-plugin/plugin.json",
+        "compatibility_overlay_missing",
+        "compatibility_overlay_invalid",
+    )
+    issues.extend(portable_issues)
+    issues.extend(overlay_issues)
+    if portable is not None and overlay is not None:
+        for mismatch in manifest_pair_mismatches(portable, overlay):
+            issues.append(_issue("manifest_pair_mismatch", ".codex-plugin/plugin.json", mismatch))
+    return _sorted_unique(issues)
 
 
 def _markdown_targets(text: str) -> tuple[str, ...]:
@@ -322,7 +391,7 @@ def validate_plugin_tree(root: Path) -> tuple[ValidationIssue, ...]:
     plugin_root = Path(root)
     if not plugin_root.is_dir():
         return (_issue("plugin_root_missing"),)
-    issues = _validate_manifest(plugin_root)
+    issues = list(validate_manifest_pair(plugin_root))
     issues.extend(validate_skill_tree(plugin_root))
     issues.extend(validate_reference_closure(plugin_root))
     return _sorted_unique(issues)
