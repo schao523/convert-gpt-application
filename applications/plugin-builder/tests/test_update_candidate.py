@@ -30,13 +30,14 @@ class UpdateCandidateTests(unittest.TestCase):
     def tearDown(self) -> None:
         self.temporary.cleanup()
 
-    def _archive_tree(self, source: Path, destination: Path) -> None:
+    def _archive_tree(self, source: Path, destination: Path, *, prefix: str | None = None) -> None:
         with zipfile.ZipFile(destination, "w", compression=zipfile.ZIP_DEFLATED) as archive:
             for path in sorted(source.rglob("*")):
                 if path.is_file():
-                    archive.write(path, path.relative_to(source).as_posix())
+                    relative = path.relative_to(source).as_posix()
+                    archive.write(path, relative if prefix is None else f"{prefix}/{relative}")
 
-    def _prepare(self, *, keep_unrelated: bool = True, remove_unrelated: bool = False, identity: str = "sample-plugin") -> Path:
+    def _prepare(self, *, keep_unrelated: bool = True, remove_unrelated: bool = False, identity: str = "sample-plugin", wrapped: bool = False) -> Path:
         index = len(list(self.root.glob("create-*")))
         create_root = self.root / f"create-{index}"
         create_root.mkdir()
@@ -46,7 +47,7 @@ class UpdateCandidateTests(unittest.TestCase):
         baseline_tree = create / "candidate"
         (baseline_tree / "owner-notes.txt").write_bytes(b"owner bytes\r\nunchanged\x00")
         baseline_zip = self.root / f"baseline-{index}.zip"
-        self._archive_tree(baseline_tree, baseline_zip)
+        self._archive_tree(baseline_tree, baseline_zip, prefix="sample-plugin" if wrapped else None)
 
         design_zip = create_root / "design.zip"
         workspace = self.root / f"update-{index}"
@@ -86,6 +87,27 @@ class UpdateCandidateTests(unittest.TestCase):
         changes = json.loads((workspace / "candidate/PLUGIN-BUILDER-CHANGES.json").read_text(encoding="utf-8"))
         self.assertIn("owner-notes.txt", changes["preserved"])
         self.assertIn("skills/checking-traceability/SKILL.md", changes["changed"])
+
+    def test_wrapped_update_baseline_preserves_unrelated_plugin_relative_bytes(self) -> None:
+        workspace = self._prepare(wrapped=True)
+        before = (workspace / "baseline/owner-notes.txt").read_bytes()
+        completed = run_cli("build", "--session", str(workspace / "session.json"), "--json")
+        self.assertEqual(completed.returncode, 0, completed.stdout)
+        self.assertEqual((workspace / "candidate/owner-notes.txt").read_bytes(), before)
+
+    def test_legacy_flat_baseline_is_migrated_to_wrapped_output(self) -> None:
+        workspace = self._prepare()
+        self.assertEqual(run_cli("build", "--session", str(workspace / "session.json"), "--json").returncode, 0)
+        self.assertEqual(run_cli("verify", "--session", str(workspace / "session.json"), "--json").returncode, 0)
+        approved = run_cli(
+            "approve-w2", "--session", str(workspace / "session.json"),
+            "--confirmed-by", "owner", "--evidence", "reviewed update evidence", "--json",
+        )
+        self.assertEqual(approved.returncode, 0, approved.stdout)
+        packaged = run_cli("package", "--session", str(workspace / "session.json"), "--json")
+        self.assertEqual(packaged.returncode, 0, packaged.stdout)
+        with zipfile.ZipFile(workspace / "dist/sample-plugin.zip") as archive:
+            self.assertTrue(all(name.startswith("sample-plugin/") for name in archive.namelist()))
 
     def test_update_adds_portable_manifest_to_legacy_baseline(self) -> None:
         workspace = self._prepare()

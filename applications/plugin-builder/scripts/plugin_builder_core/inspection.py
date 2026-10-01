@@ -8,6 +8,7 @@ import json
 import os
 from pathlib import Path
 import re
+import shutil
 import tempfile
 from typing import Any
 
@@ -125,6 +126,7 @@ def inspect_design_package(
     except PluginAuthoringError as error:
         return InspectionOutcome("FAIL", "F1", (f"package.{error.code}",))
     baseline_inventory = None
+    baseline_profile = None
     if baseline is not None:
         try:
             baseline_inventory = inventory_archive(Path(baseline))
@@ -154,7 +156,14 @@ def inspect_design_package(
         stage.mkdir()
         extract_archive(Path(design_package), stage / "input")
         if baseline is not None:
-            extract_archive(Path(baseline), stage / "baseline")
+            raw_baseline = temporary / "raw-baseline"
+            try:
+                extract_archive(Path(baseline), raw_baseline)
+                located = plugin_authoring.locate_plugin_archive_root(raw_baseline)
+            except PluginAuthoringError as error:
+                return InspectionOutcome("FAIL", "F1", (f"baseline.{error.code}",))
+            baseline_profile = located.profile
+            shutil.copytree(located.path, stage / "baseline", copy_function=shutil.copy2)
 
         errors: list[str] = []
         manifest = _load_json(stage / "input" / "package-manifest.json", "package.manifest_invalid", errors)
@@ -260,6 +269,7 @@ def inspect_design_package(
                 "members": _member_payload(baseline_inventory),
                 "total_bytes": baseline_inventory.total_bytes,
                 "tree_sha256": tree_sha256(stage / "baseline"),
+                "envelope_profile": baseline_profile,
             },
             "diagnostics": sorted(set(errors)),
         }

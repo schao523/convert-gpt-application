@@ -4,9 +4,11 @@ from .archive import (
     ArchiveInventory,
     ArchiveLimits,
     ArchiveMember,
+    LocatedPluginRoot,
     PluginAuthoringError,
     extract_archive,
     inventory_archive,
+    locate_plugin_archive_root,
 )
 from .identity import TreeMember, tree_manifest, tree_sha256, write_deterministic_zip
 from .manifests import (
@@ -32,10 +34,12 @@ __all__ = [
     "ArchiveInventory",
     "ArchiveLimits",
     "ArchiveMember",
+    "LocatedPluginRoot",
     "PluginAuthoringError",
     "TreeMember",
     "extract_archive",
     "inventory_archive",
+    "locate_plugin_archive_root",
     "tree_manifest",
     "tree_sha256",
     "write_deterministic_zip",

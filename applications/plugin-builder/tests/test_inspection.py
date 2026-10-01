@@ -103,6 +103,25 @@ class InspectionTests(unittest.TestCase):
         self.assertIn("baseline.archive_path_escape", self.result(rejected)["errors"])
         self.assertFalse((self.root / "escape.txt").exists())
 
+    def test_wrapped_update_baseline_is_normalized_to_plugin_relative_bytes(self) -> None:
+        archive = self.archive_directory(FIXTURE)
+        baseline = self.root / "wrapped.zip"
+        with zipfile.ZipFile(baseline, "w", compression=zipfile.ZIP_DEFLATED) as output:
+            output.writestr("sample-plugin/plugin.json", "{}\n")
+            output.writestr("sample-plugin/owner-notes.txt", b"owner\x00bytes")
+        workspace = self.root / "wrapped-workspace"
+
+        completed = self.run_cli(
+            "inspect", str(archive), "--workspace", str(workspace),
+            "--operation", "update", "--baseline", str(baseline), "--json",
+        )
+
+        self.assertEqual(completed.returncode, 0, completed.stdout)
+        self.assertEqual((workspace / "baseline/owner-notes.txt").read_bytes(), b"owner\x00bytes")
+        self.assertFalse((workspace / "baseline/sample-plugin").exists())
+        inspection = json.loads((workspace / "inspection.json").read_text(encoding="utf-8"))
+        self.assertEqual(inspection["baseline"]["envelope_profile"], "PORTABLE_SINGLE_DIRECTORY")
+
     def test_inspect_blocks_missing_approval_and_required_resource(self) -> None:
         source = self.root / "source"
         shutil.copytree(FIXTURE, source)

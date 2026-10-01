@@ -7,12 +7,16 @@ from hashlib import sha256
 import json
 import os
 from pathlib import Path
+import re
 import shutil
 import stat
 import tempfile
 import zipfile
 
 from .archive import PluginAuthoringError, _CHUNK_SIZE, _is_link_or_reparse
+
+
+_PLUGIN_PREFIX = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
 
 
 @dataclass(frozen=True)
@@ -61,7 +65,7 @@ def tree_sha256(root: Path) -> str:
     return sha256(encoded).hexdigest()
 
 
-def write_deterministic_zip(root: Path, destination: Path) -> str:
+def write_deterministic_zip(root: Path, destination: Path, *, prefix: str | None = None) -> str:
     tree = Path(root).absolute()
     output = Path(destination).absolute()
     try:
@@ -71,6 +75,8 @@ def write_deterministic_zip(root: Path, destination: Path) -> str:
     else:
         raise PluginAuthoringError("zip_destination_inside_tree")
     manifest = tree_manifest(tree)
+    if prefix is not None and not _PLUGIN_PREFIX.fullmatch(prefix):
+        raise PluginAuthoringError("zip_prefix_invalid", str(prefix))
     output.parent.mkdir(parents=True, exist_ok=True)
     temporary_name: str | None = None
     try:
@@ -84,7 +90,8 @@ def write_deterministic_zip(root: Path, destination: Path) -> str:
         temporary_path = Path(temporary_name)
         with zipfile.ZipFile(temporary_path, "w", compression=zipfile.ZIP_DEFLATED, compresslevel=9) as archive:
             for member in manifest:
-                info = zipfile.ZipInfo(member.path, date_time=(1980, 1, 1, 0, 0, 0))
+                archive_path = member.path if prefix is None else f"{prefix}/{member.path}"
+                info = zipfile.ZipInfo(archive_path, date_time=(1980, 1, 1, 0, 0, 0))
                 info.create_system = 3
                 info.compress_type = zipfile.ZIP_DEFLATED
                 info.external_attr = (stat.S_IFREG | 0o644) << 16

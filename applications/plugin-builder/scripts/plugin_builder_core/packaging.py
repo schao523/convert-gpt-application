@@ -93,7 +93,7 @@ def package_candidate(session_path: Path) -> PackageOutcome:
 
     report = _load(report_path)
     manifest = _load(candidate / "PLUGIN-BUILDER-MANIFEST.json")
-    plugin = _load(candidate / ".codex-plugin/plugin.json")
+    plugin = _load(candidate / "plugin.json")
     if report is None or manifest is None or plugin is None:
         return PackageOutcome("FAIL", ("package.input_manifest_invalid",))
     if any(item.get("required") is True and item.get("state") != "PASS" for item in report.get("checks", [])):
@@ -120,16 +120,22 @@ def package_candidate(session_path: Path) -> PackageOutcome:
         with tempfile.TemporaryDirectory(dir=root, prefix=".package-build-") as temporary_name:
             temporary = Path(temporary_name)
             staged_zip = temporary / f"{name}.zip"
-            archive_sha = plugin_authoring.write_deterministic_zip(candidate, staged_zip)
+            archive_sha = plugin_authoring.write_deterministic_zip(candidate, staged_zip, prefix=name)
             inventory = plugin_authoring.inventory_archive(staged_zip)
             extracted = temporary / "extracted"
             plugin_authoring.extract_archive(staged_zip, extracted)
+            located = plugin_authoring.locate_plugin_archive_root(extracted)
+            if located.profile != "PORTABLE_SINGLE_DIRECTORY":
+                return PackageOutcome("FAIL", ("package.envelope_invalid",))
             candidate_members = {item.path: item.sha256 for item in plugin_authoring.tree_manifest(candidate)}
-            extracted_members = {item.path: item.sha256 for item in plugin_authoring.tree_manifest(extracted)}
-            archive_members = {item.path: item.sha256 for item in inventory.members}
+            extracted_members = {item.path: item.sha256 for item in plugin_authoring.tree_manifest(located.path)}
+            archive_members = {
+                item.path.removeprefix(f"{name}/"): item.sha256 for item in inventory.members
+                if item.path.startswith(f"{name}/")
+            }
             if candidate_members != extracted_members or candidate_members != archive_members:
                 return PackageOutcome("FAIL", ("package.extracted_member_mismatch",))
-            validation = plugin_authoring.validate_plugin_tree(extracted)
+            validation = plugin_authoring.validate_plugin_tree(located.path)
             if validation:
                 return PackageOutcome("FAIL", tuple(f"package.extracted:{item.code}:{item.path}" for item in validation))
             for contract in manifest.get("tool_contracts", []):
@@ -137,10 +143,10 @@ def package_candidate(session_path: Path) -> PackageOutcome:
                 if validated.errors or validated.blockers:
                     return PackageOutcome("FAIL", tuple(f"package.tool:{item}" for item in (*validated.errors, *validated.blockers)))
             forbidden_imports = []
-            for path in extracted.rglob("*.py"):
+            for path in located.path.rglob("*.py"):
                 text = path.read_text(encoding="utf-8", errors="replace")
                 if "obvious_one_plugin_framework" in text or "plugin_builder_core" in text:
-                    forbidden_imports.append(path.relative_to(extracted).as_posix())
+                    forbidden_imports.append(path.relative_to(located.path).as_posix())
             if forbidden_imports:
                 return PackageOutcome("FAIL", tuple(f"package.development_import:{item}" for item in forbidden_imports))
             members_payload = [asdict(item) for item in inventory.members]
@@ -153,6 +159,8 @@ def package_candidate(session_path: Path) -> PackageOutcome:
                 "verification_sha256": verification_id["sha256"],
                 "member_manifest_sha256": member_manifest_sha,
                 "members": members_payload,
+                "candidate_members": [asdict(item) for item in plugin_authoring.tree_manifest(candidate)],
+                "envelope_profile": located.profile,
                 "tool_bindings": manifest.get("tool_bindings", []),
                 "tool_contracts_sha256": sha256(canonical_bytes(manifest.get("tool_contracts", []))).hexdigest(),
                 "extracted_validation": {"state": "PASS", "diagnostics": []},

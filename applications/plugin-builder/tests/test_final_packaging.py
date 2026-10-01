@@ -6,6 +6,7 @@ from pathlib import Path
 import sys
 import tempfile
 import unittest
+import zipfile
 
 
 TESTS = Path(__file__).parent
@@ -75,7 +76,13 @@ class FinalPackagingTests(unittest.TestCase):
         self.assertEqual(archive.read_bytes(), first_bytes)
         self.assertEqual(first_inventory, plugin_authoring.inventory_archive(archive))
         candidate_members = {item.path for item in plugin_authoring.tree_manifest(workspace / "candidate")}
-        self.assertEqual({item.path for item in first_inventory.members}, candidate_members)
+        self.assertEqual(
+            {item.path for item in first_inventory.members},
+            {f"sample-plugin/{item}" for item in candidate_members},
+        )
+        with zipfile.ZipFile(archive) as packaged:
+            self.assertIn("sample-plugin/plugin.json", packaged.namelist())
+            self.assertIn("sample-plugin/.codex-plugin/plugin.json", packaged.namelist())
 
     def test_tool_files_dependencies_and_bindings_match_w2_candidate(self) -> None:
         workspace = self._ready()
@@ -90,7 +97,9 @@ class FinalPackagingTests(unittest.TestCase):
         self.assertEqual(self._package(workspace).returncode, 0)
         extracted = self.root / "extracted"
         plugin_authoring.extract_archive(workspace / "dist/sample-plugin.zip", extracted)
-        self.assertEqual(plugin_authoring.validate_plugin_tree(extracted), ())
+        located = plugin_authoring.locate_plugin_archive_root(extracted)
+        self.assertEqual(located.profile, "PORTABLE_SINGLE_DIRECTORY")
+        self.assertEqual(plugin_authoring.validate_plugin_tree(located.path), ())
         metadata = json.loads((workspace / "dist/package-metadata.json").read_text(encoding="utf-8"))
         self.assertEqual(metadata["extracted_validation"]["state"], "PASS")
         self.assertEqual(metadata["safety_validation"]["state"], "PASS")

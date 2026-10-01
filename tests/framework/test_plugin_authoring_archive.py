@@ -12,6 +12,7 @@ from obvious_one_plugin_framework.plugin_authoring import (
     TreeMember,
     extract_archive,
     inventory_archive,
+    locate_plugin_archive_root,
     tree_manifest,
     tree_sha256,
     write_deterministic_zip,
@@ -160,6 +161,48 @@ class PluginAuthoringArchiveTests(unittest.TestCase):
             for info in archive.infolist():
                 self.assertEqual(info.date_time, (1980, 1, 1, 0, 0, 0))
                 self.assertEqual((info.external_attr >> 16) & 0o777, 0o644)
+
+    def test_deterministic_zip_can_prefix_every_member(self) -> None:
+        tree = self.root / "plugin"
+        tree.mkdir()
+        (tree / "plugin.json").write_bytes(b"{}\n")
+        (tree / "skill.txt").write_bytes(b"skill")
+        first = self.root / "first-prefixed.zip"
+        second = self.root / "second-prefixed.zip"
+
+        self.assertEqual(
+            write_deterministic_zip(tree, first, prefix="sample-plugin"),
+            write_deterministic_zip(tree, second, prefix="sample-plugin"),
+        )
+        with zipfile.ZipFile(first) as archive:
+            self.assertEqual(archive.namelist(), ["sample-plugin/plugin.json", "sample-plugin/skill.txt"])
+
+    def test_locate_plugin_archive_root_accepts_portable_single_directory(self) -> None:
+        extracted = self.root / "portable"
+        plugin = extracted / "sample-plugin"
+        plugin.mkdir(parents=True)
+        (plugin / "plugin.json").write_text("{}", encoding="utf-8")
+        located = locate_plugin_archive_root(extracted)
+        self.assertEqual(located.path, plugin)
+        self.assertEqual(located.profile, "PORTABLE_SINGLE_DIRECTORY")
+
+    def test_locate_plugin_archive_root_accepts_legacy_flat_tree_for_update_only(self) -> None:
+        extracted = self.root / "legacy"
+        (extracted / ".codex-plugin").mkdir(parents=True)
+        (extracted / ".codex-plugin/plugin.json").write_text("{}", encoding="utf-8")
+        located = locate_plugin_archive_root(extracted)
+        self.assertEqual(located.path, extracted)
+        self.assertEqual(located.profile, "LEGACY_FLAT")
+
+    def test_locate_plugin_archive_root_rejects_multiple_top_level_directories(self) -> None:
+        extracted = self.root / "ambiguous"
+        for name in ("one", "two"):
+            (extracted / name).mkdir(parents=True)
+            (extracted / name / "plugin.json").write_text("{}", encoding="utf-8")
+        self.assert_error_code(
+            "plugin_archive_root_ambiguous",
+            lambda: locate_plugin_archive_root(extracted),
+        )
 
 
     def test_inventory_rejects_portable_unicode_trailing_dot_reserved_and_prefix_aliases(self) -> None:

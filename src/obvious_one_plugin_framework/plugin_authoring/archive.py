@@ -61,6 +61,39 @@ class ArchiveInventory:
     total_bytes: int
 
 
+@dataclass(frozen=True)
+class LocatedPluginRoot:
+    path: Path
+    profile: str
+
+
+def _has_plugin_manifest(root: Path) -> bool:
+    return (root / "plugin.json").is_file() or (root / ".codex-plugin" / "plugin.json").is_file()
+
+
+def locate_plugin_archive_root(extracted_root: Path) -> LocatedPluginRoot:
+    """Locate one unambiguous logical plugin root after safe extraction."""
+    root = Path(extracted_root)
+    if not root.is_dir() or _is_link_or_reparse(root):
+        raise PluginAuthoringError("plugin_archive_root_missing")
+    flat = _has_plugin_manifest(root)
+    children = sorted((item for item in root.iterdir() if item.is_dir()), key=lambda item: item.name)
+    wrapped = [
+        item for item in children
+        if item.name != ".codex-plugin" and _has_plugin_manifest(item)
+    ]
+    if flat:
+        if wrapped:
+            raise PluginAuthoringError("plugin_archive_root_ambiguous")
+        return LocatedPluginRoot(root, "LEGACY_FLAT")
+    top_level = list(root.iterdir())
+    if len(top_level) == 1 and len(wrapped) == 1 and top_level[0] == wrapped[0]:
+        return LocatedPluginRoot(wrapped[0], "PORTABLE_SINGLE_DIRECTORY")
+    if len(wrapped) > 1 or top_level:
+        raise PluginAuthoringError("plugin_archive_root_ambiguous")
+    raise PluginAuthoringError("plugin_archive_root_missing")
+
+
 def _hash_file(path: Path) -> str:
     digest = sha256()
     with path.open("rb") as source:
