@@ -26,7 +26,7 @@ Both returned ZIPs were independently checked for their reported SHA-256, exact 
 
 ## Repository-local phase-two verification
 
-The repository-local implementation directly exercises T1–T6, pause/resume/cancel, bundled local tools, optional runtime-native and MCP evidence, deterministic packaging, and T7 from the generated artifact. These results prove local application execution, not installed runtime discovery.
+The repository-local implementation directly exercises T1–T6, pause/resume/cancel, canonical and recognized-legacy intake, bundled local tools, optional runtime-native and MCP evidence, portable wrapped ZIPs, digest-closed evidence packaging, and T7 from the generated artifact. These results prove local application execution, not installed runtime discovery.
 
 | Gate | Command or observation | Result |
 | --- | --- | --- |
@@ -40,7 +40,7 @@ The repository-local implementation directly exercises T1–T6, pause/resume/can
 
 The configured verifier's schema-v3 bundle construction is package-contract evidence only. It is not OpenClaw discovery or execution evidence and does not change OpenClaw from `NOT APPLICABLE` in the approved phase-one scope.
 
-The CLI commands are `status`, `validate-session`, `inspect`, `plan`, `approve-w1`, `resolve-update`, `build`, `verify`, `approve-w2`, `package`, `pause`, `resume`, and `cancel`; each operational command emits one machine-readable result document. Installed-plugin discovery and installed representative execution remain `NOT VERIFIED`.
+The CLI commands are `status`, `validate-session`, `inspect`, `plan`, `approve-w1`, `resolve-update`, `build`, `verify`, `approve-w2`, `package`, `package-runtime-evidence`, `pause`, `resume`, and `cancel`; each operational command emits one machine-readable result document. Installed-plugin discovery, installed representative execution, and application conversation behavior remain `NOT VERIFIED`.
 
 No marketplace installation, publication, or release is authorized or recorded for Plugin Builder.
 

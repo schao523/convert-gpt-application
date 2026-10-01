@@ -18,6 +18,7 @@ from typing import NamedTuple
 PLUGIN_ID = "plugin-builder"
 MARKER = ".plugin-builder-release-root"
 ROOT_FILES = {
+    "plugin.json",
     "README.md",
     "DISTRIBUTION.md",
     "LICENSE",
@@ -31,7 +32,7 @@ PUBLIC_DOCS = {
     "docs/runtime-compatibility.md",
 }
 PREFIXES = {"scripts", "skills"}
-MANIFEST_FILE = ".codex-plugin/plugin.json"
+MANIFEST_FILES = {"plugin.json", ".codex-plugin/plugin.json"}
 VENDOR_PACKAGE = Path("scripts/vendor/obvious_one_plugin_framework/plugin_authoring")
 
 
@@ -86,7 +87,7 @@ def _allowed(relative: Path) -> bool:
     return (
         raw in ROOT_FILES
         or raw in PUBLIC_DOCS
-        or raw == MANIFEST_FILE
+        or raw in MANIFEST_FILES
         or bool(relative.parts and relative.parts[0] in PREFIXES)
     )
 
@@ -171,10 +172,13 @@ def build_release(source: Path, destination: Path, version: str) -> ReleaseRepor
 
     source = Path(source).resolve()
     destination = Path(destination).resolve()
-    manifest = json.loads(
-        (source / ".codex-plugin" / "plugin.json").read_text(encoding="utf-8")
-    )
-    if manifest.get("name") != PLUGIN_ID or manifest.get("version") != version:
+    portable = json.loads((source / "plugin.json").read_text(encoding="utf-8"))
+    manifest = json.loads((source / ".codex-plugin" / "plugin.json").read_text(encoding="utf-8"))
+    if (
+        portable.get("name") != PLUGIN_ID or portable.get("version") != version
+        or manifest.get("name") != PLUGIN_ID or manifest.get("version") != version
+        or portable.get("extensions", {}).get("com.openai", {}).get("interface") != manifest.get("interface")
+    ):
         raise ValueError("plugin identity or version mismatch")
 
     rights_evidence = source / "docs" / "source-decisions.md"

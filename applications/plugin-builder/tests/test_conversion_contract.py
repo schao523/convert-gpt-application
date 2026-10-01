@@ -5,6 +5,8 @@ import subprocess
 import unittest
 import hashlib
 
+from obvious_one_plugin_framework.plugin_authoring import validate_manifest_pair
+
 
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE_PACKAGE_SHA256 = "8edde15b6bd0e658990c3a354b85ea90b93bfa1c17216c7b11928f8284c3f497"
@@ -19,6 +21,7 @@ class ConversionContractTests(unittest.TestCase):
     def test_identity_scope_and_provenance_are_explicit(self) -> None:
         config = load_json("conversion.json")
         manifest = load_json(".codex-plugin/plugin.json")
+        portable = load_json("plugin.json")
         scope = load_json("docs/phase-one-scope.json")
         inventory = load_json("docs/source-inventory.json")
         runtime = (ROOT / "docs/runtime-compatibility.md").read_text(encoding="utf-8")
@@ -31,7 +34,11 @@ class ConversionContractTests(unittest.TestCase):
             "approved-design-internal",
         )
         self.assertEqual(manifest["name"], "plugin-builder")
-        self.assertEqual(manifest["version"], "0.1.0")
+        self.assertEqual(manifest["version"], "0.1.1")
+        self.assertEqual(portable["$schema"], "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json")
+        self.assertEqual((portable["name"], portable["version"]), (manifest["name"], manifest["version"]))
+        self.assertEqual(portable["extensions"]["com.openai"]["interface"], manifest["interface"])
+        self.assertEqual(validate_manifest_pair(ROOT), ())
 
         self.assertEqual(scope["scope"], "OPENAI_ONLY_PHASE_ONE")
         self.assertEqual(scope["source_package_sha256"], SOURCE_PACKAGE_SHA256)

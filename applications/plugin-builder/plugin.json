@@ -1,0 +1,26 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "author": {
+    "name": "Obvious One"
+  },
+  "description": "Build and update local OpenAI plugins from approved design packages.",
+  "extensions": {
+    "com.openai": {
+      "interface": {
+        "capabilities": [
+          "Interactive",
+          "Read",
+          "Write"
+        ],
+        "category": "Productivity",
+        "defaultPrompt": "Help me build or update a plugin from an approved design package.",
+        "developerName": "Obvious One",
+        "displayName": "Plugin Builder",
+        "longDescription": "Plugin Builder guides approved design intake, implementation planning, deterministic local construction, validation, and packaging for OpenAI phase-one runtimes.",
+        "shortDescription": "Build verified plugins"
+      }
+    }
+  },
+  "name": "plugin-builder",
+  "version": "0.1.1"
+}

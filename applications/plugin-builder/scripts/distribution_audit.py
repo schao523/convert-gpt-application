@@ -10,6 +10,7 @@ import re
 
 
 ROOT_FILES = {
+    "plugin.json",
     "README.md",
     "DISTRIBUTION.md",
     "LICENSE",
@@ -25,13 +26,14 @@ PUBLIC_DOCS = {
     "docs/runtime-compatibility.md",
 }
 PREFIXES = {"scripts", "skills"}
-MANIFEST_FILE = ".codex-plugin/plugin.json"
+MANIFEST_FILES = {"plugin.json", ".codex-plugin/plugin.json"}
 VENDOR_FILES = {
     "scripts/vendor/obvious_one_plugin_framework/__init__.py",
     "scripts/vendor/obvious_one_plugin_framework/plugin_authoring/__init__.py",
     "scripts/vendor/obvious_one_plugin_framework/plugin_authoring/archive.py",
     "scripts/vendor/obvious_one_plugin_framework/plugin_authoring/identity.py",
     "scripts/vendor/obvious_one_plugin_framework/plugin_authoring/materialize.py",
+    "scripts/vendor/obvious_one_plugin_framework/plugin_authoring/manifests.py",
     "scripts/vendor/obvious_one_plugin_framework/plugin_authoring/tools.py",
     "scripts/vendor/obvious_one_plugin_framework/plugin_authoring/validation.py",
 }
@@ -99,7 +101,7 @@ def _allowed(relative: Path) -> bool:
     return (
         raw in ROOT_FILES
         or raw in PUBLIC_DOCS
-        or raw == MANIFEST_FILE
+        or raw in MANIFEST_FILES
         or bool(relative.parts and relative.parts[0] in PREFIXES)
     )
 

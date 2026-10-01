@@ -1,6 +1,6 @@
 {
   "name": "plugin-builder",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Build and update local OpenAI plugins from approved design packages.",
   "author": {
     "name": "Obvious One"
@@ -8,7 +8,7 @@
   "skills": "./skills/",
   "interface": {
     "displayName": "Plugin Builder",
-    "shortDescription": "Build verified plugins from approved designs.",
+    "shortDescription": "Build verified plugins",
     "longDescription": "Plugin Builder guides approved design intake, implementation planning, deterministic local construction, validation, and packaging for OpenAI phase-one runtimes.",
     "developerName": "Obvious One",
     "category": "Productivity",

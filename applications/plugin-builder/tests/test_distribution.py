@@ -19,6 +19,7 @@ PUBLIC_DOCS = {
     "docs/runtime-compatibility.md",
 }
 ROOT_PUBLIC_FILES = {
+    "plugin.json",
     ".codex-plugin/plugin.json",
     "README.md",
     "DISTRIBUTION.md",
