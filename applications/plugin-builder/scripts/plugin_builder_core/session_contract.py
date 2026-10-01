@@ -436,7 +436,9 @@ def _validate_v2(payload: object) -> list[str]:
         errors.append("approved_spec_sha256.invalid")
 
     inspection = _mapping(session.get("inspection"))
-    if inspection is None or set(inspection) != {"path", "sha256", "package_sha256", "baseline_sha256"}:
+    legacy_inspection_keys = {"path", "sha256", "package_sha256", "baseline_sha256"}
+    normalized_inspection_keys = legacy_inspection_keys | {"normalization"}
+    if inspection is None or frozenset(inspection) not in {frozenset(legacy_inspection_keys), frozenset(normalized_inspection_keys)}:
         errors.append("inspection.invalid_object")
     else:
         if not _v2_path(inspection.get("path")):
@@ -446,6 +448,29 @@ def _validate_v2(payload: object) -> list[str]:
                 errors.append(f"inspection.{key}.invalid")
         if inspection.get("baseline_sha256") is not None and not _sha256(inspection.get("baseline_sha256")):
             errors.append("inspection.baseline_sha256.invalid")
+        if "normalization" in inspection:
+            normalization = _mapping(inspection.get("normalization"))
+            normalization_keys = {
+                "source_sha256", "profile", "normalized_tree_sha256",
+                "normalized_archive_sha256", "report_path", "report_sha256",
+            }
+            if normalization is None or set(normalization) != normalization_keys:
+                errors.append("inspection.normalization.invalid_object")
+            else:
+                profile = normalization.get("profile")
+                if profile not in {"CANONICAL_V1", "LEGACY_WORKBENCH_V1", "UNKNOWN", "AMBIGUOUS"}:
+                    errors.append("inspection.normalization.profile.unsupported")
+                for key in ("source_sha256", "report_sha256"):
+                    if not _sha256(normalization.get(key)):
+                        errors.append(f"inspection.normalization.{key}.invalid")
+                for key in ("normalized_tree_sha256", "normalized_archive_sha256"):
+                    value = normalization.get(key)
+                    if value is None and profile in {"UNKNOWN", "AMBIGUOUS"} and stage == "F1":
+                        continue
+                    if not _sha256(value):
+                        errors.append(f"inspection.normalization.{key}.invalid")
+                if not _v2_path(normalization.get("report_path")):
+                    errors.append("inspection.normalization.report_path.invalid_relative_posix_path")
 
     pending = session.get("pending_decisions")
     if not isinstance(pending, list):

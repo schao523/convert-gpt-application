@@ -51,6 +51,7 @@ def _parser() -> argparse.ArgumentParser:
     inspect.add_argument("--workspace", type=Path, required=True)
     inspect.add_argument("--operation", choices=("create", "update"), required=True)
     inspect.add_argument("--baseline", type=Path)
+    inspect.add_argument("--normalized-package", type=Path)
     inspect.add_argument("--json", action="store_true", required=True)
     plan = subparsers.add_parser("plan")
     plan.add_argument("--session", type=Path, required=True)
@@ -101,6 +102,7 @@ def main(argv: list[str] | None = None) -> int:
                 arguments.workspace,
                 arguments.operation,
                 arguments.baseline,
+                arguments.normalized_package,
             )
         except OSError:
             _emit(operation_document("inspect", "FAIL", ["inspection.local_io_failure"], stage="F1"))

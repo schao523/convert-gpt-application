@@ -14,6 +14,7 @@ import zipfile
 ROOT = Path(__file__).resolve().parents[1]
 SCRIPTS = ROOT / "scripts"
 FIXTURE = Path(__file__).parent / "fixtures" / "design-package-create"
+LEGACY_FIXTURE = Path(__file__).parent / "fixtures" / "design-package-legacy"
 
 
 class InspectionTests(unittest.TestCase):
@@ -27,9 +28,9 @@ class InspectionTests(unittest.TestCase):
     def archive_directory(self, source: Path, name: str = "design.zip") -> Path:
         destination = self.root / name
         with zipfile.ZipFile(destination, "w", compression=zipfile.ZIP_DEFLATED) as archive:
-            for path in sorted(source.iterdir(), key=lambda item: item.name):
+            for path in sorted(source.rglob("*"), key=lambda item: item.relative_to(source).as_posix()):
                 if path.is_file():
-                    archive.write(path, path.name)
+                    archive.write(path, path.relative_to(source).as_posix())
         return destination
 
     def run_cli(self, *arguments: str) -> subprocess.CompletedProcess[str]:
@@ -78,10 +79,81 @@ class InspectionTests(unittest.TestCase):
         self.assertEqual(session["schema_version"], 2)
         self.assertEqual(session["stage"], "S2")
         self.assertEqual(session["inspection"]["path"], "inspection.json")
+        self.assertEqual(session["inspection"]["normalization"]["profile"], "CANONICAL_V1")
         self.assertEqual(session["requirements"], [
             {"id": "AC1", "required": True, "source_paths": ["input/Design_APPROVED.md"]},
             {"id": "RQ1", "required": True, "source_paths": ["input/Design_APPROVED.md", "input/Reference.md"]},
         ])
+
+    def test_inspect_accepts_legacy_package_and_persists_normalization_report(self) -> None:
+        archive = self.archive_directory(LEGACY_FIXTURE, "legacy.zip")
+        workspace = self.root / "legacy-workspace"
+        completed = self.run_cli("inspect", str(archive), "--workspace", str(workspace), "--operation", "create", "--json")
+        self.assertEqual(completed.returncode, 0, completed.stdout)
+        report = json.loads((workspace / "normalization-report.json").read_text(encoding="utf-8"))
+        session = json.loads((workspace / "session.json").read_text(encoding="utf-8"))
+        self.assertEqual(report["profile"], "LEGACY_WORKBENCH_V1")
+        self.assertEqual(session["inspection"]["normalization"]["report_path"], "normalization-report.json")
+        self.assertTrue((workspace / "input/package-manifest.json").is_file())
+
+    def test_inspect_writes_requested_normalized_package(self) -> None:
+        archive = self.archive_directory(LEGACY_FIXTURE, "legacy-output.zip")
+        requested = self.root / "exports" / "normalized.zip"
+        completed = self.run_cli(
+            "inspect", str(archive), "--workspace", str(self.root / "requested-workspace"),
+            "--operation", "create", "--normalized-package", str(requested), "--json",
+        )
+        self.assertEqual(completed.returncode, 0, completed.stdout)
+        self.assertTrue(requested.is_file())
+
+    def test_unknown_package_stays_f1_with_one_decision(self) -> None:
+        source = self.root / "unknown-source"
+        source.mkdir()
+        (source / "APPROVED.md").write_text("name only", encoding="utf-8")
+        workspace = self.root / "unknown-workspace"
+        completed = self.run_cli(
+            "inspect", str(self.archive_directory(source, "unknown.zip")),
+            "--workspace", str(workspace), "--operation", "create", "--json",
+        )
+        self.assertEqual(completed.returncode, 2)
+        session = json.loads((workspace / "session.json").read_text(encoding="utf-8"))
+        self.assertEqual(session["stage"], "F1")
+        self.assertEqual(len(session["pending_decisions"]), 1)
+
+    def test_ambiguous_package_lists_conflicts_without_selecting(self) -> None:
+        source = self.root / "ambiguous-source"
+        shutil.copytree(LEGACY_FIXTURE, source)
+        path = source / "workbench_handoff_manifest.json"
+        payload = json.loads(path.read_text(encoding="utf-8"))
+        duplicate = dict(payload["included_artifacts"][0])
+        duplicate["artifact_id"] = "SPEC-OTHER"
+        payload["included_artifacts"].append(duplicate)
+        path.write_text(json.dumps(payload), encoding="utf-8")
+        workspace = self.root / "ambiguous-workspace"
+        completed = self.run_cli(
+            "inspect", str(self.archive_directory(source, "ambiguous.zip")),
+            "--workspace", str(workspace), "--operation", "create", "--json",
+        )
+        self.assertEqual(completed.returncode, 2)
+        report = json.loads((workspace / "normalization-report.json").read_text(encoding="utf-8"))
+        self.assertEqual(report["profile"], "AMBIGUOUS")
+        self.assertIn("profile.multiple_authoritative_specifications", report["diagnostics"])
+
+    def test_normalized_package_passes_fresh_canonical_inspection(self) -> None:
+        source = self.archive_directory(LEGACY_FIXTURE, "legacy-fresh.zip")
+        normalized = self.root / "normalized-fresh.zip"
+        first = self.run_cli(
+            "inspect", str(source), "--workspace", str(self.root / "first-workspace"),
+            "--operation", "create", "--normalized-package", str(normalized), "--json",
+        )
+        self.assertEqual(first.returncode, 0, first.stdout)
+        second_workspace = self.root / "second-workspace"
+        second = self.run_cli(
+            "inspect", str(normalized), "--workspace", str(second_workspace), "--operation", "create", "--json",
+        )
+        self.assertEqual(second.returncode, 0, second.stdout)
+        report = json.loads((second_workspace / "normalization-report.json").read_text(encoding="utf-8"))
+        self.assertEqual(report["profile"], "CANONICAL_V1")
 
     def test_inspect_update_requires_safe_baseline(self) -> None:
         archive = self.archive_directory(FIXTURE)

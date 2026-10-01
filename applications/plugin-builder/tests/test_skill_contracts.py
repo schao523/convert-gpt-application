@@ -95,6 +95,16 @@ class SkillContractTests(unittest.TestCase):
         self.assertEqual(gates["W1"], "BLOCK_MUTATION_UNTIL_APPROVED")
         self.assertEqual(gates["W2"], "BLOCK_PACKAGING_UNTIL_APPROVED")
 
+    def test_session_skill_routes_handoff_compatibility_without_inventing_approval(self) -> None:
+        root = SKILLS / "guiding-plugin-builder-sessions"
+        entrypoint = read_skill("guiding-plugin-builder-sessions")
+        workflow = (root / "references/session-workflow.md").read_text(encoding="utf-8")
+        planning = (SKILLS / "planning-plugin-implementations/references/input-and-plan-contract.md").read_text(encoding="utf-8")
+        self.assertIn("canonical pass-through", entrypoint.casefold())
+        self.assertIn("legacy adaptation", workflow.casefold())
+        self.assertIn("ambiguous", workflow.casefold())
+        self.assertIn("does not establish approval", planning.casefold())
+
     # Catches planning from an unapproved input, missing requirement coverage, or self-approved behavior changes.
     def test_planning_requires_authority_and_traceability(self) -> None:
         root = SKILLS / "planning-plugin-implementations" / "references"

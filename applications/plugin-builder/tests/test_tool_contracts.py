@@ -101,6 +101,14 @@ def inspected_v2() -> dict:
             "sha256": HASH_B,
             "package_sha256": HASH_C,
             "baseline_sha256": None,
+            "normalization": {
+                "source_sha256": HASH_C,
+                "profile": "CANONICAL_V1",
+                "normalized_tree_sha256": HASH_A,
+                "normalized_archive_sha256": HASH_B,
+                "report_path": "normalization-report.json",
+                "report_sha256": HASH_D,
+            },
         },
         "pending_decisions": [],
         "requirements": [
@@ -130,6 +138,13 @@ class SessionContractTests(unittest.TestCase):
         self.assertIn("inspection.path.invalid_relative_posix_path", errors)
         self.assertIn("stage.S3.requires_plan", errors)
         self.assertIn("stage.S3.requires_approved_w1", errors)
+
+    def test_v2_requires_exact_normalization_identity(self) -> None:
+        payload = inspected_v2()
+        payload["inspection"]["normalization"]["report_path"] = "C:/private/report.json"
+        payload["inspection"]["normalization"]["extra"] = True
+        errors = validate_session(payload)
+        self.assertIn("inspection.normalization.invalid_object", errors)
 
     def test_v2_rejects_unknown_keys_and_stale_baseline_binding(self) -> None:
         payload = inspected_v2()

@@ -76,8 +76,6 @@ def classify_handoff_profile(inventory, extracted_root: Path) -> HandoffProfile:
         and canonical_manifest.get("package_kind") == "normalized-workbench-handoff"
     )
     recognized_legacy = legacy is not None and _LEGACY_REQUIRED.issubset(legacy)
-    if canonical and recognized_legacy:
-        return HandoffProfile("AMBIGUOUS", ("profile.multiple_envelopes",))
     if canonical:
         return HandoffProfile("CANONICAL_V1")
     if recognized_legacy:
