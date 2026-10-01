@@ -87,6 +87,48 @@ class UpdateCandidateTests(unittest.TestCase):
         self.assertIn("owner-notes.txt", changes["preserved"])
         self.assertIn("skills/checking-traceability/SKILL.md", changes["changed"])
 
+    def test_update_adds_portable_manifest_to_legacy_baseline(self) -> None:
+        workspace = self._prepare()
+        baseline = workspace / "baseline"
+        (baseline / "plugin.json").unlink()
+        session_path = workspace / "session.json"
+        session = json.loads(session_path.read_text(encoding="utf-8"))
+        session["baseline"]["manifest_sha256"] = plugin_authoring.tree_sha256(baseline)
+        session_path.write_text(json.dumps(session), encoding="utf-8")
+        plan_path = workspace / "implementation-plan.json"
+        plan = json.loads(plan_path.read_text(encoding="utf-8"))
+        plan["expected_members"] = sorted(set(plan["expected_members"]) | {"plugin.json"})
+        plan_path.write_text(json.dumps(plan, ensure_ascii=True, indent=2, sort_keys=True) + "\n", encoding="ascii")
+        plan_hash = sha256(plan_path.read_bytes()).hexdigest()
+        session = json.loads(session_path.read_text(encoding="utf-8"))
+        session["plan"]["sha256"] = plan_hash
+        session["w1"]["plan_sha256"] = plan_hash
+        session_path.write_text(json.dumps(session), encoding="utf-8")
+
+        completed = run_cli("build", "--session", str(session_path), "--json")
+
+        self.assertEqual(completed.returncode, 0, completed.stdout)
+        self.assertTrue((workspace / "candidate/plugin.json").is_file())
+        self.assertEqual(plugin_authoring.validate_manifest_pair(workspace / "candidate"), ())
+
+    def test_update_rejects_unapproved_manifest_identity_change(self) -> None:
+        workspace = self._prepare()
+        plan_path = workspace / "implementation-plan.json"
+        plan = json.loads(plan_path.read_text(encoding="utf-8"))
+        plan["plugin"]["version"] = "2.0.0"
+        plan_path.write_text(json.dumps(plan, ensure_ascii=True, indent=2, sort_keys=True) + "\n", encoding="ascii")
+        plan_hash = sha256(plan_path.read_bytes()).hexdigest()
+        session_path = workspace / "session.json"
+        session = json.loads(session_path.read_text(encoding="utf-8"))
+        session["plan"]["sha256"] = plan_hash
+        session["w1"]["plan_sha256"] = plan_hash
+        session_path.write_text(json.dumps(session), encoding="utf-8")
+
+        completed = run_cli("build", "--session", str(session_path), "--json")
+
+        self.assertEqual(completed.returncode, 2)
+        self.assertIn("build.plugin_identity_change_forbidden", read_result(completed)["errors"])
+
     def test_update_preserves_unaffected_tool_implementation_and_skill_binding(self) -> None:
         workspace = self._prepare()
         before = (workspace / "baseline/tools/normalize.py").read_bytes()

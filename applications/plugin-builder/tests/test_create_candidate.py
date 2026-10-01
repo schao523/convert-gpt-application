@@ -87,6 +87,18 @@ class CreateCandidateTests(unittest.TestCase):
         self.assertTrue((candidate / "tools/normalize.py").is_file())
         self.assertEqual(plugin_authoring.validate_plugin_tree(candidate), ())
 
+    def test_create_candidate_materializes_portable_and_legacy_manifests(self) -> None:
+        workspace = prepared_workspace(self.root)
+        completed = run_cli("build", "--session", str(workspace / "session.json"), "--json")
+        self.assertEqual(completed.returncode, 0, completed.stdout)
+        candidate = workspace / "candidate"
+        portable = json.loads((candidate / "plugin.json").read_text(encoding="utf-8"))
+        legacy = json.loads((candidate / ".codex-plugin/plugin.json").read_text(encoding="utf-8"))
+        self.assertEqual(portable["$schema"], "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json")
+        self.assertEqual((portable["name"], portable["version"]), (legacy["name"], legacy["version"]))
+        self.assertEqual(portable["extensions"]["com.openai"]["interface"], legacy["interface"])
+        self.assertEqual(plugin_authoring.validate_manifest_pair(candidate), ())
+
     def test_create_candidate_hash_matches_exact_manifest(self) -> None:
         workspace = prepared_workspace(self.root)
         completed = run_cli("build", "--session", str(workspace / "session.json"), "--json")

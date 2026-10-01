@@ -10,6 +10,7 @@ from pathlib import Path, PurePosixPath
 import tempfile
 from typing import Any
 
+from .bootstrap import plugin_authoring
 from .tool_contract import validate_tool_contract
 
 
@@ -78,6 +79,54 @@ def _json_strings(value: object) -> set[str]:
     return set()
 
 
+def _canonicalize_manifest_intent(proposal: dict[str, Any]) -> list[str]:
+    """Make root plugin.json authoritative before validation and W1 hashing."""
+    files = proposal.get("files")
+    expected = proposal.get("expected_members")
+    decisions = proposal.get("implementation_decisions")
+    if not isinstance(files, list) or not isinstance(expected, list) or not isinstance(decisions, dict):
+        return []
+    root_recipe = next(
+        (item for item in files if isinstance(item, dict) and item.get("path") == "plugin.json"),
+        None,
+    )
+    legacy_recipe = next(
+        (item for item in files if isinstance(item, dict) and item.get("path") == ".codex-plugin/plugin.json"),
+        None,
+    )
+    decision = "GENERATE" if root_recipe is not None else "PRESERVE"
+    errors: list[str] = []
+    if root_recipe is None and legacy_recipe is not None:
+        legacy = legacy_recipe.get("inline_json")
+        try:
+            portable = plugin_authoring.portable_manifest_from_legacy(legacy)
+        except plugin_authoring.PluginAuthoringError:
+            errors.append("plan.legacy_manifest_invalid")
+        else:
+            root_recipe = dict(legacy_recipe)
+            root_recipe["path"] = "plugin.json"
+            root_recipe["inline_json"] = portable
+            root_recipe["source_sha256"] = sha256(canonical_bytes(portable)).hexdigest()
+            files[files.index(legacy_recipe)] = root_recipe
+            decision = "ADAPT"
+    elif root_recipe is not None and legacy_recipe is not None:
+        files.remove(legacy_recipe)
+        decision = "GENERATE"
+    if root_recipe is not None:
+        payload = root_recipe.get("inline_json")
+        if not isinstance(payload, dict) or payload.get("$schema") != plugin_authoring.PORTABLE_PLUGIN_SCHEMA:
+            errors.append("plan.portable_manifest_invalid")
+    for member in ("plugin.json", ".codex-plugin/plugin.json"):
+        if member not in expected:
+            expected.append(member)
+    decisions["manifest_authority"] = {
+        "authority": "plugin.json",
+        "compatibility_overlay": ".codex-plugin/plugin.json",
+        "decision": decision,
+    }
+    return errors
+
+
 def compile_plan(inspection: object, proposal: object, output: Path) -> PlanOutcome:
     inspection_payload, errors = _load(inspection, "inspection.invalid_json")
     proposal_payload, proposal_errors = _load(proposal, "proposal.invalid_json")
@@ -92,6 +141,7 @@ def compile_plan(inspection: object, proposal: object, output: Path) -> PlanOutc
         errors.append("proposal.invalid_keys")
     if proposal_payload.get("operation") != inspection_payload.get("operation"):
         errors.append("plan.operation_mismatch")
+    errors.extend(_canonicalize_manifest_intent(proposal_payload))
 
     inspected_requirements = {
         item.get("id") for item in inspection_payload.get("requirements", [])
@@ -212,7 +262,7 @@ def compile_plan(inspection: object, proposal: object, output: Path) -> PlanOutc
     expected = proposal_payload.get("expected_members")
     derived_paths = {
         f"skills/{name}/agents/openai.yaml" for name in skill_names
-    } | {"PLUGIN-BUILDER-MANIFEST.json"}
+    } | {".codex-plugin/plugin.json", "PLUGIN-BUILDER-MANIFEST.json"}
     if proposal_payload.get("operation") == "update":
         derived_paths.add("PLUGIN-BUILDER-CHANGES.json")
     expected_paths: set[str] = set()

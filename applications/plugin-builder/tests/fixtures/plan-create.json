@@ -44,24 +44,28 @@
   ],
   "files": [
     {
-      "path": ".codex-plugin/plugin.json",
+      "path": "plugin.json",
       "classification": "generated_json",
-      "source_sha256": "fd9dadd74f531c8dfd9a63b7cfb75d496fb242a0f0c4737378404bbec365f451",
+      "source_sha256": "7e8095cc129d2c8d66a4a7ec09ab2529d1ee613c0c73dbb1ce55fdad45d5a34c",
       "redistribution": {"state": "APPROVED", "evidence": "generated for this plugin"},
       "inline_json": {
+        "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
         "name": "sample-plugin",
         "version": "1.0.0",
         "description": "Answer structured requests with traceable output.",
         "author": {"name": "Example Developer"},
-        "skills": "./skills/",
-        "interface": {
-          "displayName": "Sample Plugin",
-          "shortDescription": "Answer structured requests.",
-          "longDescription": "Answer structured requests and report requirement traceability.",
-          "developerName": "Example Developer",
-          "category": "Productivity",
-          "capabilities": ["Interactive", "Read"],
-          "defaultPrompt": "Help me answer this structured request."
+        "extensions": {
+          "com.openai": {
+            "interface": {
+              "displayName": "Sample Plugin",
+              "shortDescription": "Answer structured requests.",
+              "longDescription": "Answer structured requests and report requirement traceability.",
+              "developerName": "Example Developer",
+              "category": "Productivity",
+              "capabilities": ["Interactive", "Read"],
+              "defaultPrompt": "Help me answer this structured request."
+            }
+          }
         }
       },
       "requirement_ids": ["RQ1"]
@@ -138,6 +142,7 @@
   ],
   "expected_members": [
     ".codex-plugin/plugin.json",
+    "plugin.json",
     "skills/answering-structured-requests/SKILL.md",
     "skills/answering-structured-requests/agents/openai.yaml",
     "skills/answering-structured-requests/references/Reference.md",

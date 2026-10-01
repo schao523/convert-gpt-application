@@ -77,10 +77,19 @@ def build_update_candidate(session_path: Path) -> CandidateOutcome:
     if error is not None or previous is None:
         return CandidateOutcome("BLOCKED", (error or "build.baseline_manifest_invalid",))
     try:
-        baseline_plugin = json.loads((baseline / ".codex-plugin/plugin.json").read_text(encoding="utf-8"))
+        baseline_manifest_path = baseline / "plugin.json"
+        if baseline_manifest_path.is_file():
+            baseline_plugin = json.loads(baseline_manifest_path.read_text(encoding="utf-8"))
+        else:
+            baseline_plugin = plugin_authoring.portable_manifest_from_legacy(
+                json.loads((baseline / ".codex-plugin/plugin.json").read_text(encoding="utf-8"))
+            )
     except (OSError, UnicodeError, json.JSONDecodeError):
         return CandidateOutcome("FAIL", ("build.baseline_plugin_invalid",))
-    if baseline_plugin.get("name") != (plan.get("plugin") or {}).get("name"):
+    except plugin_authoring.PluginAuthoringError:
+        return CandidateOutcome("FAIL", ("build.baseline_plugin_invalid",))
+    planned_plugin = plan.get("plugin") or {}
+    if any(baseline_plugin.get(key) != planned_plugin.get(key) for key in ("name", "version")):
         return CandidateOutcome("BLOCKED", ("build.plugin_identity_change_forbidden",))
 
     recipes = plan.get("files") if isinstance(plan.get("files"), list) else []
@@ -130,6 +139,13 @@ def build_update_candidate(session_path: Path) -> CandidateOutcome:
                     target = stage / "skills" / str(skill["name"]) / "agents" / "openai.yaml"
                     target.parent.mkdir(parents=True, exist_ok=True)
                     target.write_bytes(_agent_yaml(skill))
+            plugin_authoring.materialize_manifest_pair(stage)
+            pair_issues = plugin_authoring.validate_manifest_pair(stage)
+            if pair_issues:
+                return CandidateOutcome(
+                    "FAIL",
+                    tuple(f"candidate.{item.code}:{item.path}" for item in pair_issues),
+                )
             bindings = []
             tool_files: set[str] = set()
             for tool in sorted(tool_contracts, key=lambda item: item["id"]):

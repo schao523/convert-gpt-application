@@ -17,6 +17,7 @@ if str(SCRIPTS) not in sys.path:
     sys.path.insert(0, str(SCRIPTS))
 
 from plugin_builder_core.inspection import inspect_design_package
+from plugin_builder_core.bootstrap import plugin_authoring
 
 
 class PlanningWorkflowTests(unittest.TestCase):
@@ -85,6 +86,43 @@ class PlanningWorkflowTests(unittest.TestCase):
         self.assertIn("PLUGIN_STRUCTURE", {item["kind"] for item in plan["checks"]})
         recipes = {item["path"]: item for item in plan["files"]}
         self.assertEqual(recipes["skills/answering-structured-requests/references/Reference.md"]["source_path"], "input/Reference.md")
+
+    def test_plan_requires_portable_manifest_and_declares_compatibility_overlay(self) -> None:
+        _, plan = self.plan()
+        recipes = {item["path"]: item for item in plan["files"]}
+        self.assertIn("plugin.json", recipes)
+        self.assertNotIn(".codex-plugin/plugin.json", recipes)
+        self.assertIn("plugin.json", plan["expected_members"])
+        self.assertIn(".codex-plugin/plugin.json", plan["expected_members"])
+        self.assertEqual(
+            plan["implementation_decisions"]["manifest_authority"],
+            {"authority": "plugin.json", "compatibility_overlay": ".codex-plugin/plugin.json", "decision": "GENERATE"},
+        )
+
+    def test_legacy_overlay_only_proposal_is_adapted_before_w1(self) -> None:
+        payload = self.proposal()
+        portable = payload["files"][0]["inline_json"]
+        payload["files"][0]["path"] = ".codex-plugin/plugin.json"
+        payload["files"][0]["inline_json"] = plugin_authoring.legacy_overlay_from_portable(portable)
+        payload["expected_members"].remove("plugin.json")
+        self.write_proposal(payload)
+
+        _, plan = self.plan()
+
+        recipes = {item["path"]: item for item in plan["files"]}
+        self.assertIn("plugin.json", recipes)
+        self.assertNotIn(".codex-plugin/plugin.json", recipes)
+        self.assertEqual(plan["implementation_decisions"]["manifest_authority"]["decision"], "ADAPT")
+
+    def test_manifest_pair_is_part_of_plan_and_tools_hash_invalidation(self) -> None:
+        planned, plan = self.plan()
+        self.assertTrue({"plugin.json", ".codex-plugin/plugin.json"}.issubset(plan["expected_members"]))
+        first_hash = planned["plan_sha256"]
+        payload = self.proposal()
+        payload["files"][0]["inline_json"]["extensions"]["com.openai"]["interface"]["defaultPrompt"] = ["First", "Second"]
+        self.write_proposal(payload)
+        revised, _ = self.plan()
+        self.assertNotEqual(revised["plan_sha256"], first_hash)
 
     def test_plan_classifies_and_binds_every_application_tool(self) -> None:
         _, plan = self.plan()

@@ -134,6 +134,13 @@ def build_candidate(session_path: Path) -> CandidateOutcome:
                 agent = stage / "skills" / str(skill["name"]) / "agents" / "openai.yaml"
                 agent.parent.mkdir(parents=True, exist_ok=True)
                 agent.write_bytes(_agent_yaml(skill))
+            plugin_authoring.materialize_manifest_pair(stage)
+            pair_issues = plugin_authoring.validate_manifest_pair(stage)
+            if pair_issues:
+                return CandidateOutcome(
+                    "FAIL",
+                    tuple(f"candidate.{item.code}:{item.path}" for item in pair_issues),
+                )
             members = plugin_authoring.tree_manifest(stage)
             actual_without_manifest = {member.path for member in members}
             expected = set(plan.get("expected_members", []))
