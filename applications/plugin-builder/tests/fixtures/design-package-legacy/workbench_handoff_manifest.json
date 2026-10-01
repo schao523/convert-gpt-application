@@ -1,0 +1,27 @@
+{
+  "application_name": "Sample Application",
+  "specification_state": "approved",
+  "approval_evidence": "Decision owner approved specification v1.1.",
+  "gate_result": "APPROVED FOR IMPLEMENTATION",
+  "specification_version": "v1.1",
+  "included_artifacts": [
+    {
+      "artifact_id": "SPEC-v1.1",
+      "path": "Sample_Application_Spec_v1.1_APPROVED.md",
+      "relation": "authoritative specification",
+      "state": "approved",
+      "version": "v1.1",
+      "provenance": "legacy workbench",
+      "requirements": "RQ1; AC1"
+    },
+    {
+      "artifact_id": "KNOWLEDGE-v1.1",
+      "path": "professional_knowledge/",
+      "relation": "required reference material",
+      "state": "approved-derived",
+      "version": "v1.1",
+      "provenance": "legacy workbench"
+    }
+  ],
+  "unresolved_owner_decisions": []
+}
