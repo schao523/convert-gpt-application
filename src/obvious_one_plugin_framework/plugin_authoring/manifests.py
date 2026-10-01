@@ -106,6 +106,8 @@ def manifest_pair_mismatches(
     legacy_interface = overlay.get("interface")
     if not isinstance(legacy_interface, Mapping):
         return ("overlay.interface",)
+    for key in set(legacy_interface) - set(_INTERFACE_KEYS):
+        mismatches.add(f"overlay.interface.{key}")
     for key in ("name", "version", "description", "author"):
         if portable.get(key) != overlay.get(key):
             mismatches.add(key)

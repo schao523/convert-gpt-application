@@ -151,13 +151,17 @@ class PluginAuthoringManifestTests(unittest.TestCase):
         portable = self.portable()
         legacy = self.legacy()
         legacy.update({"apps": ["app"], "mcpServers": {"server": {}}, "surprise": True})
+        legacy["interface"]["surprise"] = True  # type: ignore[index]
         self.write_json("plugin.json", portable)
         self.write_json(".codex-plugin/plugin.json", legacy)
 
         issues = validate_manifest_pair(self.root)
 
         mismatches = {issue.detail for issue in issues if issue.code == "manifest_pair_mismatch"}
-        self.assertEqual(mismatches, {"overlay.apps", "overlay.mcpServers", "overlay.surprise"})
+        self.assertEqual(
+            mismatches,
+            {"overlay.apps", "overlay.mcpServers", "overlay.surprise", "overlay.interface.surprise"},
+        )
 
     def test_materialize_manifest_pair_is_deterministic(self) -> None:
         self.write_json(".codex-plugin/plugin.json", self.legacy(default_prompt=["First", "Second"]))
