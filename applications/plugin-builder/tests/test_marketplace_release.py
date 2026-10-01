@@ -8,6 +8,7 @@ import shutil
 import tempfile
 import unittest
 from unittest import mock
+import zipfile
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -119,6 +120,26 @@ class MarketplaceReleaseTests(unittest.TestCase):
             self.assertFalse(
                 any("docs/approved-design/" in path for path in second.paths)
             )
+
+    def test_upload_archive_places_plugin_manifest_at_archive_root(self) -> None:
+        release = load_release()
+        with tempfile.TemporaryDirectory(dir=TEMP_ROOT) as temp:
+            root = Path(temp)
+            destination = root / "marketplace"
+            release.build_release(ROOT, destination, "0.1.1")
+            first = root / "first.zip"
+            second = root / "second.zip"
+
+            first_hash = release.write_upload_archive(destination, first)
+            second_hash = release.write_upload_archive(destination, second)
+
+            self.assertEqual(first_hash, second_hash)
+            self.assertEqual(first.read_bytes(), second.read_bytes())
+            with zipfile.ZipFile(first) as archive:
+                members = archive.namelist()
+            self.assertIn("plugin.json", members)
+            self.assertIn(".codex-plugin/plugin.json", members)
+            self.assertFalse(any(name.startswith("plugin-builder/") for name in members))
 
     def test_release_enforces_plugin_identity_and_version_before_mutation(self) -> None:
         release = load_release()

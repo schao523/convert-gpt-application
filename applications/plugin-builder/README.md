@@ -1,6 +1,6 @@
 # Plugin Builder
 
-Plugin Builder converts an approved application-plugin design package into a locally validated OpenAI plugin workspace and deterministic candidate artifact. Version 0.1.1 adds deterministic legacy-handoff normalization, an Agent Plugins 1.0 root manifest, synchronized Codex compatibility metadata, single-directory plugin ZIPs, and digest-closed runtime evidence packaging.
+Plugin Builder converts an approved application-plugin design package into a locally validated OpenAI plugin workspace and deterministic candidate artifact. Version 0.1.1 adds deterministic legacy-handoff normalization, an Agent Plugins 1.0 root manifest, synchronized Codex compatibility metadata, portable single-directory generated-plugin ZIPs, a flat-root ChatGPT/Codex uploader artifact, and digest-closed runtime evidence packaging.
 
 Phase one targets Codex and ChatGPT Work Local/Desktop. OpenClaw and Claude are explicitly out of scope. No marketplace publication, external release, account deployment, credential handling, semantic RAG, or network service is authorized.
 

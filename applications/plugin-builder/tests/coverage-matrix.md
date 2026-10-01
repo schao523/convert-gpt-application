@@ -38,7 +38,7 @@ Each approved requirement and representative test appears exactly once in the ID
 | BEHAVIOR-SCENARIOS | T1–T7 local fixtures | Repository-local and standalone generated-artifact forward execution | RUNTIME VERIFIED |
 | CONTRACT-SESSION | W1/W2, hashes, evidence, paths, and failure gates | Deterministic API and subprocess CLI tests | STATICALLY VERIFIED |
 | CONTRACT-DISTRIBUTION | Deny-by-default content contract | Schema-v3 validation, product audit, exact selection, and two-build package identity | STATICALLY VERIFIED |
-| ARTIFACT-CODEX | Generated local Codex artifact | Exact 55-member single-directory envelope, synchronized manifest pair, source/extracted plugin validation, exclusions, and byte-identical two-build ZIP/runtime-kit identity | STATICALLY VERIFIED |
+| ARTIFACT-CODEX | Generated local Codex artifact | Exact 55-member flat-root host-upload envelope, synchronized manifest pair, source/extracted plugin validation, exclusions, and byte-identical two-build ZIP/runtime-kit identity | STATICALLY VERIFIED |
 | REPOSITORY-DISCOVERY | Application configuration | Repository discovery and configured command-path tests | STATICALLY VERIFIED |
 
 ## Phase-two design-to-implementation review

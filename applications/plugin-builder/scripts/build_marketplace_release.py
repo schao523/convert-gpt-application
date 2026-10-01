@@ -254,14 +254,41 @@ def build_release(source: Path, destination: Path, version: str) -> ReleaseRepor
         return report
 
 
+def write_upload_archive(release_root: Path, destination: Path) -> str:
+    """Write the ChatGPT/Codex uploader profile with plugin.json at ZIP root."""
+
+    release = Path(release_root).resolve()
+    plugin = release / "plugins" / PLUGIN_ID
+    output = Path(destination).resolve()
+    if not (release / MARKER).is_file() or not plugin.is_dir():
+        raise ValueError("upload archive requires a built Plugin Builder release")
+    try:
+        output.relative_to(plugin)
+    except ValueError:
+        pass
+    else:
+        raise ValueError("upload archive must be outside the plugin directory")
+    issues = plugin_authoring.validate_plugin_tree(plugin)
+    if issues:
+        details = ", ".join(f"{item.code}:{item.path}:{item.detail}" for item in issues)
+        raise ValueError(f"upload plugin validation failed: {details}")
+    output.parent.mkdir(parents=True, exist_ok=True)
+    return plugin_authoring.write_deterministic_zip(plugin, output)
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--source", required=True, type=Path)
     parser.add_argument("--destination", required=True, type=Path)
     parser.add_argument("--version", required=True)
+    parser.add_argument("--archive", type=Path, help="Optional flat-root ZIP for the New Plugin uploader.")
     options = parser.parse_args()
     report = build_release(options.source, options.destination, options.version)
-    print(json.dumps(report._asdict(), ensure_ascii=True, indent=2, sort_keys=True))
+    payload = report._asdict()
+    if options.archive is not None:
+        payload["upload_archive"] = str(options.archive)
+        payload["upload_archive_sha256"] = write_upload_archive(options.destination, options.archive)
+    print(json.dumps(payload, ensure_ascii=True, indent=2, sort_keys=True))
     return 0
 
 
