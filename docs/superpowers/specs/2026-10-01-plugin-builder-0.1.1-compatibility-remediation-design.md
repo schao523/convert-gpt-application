@@ -1,6 +1,6 @@
 # Plugin Builder 0.1.1 Compatibility Remediation Design and W1 Review
 
-**Status:** Proposed — awaiting decision-owner W1 approval
+**Status:** W1 scope approved — implementation-plan review pending
 
 **Date:** 2026-10-01
 
@@ -558,12 +558,17 @@ Approve the following exact scope for implementation planning:
 - keep publication, upload, marketplace mutation, and external release out of
   scope.
 
-**Current W1 state:** `AWAITING_OWNER_APPROVAL`
+**Current W1 state:** `APPROVED`
 
-**Mutation allowed:** No
+**Approval evidence:** User stated “approve the written W1 scope” in this
+thread on 2026-10-01. The approved review source is commit `b6aa1e8`, file
+SHA-256 `92c75090fefddec43ceb5f5138f88bc42c5b8900c9f738edea0c7edbd458e33ee`.
 
-**Next action after approval:** Write the detailed test-first implementation
-plan; do not begin implementation in the same approval turn.
+**Mutation allowed:** No; the detailed implementation plan must be written and
+reviewed first.
+
+**Next action:** Write the detailed test-first implementation plan; do not
+begin implementation in the same approval turn.
 
 ## 17. Readiness boundary
 
