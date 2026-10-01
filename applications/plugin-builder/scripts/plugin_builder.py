@@ -10,6 +10,7 @@ import sys
 
 from plugin_builder_core.result import operation_document
 from plugin_builder_core.inspection import inspect_design_package
+from plugin_builder_core.evidence import build_runtime_evidence_bundle
 from plugin_builder_core.approvals import approve_w1, approve_w2
 from plugin_builder_core.verification import verify_candidate
 from plugin_builder_core.packaging import package_candidate
@@ -82,6 +83,11 @@ def _parser() -> argparse.ArgumentParser:
     resolve.add_argument("--decision", choices=("keep", "replace", "remove"), required=True)
     resolve.add_argument("--evidence", required=True)
     resolve.add_argument("--json", action="store_true", required=True)
+    evidence = subparsers.add_parser("package-runtime-evidence")
+    evidence.add_argument("--result", type=Path, required=True)
+    evidence.add_argument("--evidence-root", type=Path, required=True)
+    evidence.add_argument("--output", type=Path, required=True)
+    evidence.add_argument("--json", action="store_true", required=True)
     for command in ("pause", "resume", "cancel"):
         lifecycle = subparsers.add_parser(command)
         lifecycle.add_argument("--session", type=Path, required=True)
@@ -94,6 +100,16 @@ def main(argv: list[str] | None = None) -> int:
     if arguments.command == "status":
         _emit(operation_document("status", "PASS", [], capabilities=CAPABILITIES))
         return 0
+
+    if arguments.command == "package-runtime-evidence":
+        outcome = build_runtime_evidence_bundle(arguments.result, arguments.evidence_root, arguments.output)
+        _emit(operation_document(
+            "package-runtime-evidence", outcome.status, list(outcome.errors),
+            archive_sha256=outcome.archive_sha256,
+            result_sha256=outcome.result_sha256,
+            index_sha256=outcome.index_sha256,
+        ))
+        return 0 if outcome.status == "PASS" else 3
 
     if arguments.command == "inspect":
         try:

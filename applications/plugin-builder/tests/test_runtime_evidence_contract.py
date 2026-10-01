@@ -18,7 +18,7 @@ class RuntimeEvidenceContractTests(unittest.TestCase):
         for required in (
             "W1", "W2", "BUNDLED_LOCAL", "RUNTIME_NATIVE", "MCP_ADAPTER",
             "PYTHONPATH", "credentials", "network", "repository", "pre-existing",
-            "create", "update", "plugin_builder.py",
+            "create", "update", "plugin_builder.py", "package-runtime-evidence",
         ):
             self.assertIn(required.casefold(), text.casefold())
 

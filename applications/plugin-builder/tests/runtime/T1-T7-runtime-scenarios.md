@@ -43,4 +43,6 @@ From the installed artifact copy, with the repository absent from environment va
 
 ## Result delivery
 
-Return one JSON document conforming to `runtime-result-schema.json`. Include all T1–T7 rows even when a scenario could not run. Attach only digest-addressed logs or artifacts; never include credentials. A clean local-copy run does not prove Codex or ChatGPT Work installed discovery unless `discovery_observed` is true for that named runtime.
+Return one JSON document conforming to `runtime-result-schema.json`. Include all T1–T7 rows even when a scenario could not run. Store each scenario evidence file under its exact SHA-256 filename and run `plugin_builder.py package-runtime-evidence --result <result.json> --evidence-root <digest-files> --output <evidence.zip> --json`; do not manually construct the evidence ZIP. The command rejects absent, duplicated, altered, or unindexed evidence and embeds the result under its own digest.
+
+Attach only that validated digest-addressed bundle; never include credentials. Keep network access prohibited unless a named scenario received separate authorization. A clean local-copy run does not prove Codex or ChatGPT Work installed discovery unless `discovery_observed` is true for that named runtime.

@@ -41,7 +41,10 @@
           "id": {"enum": ["T1", "T2", "T3", "T4", "T5", "T6", "T7"]},
           "state": {"$ref": "#/$defs/evidence_state"},
           "result": {"enum": ["PASS", "FAIL", "NOT VERIFIED", "NOT APPLICABLE"]},
-          "evidence_sha256": {"anyOf": [{"$ref": "#/$defs/sha256"}, {"type": "null"}]},
+          "evidence_sha256": {
+            "description": "SHA-256 of the single digest-named evidence member for this scenario; null means no member is claimed.",
+            "anyOf": [{"$ref": "#/$defs/sha256"}, {"type": "null"}]
+          },
           "limitations": {"type": "array", "items": {"type": "string"}, "uniqueItems": true}
         }
       }
