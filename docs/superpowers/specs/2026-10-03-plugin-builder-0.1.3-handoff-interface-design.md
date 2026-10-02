@@ -1,9 +1,12 @@
 # Plugin Builder 0.1.3 Handoff Interface Design
 
-Status: **AWAITING DECISION-OWNER REVIEW**  
+Status: **APPROVED**  
 Date: 2026-10-03  
 Runtime scope: `OPENAI_ONLY_PHASE_ONE`  
 Affected applications: Cool Plugin Design Assistant and Plugin Builder
+
+Approval evidence: the decision owner explicitly approved this written
+specification in the originating Codex conversation on 2026-10-03.
 
 ## 1. Purpose
 
