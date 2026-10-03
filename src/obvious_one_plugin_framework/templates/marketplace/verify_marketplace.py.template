@@ -151,8 +151,7 @@ def _verify_openclaw(root, plugin):
         raise ValueError("content_manifest_mismatch")
 
 
-def _run_commands(plugin, codex, openclaw):
-    roots = {"codex": codex, "openclaw": openclaw}
+def _run_commands(plugin, roots):
     for command in plugin.get("commands", []):
         artifact = command.get("artifact")
         if artifact not in roots or not isinstance(command.get("argv"), list):
@@ -174,6 +173,35 @@ def _run_commands(plugin, codex, openclaw):
         )
         if completed.returncode != 0:
             raise ValueError("marketplace_command_failed")
+
+
+def _verify_targets(root, plugin):
+    targets = plugin.get("targets")
+    if not isinstance(targets, dict) or set(targets) != {"codex", "openclaw"}:
+        raise ValueError("artifact_registry_invalid")
+    roots = {}
+    for target_name in ("codex", "openclaw"):
+        target = targets[target_name]
+        if target == {"state": "NOT APPLICABLE"}:
+            continue
+        if (
+            not isinstance(target, dict)
+            or set(target) != {"state", "mode", "path", "artifact"}
+            or target.get("state") != "STATICALLY VERIFIED"
+            or target.get("mode") not in {"build", "verify_existing"}
+            or not isinstance(target.get("artifact"), dict)
+        ):
+            raise ValueError("artifact_registry_invalid")
+        artifact_root = _safe(root, target["path"])
+        _verify_exact_artifact(artifact_root, target["artifact"])
+        if target_name == "codex":
+            _verify_codex(artifact_root, plugin)
+        else:
+            _verify_openclaw(artifact_root, plugin)
+        roots[target_name] = artifact_root
+    if not roots:
+        raise ValueError("artifact_registry_invalid")
+    return roots
 
 
 def _verify_clawhub(root, plugin):
@@ -214,25 +242,29 @@ def main(argv=None):
     try:
         registry_path = args.registry.resolve()
         registry = _load(registry_path)
+        if registry.get("schema_version") != 2:
+            raise ValueError("invalid_registry")
         matches = [item for item in registry.get("plugins", []) if item.get("plugin_id") == args.plugin]
         if len(matches) != 1:
             raise ValueError("registry_plugin_missing_or_duplicate")
         plugin = matches[0]
         root = registry_path.parent
-        codex = _safe(root, plugin["codex_path"])
-        openclaw = _safe(root, plugin["openclaw_path"])
-        artifacts = plugin.get("artifacts")
-        if not isinstance(artifacts, dict):
-            raise ValueError("artifact_registry_invalid")
-        _verify_exact_artifact(codex, artifacts.get("codex", {}))
-        _verify_exact_artifact(openclaw, artifacts.get("openclaw", {}))
-        _verify_codex(codex, plugin)
-        _verify_openclaw(openclaw, plugin)
-        _verify_clawhub(openclaw, plugin)
-        _run_commands(plugin, codex, openclaw)
+        roots = _verify_targets(root, plugin)
+        if "openclaw" in roots:
+            _verify_clawhub(roots["openclaw"], plugin)
+        elif plugin.get("clawhub") != {"state": "NOT APPLICABLE"}:
+            raise ValueError("clawhub_contract_invalid")
+        _run_commands(plugin, roots)
         result = _result(
             "PASS", "marketplace_verified",
-            evidence={"plugin_id": args.plugin, "clawhub": plugin.get("clawhub", {}).get("state")},
+            evidence={
+                "plugin_id": args.plugin,
+                "clawhub": plugin.get("clawhub", {}).get("state"),
+                "targets": {
+                    name: value.get("state")
+                    for name, value in plugin["targets"].items()
+                },
+            },
         )
         code = 0
     except Exception as exc:

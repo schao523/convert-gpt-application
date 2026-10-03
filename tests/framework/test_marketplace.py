@@ -592,7 +592,7 @@ class MarketplaceTests(unittest.TestCase):
         prepare_marketplace(catalog, self.baseline, self.output)
         registry = self.output / ".obvious-one-validation.json"
         payload = json.loads(registry.read_text(encoding="utf-8"))
-        payload["plugins"][0]["artifacts"]["codex"]["content_sha256"] = "0" * 64
+        payload["plugins"][0]["targets"]["codex"]["artifact"]["content_sha256"] = "0" * 64
         _write_json(registry, payload)
         result = verify_marketplace(catalog, self.output)
         self.assertEqual(result.status, "FAIL")

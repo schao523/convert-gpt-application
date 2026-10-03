@@ -649,9 +649,10 @@ def _write_generated_controls(catalog: PreparationCatalog, stage: Path) -> None:
             "plugins": [
                 {
                     "name": entry.application.plugin_id,
-                    "source": {"path": f"./{entry.codex_destination}"},
+                    "source": {"path": f"./{entry.target('codex').destination}"},
                 }
                 for entry in catalog.applications
+                if entry.target("codex").mode != "not_applicable"
             ]
         }
         _write_json_file(codex_path, codex_catalog)
@@ -663,9 +664,10 @@ def _write_generated_controls(catalog: PreparationCatalog, stage: Path) -> None:
                 {
                     "name": entry.application.plugin_id,
                     "version": entry.application.version,
-                    "source": f"./{entry.openclaw_destination}",
+                    "source": f"./{entry.target('openclaw').destination}",
                 }
                 for entry in catalog.applications
+                if entry.target("openclaw").mode != "not_applicable"
             ]
         }
         _write_json_file(openclaw_path, openclaw_catalog)
@@ -700,23 +702,25 @@ def _update_build_catalogs(
     if not isinstance(codex_records, list) or not isinstance(openclaw_records, list):
         raise MarketplaceError("runtime_catalog_invalid")
     for entry in catalog.applications:
-        if entry.mode != "build":
-            continue
-        codex_match = next((item for item in codex_records if isinstance(item, dict) and item.get("name") == entry.application.plugin_id), None)
-        if codex_match is None:
-            codex_match = {"name": entry.application.plugin_id}
-            codex_records.append(codex_match)
-        source = codex_match.get("source")
-        source = dict(source) if isinstance(source, dict) else {}
-        source["path"] = f"./{entry.codex_destination}"
-        source["source"] = "local"
-        codex_match["source"] = source
-        claw_match = next((item for item in openclaw_records if isinstance(item, dict) and item.get("name") == entry.application.plugin_id), None)
-        if claw_match is None:
-            claw_match = {"name": entry.application.plugin_id}
-            openclaw_records.append(claw_match)
-        claw_match["version"] = entry.application.version
-        claw_match["source"] = f"./{entry.openclaw_destination}"
+        codex_target = entry.target("codex")
+        if codex_target.mode == "build":
+            codex_match = next((item for item in codex_records if isinstance(item, dict) and item.get("name") == entry.application.plugin_id), None)
+            if codex_match is None:
+                codex_match = {"name": entry.application.plugin_id}
+                codex_records.append(codex_match)
+            source = codex_match.get("source")
+            source = dict(source) if isinstance(source, dict) else {}
+            source["path"] = f"./{_required_target_destination(codex_target, 'codex')}"
+            source["source"] = "local"
+            codex_match["source"] = source
+        openclaw_target = entry.target("openclaw")
+        if openclaw_target.mode == "build":
+            claw_match = next((item for item in openclaw_records if isinstance(item, dict) and item.get("name") == entry.application.plugin_id), None)
+            if claw_match is None:
+                claw_match = {"name": entry.application.plugin_id}
+                openclaw_records.append(claw_match)
+            claw_match["version"] = entry.application.version
+            claw_match["source"] = f"./{_required_target_destination(openclaw_target, 'openclaw')}"
 
 
 def _expected_registry(
@@ -731,10 +735,11 @@ def _expected_registry(
     entries = {entry.application.plugin_id: entry for entry in catalog.applications}
     for plugin in registry["plugins"]:
         entry = entries[plugin["plugin_id"]]
-        plugin["artifacts"] = {
-            "codex": _artifact_identity(_stage_destination(stage, entry.codex_destination)),
-            "openclaw": _artifact_identity(_stage_destination(stage, entry.openclaw_destination)),
-        }
+        for target_name, target in entry.applicable_targets():
+            destination = _required_target_destination(target, target_name)
+            plugin["targets"][target_name]["artifact"] = _artifact_identity(
+                _stage_destination(stage, destination)
+            )
     return registry
 
 
