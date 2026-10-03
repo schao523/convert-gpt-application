@@ -134,6 +134,16 @@ from .knowledge_policy import (
     discover_knowledge_policy,
     validate_knowledge_policy,
 )
+from .workbench_handoff import (
+    HANDOFF_CONTRACT,
+    HANDOFF_SCHEMA,
+    BaselineIdentity,
+    HandoffValidation,
+    baseline_identity_from_archive,
+    canonical_json_bytes,
+    validate_canonical_handoff,
+    validate_update_baseline,
+)
 
 __all__ = [
     "AssetGroup",
@@ -246,6 +256,14 @@ __all__ = [
     "ProfessionalKnowledgeFile",
     "discover_knowledge_policy",
     "validate_knowledge_policy",
+    "HANDOFF_CONTRACT",
+    "HANDOFF_SCHEMA",
+    "BaselineIdentity",
+    "HandoffValidation",
+    "baseline_identity_from_archive",
+    "canonical_json_bytes",
+    "validate_canonical_handoff",
+    "validate_update_baseline",
 ]
 
 __version__ = "0.1.0"
