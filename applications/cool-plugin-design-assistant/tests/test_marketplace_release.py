@@ -54,6 +54,10 @@ class MarketplaceReleaseTests(unittest.TestCase):
             self.assertFalse(
                 (plugin / "docs/marketplace-approved-delta.json").exists()
             )
+            vendor = plugin / "scripts/vendor/obvious_one_plugin_framework"
+            self.assertTrue((vendor / "workbench_handoff/normalization.py").is_file())
+            self.assertTrue((vendor / "plugin_authoring/archive.py").is_file())
+            self.assertFalse(any("__pycache__" in path.parts for path in vendor.rglob("*")))
 
     def test_codex_release_requires_rights_evidence_before_destination_mutation(self) -> None:
         release = load_script("build_marketplace_release.py")

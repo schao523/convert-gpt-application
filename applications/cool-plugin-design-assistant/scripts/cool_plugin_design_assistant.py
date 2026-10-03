@@ -9,7 +9,9 @@ import json
 from pathlib import Path
 import re
 import sys
+import tempfile
 from typing import Any
+import zipfile
 
 
 FORBIDDEN_ARCHITECTURE_KEYS = {
@@ -83,6 +85,18 @@ HANDOFF_FIELDS = {
     "explicit_exclusions",
     "approval",
 }
+
+HANDOFF_RUNTIME_SCOPES = {"OPENAI_ONLY_PHASE_ONE"}
+
+
+def _load_workbench_handoff():
+    path = Path(__file__).resolve().parent / "workbench_handoff_bootstrap.py"
+    spec = importlib.util.spec_from_file_location("cool_plugin_design_assistant_handoff_bootstrap", path)
+    if spec is None or spec.loader is None:
+        raise RuntimeError("workbench_handoff_bootstrap_unavailable")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module.load_workbench_handoff()
 
 DESIGN_STATEMENT_HEADINGS = {
     "audience",
@@ -661,6 +675,52 @@ def handoff_gate_state(payload: Any) -> str:
     return "READY FOR WORKBENCH"
 
 
+def normalize_handoff_package(
+    source: str | Path,
+    destination: str | Path,
+    *,
+    confirmed_by: str,
+    runtime_scope: str = "OPENAI_ONLY_PHASE_ONE",
+) -> dict[str, Any]:
+    """Normalize a recognized approved handoff through the shared v1.1 runtime."""
+
+    if not _is_nonempty_string(confirmed_by):
+        raise ValueError("confirmed_by must be non-empty")
+    if runtime_scope not in HANDOFF_RUNTIME_SCOPES:
+        raise ValueError(f"unsupported runtime scope: {runtime_scope}")
+    source_path = Path(source).resolve()
+    destination_path = Path(destination).resolve()
+    if source_path == destination_path:
+        raise ValueError("source and destination must be different paths")
+    if destination_path.exists():
+        raise ValueError(f"destination already exists: {destination_path}")
+
+    runtime = _load_workbench_handoff()
+    destination_path.parent.mkdir(parents=True, exist_ok=True)
+    with tempfile.TemporaryDirectory(
+        dir=destination_path.parent,
+        prefix=f".{destination_path.name}.normalize-",
+    ) as temporary:
+        outcome = runtime.normalize_handoff_archive(
+            source_path,
+            Path(temporary) / "normalized",
+            destination_path,
+            runtime_scope=runtime_scope,
+        )
+    report = dict(outcome.report)
+    report["confirmed_by"] = confirmed_by.strip()
+    report["gate_state"] = (
+        "APPROVED WITH NONBLOCKING DECISIONS"
+        if outcome.status == "PASS"
+        else "HANDOFF BLOCKED"
+    )
+    if outcome.status == "PASS":
+        with zipfile.ZipFile(destination_path) as archive:
+            manifest = json.loads(archive.read("package-manifest.json"))
+        report["artifact_count"] = len(manifest.get("artifacts", []))
+    return report
+
+
 def coverage_report(payload: Any) -> dict[str, Any]:
     """Return coverage only when requirements and mappings are explicit."""
 
@@ -766,6 +826,16 @@ def _parser() -> argparse.ArgumentParser:
         command = commands.add_parser(name)
         command.add_argument("artifact")
         add_json(command)
+    normalize = commands.add_parser("normalize-handoff-package")
+    normalize.add_argument("source")
+    normalize.add_argument("destination")
+    normalize.add_argument("--confirmed-by", required=True)
+    normalize.add_argument(
+        "--runtime-scope",
+        choices=sorted(HANDOFF_RUNTIME_SCOPES),
+        default="OPENAI_ONLY_PHASE_ONE",
+    )
+    add_json(normalize)
     audit = commands.add_parser("distribution-audit")
     audit.add_argument("stage", nargs="?", default=str(Path(__file__).resolve().parents[1]))
     add_json(audit)
@@ -822,6 +892,16 @@ def main(argv: list[str] | None = None) -> int:
                 errors,
                 gate_state=handoff_gate_state(payload),
             )
+        elif operation == "normalize-handoff-package":
+            report = normalize_handoff_package(
+                args.source,
+                args.destination,
+                confirmed_by=args.confirmed_by,
+                runtime_scope=args.runtime_scope,
+            )
+            result_status = report.pop("status")
+            errors = report.pop("diagnostics")
+            document = _document(operation, result_status, errors, **report)
         elif operation == "coverage":
             report = coverage_report(_load_json(args.artifact))
             report_status = report.pop("status")

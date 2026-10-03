@@ -27,6 +27,7 @@ ROOT_FILES = {
 }
 PREFIXES = {".codex-plugin", "docs", "scripts", "skills"}
 EXCLUDED_PATHS = {"docs/marketplace-approved-delta.json"}
+VENDOR_PACKAGES = ("plugin_authoring", "workbench_handoff")
 
 
 class ReleaseReport(NamedTuple):
@@ -127,6 +128,26 @@ def build_release(source: Path, destination: Path, version: str) -> ReleaseRepor
         output = staging / relative
         output.parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(candidate, output)
+
+    repository = source.parents[1]
+    framework = repository / "src" / "obvious_one_plugin_framework"
+    vendor = staging / "scripts/vendor/obvious_one_plugin_framework"
+    vendor.mkdir(parents=True, exist_ok=True)
+    (vendor / "__init__.py").write_text(
+        '"""Vendored standalone runtime namespace."""\n',
+        encoding="utf-8",
+        newline="\n",
+    )
+    for package_name in VENDOR_PACKAGES:
+        package = framework / package_name
+        if not package.is_dir():
+            raise ValueError(f"shared runtime unavailable: {package_name}")
+        destination_package = vendor / package_name
+        destination_package.mkdir()
+        for candidate in sorted(package.glob("*.py"), key=lambda path: path.name):
+            if candidate.is_symlink():
+                raise ValueError(f"shared runtime contains link: {candidate.name}")
+            shutil.copyfile(candidate, destination_package / candidate.name)
 
     errors = audit.audit_tree(staging)
     if errors:

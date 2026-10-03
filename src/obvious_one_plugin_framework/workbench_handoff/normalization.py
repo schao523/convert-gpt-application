@@ -182,6 +182,9 @@ def _design_assistant_to_v11(
         represented.add(path)
         if role == "approved_specification":
             authority.append(row)
+    allowed_legacy_members = represented | {filename, "README.md"}
+    for path in sorted(set(members) - allowed_legacy_members):
+        diagnostics.append(f"package.undeclared_member:{path}")
     if len(authority) != 1:
         diagnostics.append("normalization.authoritative_specification_required")
 
@@ -217,6 +220,68 @@ def _design_assistant_to_v11(
         "source_archive_sha256": source_hash,
         "source_profile": profile,
     }
+    by_role = {item["role"]: item for item in normalized_artifacts}
+    design_statement = by_role.get("approved_design_statement")
+    if design_statement is not None:
+        handoff["approved_design_statement"] = {
+            "id": design_statement["id"],
+            "version": design_statement["version"],
+            "state": "approved",
+            "file": design_statement["file"],
+        }
+    role_shapes: dict[str, tuple[str, object]] = {
+        "workflow_definitions_and_instruction_modules": (
+            "workflow_definitions_and_instruction_modules", []
+        ),
+        "application_invariants_and_hitl_checkpoints": (
+            "application_invariants_and_hitl_checkpoints", []
+        ),
+        "acceptance_criteria_and_representative_scenarios": (
+            "acceptance_criteria_and_representative_scenarios", []
+        ),
+    }
+    for field, (role, default) in role_shapes.items():
+        row = by_role.get(role)
+        if row is not None:
+            handoff[field] = [f"{row['id']}|{row['file']}|{row['version']}"]
+        elif field not in handoff:
+            handoff[field] = default
+    specification = authority[0] if len(authority) == 1 else None
+    invariants = by_role.get("application_invariants_and_hitl_checkpoints")
+    reference_map = by_role.get("reference_material_inventory_evaluation_and_usage_map")
+    decisions_row = by_role.get("rights_and_redistribution_decisions")
+    handoff.setdefault(
+        "deterministic_operation_candidates",
+        [f"{specification['id']}#deterministic-operations"] if specification else [],
+    )
+    handoff.setdefault(
+        "tool_data_runtime_and_service_requirements",
+        {
+            "runtime_scope": runtime_scope,
+            "target_runtimes": ["ChatGPT Work Local/Desktop", "Codex"],
+            "excluded_runtimes": ["OpenClaw", "Claude"],
+            "source_artifacts": [
+                row["id"] for row in (specification, invariants) if row is not None
+            ],
+        },
+    )
+    handoff.setdefault(
+        "reference_material_inventory_evaluation_and_usage_map",
+        ([{
+            "artifact": f"{reference_map['id']}|{reference_map['file']}|{reference_map['version']}",
+            "provenance": reference_map["provenance"],
+        }] if reference_map is not None else []),
+    )
+    handoff.setdefault(
+        "rights_and_redistribution_decisions",
+        {
+            "source_artifacts": [
+                row["id"] for row in (reference_map, decisions_row) if row is not None
+            ],
+            "normalization_authority": "format-only derivative; no additional rights granted",
+        },
+    )
+    handoff.setdefault("explicit_exclusions", legacy.get("exclusions", []))
     for key in (
         "approved_design_statement",
         "workflow_definitions_and_instruction_modules",
