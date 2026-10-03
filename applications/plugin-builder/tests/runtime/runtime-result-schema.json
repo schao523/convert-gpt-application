@@ -1,0 +1,77 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://obvious.one/schemas/plugin-builder-runtime-result-v1.json",
+  "title": "Plugin Builder installed-runtime result",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "runtime", "artifact", "scenarios", "tools", "overall_state"],
+  "properties": {
+    "schema": {"const": "plugin-builder-runtime-result-v1"},
+    "runtime": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "version", "os", "clean_workspace", "discovery_observed", "repository_absent"],
+      "properties": {
+        "name": {"enum": ["Codex", "ChatGPT Work Local/Desktop"]},
+        "version": {"type": "string", "minLength": 1},
+        "os": {"type": "string", "minLength": 1},
+        "clean_workspace": {"type": "boolean"},
+        "discovery_observed": {"type": "boolean"},
+        "repository_absent": {"type": "boolean"}
+      }
+    },
+    "artifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["zip_sha256", "member_manifest_sha256"],
+      "properties": {
+        "zip_sha256": {"$ref": "#/$defs/sha256"},
+        "member_manifest_sha256": {"$ref": "#/$defs/sha256"}
+      }
+    },
+    "scenarios": {
+      "type": "array",
+      "minItems": 7,
+      "maxItems": 7,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "state", "result", "evidence_sha256", "limitations"],
+        "properties": {
+          "id": {"enum": ["T1", "T2", "T3", "T4", "T5", "T6", "T7"]},
+          "state": {"$ref": "#/$defs/evidence_state"},
+          "result": {"enum": ["PASS", "FAIL", "NOT VERIFIED", "NOT APPLICABLE"]},
+          "evidence_sha256": {
+            "description": "SHA-256 of the single digest-named evidence member for this scenario; null means no member is claimed.",
+            "anyOf": [{"$ref": "#/$defs/sha256"}, {"type": "null"}]
+          },
+          "limitations": {"type": "array", "items": {"type": "string"}, "uniqueItems": true}
+        }
+      }
+    },
+    "tools": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["tool_id", "implementation_kind", "state", "executed", "network_contacted", "contract_sha256", "skill_bindings"],
+        "properties": {
+          "tool_id": {"type": "string", "minLength": 1},
+          "implementation_kind": {"enum": ["BUNDLED_LOCAL", "FRAMEWORK_ADAPTER", "RUNTIME_NATIVE", "MCP_ADAPTER"]},
+          "state": {"$ref": "#/$defs/evidence_state"},
+          "executed": {"type": "boolean"},
+          "network_contacted": {"type": "boolean"},
+          "contract_sha256": {"$ref": "#/$defs/sha256"},
+          "skill_bindings": {"type": "array", "minItems": 1, "items": {"type": "string"}, "uniqueItems": true}
+        }
+      }
+    },
+    "overall_state": {"$ref": "#/$defs/evidence_state"}
+  },
+  "$defs": {
+    "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "evidence_state": {
+      "enum": ["EXPECTED", "STATICALLY VERIFIED", "RUNTIME VERIFIED", "NOT VERIFIED", "NOT APPLICABLE"]
+    }
+  }
+}

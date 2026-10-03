@@ -1,0 +1,101 @@
+{
+  "application": "Plugin Builder",
+  "artifacts": [
+    {
+      "file": "Acceptance_and_Test_Scenarios_v1.0.md",
+      "id": "TEST-v1.0",
+      "provenance": "extracted without new decisions from SPEC-v1.0",
+      "requirements": "AC1\u2013AC10; T1\u2013T7",
+      "role": "acceptance_criteria_and_representative_scenarios",
+      "sha256": "45ef0d13d178a0a7076312199469fbe17e11be15ed07a7d588205f31f6ad96b9",
+      "size": 1379,
+      "state": "approved-derived",
+      "version": "v1.0"
+    },
+    {
+      "file": "Behavioral_Workflows_and_Modules_v1.1_APPROVED.md",
+      "id": "BW-v1.1",
+      "provenance": "extracted without new decisions from SPEC-v1.0",
+      "requirements": "RQ1\u2013RQ5; WF-01, M1\u2013M6, W1/W2",
+      "role": "workflow_definitions_and_instruction_modules",
+      "sha256": "0e2dfbc844cbeb7f0180f99e263a1f6ba6bd5d6224ff2f242ff3905e535fc8e4",
+      "size": 6840,
+      "state": "approved-derived",
+      "version": "v1.1"
+    },
+    {
+      "file": "Decisions_and_Exclusions_v1.0.md",
+      "id": "DEC-v1.0",
+      "provenance": "extracted without new decisions from SPEC-v1.0",
+      "requirements": "RQ1\u2013RQ7",
+      "role": "rights_and_redistribution_decisions",
+      "sha256": "52fa0672cd65f7c9facee9f75fa6bd93331104a26ce6115edce181cbca55af71",
+      "size": 1968,
+      "state": "approved-derived",
+      "version": "v1.0"
+    },
+    {
+      "file": "Design_Statement_v1_APPROVED.md",
+      "id": "DS-v1",
+      "provenance": "extracted without new decisions from SPEC-v1.0",
+      "requirements": "confirmed intent; RQ1\u2013RQ3",
+      "role": "approved_design_statement",
+      "sha256": "fa3c818b3a8a485d1be1604e69c0b47c85462db1dfb2722512400f010ebd2a15",
+      "size": 601,
+      "state": "approved-derived",
+      "version": "v1"
+    },
+    {
+      "file": "Invariants_Capabilities_and_Gates_v1.0.md",
+      "id": "INV-v1.0",
+      "provenance": "extracted without new decisions from SPEC-v1.0",
+      "requirements": "RQ1\u2013RQ7",
+      "role": "application_invariants_and_hitl_checkpoints",
+      "sha256": "787d16402f70295cd654ebb612dcef7406d21813783c131b355d96acbbd121ad",
+      "size": 2989,
+      "state": "approved-derived",
+      "version": "v1.0"
+    },
+    {
+      "file": "Plugin_Builder_Application_Spec_v1.0_APPROVED.md",
+      "id": "SPEC-v1.0",
+      "provenance": "approved design specification; user approval 2026-09-28",
+      "requirements": "RQ1\u2013RQ7",
+      "role": "approved_specification",
+      "sha256": "11f4a18b60e771aad597a0442439759db8eb55d154ff819b1fad88f6fa937445",
+      "size": 17704,
+      "state": "approved",
+      "version": "v1.0"
+    },
+    {
+      "file": "Reference_Material_Usage_Map_v1.0.md",
+      "id": "RM-v1.0",
+      "provenance": "extracted without new decisions from SPEC-v1.0",
+      "requirements": "RQ2, RQ5; R1\u2013R4",
+      "role": "reference_material_inventory_evaluation_and_usage_map",
+      "sha256": "b487009df89d2314450921fbfd4d62eb01fee22e08eb4d4e75f4f482b631b1ac",
+      "size": 1712,
+      "state": "approved-derived",
+      "version": "v1.0"
+    }
+  ],
+  "canonical_handoff": {
+    "file": "workbench-handoff.json",
+    "sha256": "cd148b21ae6ffafac71e98c3e341aca2cebc192dc2b23e6674fa7eac00c1c2e9",
+    "size": 2823
+  },
+  "gate": "APPROVED WITH NONBLOCKING DECISIONS",
+  "normalization": "format-only",
+  "package_kind": "normalized-workbench-handoff",
+  "package_schema_version": 1,
+  "runtime_scope": "OPENAI_ONLY_PHASE_ONE",
+  "source_archive_sha256": "8edde15b6bd0e658990c3a354b85ea90b93bfa1c17216c7b11928f8284c3f497",
+  "spec_version": "v1.0",
+  "supporting_files": [
+    {
+      "file": "README.md",
+      "sha256": "13f7b02d13bbb1a384d0d79e477afec8bbecc0f1711709e508423aaa65edcc0a",
+      "size": 818
+    }
+  ]
+}

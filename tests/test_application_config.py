@@ -96,6 +96,26 @@ class ApplicationConfigTests(unittest.TestCase):
                 relative,
             )
 
+    def test_plugin_builder_phase_one_configuration_is_explicit(self) -> None:
+        configs = {item.plugin_id: item for item in discover_applications(ROOT)}
+        builder = configs["plugin-builder"]
+
+        self.assertEqual(builder.version, "0.1.1")
+        self.assertIsNone(builder.verification.marketplace)
+        self.assertEqual(
+            {
+                command.command_id: command.marketplace_targets
+                for command in builder.verification.commands
+            },
+            {
+                "runtime-status": ("codex",),
+                "session-validator": ("codex",),
+                "create-smoke": ("codex",),
+                "update-smoke": ("codex",),
+                "bundled-local-tool-smoke": ("codex",),
+            },
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

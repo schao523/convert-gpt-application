@@ -1,0 +1,86 @@
+{
+  "acceptance_criteria_and_representative_scenarios": [
+    "TEST-v1.0|Acceptance_and_Test_Scenarios_v1.0.md|v1.0"
+  ],
+  "application_invariants_and_hitl_checkpoints": [
+    "INV-v1.0|Invariants_Capabilities_and_Gates_v1.0.md|v1.0"
+  ],
+  "approval": {
+    "confirmed_by": "decision owner (user approval in this task)",
+    "evidence": "User explicitly replied \u300c\u6279\u51c6 v1.0 \u898f\u683c\u300d on 2026-09-28",
+    "specification_version": "v1.0",
+    "state": "approved"
+  },
+  "approved_design_statement": {
+    "file": "Design_Statement_v1_APPROVED.md",
+    "id": "DS-v1",
+    "state": "approved",
+    "version": "v1"
+  },
+  "approved_specification": {
+    "file": "Plugin_Builder_Application_Spec_v1.0_APPROVED.md",
+    "id": "SPEC-v1.0",
+    "state": "approved",
+    "version": "v1.0"
+  },
+  "deterministic_operation_candidates": [
+    "SPEC-v1.0#deterministic-operations"
+  ],
+  "explicit_exclusions": [
+    "Automatic ChatGPT installation or account deployment",
+    "Public marketplace publication",
+    "OpenClaw and Claude targets",
+    "Original GPT folder as a default input"
+  ],
+  "reference_material_inventory_evaluation_and_usage_map": [
+    {
+      "artifact": "RM-v1.0|Reference_Material_Usage_Map_v1.0.md|v1.0",
+      "provenance": "extracted without new decisions from SPEC-v1.0"
+    }
+  ],
+  "rights_and_redistribution_decisions": {
+    "normalization_authority": "format-only derivative; no additional rights granted",
+    "source_artifacts": [
+      "RM-v1.0",
+      "DEC-v1.0"
+    ]
+  },
+  "tool_data_runtime_and_service_requirements": {
+    "excluded_runtimes": [
+      "OpenClaw",
+      "Claude"
+    ],
+    "runtime_scope": "OPENAI_ONLY_PHASE_ONE",
+    "source_artifacts": [
+      "SPEC-v1.0",
+      "INV-v1.0"
+    ],
+    "target_runtimes": [
+      "ChatGPT Work Local/Desktop",
+      "Codex"
+    ]
+  },
+  "unresolved_owner_decisions": [
+    {
+      "blocking": false,
+      "decision_id": "UD-01",
+      "owner": "Conversion Workbench implementation team",
+      "summary": "Concrete incoming Design Spec format and version evidence are checked with the first representative input; no fixed format is prescribed here."
+    },
+    {
+      "blocking": false,
+      "decision_id": "UD-02",
+      "owner": "Conversion Workbench implementation team",
+      "summary": "Current target runtime capabilities and upload ZIP compatibility require actual environment verification."
+    },
+    {
+      "blocking": false,
+      "decision_id": "UD-03",
+      "owner": "future Plugin Builder user",
+      "summary": "Rights and availability of resources referenced by a future user Design Spec must be resolved for that individual build before redistribution."
+    }
+  ],
+  "workflow_definitions_and_instruction_modules": [
+    "BW-v1.1|Behavioral_Workflows_and_Modules_v1.1_APPROVED.md|v1.1"
+  ]
+}
