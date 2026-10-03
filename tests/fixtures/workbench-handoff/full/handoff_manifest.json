@@ -1,0 +1,56 @@
+{
+  "application": "Interoperability Sample",
+  "approval_evidence": "Decision owner approved this full design fixture.",
+  "artifacts": [
+    {
+      "file": "Design_APPROVED.md",
+      "id": "SPEC-INTEROP-1",
+      "provenance": "approved interoperability fixture",
+      "requirements": [
+        "D-01",
+        "DAC-01"
+      ],
+      "role": "approved_specification",
+      "state": "approved",
+      "version": "1.0"
+    },
+    {
+      "file": "Workflow_APPROVED.md",
+      "id": "WORKFLOW-INTEROP-1",
+      "provenance": "approved interoperability fixture",
+      "requirements": [
+        "IM-09"
+      ],
+      "role": "workflow_definitions_and_instruction_modules",
+      "state": "approved",
+      "version": "1.0"
+    }
+  ],
+  "exclusions": [
+    "OpenClaw and Claude runtimes"
+  ],
+  "gate": "APPROVED",
+  "readiness_note": "Ready for deterministic normalization.",
+  "requirements": [
+    {
+      "id": "D-01",
+      "source": "Design_APPROVED.md#D-01",
+      "verbatim": "D-01 preserves the approved application intent exactly."
+    },
+    {
+      "id": "DAC-01",
+      "source": "Design_APPROVED.md#DAC-01",
+      "verbatim": "DAC-01 preserves UTF-8 text: 酷插件設計助理."
+    },
+    {
+      "id": "IM-09",
+      "source": "Workflow_APPROVED.md#IM-09",
+      "verbatim": "IM-09 routes the approved handoff without manual sidecar repair."
+    }
+  ],
+  "reserved_workbench_decisions": [
+    "Skill architecture"
+  ],
+  "spec_version": "1.0",
+  "unresolved_owner_decisions": []
+}
