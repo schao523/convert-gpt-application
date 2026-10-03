@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "application_id": "plugin-builder",
-  "version": "0.1.3",
+  "version": "1.0.0",
   "behavioral_authority": "SPEC-v1.0",
   "scope": "OPENAI_ONLY_PHASE_ONE",
   "source_package_sha256": "8edde15b6bd0e658990c3a354b85ea90b93bfa1c17216c7b11928f8284c3f497",

@@ -27,7 +27,7 @@ Each approved requirement and representative test appears exactly once in the ID
 | T4 | building-and-updating-plugins | Unspecified baseline content waits and is not deleted | RUNTIME VERIFIED |
 | T5 | verifying-and-packaging-plugins | Persistent required failure yields no artifact | RUNTIME VERIFIED |
 | T6 | verifying-and-packaging-plugins | Environmental limitation remains NOT VERIFIED and visible through W2 | RUNTIME VERIFIED |
-| T7 | guiding-plugin-builder-sessions + runtime adapters | Generated 0.1.3 candidate normalizes canonical and retained legacy intake, runs clean-process wrapped create/update with preservation, executes its bundled tool, and closes digest-addressed evidence without repository imports | RUNTIME VERIFIED |
+| T7 | guiding-plugin-builder-sessions + runtime adapters | Generated 1.0.0 candidate normalizes canonical and retained legacy intake, runs clean-process wrapped create/update with preservation, executes its bundled tool, and closes digest-addressed evidence without repository imports | RUNTIME VERIFIED |
 | RUNTIME-CODEX | Codex | Task 0 filesystem/ZIP primitive probe | RUNTIME VERIFIED |
 | RUNTIME-WORK | ChatGPT Work Local/Desktop | Task 0 filesystem/ZIP primitive probe | RUNTIME VERIFIED |
 | RUNTIME-CODEX-APPLICATION | Codex installed Plugin Builder | Representative T1–T7 execution from the generated artifact | NOT VERIFIED |

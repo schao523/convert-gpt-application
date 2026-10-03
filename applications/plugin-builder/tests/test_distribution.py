@@ -62,7 +62,7 @@ class DistributionTests(unittest.TestCase):
         self.assertIsNone(contract.rag)
         self.assertTrue(contract.publication.github_marketplace.enabled)
         self.assertFalse(contract.publication.clawhub.enabled)
-        self.assertEqual(raw["version"], "0.1.3")
+        self.assertEqual(raw["version"], "1.0.0")
         self.assertEqual(raw["release_repository"], "schao523/obvious-one-plugins")
         self.assertEqual(
             contract.audit_hook,

@@ -1,6 +1,6 @@
 # Plugin Builder
 
-Plugin Builder converts an approved application-plugin design package into a locally validated OpenAI plugin workspace and deterministic candidate artifact. Version 0.1.3 adds the shared `WORKBENCH_HANDOFF_V1_1` interface, exact canonical requirement records, hash-bound update baselines, deterministic Design Assistant full/delta compatibility, an Agent Plugins 1.0 root manifest, and digest-closed runtime evidence packaging.
+Plugin Builder converts an approved application-plugin design package into a locally validated OpenAI plugin workspace and deterministic candidate artifact. Version 1.0.0 adds the shared `WORKBENCH_HANDOFF_V1_1` interface, exact canonical requirement records, hash-bound update baselines, deterministic Design Assistant full/delta compatibility, an Agent Plugins 1.0 root manifest, and digest-closed runtime evidence packaging.
 
 Phase one targets Codex and ChatGPT Work Local/Desktop. OpenClaw and Claude are explicitly out of scope. Private/local ZIP, the public GitHub Codex marketplace, and the OpenAI universal directory are approved release targets, but no upload, marketplace mutation, external release, account deployment, or directory submission has been performed or authorized by this implementation run.
 

@@ -34,7 +34,7 @@ class ConversionContractTests(unittest.TestCase):
         self.assertEqual(
             manifest["interface"]["displayName"], "Cool Plugin Design Assistant"
         )
-        self.assertEqual(manifest["version"], "1.0.0")
+        self.assertEqual(manifest["version"], "1.0.1")
         self.assertEqual(len(inventory["source_inventory"]), 16)
         self.assertFalse(
             any(":\\Users\\" in item["path"] for item in inventory["source_inventory"])

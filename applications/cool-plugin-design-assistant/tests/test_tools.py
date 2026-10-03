@@ -673,7 +673,7 @@ class ToolTests(unittest.TestCase):
         status = tool.status()
         self.assertEqual(status["status"], "PASS")
         self.assertEqual(status["plugin_id"], "cool-plugin-design-assistant")
-        self.assertEqual(status["version"], "1.0.0")
+        self.assertEqual(status["version"], "1.0.1")
         self.assertEqual(len(status["skills"]), 7)
         self.assertEqual(status["rag"], "NOT APPLICABLE")
         self.assertEqual(status["clawhub"], "NOT APPLICABLE")
