@@ -1,7 +1,8 @@
 # Obvious One Target-Aware Marketplace Contract
 
-Status: **PROPOSED — OWNER REVIEW REQUIRED**  
+Status: **APPROVED**  
 Date: 2026-10-03  
+Owner approval: confirmed in the development session on 2026-10-03  
 Scope: local marketplace preparation and verification only
 
 ## 1. Purpose
