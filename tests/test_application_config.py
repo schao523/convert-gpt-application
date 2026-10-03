@@ -2,11 +2,42 @@ from pathlib import Path
 import subprocess
 import unittest
 
+from obvious_one_plugin_framework.marketplace import load_preparation_catalog
 from obvious_one_plugin_framework.verification import discover_applications
 
 
 ROOT = Path(__file__).resolve().parents[1]
 class ApplicationConfigTests(unittest.TestCase):
+    def test_design_assistant_remains_dual_runtime(self) -> None:
+        catalog = load_preparation_catalog(
+            ROOT / "marketplaces" / "obvious-one.json", ROOT
+        )
+        assistant = next(
+            entry
+            for entry in catalog.applications
+            if entry.application.plugin_id == "cool-plugin-design-assistant"
+        )
+
+        self.assertEqual(assistant.target("codex").mode, "build")
+        self.assertEqual(assistant.target("codex").destination, "plugins/cool-plugin-design-assistant")
+        self.assertEqual(assistant.target("openclaw").mode, "build")
+        self.assertEqual(
+            assistant.target("openclaw").destination,
+            "openclaw/cool-plugin-design-assistant",
+        )
+
+    def test_all_cataloged_target_destinations_match_application_identity(self) -> None:
+        catalog = load_preparation_catalog(
+            ROOT / "marketplaces" / "obvious-one.json", ROOT
+        )
+
+        self.assertEqual(catalog.schema_version, 2)
+        for entry in catalog.applications:
+            plugin_id = entry.application.plugin_id
+            for target_name, target in entry.applicable_targets():
+                prefix = "plugins" if target_name == "codex" else "openclaw"
+                self.assertEqual(target.destination, f"{prefix}/{plugin_id}")
+
     def test_every_discovered_application_configuration_resolves(self) -> None:
         configs = discover_applications(ROOT)
         self.assertGreater(len(configs), 0)
@@ -95,6 +126,26 @@ class ApplicationConfigTests(unittest.TestCase):
                 (assistant.root / Path(relative)).is_file(),
                 relative,
             )
+
+    def test_plugin_builder_phase_one_configuration_is_explicit(self) -> None:
+        configs = {item.plugin_id: item for item in discover_applications(ROOT)}
+        builder = configs["plugin-builder"]
+
+        self.assertEqual(builder.version, "1.0.0")
+        self.assertIsNone(builder.verification.marketplace)
+        self.assertEqual(
+            {
+                command.command_id: command.marketplace_targets
+                for command in builder.verification.commands
+            },
+            {
+                "runtime-status": ("codex",),
+                "session-validator": (),
+                "create-smoke": (),
+                "update-smoke": (),
+                "bundled-local-tool-smoke": (),
+            },
+        )
 
 
 if __name__ == "__main__":

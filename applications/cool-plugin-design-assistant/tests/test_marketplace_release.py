@@ -29,7 +29,8 @@ class MarketplaceReleaseTests(unittest.TestCase):
             REPOSITORY / "marketplaces" / "obvious-one.json", REPOSITORY
         )
         modes = {
-            entry.application.plugin_id: entry.mode for entry in catalog.applications
+            entry.application.plugin_id: entry.target("codex").mode
+            for entry in catalog.applications
         }
         self.assertEqual(modes["cool-bible-tutor"], "build")
         self.assertEqual(modes["vibe-coding-designer"], "build")
@@ -39,8 +40,8 @@ class MarketplaceReleaseTests(unittest.TestCase):
         release = load_script("build_marketplace_release.py")
         with tempfile.TemporaryDirectory() as temp:
             destination = Path(temp) / "marketplace"
-            first = release.build_release(ROOT, destination, "1.0.0")
-            second = release.build_release(ROOT, destination, "1.0.0")
+            first = release.build_release(ROOT, destination, "1.0.1")
+            second = release.build_release(ROOT, destination, "1.0.1")
             self.assertEqual(first.sha256, second.sha256)
             self.assertEqual(first.paths, second.paths)
             plugin = destination / "plugins" / "cool-plugin-design-assistant"
@@ -54,6 +55,10 @@ class MarketplaceReleaseTests(unittest.TestCase):
             self.assertFalse(
                 (plugin / "docs/marketplace-approved-delta.json").exists()
             )
+            vendor = plugin / "scripts/vendor/obvious_one_plugin_framework"
+            self.assertTrue((vendor / "workbench_handoff/normalization.py").is_file())
+            self.assertTrue((vendor / "plugin_authoring/archive.py").is_file())
+            self.assertFalse(any("__pycache__" in path.parts for path in vendor.rglob("*")))
 
     def test_codex_release_requires_rights_evidence_before_destination_mutation(self) -> None:
         release = load_script("build_marketplace_release.py")
@@ -63,7 +68,7 @@ class MarketplaceReleaseTests(unittest.TestCase):
             (copied_source / "docs" / "source-decisions.md").unlink()
             destination = Path(temp) / "marketplace"
             with self.assertRaisesRegex(ValueError, "rights and provenance evidence missing"):
-                release.build_release(copied_source, destination, "1.0.0")
+                release.build_release(copied_source, destination, "1.0.1")
             self.assertFalse(destination.exists())
 
     def test_codex_release_detects_windows_reparse_points(self) -> None:

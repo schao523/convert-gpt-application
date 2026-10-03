@@ -1,0 +1,22 @@
+{
+  "schema_version": 3,
+  "application_id": "plugin-builder",
+  "plugin_id": "plugin-builder",
+  "source_repository": "plugin-builder-approved-handoff-v1.0",
+  "source_tree_sha256": "d0d8700951992c12becf5543087716ecd8bd7fbdb42b53ab70a269af0f4f972d",
+  "marketplace_repository": "schao523/obvious-one-plugins",
+  "marketplace_commit": "0000000000000000000000000000000000000000",
+  "incorporated_branches": [],
+  "source_inventory": [
+    {"classification": "approved-design-internal", "path": "Acceptance_and_Test_Scenarios_v1.0.md", "sha256": "45ef0d13d178a0a7076312199469fbe17e11be15ed07a7d588205f31f6ad96b9"},
+    {"classification": "approved-design-internal", "path": "Behavioral_Workflows_and_Modules_v1.1_APPROVED.md", "sha256": "0e2dfbc844cbeb7f0180f99e263a1f6ba6bd5d6224ff2f242ff3905e535fc8e4"},
+    {"classification": "approved-design-internal", "path": "Decisions_and_Exclusions_v1.0.md", "sha256": "52fa0672cd65f7c9facee9f75fa6bd93331104a26ce6115edce181cbca55af71"},
+    {"classification": "approved-design-internal", "path": "Design_Statement_v1_APPROVED.md", "sha256": "fa3c818b3a8a485d1be1604e69c0b47c85462db1dfb2722512400f010ebd2a15"},
+    {"classification": "approved-design-internal", "path": "Invariants_Capabilities_and_Gates_v1.0.md", "sha256": "787d16402f70295cd654ebb612dcef7406d21813783c131b355d96acbbd121ad"},
+    {"classification": "approved-design-internal", "path": "Plugin_Builder_Application_Spec_v1.0_APPROVED.md", "sha256": "11f4a18b60e771aad597a0442439759db8eb55d154ff819b1fad88f6fa937445"},
+    {"classification": "approved-design-internal", "path": "README.md", "sha256": "13f7b02d13bbb1a384d0d79e477afec8bbecc0f1711709e508423aaa65edcc0a"},
+    {"classification": "approved-design-internal", "path": "Reference_Material_Usage_Map_v1.0.md", "sha256": "b487009df89d2314450921fbfd4d62eb01fee22e08eb4d4e75f4f482b631b1ac"},
+    {"classification": "approved-design-internal", "path": "package-manifest.json", "sha256": "b1ef2898f8f5b32359eebb13cf4338a103ff96b63eca4ada825c40c752c390e0"},
+    {"classification": "approved-design-internal", "path": "workbench-handoff.json", "sha256": "cd148b21ae6ffafac71e98c3e341aca2cebc192dc2b23e6674fa7eac00c1c2e9"}
+  ]
+}

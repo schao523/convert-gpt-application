@@ -1,0 +1,61 @@
+{
+  "application": "Interoperability Sample",
+  "approval_evidence": "Decision owner approved this delta fixture.",
+  "artifacts": [
+    {
+      "file": "Delta_APPROVED.md",
+      "id": "SPEC-INTEROP-DELTA-1",
+      "provenance": "approved interoperability delta fixture",
+      "requirements": [
+        "DAC-01",
+        "IM-09"
+      ],
+      "role": "approved_specification",
+      "state": "approved",
+      "version": "1.1"
+    },
+    {
+      "file": "Design_Statement_APPROVED.md",
+      "id": "DS-INTEROP-1",
+      "provenance": "approved interoperability delta fixture",
+      "requirements": [],
+      "role": "approved_design_statement",
+      "state": "approved",
+      "version": "1.0"
+    }
+  ],
+  "baseline": {
+    "archive_sha256": "__BASELINE_SHA256__",
+    "plugin_id": "interop-plugin",
+    "version": "1.0.0"
+  },
+  "baseline_preservation": {
+    "identity_must_match": true,
+    "preserve_unaffected_members": true,
+    "removal_requires_requirement": true
+  },
+  "exclusions": [
+    "OpenClaw and Claude runtimes"
+  ],
+  "gate": "READY FOR WORKBENCH",
+  "readiness_note": "Ready for deterministic normalization.",
+  "requirements": [
+    {
+      "change": "modify",
+      "id": "DAC-01",
+      "source": "Delta_APPROVED.md#DAC-01",
+      "verbatim": "DAC-01 preserves UTF-8 text: 酷插件設計助理."
+    },
+    {
+      "change": "add",
+      "id": "IM-09",
+      "source": "Delta_APPROVED.md#IM-09",
+      "verbatim": "IM-09 routes the approved update without manual sidecar repair."
+    }
+  ],
+  "reserved_workbench_decisions": [
+    "Skill architecture"
+  ],
+  "spec_version": "1.1",
+  "unresolved_owner_decisions": []
+}

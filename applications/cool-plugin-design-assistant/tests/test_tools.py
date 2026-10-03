@@ -1,10 +1,13 @@
 import copy
+import hashlib
 import importlib.util
 import json
 from pathlib import Path
 import subprocess
 import sys
+import tempfile
 import unittest
+import zipfile
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -26,7 +29,260 @@ def load_fixture(name: str):
 tool = load_tool()
 
 
+def test_temp_directory():
+    temp_root = ROOT.parents[1] / ".tmp" / "cool-plugin-design-assistant-tests"
+    temp_root.mkdir(parents=True, exist_ok=True)
+    return tempfile.TemporaryDirectory(dir=temp_root)
+
+
+def write_approved_handoff_package(
+    path: Path,
+    *,
+    extra_members: dict[str, bytes] | None = None,
+    operation: str = "create",
+) -> dict[str, bytes]:
+    artifacts = {
+        "Plugin_Builder_Application_Spec_v1.0_APPROVED.md": b"# Approved specification\nRequirement SPEC-01 is exact.\n",
+        "Design_Statement_v1_APPROVED.md": b"# Approved design statement\nRequirement DS-01 is exact.\n",
+        "Behavioral_Workflows_and_Modules_v1.1_APPROVED.md": b"# Approved workflows\nRequirement BW-01 is exact.\n",
+        "Reference_Material_Usage_Map_v1.0.md": b"# Reference material map\nRequirement RM-01 is exact.\n",
+        "Invariants_Capabilities_and_Gates_v1.0.md": b"# Invariants and gates\nRequirement INV-01 is exact.\n",
+        "Acceptance_and_Test_Scenarios_v1.0.md": b"# Acceptance scenarios\nRequirement TEST-01 is exact.\n",
+        "Decisions_and_Exclusions_v1.0.md": b"# Decisions and exclusions\nRequirement DEC-01 is exact.\n",
+        "README.md": b"# Approved Plugin Builder handoff\n",
+    }
+    artifact_rows = [
+        ("SPEC-v1.0", "Plugin_Builder_Application_Spec_v1.0_APPROVED.md", "v1.0", "approved"),
+        ("DS-v1", "Design_Statement_v1_APPROVED.md", "v1", "approved-derived"),
+        ("BW-v1.1", "Behavioral_Workflows_and_Modules_v1.1_APPROVED.md", "v1.1", "approved"),
+        ("RM-v1.0", "Reference_Material_Usage_Map_v1.0.md", "v1.0", "approved-derived"),
+        ("INV-v1.0", "Invariants_Capabilities_and_Gates_v1.0.md", "v1.0", "approved-derived"),
+        ("TEST-v1.0", "Acceptance_and_Test_Scenarios_v1.0.md", "v1.0", "approved-derived"),
+        ("DEC-v1.0", "Decisions_and_Exclusions_v1.0.md", "v1.0", "approved-derived"),
+    ]
+    manifest = {
+        "application": "Plugin Builder",
+        "spec_version": "v1.0",
+        "gate": "APPROVED WITH NONBLOCKING DECISIONS",
+        "approval_evidence": "The decision owner approved the package.",
+        "artifacts": [
+            {
+                "id": artifact_id,
+                "file": filename,
+                "version": version,
+                "state": state,
+                "provenance": "approved handoff",
+                "requirements": [f"{artifact_id.split('-', 1)[0]}-01"],
+            }
+            for index, (artifact_id, filename, version, state) in enumerate(
+                artifact_rows, start=1
+            )
+        ],
+        "unresolved_owner_decisions": [
+            {
+                "decision_id": "UD-01",
+                "summary": "Choose the initial model allowlist.",
+                "owner": "decision owner",
+                "impact": "Workbench must retain the decision without guessing.",
+                "blocking": False,
+            }
+        ],
+        "exclusions": [
+            "OpenClaw and Claude targets",
+            "automatic deployment",
+            "public marketplace publication",
+        ],
+        "reserved_workbench_decisions": ["Skill architecture"],
+        "readiness_note": "Ready for deterministic normalization.",
+        "requirements": [
+            {
+                "id": f"{artifact_id.split('-', 1)[0]}-01",
+                "source": filename,
+                "verbatim": f"Requirement {artifact_id.split('-', 1)[0]}-01 is exact.",
+                **({"change": "modify"} if operation == "update" else {}),
+            }
+            for artifact_id, filename, _version, _state in artifact_rows
+        ],
+    }
+    if operation == "update":
+        manifest["baseline"] = {
+            "plugin_id": "plugin-builder",
+            "version": "0.1.2",
+            "archive_sha256": "a" * 64,
+        }
+        manifest["baseline_preservation"] = {
+            "preserve_unaffected_members": True,
+            "removal_requires_requirement": True,
+            "identity_must_match": True,
+        }
+    authority_name = "handoff_manifest.json" if operation == "create" else "delta_handoff_manifest.json"
+    members = {
+        **artifacts,
+        authority_name: json.dumps(
+            manifest, ensure_ascii=False, sort_keys=True
+        ).encode("utf-8"),
+        **(extra_members or {}),
+    }
+    with zipfile.ZipFile(path, "w", compression=zipfile.ZIP_DEFLATED) as archive:
+        for name, content in members.items():
+            archive.writestr(name, content)
+    return artifacts
+
+
 class ToolTests(unittest.TestCase):
+    def test_normalizes_approved_package_into_valid_workbench_handoff(self) -> None:
+        with test_temp_directory() as temp:
+            root = Path(temp)
+            source = root / "approved.zip"
+            output = root / "approved-normalized.zip"
+            artifacts = write_approved_handoff_package(source)
+            source_bytes = source.read_bytes()
+
+            result = tool.normalize_handoff_package(
+                source,
+                output,
+                confirmed_by="decision owner",
+                runtime_scope="OPENAI_ONLY_PHASE_ONE",
+            )
+
+            self.assertEqual(source.read_bytes(), source_bytes)
+            self.assertEqual(result["gate_state"], "APPROVED WITH NONBLOCKING DECISIONS")
+            with zipfile.ZipFile(output) as archive:
+                names = archive.namelist()
+                self.assertEqual(names, sorted(names))
+                self.assertNotIn("handoff_manifest.json", names)
+                self.assertIn("package-manifest.json", names)
+                self.assertIn("workbench-handoff.json", names)
+                for name, content in artifacts.items():
+                    self.assertEqual(archive.read(name), content)
+                handoff = json.loads(archive.read("workbench-handoff.json"))
+                package_manifest = json.loads(archive.read("package-manifest.json"))
+
+            self.assertEqual(tool.validate_handoff(handoff), [])
+            self.assertEqual(handoff["approved_specification"]["version"], "v1.0")
+            self.assertEqual(handoff["schema"], "workbench-handoff-v1.1")
+            self.assertEqual(handoff["operation"], "create")
+            self.assertEqual(handoff["requirements"][0]["id"], "SPEC-01")
+            self.assertEqual(
+                handoff["tool_data_runtime_and_service_requirements"]["runtime_scope"],
+                "OPENAI_ONLY_PHASE_ONE",
+            )
+            self.assertEqual(
+                package_manifest["source_archive_sha256"],
+                hashlib.sha256(source_bytes).hexdigest(),
+            )
+            self.assertEqual(package_manifest["canonical_handoff"]["file"], "workbench-handoff.json")
+            self.assertEqual(package_manifest["handoff_contract"], "WORKBENCH_HANDOFF_V1_1")
+            supporting = {item["file"]: item for item in package_manifest["supporting_files"]}
+            self.assertEqual(supporting["README.md"]["sha256"], hashlib.sha256(artifacts["README.md"]).hexdigest())
+
+    def test_normalizes_delta_package_to_v11_update_with_baseline_contract(self) -> None:
+        with test_temp_directory() as temp:
+            root = Path(temp)
+            source = root / "delta.zip"
+            output = root / "delta-normalized.zip"
+            write_approved_handoff_package(source, operation="update")
+
+            result = tool.normalize_handoff_package(source, output, confirmed_by="decision owner")
+
+            self.assertEqual(result["profile"], "COOL_DESIGN_ASSISTANT_DELTA_V1")
+            with zipfile.ZipFile(output) as archive:
+                handoff = json.loads(archive.read("workbench-handoff.json"))
+            self.assertEqual(handoff["operation"], "update")
+            self.assertEqual(handoff["requirements"][0]["change"], "modify")
+            self.assertEqual(handoff["baseline"]["plugin_id"], "plugin-builder")
+            self.assertTrue(handoff["baseline_preservation"]["preserve_unaffected_members"])
+
+    def test_rejects_legacy_package_without_exact_requirement_authority(self) -> None:
+        with test_temp_directory() as temp:
+            root = Path(temp)
+            source = root / "approved.zip"
+            output = root / "normalized.zip"
+            write_approved_handoff_package(source)
+            with zipfile.ZipFile(source) as archive:
+                members = {name: archive.read(name) for name in archive.namelist()}
+                manifest = json.loads(archive.read("handoff_manifest.json"))
+            manifest.pop("requirements")
+            members["handoff_manifest.json"] = json.dumps(manifest).encode("utf-8")
+            with zipfile.ZipFile(source, "w", compression=zipfile.ZIP_DEFLATED) as archive:
+                for name, content in sorted(members.items()):
+                    archive.writestr(name, content)
+            result = tool.normalize_handoff_package(source, output, confirmed_by="decision owner")
+            self.assertEqual(result["status"], "BLOCKED")
+            self.assertIn("requirements.explicit_records_required", result["diagnostics"])
+            self.assertFalse(output.exists())
+
+    def test_handoff_normalization_is_byte_deterministic(self) -> None:
+        with test_temp_directory() as temp:
+            root = Path(temp)
+            source = root / "approved.zip"
+            first = root / "normalized-one.zip"
+            second = root / "normalized-two.zip"
+            write_approved_handoff_package(source)
+
+            tool.normalize_handoff_package(source, first, confirmed_by="decision owner")
+            tool.normalize_handoff_package(source, second, confirmed_by="decision owner")
+
+            self.assertEqual(first.read_bytes(), second.read_bytes())
+
+    def test_handoff_normalization_rejects_unlisted_members_without_output(self) -> None:
+        with test_temp_directory() as temp:
+            root = Path(temp)
+            source = root / "approved.zip"
+            output = root / "normalized.zip"
+            write_approved_handoff_package(
+                source,
+                extra_members={"unapproved.txt": b"not in the approved manifest"},
+            )
+
+            result = tool.normalize_handoff_package(source, output, confirmed_by="decision owner")
+            self.assertEqual(result["status"], "FAIL")
+            self.assertIn("package.undeclared_member:unapproved.txt", result["diagnostics"])
+            self.assertFalse(output.exists())
+
+    def test_normalize_handoff_cli_reports_repository_gate(self) -> None:
+        with test_temp_directory() as temp:
+            root = Path(temp)
+            source = root / "approved.zip"
+            output = root / "normalized.zip"
+            write_approved_handoff_package(source)
+
+            completed = subprocess.run(
+                [
+                    sys.executable,
+                    "-B",
+                    str(SCRIPT),
+                    "normalize-handoff-package",
+                    str(source),
+                    str(output),
+                    "--confirmed-by",
+                    "decision owner",
+                    "--runtime-scope",
+                    "OPENAI_ONLY_PHASE_ONE",
+                    "--json",
+                ],
+                check=False,
+                capture_output=True,
+                text=True,
+            )
+
+            self.assertEqual(completed.returncode, 0, completed.stderr)
+            document = json.loads(completed.stdout)
+            self.assertEqual(document["status"], "PASS")
+            self.assertEqual(
+                document["gate_state"], "APPROVED WITH NONBLOCKING DECISIONS"
+            )
+            self.assertTrue(output.is_file())
+
+    def test_handoff_reference_requires_canonical_records_and_one_envelope(self) -> None:
+        reference = (
+            ROOT
+            / "skills/creating-application-plugin-design-specifications/references/workbench-handoff-contract.md"
+        ).read_text(encoding="utf-8")
+        self.assertIn("WORKBENCH_HANDOFF_V1_1", reference)
+        self.assertIn("exact `id`, `source`, and `verbatim`", reference)
+        self.assertIn("one semantic authority", reference)
+
     def test_workflow_validator_requires_reachable_terminal_and_failure_paths(self) -> None:
         valid = load_fixture("workflow-valid.json")
         self.assertEqual(tool.validate_workflow(valid), [])
@@ -417,7 +673,7 @@ class ToolTests(unittest.TestCase):
         status = tool.status()
         self.assertEqual(status["status"], "PASS")
         self.assertEqual(status["plugin_id"], "cool-plugin-design-assistant")
-        self.assertEqual(status["version"], "1.0.0")
+        self.assertEqual(status["version"], "1.0.1")
         self.assertEqual(len(status["skills"]), 7)
         self.assertEqual(status["rag"], "NOT APPLICABLE")
         self.assertEqual(status["clawhub"], "NOT APPLICABLE")

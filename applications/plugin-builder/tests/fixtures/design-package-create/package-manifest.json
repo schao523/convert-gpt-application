@@ -1,0 +1,40 @@
+{
+  "application": "Sample Plugin",
+  "artifacts": [
+    {
+      "file": "Design_APPROVED.md",
+      "id": "SPEC-v1.0",
+      "provenance": "fixture approved design",
+      "requirements": "RQ1; AC1",
+      "role": "approved_specification",
+      "sha256": "a349cf85de1d72821b469aa094cff42daaf652cad0f0f1832d61b5fd0178af49",
+      "size": 179,
+      "state": "approved",
+      "version": "v1.0"
+    },
+    {
+      "file": "Reference.md",
+      "id": "REF-v1.0",
+      "provenance": "fixture required resource",
+      "requirements": "RQ1",
+      "role": "required_reference_material",
+      "sha256": "6f40ff0bc95d7e03248b5ca370998159f36ab0dcf9a7c170d887d1202ff4a0fd",
+      "size": 80,
+      "state": "approved-derived",
+      "version": "v1.0"
+    }
+  ],
+  "canonical_handoff": {
+    "file": "workbench-handoff.json",
+    "sha256": "0ad6c5c80903b96d7e558a5b481fa7466be1b0369d5b097d5a46a236ec7a95b7",
+    "size": 349
+  },
+  "gate": "APPROVED",
+  "normalization": "format-only",
+  "package_kind": "normalized-workbench-handoff",
+  "package_schema_version": 1,
+  "runtime_scope": "OPENAI_ONLY_PHASE_ONE",
+  "source_archive_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "spec_version": "v1.0",
+  "supporting_files": []
+}

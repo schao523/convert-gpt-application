@@ -39,6 +39,7 @@ BLOCKING_CODES = frozenset({
     "hosted_lineage_unresolved",
     "capability_decision_required",
     "required_capability_artifact_missing",
+    "not_applicable_target_already_published",
 })
 
 
@@ -157,7 +158,7 @@ def main(argv: list[str] | None = None) -> int:
         exit_code = 2
     except (PackageAuditError, AssetBuildError, IndexReuseError, MarketplaceError) as exc:
         result = _typed_failure(operation, exc)
-        exit_code = 3
+        exit_code = 2 if result.status == "BLOCKED" else 3
     except subprocess.TimeoutExpired:
         result = _failure(operation, "FAIL", "operation_timeout")
         exit_code = 4

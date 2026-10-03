@@ -25,13 +25,17 @@ from .verification import (
 
 
 _CATALOG_KEYS = {"schema_version", "marketplace_id", "applications"}
-_ENTRY_KEYS = {
+_V1_ENTRY_KEYS = {
     "application_config",
     "distribution_contract",
     "codex_destination",
     "openclaw_destination",
     "mode",
 }
+_V2_ENTRY_KEYS = {"application_config", "distribution_contract", "targets"}
+_TARGET_NAMES = ("codex", "openclaw")
+_APPLICABLE_TARGET_MODES = {"build", "verify_existing"}
+_TARGET_MODES = _APPLICABLE_TARGET_MODES | {"not_applicable"}
 
 
 class MarketplaceError(ValueError):
@@ -41,12 +45,45 @@ class MarketplaceError(ValueError):
 
 
 @dataclass(frozen=True)
+class PreparationTarget:
+    mode: str
+    destination: str | None
+
+
+@dataclass(frozen=True)
 class PreparationEntry:
     application: ApplicationConfig
     contract: DistributionContract
-    codex_destination: str
-    openclaw_destination: str
-    mode: str
+    codex: PreparationTarget
+    openclaw: PreparationTarget
+
+    def target(self, name: str) -> PreparationTarget:
+        if name == "codex":
+            return self.codex
+        if name == "openclaw":
+            return self.openclaw
+        raise MarketplaceError("invalid_marketplace_catalog_target", name)
+
+    def applicable_targets(self) -> tuple[tuple[str, PreparationTarget], ...]:
+        return tuple(
+            (name, self.target(name))
+            for name in _TARGET_NAMES
+            if self.target(name).mode != "not_applicable"
+        )
+
+    @property
+    def mode(self) -> str:
+        if self.codex.mode != self.openclaw.mode:
+            raise MarketplaceError("runtime_catalog_target_mismatch", self.application.plugin_id)
+        return self.codex.mode
+
+    @property
+    def codex_destination(self) -> str:
+        return _required_target_destination(self.codex, "codex")
+
+    @property
+    def openclaw_destination(self) -> str:
+        return _required_target_destination(self.openclaw, "openclaw")
 
 
 @dataclass(frozen=True)
@@ -66,7 +103,8 @@ def load_preparation_catalog(path: Path, repository_root: Path) -> PreparationCa
     except (OSError, UnicodeError, json.JSONDecodeError) as exc:
         raise MarketplaceError("invalid_marketplace_catalog") from exc
     root = _strict_mapping(raw, _CATALOG_KEYS, "catalog")
-    if root["schema_version"] != 1:
+    schema_version = root["schema_version"]
+    if schema_version not in {1, 2}:
         raise MarketplaceError("unsupported_marketplace_catalog_schema")
     marketplace_id = _text(root["marketplace_id"], "marketplace_id")
     applications_raw = root["applications"]
@@ -78,7 +116,11 @@ def load_preparation_catalog(path: Path, repository_root: Path) -> PreparationCa
     destinations: set[str] = set()
     destination_parts: list[tuple[str, ...]] = []
     for index, item in enumerate(applications_raw):
-        entry = _strict_mapping(item, _ENTRY_KEYS, f"applications[{index}]")
+        entry = _strict_mapping(
+            item,
+            _V1_ENTRY_KEYS if schema_version == 1 else _V2_ENTRY_KEYS,
+            f"applications[{index}]",
+        )
         config_path = _within(repository, entry["application_config"], "application_config")
         contract_path = _within(repository, entry["distribution_contract"], "distribution_contract")
         application = load_application_config_path(config_path, repository)
@@ -87,20 +129,44 @@ def load_preparation_catalog(path: Path, repository_root: Path) -> PreparationCa
             raise MarketplaceError("distribution_contract_mismatch", application.application_id)
         if contract.plugin_id != application.plugin_id:
             raise MarketplaceError("marketplace_identity_mismatch", application.plugin_id)
-        mode = _text(entry["mode"], "mode")
-        if mode not in {"build", "verify_existing"}:
-            raise MarketplaceError("invalid_preparation_mode", mode)
-        if mode == "build":
+        if schema_version == 1:
+            mode = _text(entry["mode"], "mode")
+            if mode not in _APPLICABLE_TARGET_MODES:
+                raise MarketplaceError("invalid_preparation_mode", mode)
+            codex = PreparationTarget(
+                mode,
+                _destination(entry["codex_destination"], "codex_destination"),
+            )
+            openclaw = PreparationTarget(
+                mode,
+                _destination(entry["openclaw_destination"], "openclaw_destination"),
+            )
+        else:
+            targets = entry["targets"]
+            if not isinstance(targets, dict) or set(targets) != set(_TARGET_NAMES):
+                raise MarketplaceError("invalid_marketplace_catalog_target", f"applications[{index}].targets")
+            codex = _parse_target(targets["codex"], "codex")
+            openclaw = _parse_target(targets["openclaw"], "openclaw")
+            if codex.mode == "not_applicable" and openclaw.mode == "not_applicable":
+                raise MarketplaceError("marketplace_no_applicable_targets", application.plugin_id)
+            if (
+                openclaw.mode == "not_applicable"
+                and contract.publication is not None
+                and contract.publication.clawhub.enabled
+            ):
+                raise MarketplaceError("clawhub_requires_openclaw_target", application.plugin_id)
+        if any(target.mode == "build" for target in (codex, openclaw)):
             try:
                 require_buildable_contract(contract)
             except ContractError as exc:
                 raise MarketplaceError(exc.code, application.plugin_id) from exc
-        codex_destination = _destination(entry["codex_destination"], "codex_destination")
-        openclaw_destination = _destination(entry["openclaw_destination"], "openclaw_destination")
         if application.application_id in identities:
             raise MarketplaceError("duplicate_marketplace_application", application.application_id)
         identities.add(application.application_id)
-        for destination in (codex_destination, openclaw_destination):
+        for target in (codex, openclaw):
+            if target.destination is None:
+                continue
+            destination = target.destination
             identity = destination.casefold()
             if identity in destinations:
                 raise MarketplaceError("duplicate_marketplace_destination", destination)
@@ -117,12 +183,11 @@ def load_preparation_catalog(path: Path, repository_root: Path) -> PreparationCa
             PreparationEntry(
                 application,
                 contract,
-                codex_destination,
-                openclaw_destination,
-                mode,
+                codex,
+                openclaw,
             )
         )
-    return PreparationCatalog(1, marketplace_id, tuple(entries), repository, catalog_path)
+    return PreparationCatalog(schema_version, marketplace_id, tuple(entries), repository, catalog_path)
 
 
 def prepare_marketplace(
@@ -140,21 +205,40 @@ def prepare_marketplace(
         temporary_root = Path(temporary)
         stage = temporary_root / "marketplace"
         _copy_marketplace_tree(baseline_root, stage)
+        _ensure_not_applicable_targets_absent(catalog, stage)
         for entry in catalog.applications:
-            if entry.mode == "build":
-                _build_entry(entry, stage, temporary_root / entry.application.plugin_id)
-            else:
-                _verify_existing_entry(entry, baseline_root, stage)
+            for target_name, target in entry.applicable_targets():
+                if target.mode == "build":
+                    _build_target(
+                        entry,
+                        target_name,
+                        target,
+                        stage,
+                        temporary_root / entry.application.plugin_id,
+                    )
+                else:
+                    _verify_existing_target(
+                        entry,
+                        target_name,
+                        target,
+                        baseline_root,
+                        stage,
+                    )
         _write_generated_controls(catalog, stage)
         comparison = temporary_root / "comparison"
         _copy_marketplace_tree(baseline_root, comparison)
         if _is_git_root(baseline_root):
             for entry in catalog.applications:
-                if entry.mode == "verify_existing":
+                destinations = tuple(
+                    target.destination
+                    for _, target in entry.applicable_targets()
+                    if target.mode == "verify_existing" and target.destination is not None
+                )
+                if destinations:
                     _materialize_committed_destinations(
                         baseline_root,
                         comparison,
-                        (entry.codex_destination, entry.openclaw_destination),
+                        destinations,
                     )
         delta = _tree_delta(comparison, stage)
         aggregate, total_bytes = _tree_identity(stage)
@@ -250,11 +334,7 @@ def verify_marketplace(
     files_checked = 0
     requested_git = check_index or commit is not None or fresh_checkout
     if requested_git:
-        scopes = tuple(
-            destination
-            for entry in catalog.applications
-            for destination in (entry.codex_destination, entry.openclaw_destination)
-        )
+        scopes = _applicable_destinations(catalog)
         reference = "HEAD" if fresh_checkout and commit is None else commit
         try:
             report = verify_git_evidence(
@@ -303,10 +383,23 @@ def verify_marketplace(
     )
 
 
-def _build_entry(entry: PreparationEntry, stage: Path, work: Path) -> None:
-    work.mkdir(parents=True)
+def _build_target(
+    entry: PreparationEntry,
+    target_name: str,
+    target: PreparationTarget,
+    stage: Path,
+    work: Path,
+) -> None:
+    destination = _required_target_destination(target, target_name)
+    work.mkdir(parents=True, exist_ok=True)
+    if target_name == "openclaw":
+        artifact = work / "openclaw" / entry.application.plugin_id
+        build_package(entry.contract, artifact)
+        verify_package(entry.contract, artifact)
+        _replace_destination(artifact, _stage_destination(stage, destination))
+        return
     diagnostics = work / "diagnostics"
-    diagnostics.mkdir()
+    diagnostics.mkdir(exist_ok=True)
     context = ExpansionContext(
         python=sys.executable,
         repository_root=entry.application.root,
@@ -335,38 +428,70 @@ def _build_entry(entry: PreparationEntry, stage: Path, work: Path) -> None:
     if not codex_artifact.is_dir():
         raise MarketplaceError("codex_artifact_missing", entry.application.plugin_id)
     _check_plugin_manifest(codex_artifact, entry.application.plugin_id, entry.application.version)
-
-    openclaw_artifact = work / "openclaw" / entry.application.plugin_id
-    build_package(entry.contract, openclaw_artifact)
-    verify_package(entry.contract, openclaw_artifact)
-    _replace_destination(codex_artifact, _stage_destination(stage, entry.codex_destination))
-    _replace_destination(openclaw_artifact, _stage_destination(stage, entry.openclaw_destination))
+    _replace_destination(codex_artifact, _stage_destination(stage, destination))
 
 
-def _verify_existing_entry(entry: PreparationEntry, baseline: Path, stage: Path) -> None:
+def _verify_existing_target(
+    entry: PreparationEntry,
+    target_name: str,
+    target: PreparationTarget,
+    baseline: Path,
+    stage: Path,
+) -> None:
+    destination = _required_target_destination(target, target_name)
     committed = _is_git_root(baseline)
     if committed:
         _materialize_committed_destinations(
             baseline,
             stage,
-            (entry.codex_destination, entry.openclaw_destination),
+            (destination,),
         )
-    codex = _stage_destination(stage, entry.codex_destination)
-    openclaw = _stage_destination(stage, entry.openclaw_destination)
-    _check_plugin_manifest(codex, entry.application.plugin_id, entry.application.version)
-    if entry.contract.schema_version == 3:
-        verify_package(entry.contract, openclaw)
+    artifact = _stage_destination(stage, destination)
+    if target_name == "codex":
+        _check_plugin_manifest(artifact, entry.application.plugin_id, entry.application.version)
+    elif entry.contract.schema_version == 3:
+        verify_package(entry.contract, artifact)
     else:
         _check_legacy_content_manifest(
-            openclaw,
+            artifact,
             entry.application.plugin_id,
             entry.application.version,
         )
-    if not committed:
-        if _tree_files(baseline / Path(entry.codex_destination)) != _tree_files(codex):
-            raise MarketplaceError("verify_existing_mutated", entry.application.plugin_id)
-        if _tree_files(baseline / Path(entry.openclaw_destination)) != _tree_files(openclaw):
-            raise MarketplaceError("verify_existing_mutated", entry.application.plugin_id)
+    if not committed and _tree_files(baseline / Path(destination)) != _tree_files(artifact):
+        raise MarketplaceError("verify_existing_mutated", entry.application.plugin_id)
+
+
+def _ensure_not_applicable_targets_absent(
+    catalog: PreparationCatalog,
+    stage: Path,
+) -> None:
+    candidates = {
+        "codex": (".agents/plugins/marketplace.json", ".codex-plugin/marketplace.json"),
+        "openclaw": (".claude-plugin/marketplace.json", "openclaw/marketplace.json"),
+    }
+    loaded: dict[str, dict[str, object] | None] = {}
+    for entry in catalog.applications:
+        for target_name in _TARGET_NAMES:
+            if entry.target(target_name).mode != "not_applicable":
+                continue
+            if target_name not in loaded:
+                path = _first_catalog(stage, candidates[target_name])
+                loaded[target_name] = _load_json_mapping(path) if path.is_file() else None
+            runtime_catalog = loaded[target_name]
+            if runtime_catalog is None:
+                continue
+            records = runtime_catalog.get("plugins")
+            if not isinstance(records, list):
+                raise MarketplaceError("runtime_catalog_invalid", target_name)
+            if any(
+                isinstance(record, dict)
+                and record.get("name") == entry.application.plugin_id
+                for record in records
+            ):
+                raise MarketplaceError(
+                    "not_applicable_target_already_published",
+                    f"{entry.application.plugin_id}:{target_name}",
+                )
 
 
 def _check_legacy_content_manifest(root: Path, plugin_id: str, version: str) -> None:
@@ -520,9 +645,10 @@ def _write_generated_controls(catalog: PreparationCatalog, stage: Path) -> None:
             "plugins": [
                 {
                     "name": entry.application.plugin_id,
-                    "source": {"path": f"./{entry.codex_destination}"},
+                    "source": {"path": f"./{entry.target('codex').destination}"},
                 }
                 for entry in catalog.applications
+                if entry.target("codex").mode != "not_applicable"
             ]
         }
         _write_json_file(codex_path, codex_catalog)
@@ -534,9 +660,10 @@ def _write_generated_controls(catalog: PreparationCatalog, stage: Path) -> None:
                 {
                     "name": entry.application.plugin_id,
                     "version": entry.application.version,
-                    "source": f"./{entry.openclaw_destination}",
+                    "source": f"./{entry.target('openclaw').destination}",
                 }
                 for entry in catalog.applications
+                if entry.target("openclaw").mode != "not_applicable"
             ]
         }
         _write_json_file(openclaw_path, openclaw_catalog)
@@ -571,23 +698,25 @@ def _update_build_catalogs(
     if not isinstance(codex_records, list) or not isinstance(openclaw_records, list):
         raise MarketplaceError("runtime_catalog_invalid")
     for entry in catalog.applications:
-        if entry.mode != "build":
-            continue
-        codex_match = next((item for item in codex_records if isinstance(item, dict) and item.get("name") == entry.application.plugin_id), None)
-        if codex_match is None:
-            codex_match = {"name": entry.application.plugin_id}
-            codex_records.append(codex_match)
-        source = codex_match.get("source")
-        source = dict(source) if isinstance(source, dict) else {}
-        source["path"] = f"./{entry.codex_destination}"
-        source["source"] = "local"
-        codex_match["source"] = source
-        claw_match = next((item for item in openclaw_records if isinstance(item, dict) and item.get("name") == entry.application.plugin_id), None)
-        if claw_match is None:
-            claw_match = {"name": entry.application.plugin_id}
-            openclaw_records.append(claw_match)
-        claw_match["version"] = entry.application.version
-        claw_match["source"] = f"./{entry.openclaw_destination}"
+        codex_target = entry.target("codex")
+        if codex_target.mode == "build":
+            codex_match = next((item for item in codex_records if isinstance(item, dict) and item.get("name") == entry.application.plugin_id), None)
+            if codex_match is None:
+                codex_match = {"name": entry.application.plugin_id}
+                codex_records.append(codex_match)
+            source = codex_match.get("source")
+            source = dict(source) if isinstance(source, dict) else {}
+            source["path"] = f"./{_required_target_destination(codex_target, 'codex')}"
+            source["source"] = "local"
+            codex_match["source"] = source
+        openclaw_target = entry.target("openclaw")
+        if openclaw_target.mode == "build":
+            claw_match = next((item for item in openclaw_records if isinstance(item, dict) and item.get("name") == entry.application.plugin_id), None)
+            if claw_match is None:
+                claw_match = {"name": entry.application.plugin_id}
+                openclaw_records.append(claw_match)
+            claw_match["version"] = entry.application.version
+            claw_match["source"] = f"./{_required_target_destination(openclaw_target, 'openclaw')}"
 
 
 def _expected_registry(
@@ -602,10 +731,11 @@ def _expected_registry(
     entries = {entry.application.plugin_id: entry for entry in catalog.applications}
     for plugin in registry["plugins"]:
         entry = entries[plugin["plugin_id"]]
-        plugin["artifacts"] = {
-            "codex": _artifact_identity(_stage_destination(stage, entry.codex_destination)),
-            "openclaw": _artifact_identity(_stage_destination(stage, entry.openclaw_destination)),
-        }
+        for target_name, target in entry.applicable_targets():
+            destination = _required_target_destination(target, target_name)
+            plugin["targets"][target_name]["artifact"] = _artifact_identity(
+                _stage_destination(stage, destination)
+            )
     return registry
 
 
@@ -645,15 +775,19 @@ def _merge_exact_byte_attributes(catalog: PreparationCatalog, stage: Path) -> No
     existing = path.read_text(encoding="utf-8") if path.is_file() else ""
     existing = existing.replace("\r\n", "\n").replace("\r", "\n")
     lines = existing.splitlines()
-    scopes = tuple(
-        destination
-        for entry in catalog.applications
-        for destination in (entry.codex_destination, entry.openclaw_destination)
-    )
+    scopes = _applicable_destinations(catalog)
     for line in exact_byte_attributes(scopes).splitlines():
         if line not in lines:
             lines.append(line)
     _write_text_file(path, "\n".join(lines) + "\n")
+
+
+def _applicable_destinations(catalog: PreparationCatalog) -> tuple[str, ...]:
+    return tuple(
+        _required_target_destination(target, target_name)
+        for entry in catalog.applications
+        for target_name, target in entry.applicable_targets()
+    )
 
 
 def _write_json_file(path: Path, value: object) -> None:
@@ -843,6 +977,31 @@ def _destination(value: object, field: str) -> str:
     ):
         raise MarketplaceError("catalog_path_escape", field)
     return path.as_posix()
+
+
+def _parse_target(value: object, name: str) -> PreparationTarget:
+    if not isinstance(value, dict) or "mode" not in value:
+        raise MarketplaceError("invalid_marketplace_catalog_target", name)
+    mode = value["mode"]
+    if not isinstance(mode, str) or mode not in _TARGET_MODES:
+        raise MarketplaceError("invalid_marketplace_catalog_target", name)
+    if mode == "not_applicable":
+        if set(value) != {"mode"}:
+            if "destination" in value:
+                raise MarketplaceError("marketplace_target_destination_forbidden", name)
+            raise MarketplaceError("invalid_marketplace_catalog_target", name)
+        return PreparationTarget(mode, None)
+    if "destination" not in value:
+        raise MarketplaceError("marketplace_target_destination_required", name)
+    if set(value) != {"mode", "destination"}:
+        raise MarketplaceError("invalid_marketplace_catalog_target", name)
+    return PreparationTarget(mode, _destination(value["destination"], f"targets.{name}.destination"))
+
+
+def _required_target_destination(target: PreparationTarget, name: str) -> str:
+    if target.destination is None:
+        raise MarketplaceError("marketplace_target_destination_required", name)
+    return target.destination
 
 
 def _strict_mapping(value: object, keys: set[str], label: str) -> dict[str, object]:

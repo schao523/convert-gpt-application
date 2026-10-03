@@ -51,6 +51,10 @@ from obvious_one_plugin_framework.hosted_deployment_verifier import (  # noqa: E
 
 CommandRunner = Callable[..., subprocess.CompletedProcess[str]]
 _DIFFERENCE_KEYS = ("missing", "unexpected", "digest_mismatch")
+_HANDOFF_INTERFACE_APPLICATIONS = {
+    "cool-plugin-design-assistant",
+    "plugin-builder",
+}
 
 
 @dataclass(frozen=True)
@@ -250,6 +254,23 @@ def run_shared_gates(context: RunContext) -> list[GateResult]:
         ("application-config", [python, "-B", "-m", "unittest", "tests.test_application_config", "-v"]),
     )
     return [_run_gate(context, gate_id, command) for gate_id, command in commands]
+
+
+def run_handoff_interoperability_gate(context: RunContext) -> GateResult:
+    """Verify the shared producer-to-consumer handoff without merging product suites."""
+
+    return _run_gate(
+        context,
+        "workbench-handoff-interoperability",
+        [
+            context.python,
+            "-B",
+            "-m",
+            "unittest",
+            "tests.test_workbench_handoff_interoperability",
+            "-v",
+        ],
+    )
 
 
 def _expansion_context(
@@ -571,6 +592,8 @@ def verify(
         command_runner=command_runner,
     )
     shared = run_shared_gates(context)
+    if any(config.application_id in _HANDOFF_INTERFACE_APPLICATIONS for config in selected):
+        shared.append(run_handoff_interoperability_gate(context))
     applications: list[ApplicationResult] = []
     if aggregate_state(shared) == "FAIL":
         for config in selected:
@@ -616,6 +639,8 @@ def _list_gates(repository_root: Path) -> str:
         ]
         if (config.root / "hosted-openai" / "deployment.json").is_file():
             gates.append("hosted-deployment")
+        if config.application_id in _HANDOFF_INTERFACE_APPLICATIONS:
+            gates.append("workbench-handoff-interoperability")
         lines.append(f"{config.application_id}: {' '.join(gates)}")
     return "\n".join(lines)
 

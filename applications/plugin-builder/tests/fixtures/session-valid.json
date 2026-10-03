@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "operation": "create",
+  "stage": "W1",
+  "workspace_path": "sessions/example",
+  "approved_spec_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "plan_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "baseline": null,
+  "w1": null,
+  "candidate": null,
+  "verification": null,
+  "w2": null,
+  "package": null,
+  "requirements": [
+    {
+      "id": "RQ1",
+      "owner": "guiding-plugin-builder-sessions",
+      "evidence": "NOT VERIFIED",
+      "required": true
+    }
+  ]
+}

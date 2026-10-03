@@ -271,6 +271,17 @@ python -B -m obvious_one_plugin_framework.cli prepare-marketplace `
 `prepare-marketplace` does not apply or publish the delta. It writes scoped
 rules such as `/plugins/<plugin-id>/** -text whitespace=cr-at-eol` so committed
 manifest bytes survive Windows, Linux, and macOS checkouts.
+
+Preparation-catalog schema v2 declares `targets.codex` and
+`targets.openclaw` independently. Each target uses `build`, `verify_existing`,
+or `not_applicable`; applicable modes require a safe `destination`, while
+`not_applicable` forbids one. Schema-v1 catalogs remain readable and retain
+their original dual-runtime shared-mode meaning, but new or modified catalogs
+use schema v2. Runtime catalogs may therefore contain different exact plugin
+sets. A `not_applicable` target produces no artifact, runtime-catalog entry,
+Git evidence scope, or exact-byte rule, and its validation-registry state is
+`NOT APPLICABLE`. If that target is already present in the baseline runtime
+catalog, preparation blocks instead of silently deleting it.
 When the output is inside the conversion repository it must be below `dist` or
 `.tmp`; application source, catalog inputs, and overlapping marketplace
 destinations are rejected before staging. Links and Windows reparse points are
@@ -298,9 +309,16 @@ python -B -m obvious_one_plugin_framework.cli verify-marketplace --catalog .\mar
 
 `--index`, `--commit`, and `--fresh-checkout` are mutually exclusive. Cool
 Bible Tutor, Vibe Coding Designer, and Cool Plugin Design Assistant are
-schema-v3 `build` entries in this catalog. The generic `verify_existing` mode
-remains available for cataloged legacy artifacts that have not yet migrated.
-Disabled ClawHub publication is `NOT APPLICABLE`, not a package failure.
+dual-runtime schema-v3 `build` entries. Plugin Builder is a Codex `build`
+entry whose OpenClaw target is `not_applicable` under its approved
+`OPENAI_ONLY_PHASE_ONE` scope. The generic `verify_existing` mode remains
+available for cataloged legacy artifacts that have not yet migrated. Disabled
+ClawHub publication is `NOT APPLICABLE`, not a package failure.
+
+Successful preparation and verification authorize no marketplace mutation.
+Applying the staged delta, committing or pushing the marketplace repository,
+creating tags or releases, publishing to ClawHub, and submitting to the OpenAI
+universal directory each remain separate owner-approved actions.
 
 `verify_existing` means byte preservation, not trust in an old manifest. The
 generated marketplace verifier recalculates every legacy manifest path, size,

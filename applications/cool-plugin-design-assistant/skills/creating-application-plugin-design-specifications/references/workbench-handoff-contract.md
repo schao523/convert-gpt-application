@@ -22,6 +22,34 @@ to specification requirements. A rights decision that is required for intended
 distribution remains a blocking owner decision until confirmed; do not replace
 it with a technical workaround.
 
+New full and delta packages use the `WORKBENCH_HANDOFF_V1_1` contract. A package
+contains exactly one semantic authority; a canonical pair must not be combined
+with `handoff_manifest.json`, `delta_handoff_manifest.json`, or another legacy
+authority. Mixed authorities are ambiguous and remain blocked.
+
+The portable package boundary has two distinct machine-readable documents:
+
+- `package-manifest.json` inventories the package, artifact roles, immutable
+  hashes, source-package hash, and normalization metadata; and
+- `workbench-handoff.json` contains the canonical semantic payload consumed by
+  the Workbench handoff validator.
+
+Both create and update packages carry a non-empty canonical `requirements`
+array. Every requirement record preserves the exact `id`, `source`, and `verbatim`
+text supplied by the approved design. Artifact-level `requirements`
+arrays index those exact IDs. Do not infer IDs from headings or filename
+patterns, paraphrase approved text, or create a source binding that the package
+does not supply. An update record also carries `change`, and the handoff binds
+the approved baseline archive and preservation contract.
+
+When an approved legacy package uses `handoff_manifest.json` or
+`delta_handoff_manifest.json`, normalize it only when it already supplies exact
+requirement records and, for updates, the baseline and preservation contract.
+Preserve every approved artifact byte for byte, record the source archive hash,
+validate the canonical payload before committing the derived archive, and never
+overwrite the approved source or an existing output. Format-only normalization
+does not grant new rights or reopen approved product behavior.
+
 Represent each unresolved owner decision as an object with a stable
 `decision_id`, concise `summary`, named `owner`, and boolean `blocking` value.
 The handoff validator rejects malformed or blocking entries but preserves valid

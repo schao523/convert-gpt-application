@@ -375,12 +375,22 @@ overwrites the old contract. Missing or non-approved rights evidence is
 reviews the proposal; a later conversion caller records the approved choices
 and validates again.
 
-Marketplace preparation is similarly non-destructive. A catalog entry uses
-`build` for an approved schema-v3 product or `verify_existing` for a published
-legacy artifact. `prepare-marketplace` writes a separate local tree and does
-not apply or publish the delta. `verify-marketplace` then checks the generated
-artifacts and, when requested, exact Git index, commit, and fresh-checkout
-bytes. Publication still requires separate explicit approval.
+Marketplace preparation is similarly non-destructive. Preparation-catalog
+schema v2 records Codex and OpenClaw targets independently as `build`,
+`verify_existing`, or `not_applicable`. Applicable targets require their own
+safe destination; `not_applicable` creates no artifact, catalog entry, Git
+scope, or exact-byte rule and is recorded as `NOT APPLICABLE`. The two runtime
+catalogs can therefore have different exact plugin sets. Schema-v1 preparation
+catalogs remain compatible inputs with their original dual-runtime meaning,
+but new or changed catalogs use schema v2.
+
+Plugin Builder's approved `OPENAI_ONLY_PHASE_ONE` release is Codex-only, while
+Cool Plugin Design Assistant remains dual-runtime. `prepare-marketplace`
+writes a separate local tree and does not apply or publish the delta.
+`verify-marketplace` then checks the generated artifacts and, when requested,
+exact Git index, commit, and fresh-checkout bytes. Applying or pushing the
+marketplace delta, publishing to ClawHub, and submitting to the OpenAI
+universal directory still require separate explicit owner approval.
 
 The generated marketplace validation registry drives catalog-driven CI so a
 new plugin is not silently omitted from validation. Each plugin receives its

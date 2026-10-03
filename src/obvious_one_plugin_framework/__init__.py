@@ -89,11 +89,27 @@ from .hosted_deployment_contract import (
     load_hosted_identity,
 )
 from .hosted_identity import (
-    ArchiveLimits,
+    ArchiveLimits as HostedIdentityArchiveLimits,
     HostedIdentityCandidate,
     HostedIdentityInventory,
     inventory_hosted_identity_archive,
     propose_hosted_identity,
+)
+from .plugin_authoring import (
+    ArchiveInventory,
+    ArchiveLimits,
+    ArchiveMember,
+    PluginAuthoringError,
+    TreeMember,
+    extract_archive,
+    inventory_archive,
+    tree_manifest,
+    tree_sha256,
+    write_deterministic_zip,
+    ValidationIssue,
+    validate_plugin_tree,
+    validate_reference_closure,
+    validate_skill_tree,
 )
 from .hosted_deployment_planner import (
     HostedDeploymentPlan,
@@ -117,6 +133,16 @@ from .knowledge_policy import (
     ProfessionalKnowledgeFile,
     discover_knowledge_policy,
     validate_knowledge_policy,
+)
+from .workbench_handoff import (
+    HANDOFF_CONTRACT,
+    HANDOFF_SCHEMA,
+    BaselineIdentity,
+    HandoffValidation,
+    baseline_identity_from_archive,
+    canonical_json_bytes,
+    validate_canonical_handoff,
+    validate_update_baseline,
 )
 
 __all__ = [
@@ -194,6 +220,20 @@ __all__ = [
     "load_hosted_deployment_contract",
     "load_hosted_identity",
     "ArchiveLimits",
+    "ArchiveInventory",
+    "ArchiveMember",
+    "PluginAuthoringError",
+    "TreeMember",
+    "extract_archive",
+    "inventory_archive",
+    "tree_manifest",
+    "tree_sha256",
+    "write_deterministic_zip",
+    "HostedIdentityArchiveLimits",
+    "ValidationIssue",
+    "validate_plugin_tree",
+    "validate_reference_closure",
+    "validate_skill_tree",
     "HostedIdentityCandidate",
     "HostedIdentityInventory",
     "inventory_hosted_identity_archive",
@@ -216,6 +256,14 @@ __all__ = [
     "ProfessionalKnowledgeFile",
     "discover_knowledge_policy",
     "validate_knowledge_policy",
+    "HANDOFF_CONTRACT",
+    "HANDOFF_SCHEMA",
+    "BaselineIdentity",
+    "HandoffValidation",
+    "baseline_identity_from_archive",
+    "canonical_json_bytes",
+    "validate_canonical_handoff",
+    "validate_update_baseline",
 ]
 
 __version__ = "0.1.0"

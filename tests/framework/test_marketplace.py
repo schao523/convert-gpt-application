@@ -67,6 +67,50 @@ class MarketplaceTests(unittest.TestCase):
             },
         )
 
+    def _write_v2_catalog(
+        self,
+        *,
+        legacy_openclaw_mode: str = "verify_existing",
+        modern_openclaw_mode: str = "not_applicable",
+    ) -> None:
+        def target(mode: str, destination: str) -> dict[str, object]:
+            return {"mode": mode} if mode == "not_applicable" else {
+                "mode": mode,
+                "destination": destination,
+            }
+
+        _write_json(
+            self.catalog_path,
+            {
+                "schema_version": 2,
+                "marketplace_id": "test-marketplace",
+                "applications": [
+                    {
+                        "application_config": "applications/legacy/conversion.json",
+                        "distribution_contract": "applications/legacy/openclaw/distribution.json",
+                        "targets": {
+                            "codex": target("verify_existing", "plugins/legacy"),
+                            "openclaw": target(legacy_openclaw_mode, "openclaw/legacy"),
+                        },
+                    },
+                    {
+                        "application_config": "applications/modern/conversion.json",
+                        "distribution_contract": "applications/modern/openclaw/distribution.json",
+                        "targets": {
+                            "codex": target("build", "plugins/modern"),
+                            "openclaw": target(modern_openclaw_mode, "openclaw/modern"),
+                        },
+                    },
+                ],
+            },
+        )
+
+    def _write_codex_only_modern_catalog(self) -> None:
+        self._write_v2_catalog()
+        raw = json.loads(self.catalog_path.read_text(encoding="utf-8"))
+        raw["applications"] = [raw["applications"][1]]
+        _write_json(self.catalog_path, raw)
+
     def _upgrade_to_v3(self, application: Path) -> None:
         contract_path = application / "openclaw" / "distribution.json"
         raw = json.loads(contract_path.read_text(encoding="utf-8"))
@@ -161,6 +205,137 @@ class MarketplaceTests(unittest.TestCase):
         with self.assertRaisesRegex(MarketplaceError, "legacy_contract_read_only"):
             load_preparation_catalog(self.catalog_path, self.repository)
 
+    def test_v2_catalog_accepts_codex_only_and_dual_runtime_targets(self) -> None:
+        self._write_v2_catalog(modern_openclaw_mode="build")
+
+        catalog = load_preparation_catalog(self.catalog_path, self.repository)
+
+        self.assertEqual(catalog.schema_version, 2)
+        legacy, modern = catalog.applications
+        self.assertEqual(
+            [(name, target.mode, target.destination) for name, target in legacy.applicable_targets()],
+            [
+                ("codex", "verify_existing", "plugins/legacy"),
+                ("openclaw", "verify_existing", "openclaw/legacy"),
+            ],
+        )
+        self.assertEqual(modern.target("codex").mode, "build")
+        self.assertEqual(modern.target("codex").destination, "plugins/modern")
+        self.assertEqual(modern.target("openclaw").mode, "build")
+
+        self._write_v2_catalog()
+        codex_only = load_preparation_catalog(self.catalog_path, self.repository).applications[1]
+        self.assertEqual(
+            [(name, target.destination) for name, target in codex_only.applicable_targets()],
+            [("codex", "plugins/modern")],
+        )
+        self.assertEqual(codex_only.target("openclaw").mode, "not_applicable")
+        self.assertIsNone(codex_only.target("openclaw").destination)
+
+    def test_v2_target_shapes_and_no_applicable_targets_are_rejected(self) -> None:
+        cases = [
+            (
+                {"mode": "build"},
+                "marketplace_target_destination_required",
+            ),
+            (
+                {"mode": "not_applicable", "destination": "openclaw/modern"},
+                "marketplace_target_destination_forbidden",
+            ),
+            (
+                {"mode": "unsupported", "destination": "openclaw/modern"},
+                "invalid_marketplace_catalog_target",
+            ),
+            (
+                {"mode": "not_applicable", "extra": True},
+                "invalid_marketplace_catalog_target",
+            ),
+        ]
+        for target, diagnostic in cases:
+            with self.subTest(diagnostic=diagnostic):
+                self._write_v2_catalog()
+                raw = json.loads(self.catalog_path.read_text(encoding="utf-8"))
+                raw["applications"][1]["targets"]["openclaw"] = target
+                _write_json(self.catalog_path, raw)
+                with self.assertRaisesRegex(MarketplaceError, diagnostic):
+                    load_preparation_catalog(self.catalog_path, self.repository)
+
+        self._write_v2_catalog()
+        raw = json.loads(self.catalog_path.read_text(encoding="utf-8"))
+        raw["applications"][1]["targets"] = {
+            "codex": {"mode": "not_applicable"},
+            "openclaw": {"mode": "not_applicable"},
+        }
+        _write_json(self.catalog_path, raw)
+        with self.assertRaisesRegex(MarketplaceError, "marketplace_no_applicable_targets"):
+            load_preparation_catalog(self.catalog_path, self.repository)
+
+    def test_v2_destinations_are_unique_safe_and_non_overlapping_across_targets(self) -> None:
+        cases = [
+            ("plugins/legacy", "duplicate_marketplace_destination"),
+            ("plugins", "overlapping_marketplace_destination"),
+            ("../escape", "catalog_path_escape"),
+        ]
+        for destination, diagnostic in cases:
+            with self.subTest(destination=destination):
+                self._write_v2_catalog(modern_openclaw_mode="build")
+                raw = json.loads(self.catalog_path.read_text(encoding="utf-8"))
+                raw["applications"][1]["targets"]["openclaw"]["destination"] = destination
+                _write_json(self.catalog_path, raw)
+                with self.assertRaisesRegex(MarketplaceError, diagnostic):
+                    load_preparation_catalog(self.catalog_path, self.repository)
+
+    def test_v1_catalog_translates_to_two_targets_without_behavior_change(self) -> None:
+        catalog = load_preparation_catalog(self.catalog_path, self.repository)
+
+        self.assertEqual(catalog.schema_version, 1)
+        self.assertEqual(
+            [
+                [(name, target.mode, target.destination) for name, target in entry.applicable_targets()]
+                for entry in catalog.applications
+            ],
+            [
+                [
+                    ("codex", "verify_existing", "plugins/legacy"),
+                    ("openclaw", "verify_existing", "openclaw/legacy"),
+                ],
+                [
+                    ("codex", "build", "plugins/modern"),
+                    ("openclaw", "build", "openclaw/modern"),
+                ],
+            ],
+        )
+
+    def test_codex_only_target_requires_disabled_clawhub(self) -> None:
+        source = self.modern
+        _write_json(
+            source / "openclaw.plugin.json",
+            {"id": "modern", "configSchema": {"type": "object", "additionalProperties": False}},
+        )
+        (source / "index.js").write_text("export default {};\n", encoding="utf-8")
+        _write_json(
+            source / "package.json",
+            {
+                "name": "@example/modern",
+                "version": "1.2.3",
+                "openclaw": {"extensions": ["./index.js"]},
+            },
+        )
+        contract_path = source / "openclaw" / "distribution.json"
+        contract = json.loads(contract_path.read_text(encoding="utf-8"))
+        contract["include_files"].extend(["openclaw.plugin.json", "index.js"])
+        contract["content_rules"][0]["paths"].extend(["openclaw.plugin.json", "index.js"])
+        contract["publication"]["clawhub"] = {
+            "enabled": True,
+            "family": "native-plugin",
+            "native_manifest": "openclaw.plugin.json",
+        }
+        _write_json(contract_path, contract)
+        self._write_v2_catalog()
+
+        with self.assertRaisesRegex(MarketplaceError, "clawhub_requires_openclaw_target"):
+            load_preparation_catalog(self.catalog_path, self.repository)
+
     def test_duplicate_destination_and_path_escape_are_rejected(self) -> None:
         raw = json.loads(self.catalog_path.read_text(encoding="utf-8"))
         raw["applications"][1]["codex_destination"] = "plugins/legacy"
@@ -219,6 +394,106 @@ class MarketplaceTests(unittest.TestCase):
         )
         self.assertTrue((self.output / "plugins/modern/.codex-plugin/plugin.json").is_file())
         self.assertTrue((self.output / "openclaw/modern/CONTENT-MANIFEST.json").is_file())
+
+    def test_codex_only_build_emits_no_openclaw_artifact(self) -> None:
+        self._write_v2_catalog()
+        catalog = load_preparation_catalog(self.catalog_path, self.repository)
+
+        with patch("obvious_one_plugin_framework.marketplace._write_generated_controls"):
+            result = prepare_marketplace(catalog, self.baseline, self.output)
+
+        self.assertEqual(result.status, "PASS")
+        self.assertTrue((self.output / "plugins/modern/.codex-plugin/plugin.json").is_file())
+        self.assertFalse((self.output / "openclaw/modern").exists())
+        self.assertTrue((self.output / "openclaw/legacy/CONTENT-MANIFEST.json").is_file())
+
+    def test_dual_runtime_build_still_emits_both_artifacts(self) -> None:
+        self._write_v2_catalog(modern_openclaw_mode="build")
+        catalog = load_preparation_catalog(self.catalog_path, self.repository)
+
+        with patch("obvious_one_plugin_framework.marketplace._write_generated_controls"):
+            result = prepare_marketplace(catalog, self.baseline, self.output)
+
+        self.assertEqual(result.status, "PASS")
+        self.assertTrue((self.output / "plugins/modern/.codex-plugin/plugin.json").is_file())
+        self.assertTrue((self.output / "openclaw/modern/CONTENT-MANIFEST.json").is_file())
+
+    def test_not_applicable_catalog_entry_blocks_without_deleting_or_replacing_output(self) -> None:
+        self._write_v2_catalog()
+        _write_json(
+            self.baseline / ".claude-plugin/marketplace.json",
+            {
+                "plugins": [
+                    {
+                        "name": "modern",
+                        "version": "1.2.2",
+                        "source": "./openclaw/modern",
+                    }
+                ]
+            },
+        )
+        self.output.mkdir()
+        (self.output / "keep.txt").write_bytes(b"keep\r\n")
+        catalog = load_preparation_catalog(self.catalog_path, self.repository)
+
+        with patch("obvious_one_plugin_framework.marketplace._write_generated_controls") as controls:
+            with self.assertRaisesRegex(MarketplaceError, "not_applicable_target_already_published"):
+                prepare_marketplace(catalog, self.baseline, self.output)
+
+        controls.assert_not_called()
+        self.assertEqual(self._tree(self.output), {"keep.txt": b"keep\r\n"})
+        self.assertTrue((self.baseline / ".claude-plugin/marketplace.json").is_file())
+
+    def test_repeated_target_aware_preparation_is_byte_identical(self) -> None:
+        self._write_v2_catalog()
+        catalog = load_preparation_catalog(self.catalog_path, self.repository)
+        second = self.root / "staged-again"
+
+        with patch("obvious_one_plugin_framework.marketplace._write_generated_controls"):
+            first_result = prepare_marketplace(catalog, self.baseline, self.output)
+            second_result = prepare_marketplace(catalog, self.baseline, second)
+
+        self.assertEqual(first_result.artifacts[0].sha256, second_result.artifacts[0].sha256)
+        self.assertEqual(self._tree(self.output), self._tree(second))
+
+    def test_codex_only_index_commit_and_fresh_checkout_use_only_codex_scope(self) -> None:
+        self._write_codex_only_modern_catalog()
+        catalog = load_preparation_catalog(self.catalog_path, self.repository)
+        prepare_marketplace(catalog, self.baseline, self.output)
+        self.git(self.output, "init")
+        self.git(self.output, "config", "user.email", "tests@example.invalid")
+        self.git(self.output, "config", "user.name", "Framework Tests")
+        self.git(self.output, "add", ".")
+        self.git(self.output, "commit", "-m", "codex-only stage")
+
+        result = verify_marketplace(
+            catalog,
+            self.output,
+            check_index=True,
+            commit="HEAD",
+            fresh_checkout=True,
+        )
+
+        self.assertEqual(result.status, "PASS")
+        self.assertEqual(
+            result.evidence["gates"],
+            {
+                "filesystem": "PASS",
+                "index": "PASS",
+                "commit": "PASS",
+                "fresh_checkout": "PASS",
+            },
+        )
+
+    def test_exact_byte_attributes_omit_not_applicable_destination(self) -> None:
+        self._write_codex_only_modern_catalog()
+        catalog = load_preparation_catalog(self.catalog_path, self.repository)
+
+        prepare_marketplace(catalog, self.baseline, self.output)
+
+        attributes = (self.output / ".gitattributes").read_text(encoding="utf-8")
+        self.assertIn("/plugins/modern/** -text whitespace=cr-at-eol", attributes)
+        self.assertNotIn("openclaw/modern", attributes)
 
     def test_failed_product_audit_preserves_existing_output(self) -> None:
         hook = self.modern / "audit.py"
@@ -362,7 +637,7 @@ class MarketplaceTests(unittest.TestCase):
         prepare_marketplace(catalog, self.baseline, self.output)
         registry = self.output / ".obvious-one-validation.json"
         payload = json.loads(registry.read_text(encoding="utf-8"))
-        payload["plugins"][0]["artifacts"]["codex"]["content_sha256"] = "0" * 64
+        payload["plugins"][0]["targets"]["codex"]["artifact"]["content_sha256"] = "0" * 64
         _write_json(registry, payload)
         result = verify_marketplace(catalog, self.output)
         self.assertEqual(result.status, "FAIL")

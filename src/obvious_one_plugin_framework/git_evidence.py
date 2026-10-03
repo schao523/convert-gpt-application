@@ -51,8 +51,13 @@ def verify_git_evidence(
     if set(working) - set(stage_zero):
         codes.add("untracked_artifact")
     for path, oid in stage_zero.items():
-        index_bytes = _git_bytes(root, "cat-file", "blob", oid)
-        if path not in working or working[path].read_bytes() != index_bytes:
+        if path not in working:
+            codes.add("working_tree_mismatch")
+            continue
+        checkout_bytes = _git_bytes(
+            root, "cat-file", "--filters", f"--path={path}", oid
+        )
+        if working[path].read_bytes() != checkout_bytes:
             codes.add("working_tree_mismatch")
     committed: dict[str, str] = {}
     resolved_commit: str | None = None
@@ -90,7 +95,7 @@ def verify_git_evidence(
         if commit is None:
             codes.add("fresh_checkout_commit_required")
         elif resolved_commit is not None:
-            _verify_fresh_checkout(root, resolved_commit, committed, codes)
+            _verify_fresh_checkout(root, resolved_commit, committed, working, codes)
 
     working_failed = bool({"untracked_artifact", "working_tree_mismatch"} & codes) or not working_attributes_ok
     index_failed = "incomplete_index_entry" in codes or not index_attributes_ok
@@ -170,7 +175,13 @@ def _attributes(
         arguments.append("--cached")
     if source is not None:
         arguments.append(f"--source={source}")
-    payload = _git_bytes(root, *arguments, "text", "eol", "--", *paths)
+    arguments.append("--stdin")
+    path_input = b"".join(
+        path.encode("utf-8", "surrogateescape") + b"\0" for path in paths
+    )
+    payload = _git_bytes(
+        root, *arguments, "text", "eol", "filter", input_bytes=path_input
+    )
     parts = payload.split(b"\0")
     raw: dict[str, dict[str, str]] = {}
     for index in range(0, len(parts) - 2, 3):
@@ -178,22 +189,30 @@ def _attributes(
         attribute = parts[index + 1].decode("ascii")
         raw.setdefault(path, {})[attribute] = parts[index + 2].decode("utf-8", "replace")
     return {
-        path: (values.get("text", "unspecified"), values.get("eol", "unspecified"))
+        path: (
+            values.get("text", "unspecified"),
+            values.get("eol", "unspecified"),
+            values.get("filter", "unspecified"),
+        )
         for path, values in raw.items()
     }
 
 
-def _deterministic_attributes(policy: tuple[str, str] | None) -> bool:
+def _deterministic_attributes(policy: tuple[str, str, str] | None) -> bool:
     if policy is None:
         return False
-    text, eol = policy
-    return text == "unset" or (text == "set" and eol in {"lf", "crlf"})
+    text, eol, filter_policy = policy
+    no_transforming_filter = filter_policy in {"unspecified", "unset"}
+    return no_transforming_filter and (
+        text == "unset" or (text == "set" and eol in {"lf", "crlf"})
+    )
 
 
 def _verify_fresh_checkout(
     root: Path,
     commit: str,
     committed: dict[str, str],
+    working: dict[str, Path],
     codes: set[str],
 ) -> None:
     with TemporaryDirectory(prefix="git-evidence-") as temporary:
@@ -219,24 +238,31 @@ def _verify_fresh_checkout(
         if checked_out.returncode != 0:
             codes.add("fresh_checkout_failed")
             return
-        for path, oid in committed.items():
+        for path in committed:
             candidate = checkout / Path(path)
-            expected = _git_bytes(root, "cat-file", "blob", oid)
-            if not candidate.is_file() or candidate.read_bytes() != expected:
+            expected = working.get(path)
+            if (
+                not candidate.is_file()
+                or expected is None
+                or candidate.read_bytes() != expected.read_bytes()
+            ):
                 codes.add("fresh_checkout_mismatch")
 
 
-def _git_bytes(root: Path, *arguments: str) -> bytes:
-    completed = _run_git(root, *arguments)
+def _git_bytes(root: Path, *arguments: str, input_bytes: bytes | None = None) -> bytes:
+    completed = _run_git(root, *arguments, input_bytes=input_bytes)
     if completed.returncode != 0:
         raise ValueError("git_evidence_command_failed")
     return completed.stdout
 
 
-def _run_git(root: Path, *arguments: str) -> subprocess.CompletedProcess[bytes]:
+def _run_git(
+    root: Path, *arguments: str, input_bytes: bytes | None = None
+) -> subprocess.CompletedProcess[bytes]:
     return subprocess.run(
         ["git", *arguments],
         cwd=root,
+        input=input_bytes,
         shell=False,
         timeout=30,
         check=False,

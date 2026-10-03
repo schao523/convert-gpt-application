@@ -24,20 +24,57 @@ def build_validation_registry(
     codex = _codex_plugins(_load_mapping(codex_catalog))
     openclaw = _openclaw_plugins(_load_mapping(openclaw_catalog))
     planned = {entry.application.plugin_id: entry for entry in preparation_catalog.applications}
-    if set(codex) != set(openclaw) or set(codex) != set(planned):
-        raise MarketplaceError("runtime_catalog_mismatch", "plugin identities")
+    runtime_plugins = {"codex": codex, "openclaw": openclaw}
+    for target_name, actual in runtime_plugins.items():
+        expected = {
+            plugin_id
+            for plugin_id, entry in planned.items()
+            if entry.target(target_name).mode != "not_applicable"
+        }
+        missing = sorted(expected - set(actual))
+        if missing:
+            raise MarketplaceError(
+                "runtime_catalog_missing_entry",
+                f"{target_name}:{missing[0]}",
+            )
+        unexpected = sorted(set(actual) - expected)
+        if unexpected:
+            raise MarketplaceError(
+                "runtime_catalog_unexpected_entry",
+                f"{target_name}:{unexpected[0]}",
+            )
 
     plugins: list[dict[str, object]] = []
     for plugin_id in sorted(planned):
         entry = planned[plugin_id]
-        if codex[plugin_id] != entry.codex_destination:
-            raise MarketplaceError("runtime_catalog_mismatch", plugin_id)
-        openclaw_path, version = openclaw[plugin_id]
-        if openclaw_path != entry.openclaw_destination or version != entry.application.version:
-            raise MarketplaceError("runtime_catalog_mismatch", plugin_id)
+        targets: dict[str, dict[str, object]] = {}
+        for target_name in ("codex", "openclaw"):
+            target = entry.target(target_name)
+            if target.mode == "not_applicable":
+                targets[target_name] = {"state": "NOT APPLICABLE"}
+                continue
+            if target.destination is None:
+                raise MarketplaceError("runtime_catalog_target_mismatch", f"{plugin_id}:{target_name}")
+            if target_name == "codex":
+                if codex[plugin_id] != target.destination:
+                    raise MarketplaceError("runtime_catalog_target_mismatch", f"{plugin_id}:codex")
+            else:
+                openclaw_path, version = openclaw[plugin_id]
+                if openclaw_path != target.destination or version != entry.application.version:
+                    raise MarketplaceError("runtime_catalog_target_mismatch", f"{plugin_id}:openclaw")
+            targets[target_name] = {
+                "state": "STATICALLY VERIFIED",
+                "mode": target.mode,
+                "path": target.destination,
+            }
         commands = []
         for command in entry.application.verification.commands:
             for target in command.marketplace_targets:
+                if entry.target(target).mode == "not_applicable":
+                    raise MarketplaceError(
+                        "marketplace_command_target_not_applicable",
+                        f"{plugin_id}:{command.command_id}:{target}",
+                    )
                 argv = tuple(argument.replace("{application_root}", "{artifact_root}") for argument in command.argv)
                 placeholders = {name for argument in argv for name in _PLACEHOLDER.findall(argument)}
                 if not placeholders <= {"python", "artifact_root"}:
@@ -61,14 +98,12 @@ def build_validation_registry(
         plugins.append({
             "plugin_id": plugin_id,
             "version": entry.application.version,
-            "mode": entry.mode,
-            "codex_path": entry.codex_destination,
-            "openclaw_path": entry.openclaw_destination,
+            "targets": targets,
             "commands": commands,
             "clawhub": clawhub,
         })
     return {
-        "schema_version": 1,
+        "schema_version": 2,
         "marketplace_id": preparation_catalog.marketplace_id,
         "plugins": plugins,
     }
@@ -104,17 +139,17 @@ def _load_mapping(value: Mapping[str, object] | Path) -> Mapping[str, object]:
 def _codex_plugins(catalog: Mapping[str, object]) -> dict[str, str]:
     records = catalog.get("plugins")
     if not isinstance(records, list):
-        raise MarketplaceError("runtime_catalog_mismatch", "codex plugins")
+        raise MarketplaceError("runtime_catalog_target_mismatch", "codex plugins")
     result: dict[str, str] = {}
     for item in records:
         if not isinstance(item, dict) or not isinstance(item.get("name"), str):
-            raise MarketplaceError("runtime_catalog_mismatch", "codex entry")
+            raise MarketplaceError("runtime_catalog_target_mismatch", "codex entry")
         source = item.get("source")
         if not isinstance(source, dict) or not isinstance(source.get("path"), str):
-            raise MarketplaceError("runtime_catalog_mismatch", str(item.get("name")))
+            raise MarketplaceError("runtime_catalog_target_mismatch", str(item.get("name")))
         plugin_id = item["name"]
         if plugin_id in result:
-            raise MarketplaceError("runtime_catalog_mismatch", "duplicate codex entry")
+            raise MarketplaceError("runtime_catalog_target_mismatch", "duplicate codex entry")
         result[plugin_id] = _catalog_path(source["path"])
     return result
 
@@ -122,14 +157,14 @@ def _codex_plugins(catalog: Mapping[str, object]) -> dict[str, str]:
 def _openclaw_plugins(catalog: Mapping[str, object]) -> dict[str, tuple[str, str]]:
     records = catalog.get("plugins")
     if not isinstance(records, list):
-        raise MarketplaceError("runtime_catalog_mismatch", "openclaw plugins")
+        raise MarketplaceError("runtime_catalog_target_mismatch", "openclaw plugins")
     result: dict[str, tuple[str, str]] = {}
     for item in records:
         if not isinstance(item, dict) or not all(isinstance(item.get(key), str) for key in ("name", "version", "source")):
-            raise MarketplaceError("runtime_catalog_mismatch", "openclaw entry")
+            raise MarketplaceError("runtime_catalog_target_mismatch", "openclaw entry")
         plugin_id = item["name"]
         if plugin_id in result:
-            raise MarketplaceError("runtime_catalog_mismatch", "duplicate openclaw entry")
+            raise MarketplaceError("runtime_catalog_target_mismatch", "duplicate openclaw entry")
         result[plugin_id] = (_catalog_path(item["source"]), item["version"])
     return result
 

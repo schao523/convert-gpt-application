@@ -1,27 +1,38 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "marketplace_id": "obvious-one",
   "applications": [
     {
       "application_config": "applications/cool-bible-tutor/conversion.json",
       "distribution_contract": "applications/cool-bible-tutor/openclaw/distribution.json",
-      "codex_destination": "plugins/cool-bible-tutor",
-      "openclaw_destination": "openclaw/cool-bible-tutor",
-      "mode": "build"
+      "targets": {
+        "codex": {"mode": "build", "destination": "plugins/cool-bible-tutor"},
+        "openclaw": {"mode": "build", "destination": "openclaw/cool-bible-tutor"}
+      }
     },
     {
       "application_config": "applications/vibe-coding-designer/conversion.json",
       "distribution_contract": "applications/vibe-coding-designer/openclaw/distribution.json",
-      "codex_destination": "plugins/vibe-coding-designer",
-      "openclaw_destination": "openclaw/vibe-coding-designer",
-      "mode": "build"
+      "targets": {
+        "codex": {"mode": "build", "destination": "plugins/vibe-coding-designer"},
+        "openclaw": {"mode": "build", "destination": "openclaw/vibe-coding-designer"}
+      }
     },
     {
       "application_config": "applications/cool-plugin-design-assistant/conversion.json",
       "distribution_contract": "applications/cool-plugin-design-assistant/openclaw/distribution.json",
-      "codex_destination": "plugins/cool-plugin-design-assistant",
-      "openclaw_destination": "openclaw/cool-plugin-design-assistant",
-      "mode": "build"
+      "targets": {
+        "codex": {"mode": "build", "destination": "plugins/cool-plugin-design-assistant"},
+        "openclaw": {"mode": "build", "destination": "openclaw/cool-plugin-design-assistant"}
+      }
+    },
+    {
+      "application_config": "applications/plugin-builder/conversion.json",
+      "distribution_contract": "applications/plugin-builder/openclaw/distribution.json",
+      "targets": {
+        "codex": {"mode": "build", "destination": "plugins/plugin-builder"},
+        "openclaw": {"mode": "not_applicable"}
+      }
     }
   ]
 }
