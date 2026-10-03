@@ -5,6 +5,7 @@ import subprocess
 import unittest
 import hashlib
 
+from obvious_one_plugin_framework.marketplace import load_preparation_catalog
 from obvious_one_plugin_framework.plugin_authoring import validate_manifest_pair
 
 
@@ -18,6 +19,24 @@ def load_json(relative: str) -> dict:
 
 
 class ConversionContractTests(unittest.TestCase):
+    def test_obvious_one_catalog_declares_plugin_builder_codex_only(self) -> None:
+        repository = ROOT.parents[1]
+        catalog = load_preparation_catalog(
+            repository / "marketplaces" / "obvious-one.json", repository
+        )
+        builder = next(
+            entry
+            for entry in catalog.applications
+            if entry.application.plugin_id == "plugin-builder"
+        )
+
+        self.assertEqual(catalog.schema_version, 2)
+        self.assertEqual(builder.application.version, "0.1.3")
+        self.assertEqual(builder.target("codex").mode, "build")
+        self.assertEqual(builder.target("codex").destination, "plugins/plugin-builder")
+        self.assertEqual(builder.target("openclaw").mode, "not_applicable")
+        self.assertIsNone(builder.target("openclaw").destination)
+
     def test_identity_scope_and_provenance_are_explicit(self) -> None:
         config = load_json("conversion.json")
         manifest = load_json(".codex-plugin/plugin.json")
