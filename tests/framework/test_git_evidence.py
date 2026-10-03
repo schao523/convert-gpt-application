@@ -49,6 +49,14 @@ class GitEvidenceTests(unittest.TestCase):
         self.assertEqual(report.status, "PASS")
         self.assertEqual(report.codes, ())
 
+    def test_dual_runtime_git_evidence_still_checks_both_scopes(self) -> None:
+        (self.repo / "openclaw/demo/CONTENT-MANIFEST.json").write_bytes(b'{"drift":true}\n')
+
+        report = verify_git_evidence(self.repo, SCOPES, commit="HEAD")
+
+        self.assertEqual(report.status, "FAIL")
+        self.assertIn("working_tree_mismatch", report.codes)
+
     def test_staged_and_unstaged_differences_are_distinct(self) -> None:
         path = self.repo / "plugins/demo/space 名稱.txt"
         path.write_bytes(b"staged\n")

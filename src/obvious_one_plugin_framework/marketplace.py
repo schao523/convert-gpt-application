@@ -334,11 +334,7 @@ def verify_marketplace(
     files_checked = 0
     requested_git = check_index or commit is not None or fresh_checkout
     if requested_git:
-        scopes = tuple(
-            destination
-            for entry in catalog.applications
-            for destination in (entry.codex_destination, entry.openclaw_destination)
-        )
+        scopes = _applicable_destinations(catalog)
         reference = "HEAD" if fresh_checkout and commit is None else commit
         try:
             report = verify_git_evidence(
@@ -779,15 +775,19 @@ def _merge_exact_byte_attributes(catalog: PreparationCatalog, stage: Path) -> No
     existing = path.read_text(encoding="utf-8") if path.is_file() else ""
     existing = existing.replace("\r\n", "\n").replace("\r", "\n")
     lines = existing.splitlines()
-    scopes = tuple(
-        destination
-        for entry in catalog.applications
-        for destination in (entry.codex_destination, entry.openclaw_destination)
-    )
+    scopes = _applicable_destinations(catalog)
     for line in exact_byte_attributes(scopes).splitlines():
         if line not in lines:
             lines.append(line)
     _write_text_file(path, "\n".join(lines) + "\n")
+
+
+def _applicable_destinations(catalog: PreparationCatalog) -> tuple[str, ...]:
+    return tuple(
+        _required_target_destination(target, target_name)
+        for entry in catalog.applications
+        for target_name, target in entry.applicable_targets()
+    )
 
 
 def _write_json_file(path: Path, value: object) -> None:

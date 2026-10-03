@@ -105,6 +105,12 @@ class MarketplaceTests(unittest.TestCase):
             },
         )
 
+    def _write_codex_only_modern_catalog(self) -> None:
+        self._write_v2_catalog()
+        raw = json.loads(self.catalog_path.read_text(encoding="utf-8"))
+        raw["applications"] = [raw["applications"][1]]
+        _write_json(self.catalog_path, raw)
+
     def _upgrade_to_v3(self, application: Path) -> None:
         contract_path = application / "openclaw" / "distribution.json"
         raw = json.loads(contract_path.read_text(encoding="utf-8"))
@@ -449,6 +455,45 @@ class MarketplaceTests(unittest.TestCase):
 
         self.assertEqual(first_result.artifacts[0].sha256, second_result.artifacts[0].sha256)
         self.assertEqual(self._tree(self.output), self._tree(second))
+
+    def test_codex_only_index_commit_and_fresh_checkout_use_only_codex_scope(self) -> None:
+        self._write_codex_only_modern_catalog()
+        catalog = load_preparation_catalog(self.catalog_path, self.repository)
+        prepare_marketplace(catalog, self.baseline, self.output)
+        self.git(self.output, "init")
+        self.git(self.output, "config", "user.email", "tests@example.invalid")
+        self.git(self.output, "config", "user.name", "Framework Tests")
+        self.git(self.output, "add", ".")
+        self.git(self.output, "commit", "-m", "codex-only stage")
+
+        result = verify_marketplace(
+            catalog,
+            self.output,
+            check_index=True,
+            commit="HEAD",
+            fresh_checkout=True,
+        )
+
+        self.assertEqual(result.status, "PASS")
+        self.assertEqual(
+            result.evidence["gates"],
+            {
+                "filesystem": "PASS",
+                "index": "PASS",
+                "commit": "PASS",
+                "fresh_checkout": "PASS",
+            },
+        )
+
+    def test_exact_byte_attributes_omit_not_applicable_destination(self) -> None:
+        self._write_codex_only_modern_catalog()
+        catalog = load_preparation_catalog(self.catalog_path, self.repository)
+
+        prepare_marketplace(catalog, self.baseline, self.output)
+
+        attributes = (self.output / ".gitattributes").read_text(encoding="utf-8")
+        self.assertIn("/plugins/modern/** -text whitespace=cr-at-eol", attributes)
+        self.assertNotIn("openclaw/modern", attributes)
 
     def test_failed_product_audit_preserves_existing_output(self) -> None:
         hook = self.modern / "audit.py"
