@@ -4,7 +4,7 @@
   "plugin_id": "plugin-builder",
   "source_repository": "plugin-builder-approved-handoff-v1.0",
   "source_tree_sha256": "d0d8700951992c12becf5543087716ecd8bd7fbdb42b53ab70a269af0f4f972d",
-  "marketplace_repository": "NOT_AUTHORIZED_PHASE_ONE",
+  "marketplace_repository": "schao523/obvious-one-plugins",
   "marketplace_commit": "0000000000000000000000000000000000000000",
   "incorporated_branches": [],
   "source_inventory": [

@@ -12,8 +12,10 @@ Run `plan` only from a valid inspected session. Classify each application capabi
 
 Handoff normalization does not establish approval. Plan only when the canonical handoff records sufficient explicit approval evidence; a filename containing `APPROVED`, a generated sidecar, or a successful format conversion is not planning authority.
 
+For `WORKBENCH_HANDOFF_V1_1`, retain every canonical requirement record with its exact `id`, `source`, and `verbatim` values; an update also retains its exact `change` value. Do not derive IDs from prose or rewrite source text. An update requires the supplied baseline ZIP to match the declared plugin ID, version, and archive SHA-256, plus the approved baseline-preservation contract, before planning can advance.
+
 The plan identifies each behavioral requirement, application invariant, skill owner, reference need, deterministic operation, dependency, runtime adapter, acceptance scenario, and unresolved decision. An existing plugin ZIP is mandatory for update mode; store only its digest and a relative workspace identity.
 
 Evaluate available framework and creator capabilities before proposing new code. Record one decision for each required capability: `REUSE`, `ADAPT`, `BUNDLE`, or `UNRESOLVED`, plus the inspected evidence. Do not replace required retrieval or deterministic processing with model memory.
 
-The W1 review package is plain language: intended skill responsibilities, reused or bundled capabilities, planned files, requirement coverage, risks, and decisions still needed. It is not permission to publish or deploy.
+The W1 review package is plain language: intended skill responsibilities, reused or bundled capabilities, planned files, requirement coverage, risks, and decisions still needed. W1 remains the only approval that permits candidate mutation. W2 remains the only approval that permits final packaging. Neither is permission to publish or deploy.

@@ -104,6 +104,20 @@ class SkillContractTests(unittest.TestCase):
         self.assertIn("legacy adaptation", workflow.casefold())
         self.assertIn("ambiguous", workflow.casefold())
         self.assertIn("does not establish approval", planning.casefold())
+        for profile in (
+            "WORKBENCH_HANDOFF_V1_1",
+            "CANONICAL_V1",
+            "LEGACY_WORKBENCH_V1",
+            "COOL_DESIGN_ASSISTANT_FULL_V1",
+            "COOL_DESIGN_ASSISTANT_DELTA_V1",
+            "AMBIGUOUS",
+            "UNKNOWN",
+        ):
+            self.assertIn(profile, workflow)
+        self.assertIn("exact `id`, `source`, and `verbatim`", planning)
+        self.assertIn("supplied baseline ZIP", planning)
+        self.assertIn("W1", planning)
+        self.assertIn("W2", planning)
 
     # Catches planning from an unapproved input, missing requirement coverage, or self-approved behavior changes.
     def test_planning_requires_authority_and_traceability(self) -> None:

@@ -34,11 +34,12 @@ class ConversionContractTests(unittest.TestCase):
             "approved-design-internal",
         )
         self.assertEqual(manifest["name"], "plugin-builder")
-        self.assertEqual(manifest["version"], "0.1.1")
+        self.assertEqual(manifest["version"], "0.1.3")
         self.assertEqual(portable["$schema"], "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json")
         self.assertEqual((portable["name"], portable["version"]), (manifest["name"], manifest["version"]))
         self.assertEqual(portable["extensions"]["com.openai"]["interface"], manifest["interface"])
         self.assertEqual(validate_manifest_pair(ROOT), ())
+        self.assertEqual(config["marketplace_repository"], "schao523/obvious-one-plugins")
 
         self.assertEqual(scope["scope"], "OPENAI_ONLY_PHASE_ONE")
         self.assertEqual(scope["source_package_sha256"], SOURCE_PACKAGE_SHA256)
@@ -50,6 +51,11 @@ class ConversionContractTests(unittest.TestCase):
         self.assertGreaterEqual(set(scope["excluded_runtimes"]), {"OpenClaw", "Claude"})
         self.assertEqual(scope["publication_state"], "NOT_PERFORMED")
         self.assertEqual(scope["release_state"], "NOT_PERFORMED")
+        self.assertEqual(scope["version"], "0.1.3")
+        self.assertEqual(
+            scope["approved_release_targets"],
+            ["private/local ZIP", "public GitHub Codex marketplace", "OpenAI universal directory"],
+        )
 
         serialized_inventory = json.dumps(inventory, ensure_ascii=False)
         self.assertNotRegex(serialized_inventory, re.compile(r"[A-Za-z]:[\\/]"))

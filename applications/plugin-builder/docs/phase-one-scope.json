@@ -1,13 +1,18 @@
 {
   "schema_version": 1,
   "application_id": "plugin-builder",
-  "version": "0.1.0",
+  "version": "0.1.3",
   "behavioral_authority": "SPEC-v1.0",
   "scope": "OPENAI_ONLY_PHASE_ONE",
   "source_package_sha256": "8edde15b6bd0e658990c3a354b85ea90b93bfa1c17216c7b11928f8284c3f497",
   "normalized_package_sha256": "953747ad9f92d05dc29a049359fa06227fc2f8cc8590242cd4d1f09e17f82b21",
   "target_runtimes": ["ChatGPT Work Local/Desktop", "Codex"],
   "excluded_runtimes": ["OpenClaw", "Claude"],
+  "approved_release_targets": [
+    "private/local ZIP",
+    "public GitHub Codex marketplace",
+    "OpenAI universal directory"
+  ],
   "publication_state": "NOT_PERFORMED",
   "release_state": "NOT_PERFORMED"
 }
