@@ -134,6 +134,7 @@ class GitEvidenceTests(unittest.TestCase):
         output = b"".join(
             path.encode("utf-8") + b"\0text\0unset\0"
             + path.encode("utf-8") + b"\0eol\0unspecified\0"
+            + path.encode("utf-8") + b"\0filter\0unspecified\0"
             for path in paths
         )
         completed = subprocess.CompletedProcess([], 0, stdout=output, stderr=b"")
@@ -146,13 +147,24 @@ class GitEvidenceTests(unittest.TestCase):
 
         self.assertEqual(
             run.call_args.args[0],
-            ["git", "check-attr", "-z", "--cached", "--stdin", "text", "eol"],
+            [
+                "git",
+                "check-attr",
+                "-z",
+                "--cached",
+                "--stdin",
+                "text",
+                "eol",
+                "filter",
+            ],
         )
         self.assertEqual(
             run.call_args.kwargs["input"],
             b"plugins/demo/one.txt\0plugins/demo/two.txt\0",
         )
-        self.assertEqual(attributes[paths[0]], ("unset", "unspecified"))
+        self.assertEqual(
+            attributes[paths[0]], ("unset", "unspecified", "unspecified")
+        )
 
     def test_explicit_legacy_eol_policy_is_deterministic_evidence(self) -> None:
         (self.repo / ".gitattributes").write_text(
@@ -186,6 +198,36 @@ class GitEvidenceTests(unittest.TestCase):
 
         self.assertEqual(report.status, "PASS")
         self.assertEqual(report.codes, ())
+
+    def test_working_bytes_must_match_the_declared_checkout_eol(self) -> None:
+        path = self.repo / "plugins/demo/space 名稱.txt"
+        (self.repo / ".gitattributes").write_text(
+            "/openclaw/demo/** -text\n"
+            "/plugins/demo/** text eol=lf\n",
+            encoding="utf-8",
+            newline="\n",
+        )
+        _git(self.repo, "add", ".")
+        _git(self.repo, "commit", "-m", "pin lf checkout bytes")
+        path.write_bytes(b"one\r\ntwo\r\n")
+
+        report = verify_git_evidence(self.repo, SCOPES, commit="HEAD")
+
+        self.assertEqual(report.status, "FAIL")
+        self.assertIn("working_tree_mismatch", report.codes)
+
+    def test_custom_git_filters_are_not_exact_byte_evidence(self) -> None:
+        (self.repo / ".gitattributes").write_text(
+            "/openclaw/demo/** -text\n"
+            "/plugins/demo/** -text filter=custom\n",
+            encoding="utf-8",
+            newline="\n",
+        )
+
+        report = verify_git_evidence(self.repo, SCOPES)
+
+        self.assertEqual(report.status, "FAIL")
+        self.assertIn("exact_byte_attribute_missing", report.codes)
 
     def test_unstaged_attributes_cannot_mask_index_or_commit_evidence(self) -> None:
         (self.repo / ".gitattributes").write_text(

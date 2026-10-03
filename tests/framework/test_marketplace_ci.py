@@ -306,6 +306,67 @@ class MarketplaceCiTests(unittest.TestCase):
         self.assertNotEqual(failed.returncode, 0)
         self.assertEqual(json.loads(failed.stdout)["status"], "FAIL")
 
+    def test_generated_verifier_rejects_runtime_catalog_drift(self) -> None:
+        catalog = self.codex_only_catalog()
+        prepare_marketplace(catalog, self.fixture.baseline, self.fixture.output)
+        command = [
+            sys.executable,
+            "-B",
+            str(self.fixture.output / "tools/verify_marketplace.py"),
+            "--registry",
+            str(self.fixture.output / ".obvious-one-validation.json"),
+            "--plugin",
+            "modern",
+            "--json",
+        ]
+        codex_path = self.fixture.output / ".agents/plugins/marketplace.json"
+        openclaw_path = self.fixture.output / ".claude-plugin/marketplace.json"
+        original_codex = codex_path.read_bytes()
+        original_openclaw = openclaw_path.read_bytes()
+        cases = {
+            "missing-codex": (
+                codex_path,
+                {"plugins": []},
+            ),
+            "phantom-openclaw": (
+                openclaw_path,
+                {
+                    "plugins": [
+                        {
+                            "name": "legacy",
+                            "version": "1.0.0",
+                            "source": "./openclaw/legacy",
+                        },
+                        {
+                            "name": "modern",
+                            "version": "1.2.3",
+                            "source": "./openclaw/modern",
+                        },
+                    ]
+                },
+            ),
+        }
+        try:
+            for name, (path, payload) in cases.items():
+                with self.subTest(name):
+                    path.write_text(json.dumps(payload), encoding="utf-8")
+                    completed = subprocess.run(
+                        command,
+                        cwd=self.fixture.output,
+                        capture_output=True,
+                        text=True,
+                    )
+                    self.assertNotEqual(completed.returncode, 0)
+                    self.assertEqual(
+                        json.loads(completed.stdout)["code"],
+                        "runtime_catalog_mismatch",
+                    )
+                    codex_path.write_bytes(original_codex)
+                    openclaw_path.write_bytes(original_openclaw)
+        finally:
+            codex_path.write_bytes(original_codex)
+            openclaw_path.write_bytes(original_openclaw)
+
     def test_generated_verifier_does_not_retrust_stale_legacy_manifest(self) -> None:
         manifest_path = self.fixture.baseline / "openclaw/legacy/CONTENT-MANIFEST.json"
         manifest = json.loads(manifest_path.read_text(encoding="utf-8"))

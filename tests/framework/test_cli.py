@@ -496,6 +496,45 @@ class FrameworkCliTests(unittest.TestCase):
         self.assertIn("/docs/** text\n", attributes)
         self.assertIn("/plugins/modern/** -text whitespace=cr-at-eol\n", attributes)
 
+    def test_prepare_marketplace_reports_published_excluded_target_as_blocked(self) -> None:
+        fixture = self.marketplace_fixture()
+        fixture._write_v2_catalog()
+        openclaw_catalog = fixture.baseline / ".claude-plugin/marketplace.json"
+        openclaw_catalog.parent.mkdir(parents=True, exist_ok=True)
+        openclaw_catalog.write_text(
+            json.dumps(
+                {
+                    "plugins": [
+                        {
+                            "name": "modern",
+                            "version": "1.2.2",
+                            "source": "./openclaw/modern",
+                        }
+                    ]
+                }
+            ),
+            encoding="utf-8",
+        )
+        fixture.output.mkdir()
+        sentinel = fixture.output / "keep.txt"
+        sentinel.write_bytes(b"keep\r\n")
+
+        code, payload = self.invoke(
+            "prepare-marketplace",
+            "--catalog",
+            str(fixture.catalog_path),
+            "--marketplace",
+            str(fixture.baseline),
+            "--output",
+            str(fixture.output),
+            "--json",
+        )
+
+        self.assertEqual(code, 2)
+        self.assertEqual(payload["status"], "BLOCKED")
+        self.assertEqual(payload["code"], "not_applicable_target_already_published")
+        self.assertEqual(sentinel.read_bytes(), b"keep\r\n")
+
     def test_verify_marketplace_cli_supports_all_git_evidence_modes(self) -> None:
         fixture = self.marketplace_fixture()
         prepared, _ = self.invoke(

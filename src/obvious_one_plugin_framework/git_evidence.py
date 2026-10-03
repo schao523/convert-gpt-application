@@ -54,10 +54,10 @@ def verify_git_evidence(
         if path not in working:
             codes.add("working_tree_mismatch")
             continue
-        working_oid = _git_bytes(
-            root, "hash-object", f"--path={path}", "--", path
-        ).decode("ascii").strip()
-        if working_oid != oid:
+        checkout_bytes = _git_bytes(
+            root, "cat-file", "--filters", f"--path={path}", oid
+        )
+        if working[path].read_bytes() != checkout_bytes:
             codes.add("working_tree_mismatch")
     committed: dict[str, str] = {}
     resolved_commit: str | None = None
@@ -180,7 +180,7 @@ def _attributes(
         path.encode("utf-8", "surrogateescape") + b"\0" for path in paths
     )
     payload = _git_bytes(
-        root, *arguments, "text", "eol", input_bytes=path_input
+        root, *arguments, "text", "eol", "filter", input_bytes=path_input
     )
     parts = payload.split(b"\0")
     raw: dict[str, dict[str, str]] = {}
@@ -189,16 +189,23 @@ def _attributes(
         attribute = parts[index + 1].decode("ascii")
         raw.setdefault(path, {})[attribute] = parts[index + 2].decode("utf-8", "replace")
     return {
-        path: (values.get("text", "unspecified"), values.get("eol", "unspecified"))
+        path: (
+            values.get("text", "unspecified"),
+            values.get("eol", "unspecified"),
+            values.get("filter", "unspecified"),
+        )
         for path, values in raw.items()
     }
 
 
-def _deterministic_attributes(policy: tuple[str, str] | None) -> bool:
+def _deterministic_attributes(policy: tuple[str, str, str] | None) -> bool:
     if policy is None:
         return False
-    text, eol = policy
-    return text == "unset" or (text == "set" and eol in {"lf", "crlf"})
+    text, eol, filter_policy = policy
+    no_transforming_filter = filter_policy in {"unspecified", "unset"}
+    return no_transforming_filter and (
+        text == "unset" or (text == "set" and eol in {"lf", "crlf"})
+    )
 
 
 def _verify_fresh_checkout(
