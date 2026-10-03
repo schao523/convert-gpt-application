@@ -11,10 +11,29 @@ import tempfile
 import unittest
 import zipfile
 
+from obvious_one_plugin_framework.workbench_handoff import normalize_handoff_archive
+
 
 ROOT = Path(__file__).resolve().parents[1]
 DESIGN = Path(__file__).parent / "fixtures/design-package-legacy"
 PLAN = Path(__file__).parent / "fixtures/plan-create.json"
+INTEROP = ROOT.parents[1] / "tests/fixtures/workbench-handoff"
+
+
+def _write_deterministic_zip(path: Path, members: dict[str, bytes]) -> None:
+    with zipfile.ZipFile(path, "w", compression=zipfile.ZIP_DEFLATED) as archive:
+        for name, payload in sorted(members.items()):
+            info = zipfile.ZipInfo(name, (1980, 1, 1, 0, 0, 0))
+            info.compress_type = zipfile.ZIP_DEFLATED
+            info.external_attr = 0o100644 << 16
+            archive.writestr(info, payload)
+
+
+def _members(root: Path) -> dict[str, bytes]:
+    return {
+        path.relative_to(root).as_posix(): path.read_bytes()
+        for path in sorted(root.rglob("*")) if path.is_file()
+    }
 
 
 def _release_module():
@@ -27,11 +46,72 @@ def _release_module():
 
 
 class StandaloneArtifactTests(unittest.TestCase):
+    def test_extracted_artifact_accepts_canonical_full_and_delta_without_repository_imports(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            release_root = root / "release"
+            _release_module().build_release(ROOT, release_root, "0.1.3")
+            plugin = release_root / "plugins/plugin-builder"
+
+            full_source = root / "full-source.zip"
+            _write_deterministic_zip(full_source, _members(INTEROP / "full"))
+            full = root / "full-canonical.zip"
+            full_result = normalize_handoff_archive(full_source, root / "full-tree", full)
+            self.assertEqual(full_result.status, "PASS", full_result.diagnostics)
+
+            baseline_members = _members(INTEROP / "delta/baseline")
+            baseline = root / "baseline.zip"
+            _write_deterministic_zip(baseline, baseline_members)
+            delta_members = {
+                name: payload for name, payload in _members(INTEROP / "delta").items()
+                if not name.startswith("baseline/")
+            }
+            delta_manifest = json.loads(delta_members["delta_handoff_manifest.json"])
+            delta_manifest["baseline"]["archive_sha256"] = sha256(baseline.read_bytes()).hexdigest()
+            delta_members["delta_handoff_manifest.json"] = (
+                json.dumps(delta_manifest, ensure_ascii=True, indent=2, sort_keys=True) + "\n"
+            ).encode("ascii")
+            delta_source = root / "delta-source.zip"
+            _write_deterministic_zip(delta_source, delta_members)
+            delta = root / "delta-canonical.zip"
+            delta_result = normalize_handoff_archive(delta_source, root / "delta-tree", delta)
+            self.assertEqual(delta_result.status, "PASS", delta_result.diagnostics)
+
+            environment = {
+                key: value for key, value in os.environ.items()
+                if key.upper() not in {"PYTHONPATH", "PYTHONHOME"}
+                and str(ROOT.parents[1]).casefold() not in value.casefold()
+            }
+
+            def inspect(*arguments: str) -> dict:
+                completed = subprocess.run(
+                    [sys.executable, "-B", str(plugin / "scripts/plugin_builder.py"), "inspect", *arguments, "--json"],
+                    cwd=root, env=environment, capture_output=True, text=True,
+                    encoding="utf-8", errors="strict", check=False,
+                )
+                self.assertEqual(completed.stderr, "")
+                self.assertEqual(len(completed.stdout.splitlines()), 1)
+                document = json.loads(completed.stdout)
+                self.assertEqual(completed.returncode, 0, document)
+                return document
+
+            created = inspect(str(full), "--workspace", str(root / "create"), "--operation", "create")
+            updated = inspect(
+                str(delta), "--workspace", str(root / "update"), "--operation", "update",
+                "--baseline", str(baseline),
+            )
+            self.assertEqual((created["status"], created["stage"]), ("PASS", "S2"))
+            self.assertEqual((updated["status"], updated["stage"]), ("PASS", "S2"))
+            self.assertEqual(
+                (root / "update/baseline/skills/existing/SKILL.md").read_bytes(),
+                baseline_members["skills/existing/SKILL.md"],
+            )
+
     def test_t7_generated_artifact_runs_create_update_and_local_tool_without_repository(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
             release_root = root / "release"
-            _release_module().build_release(ROOT, release_root, "0.1.1")
+            _release_module().build_release(ROOT, release_root, "0.1.3")
             plugin = release_root / "plugins/plugin-builder"
             self.assertTrue((plugin / "scripts/vendor/obvious_one_plugin_framework/plugin_authoring/__init__.py").is_file())
             external = root / "external"
