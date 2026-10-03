@@ -140,10 +140,10 @@ class ApplicationConfigTests(unittest.TestCase):
             },
             {
                 "runtime-status": ("codex",),
-                "session-validator": ("codex",),
-                "create-smoke": ("codex",),
-                "update-smoke": ("codex",),
-                "bundled-local-tool-smoke": ("codex",),
+                "session-validator": (),
+                "create-smoke": (),
+                "update-smoke": (),
+                "bundled-local-tool-smoke": (),
             },
         )
 

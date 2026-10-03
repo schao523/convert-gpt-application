@@ -4,8 +4,10 @@ from pathlib import Path
 import subprocess
 import tempfile
 import unittest
+from unittest import mock
 
 from obvious_one_plugin_framework.git_evidence import (
+    _attributes,
     exact_byte_attributes,
     verify_git_evidence,
 )
@@ -127,6 +129,31 @@ class GitEvidenceTests(unittest.TestCase):
             "/plugins/demo/** -text whitespace=cr-at-eol\n",
         )
 
+    def test_attribute_queries_stream_paths_over_stdin(self) -> None:
+        paths = ("plugins/demo/one.txt", "plugins/demo/two.txt")
+        output = b"".join(
+            path.encode("utf-8") + b"\0text\0unset\0"
+            + path.encode("utf-8") + b"\0eol\0unspecified\0"
+            for path in paths
+        )
+        completed = subprocess.CompletedProcess([], 0, stdout=output, stderr=b"")
+
+        with mock.patch(
+            "obvious_one_plugin_framework.git_evidence.subprocess.run",
+            return_value=completed,
+        ) as run:
+            attributes = _attributes(self.repo, paths, cached=True)
+
+        self.assertEqual(
+            run.call_args.args[0],
+            ["git", "check-attr", "-z", "--cached", "--stdin", "text", "eol"],
+        )
+        self.assertEqual(
+            run.call_args.kwargs["input"],
+            b"plugins/demo/one.txt\0plugins/demo/two.txt\0",
+        )
+        self.assertEqual(attributes[paths[0]], ("unset", "unspecified"))
+
     def test_explicit_legacy_eol_policy_is_deterministic_evidence(self) -> None:
         (self.repo / ".gitattributes").write_text(
             "/openclaw/demo/** text eol=lf\n"
@@ -137,6 +164,25 @@ class GitEvidenceTests(unittest.TestCase):
         _git(self.repo, "add", ".gitattributes")
 
         report = verify_git_evidence(self.repo, SCOPES)
+
+        self.assertEqual(report.status, "PASS")
+        self.assertEqual(report.codes, ())
+
+    def test_explicit_crlf_policy_reproduces_worktree_bytes_in_fresh_checkout(self) -> None:
+        path = self.repo / "plugins/demo/space 名稱.txt"
+        path.write_bytes(b"one\r\ntwo\r\n")
+        (self.repo / ".gitattributes").write_text(
+            "/openclaw/demo/** -text\n"
+            "/plugins/demo/** text eol=crlf\n",
+            encoding="utf-8",
+            newline="\n",
+        )
+        _git(self.repo, "add", ".")
+        _git(self.repo, "commit", "-m", "pin crlf checkout bytes")
+
+        report = verify_git_evidence(
+            self.repo, SCOPES, commit="HEAD", fresh_checkout=True
+        )
 
         self.assertEqual(report.status, "PASS")
         self.assertEqual(report.codes, ())

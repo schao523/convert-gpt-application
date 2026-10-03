@@ -28,23 +28,19 @@
       },
       {
         "id": "session-validator",
-        "argv": ["{python}", "-B", "{application_root}/scripts/plugin_builder.py", "validate-session", "{application_root}/tests/fixtures/session-valid.json", "--json"],
-        "marketplace_targets": ["codex"]
+        "argv": ["{python}", "-B", "{application_root}/scripts/plugin_builder.py", "validate-session", "{application_root}/tests/fixtures/session-valid.json", "--json"]
       },
       {
         "id": "create-smoke",
-        "argv": ["{python}", "-B", "-m", "unittest", "applications.plugin-builder.tests.test_end_to_end_scenarios.EndToEndScenarios.test_t2_create_with_bundled_local_tool_reaches_verified_deterministic_zip", "-v"],
-        "marketplace_targets": ["codex"]
+        "argv": ["{python}", "-B", "-m", "unittest", "applications.plugin-builder.tests.test_end_to_end_scenarios.EndToEndScenarios.test_t2_create_with_bundled_local_tool_reaches_verified_deterministic_zip", "-v"]
       },
       {
         "id": "update-smoke",
-        "argv": ["{python}", "-B", "-m", "unittest", "applications.plugin-builder.tests.test_end_to_end_scenarios.EndToEndScenarios.test_t4_unexplained_update_content_and_tools_wait_and_survive", "-v"],
-        "marketplace_targets": ["codex"]
+        "argv": ["{python}", "-B", "-m", "unittest", "applications.plugin-builder.tests.test_end_to_end_scenarios.EndToEndScenarios.test_t4_unexplained_update_content_and_tools_wait_and_survive", "-v"]
       },
       {
         "id": "bundled-local-tool-smoke",
-        "argv": ["{python}", "-B", "-m", "unittest", "applications.plugin-builder.tests.test_candidate_verification.CandidateVerificationTests.test_local_tool_executes_with_declared_fixture_and_direct_argv", "-v"],
-        "marketplace_targets": ["codex"]
+        "argv": ["{python}", "-B", "-m", "unittest", "applications.plugin-builder.tests.test_candidate_verification.CandidateVerificationTests.test_local_tool_executes_with_declared_fixture_and_direct_argv", "-v"]
       }
     ],
     "codex_build": {

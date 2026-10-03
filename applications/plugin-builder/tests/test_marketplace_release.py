@@ -5,6 +5,8 @@ import importlib.util
 import json
 from pathlib import Path
 import shutil
+import subprocess
+import sys
 import tempfile
 import unittest
 from unittest import mock
@@ -125,6 +127,45 @@ class MarketplaceReleaseTests(unittest.TestCase):
             self.assertFalse(
                 any("docs/approved-design/" in path for path in second.paths)
             )
+
+    def test_codex_marketplace_commands_execute_from_the_packaged_artifact(self) -> None:
+        release = load_release()
+        config = json.loads((ROOT / "conversion.json").read_text(encoding="utf-8"))
+        commands = [
+            item
+            for item in config["verification"]["commands"]
+            if "codex" in item.get("marketplace_targets", [])
+        ]
+        self.assertTrue(commands)
+
+        with tempfile.TemporaryDirectory(dir=TEMP_ROOT) as temp:
+            destination = Path(temp) / "marketplace"
+            release.build_release(ROOT, destination, "0.1.3")
+            artifact_root = destination / "plugins" / "plugin-builder"
+
+            for command in commands:
+                argv = [
+                    argument.replace("{python}", sys.executable).replace(
+                        "{application_root}", str(artifact_root)
+                    )
+                    for argument in command["argv"]
+                ]
+                completed = subprocess.run(
+                    argv,
+                    cwd=artifact_root,
+                    stdin=subprocess.DEVNULL,
+                    capture_output=True,
+                    text=True,
+                    encoding="utf-8",
+                    errors="replace",
+                    shell=False,
+                    check=False,
+                )
+                self.assertEqual(
+                    completed.returncode,
+                    0,
+                    f"{command['id']}: {completed.stdout}\n{completed.stderr}",
+                )
 
     def test_upload_archive_places_plugin_manifest_at_archive_root(self) -> None:
         release = load_release()
