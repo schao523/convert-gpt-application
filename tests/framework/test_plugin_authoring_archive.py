@@ -3,9 +3,11 @@ from __future__ import annotations
 from pathlib import Path
 import tempfile
 import unittest
+from unittest.mock import patch
 import warnings
 import zipfile
 
+from obvious_one_plugin_framework.plugin_authoring import archive as archive_module
 from obvious_one_plugin_framework.plugin_authoring import (
     ArchiveLimits,
     PluginAuthoringError,
@@ -124,6 +126,47 @@ class PluginAuthoringArchiveTests(unittest.TestCase):
         ))
         self.assertFalse((destination / "preserve.txt").exists())
         self.assertEqual((destination / "skills" / "author" / "SKILL.md").read_bytes(), b"instructions")
+
+    def test_destination_check_allows_only_root_owned_aliases(self) -> None:
+        root_alias = Path(self.root.anchor) / "trusted-system-alias"
+        destination = root_alias / "caller-workspace" / "plugin"
+
+        with (
+            patch("sys.platform", "darwin"),
+            patch.object(
+                archive_module,
+                "_is_link_or_reparse",
+                side_effect=lambda candidate: candidate == root_alias,
+            ),
+        ):
+            archive_module._check_existing_components(destination)
+
+        with (
+            patch("sys.platform", "win32"),
+            patch.object(
+                archive_module,
+                "_is_link_or_reparse",
+                side_effect=lambda candidate: candidate == root_alias,
+            ),
+        ):
+            self.assert_error_code(
+                "destination_link_component",
+                lambda: archive_module._check_existing_components(destination),
+            )
+
+        nested_alias = root_alias / "caller-workspace"
+        with (
+            patch("sys.platform", "darwin"),
+            patch.object(
+                archive_module,
+                "_is_link_or_reparse",
+                side_effect=lambda candidate: candidate in {root_alias, nested_alias},
+            ),
+        ):
+            self.assert_error_code(
+                "destination_link_component",
+                lambda: archive_module._check_existing_components(destination),
+            )
 
     def test_tree_and_zip_identity_are_portable_and_repeatable(self) -> None:
         first = self.root / "first"

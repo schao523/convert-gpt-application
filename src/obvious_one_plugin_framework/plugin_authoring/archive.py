@@ -9,6 +9,7 @@ from pathlib import Path, PurePosixPath
 import re
 import shutil
 import stat
+import sys
 import tempfile
 import unicodedata
 import zipfile
@@ -251,10 +252,16 @@ def _check_existing_components(path: Path) -> None:
     absolute = path.absolute()
     parts = absolute.parts
     current = Path(parts[0])
+    anchor = Path(absolute.anchor)
     for part in parts[1:]:
         current /= part
         if current.exists() or _is_link_or_reparse(current):
             if _is_link_or_reparse(current):
+                # macOS exposes trusted system roots such as /var and /tmp as
+                # aliases below the filesystem anchor.  Caller-controlled
+                # links deeper in the destination remain fail-closed.
+                if sys.platform == "darwin" and current.parent == anchor:
+                    continue
                 raise PluginAuthoringError("destination_link_component", current.name)
 
 
