@@ -35,6 +35,7 @@ class WorkbenchHandoffContractTests(unittest.TestCase):
         requirements: list[dict[str, str]] | None = None,
         artifact_requirements: list[str] | None = None,
         source: bytes = b"# Approved\r\nRequirement alpha\r\nSecond line\r\n",
+        supporting_source: bytes | None = None,
     ):
         records = requirements if requirements is not None else [
             {
@@ -60,6 +61,15 @@ class WorkbenchHandoffContractTests(unittest.TestCase):
                 "state": "approved",
                 "version": "v1",
             },
+            "approved_design_statement": {"file": "approved.md", "id": "DS-v1", "state": "approved", "version": "v1"},
+            "workflow_definitions_and_instruction_modules": [],
+            "reference_material_inventory_evaluation_and_usage_map": [],
+            "application_invariants_and_hitl_checkpoints": [],
+            "deterministic_operation_candidates": [],
+            "tool_data_runtime_and_service_requirements": {"runtime_scope": "OPENAI_ONLY_PHASE_ONE"},
+            "acceptance_criteria_and_representative_scenarios": [],
+            "rights_and_redistribution_decisions": {"normalization_authority": "format-only"},
+            "explicit_exclusions": [],
             "unresolved_owner_decisions": [],
             "requirements": records,
         }
@@ -93,7 +103,11 @@ class WorkbenchHandoffContractTests(unittest.TestCase):
                 "state": "approved",
                 "version": "v1",
             }],
-            "supporting_files": [],
+            "supporting_files": [] if supporting_source is None else [{
+                "file": "supporting.md",
+                "sha256": sha256(supporting_source).hexdigest(),
+                "size": len(supporting_source),
+            }],
             "canonical_handoff": {
                 "file": "workbench-handoff.json",
                 "sha256": sha256(handoff_bytes).hexdigest(),
@@ -105,6 +119,8 @@ class WorkbenchHandoffContractTests(unittest.TestCase):
             "workbench-handoff.json": handoff_bytes,
             "package-manifest.json": canonical_json_bytes(manifest),
         }
+        if supporting_source is not None:
+            members["supporting.md"] = supporting_source
         archive_path = self.root / f"{operation}-{len(list(self.root.glob('*.zip')))}.zip"
         with zipfile.ZipFile(archive_path, "w", compression=zipfile.ZIP_DEFLATED) as archive:
             for name, payload in members.items():
@@ -166,6 +182,25 @@ class WorkbenchHandoffContractTests(unittest.TestCase):
                 )
                 result = self._validate(manifest, handoff, inventory, extracted)
                 self.assertIn(diagnostic, result.diagnostics)
+
+    def test_v11_requires_complete_semantic_fields_and_owner_decision_shape(self) -> None:
+        manifest, handoff, inventory, extracted = self._package()
+        handoff.pop("approved_design_statement")
+        handoff["unresolved_owner_decisions"] = [{"decision_id": "OD-1", "blocking": False}]
+
+        result = self._validate(manifest, handoff, inventory, extracted)
+
+        self.assertIn("handoff.semantic_field_missing:approved_design_statement", result.diagnostics)
+        self.assertIn("owner_decisions.invalid:0", result.diagnostics)
+
+    def test_v11_requirement_source_must_be_its_indexing_artifact_not_supporting_material(self) -> None:
+        supporting = b"Requirement alpha\r\nSecond line\r\n"
+        manifest, handoff, inventory, extracted = self._package(supporting_source=supporting)
+        handoff["requirements"][0]["source"] = "supporting.md#d-01"
+
+        result = self._validate(manifest, handoff, inventory, extracted)
+
+        self.assertIn("requirements.source_not_artifact:D-01", result.diagnostics)
 
     def test_v11_update_requires_change_baseline_and_preservation_contract(self) -> None:
         manifest, handoff, inventory, extracted = self._package(operation="update")

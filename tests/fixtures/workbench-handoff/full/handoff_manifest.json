@@ -24,12 +24,21 @@
       "role": "workflow_definitions_and_instruction_modules",
       "state": "approved",
       "version": "1.0"
+    },
+    {
+      "file": "Design_Statement_APPROVED.md",
+      "id": "DS-INTEROP-1",
+      "provenance": "approved interoperability fixture",
+      "requirements": [],
+      "role": "approved_design_statement",
+      "state": "approved",
+      "version": "1.0"
     }
   ],
   "exclusions": [
     "OpenClaw and Claude runtimes"
   ],
-  "gate": "APPROVED",
+  "gate": "READY FOR WORKBENCH",
   "readiness_note": "Ready for deterministic normalization.",
   "requirements": [
     {

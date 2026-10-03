@@ -16,6 +16,17 @@ HANDOFF_SCHEMA = "workbench-handoff-v1.1"
 RUNTIME_SCOPE = "OPENAI_ONLY_PHASE_ONE"
 _OPERATIONS = {"create", "update"}
 _CHANGES = {"add", "modify", "remove", "preserve"}
+_SEMANTIC_FIELD_TYPES = {
+    "approved_design_statement": dict,
+    "workflow_definitions_and_instruction_modules": list,
+    "reference_material_inventory_evaluation_and_usage_map": list,
+    "application_invariants_and_hitl_checkpoints": list,
+    "deterministic_operation_candidates": list,
+    "tool_data_runtime_and_service_requirements": dict,
+    "acceptance_criteria_and_representative_scenarios": list,
+    "rights_and_redistribution_decisions": dict,
+    "explicit_exclusions": list,
+}
 
 
 @dataclass(frozen=True)
@@ -95,12 +106,14 @@ def _validate_requirements(
         diagnostics.append("requirements.explicit_records_required")
         return
     bindings: dict[str, set[str]] = {}
+    artifact_paths: set[str] = set()
     for artifact in artifacts:
         path = _safe_member_path(artifact.get("file"))
         values = artifact.get("requirements")
         if path is None or not isinstance(values, list) or any(not isinstance(item, str) or not item for item in values):
             diagnostics.append(f"requirements.artifact_index_invalid:{path or ''}")
             continue
+        artifact_paths.add(path)
         for identifier in values:
             bindings.setdefault(identifier, set()).add(path)
 
@@ -139,6 +152,10 @@ def _validate_requirements(
         if member_path not in declared_paths or not (input_root / member_path).is_file():
             diagnostics.append(f"requirements.source_missing:{identifier}")
             continue
+        if member_path not in artifact_paths:
+            diagnostics.append(f"requirements.source_not_artifact:{identifier}")
+        elif member_path not in bindings.get(identifier, set()):
+            diagnostics.append(f"requirements.source_artifact_binding_missing:{identifier}")
         verbatim = record.get("verbatim")
         if not isinstance(verbatim, str) or not verbatim.strip():
             diagnostics.append(f"requirements.text_invalid:{identifier}")
@@ -192,6 +209,17 @@ def _validate_update_fields(handoff: dict[str, Any], operation: object, diagnost
         diagnostics.append("baseline.preservation_required")
 
 
+def _validate_semantic_fields(handoff: dict[str, Any], diagnostics: list[str]) -> None:
+    for field, expected_type in _SEMANTIC_FIELD_TYPES.items():
+        if field not in handoff:
+            diagnostics.append(f"handoff.semantic_field_missing:{field}")
+        elif not isinstance(handoff[field], expected_type):
+            diagnostics.append(f"handoff.semantic_field_invalid:{field}")
+    runtime = handoff.get("tool_data_runtime_and_service_requirements")
+    if isinstance(runtime, dict) and runtime.get("runtime_scope") != RUNTIME_SCOPE:
+        diagnostics.append("handoff.runtime_scope_mismatch")
+
+
 def validate_canonical_handoff(
     manifest: dict[str, Any],
     handoff: dict[str, Any],
@@ -227,10 +255,15 @@ def validate_canonical_handoff(
         diagnostics.append("owner_decisions.invalid")
     else:
         for index, item in enumerate(decisions):
-            if not isinstance(item, dict):
+            if not isinstance(item, dict) or not all(
+                isinstance(item.get(key), str) and bool(item[key].strip())
+                for key in ("decision_id", "owner", "summary", "impact")
+            ) or type(item.get("blocking")) is not bool:
                 diagnostics.append(f"owner_decisions.invalid:{index}")
             elif item.get("blocking") is True:
                 diagnostics.append(f"owner_decisions.blocking:{item.get('decision_id', index)}")
+
+    _validate_semantic_fields(handoff, diagnostics)
 
     artifacts, declared_paths = _validate_physical_manifest(manifest, inventory, Path(input_root), diagnostics)
     canonical = manifest.get("canonical_handoff")

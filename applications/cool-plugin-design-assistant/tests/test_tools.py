@@ -83,6 +83,7 @@ def write_approved_handoff_package(
                 "decision_id": "UD-01",
                 "summary": "Choose the initial model allowlist.",
                 "owner": "decision owner",
+                "impact": "Workbench must retain the decision without guessing.",
                 "blocking": False,
             }
         ],
@@ -235,7 +236,7 @@ class ToolTests(unittest.TestCase):
             )
 
             result = tool.normalize_handoff_package(source, output, confirmed_by="decision owner")
-            self.assertEqual(result["status"], "BLOCKED")
+            self.assertEqual(result["status"], "FAIL")
             self.assertIn("package.undeclared_member:unapproved.txt", result["diagnostics"])
             self.assertFalse(output.exists())
 

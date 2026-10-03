@@ -13,6 +13,15 @@
       "role": "approved_specification",
       "state": "approved",
       "version": "1.1"
+    },
+    {
+      "file": "Design_Statement_APPROVED.md",
+      "id": "DS-INTEROP-1",
+      "provenance": "approved interoperability delta fixture",
+      "requirements": [],
+      "role": "approved_design_statement",
+      "state": "approved",
+      "version": "1.0"
     }
   ],
   "baseline": {
@@ -28,7 +37,7 @@
   "exclusions": [
     "OpenClaw and Claude runtimes"
   ],
-  "gate": "APPROVED",
+  "gate": "READY FOR WORKBENCH",
   "readiness_note": "Ready for deterministic normalization.",
   "requirements": [
     {

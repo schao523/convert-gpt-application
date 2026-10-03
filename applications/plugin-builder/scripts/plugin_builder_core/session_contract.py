@@ -366,11 +366,10 @@ def _validate_v2_requirements(errors: list[str], value: object) -> dict[str, boo
         item = _mapping(entry)
         legacy_keys = {"id", "required", "source_paths"}
         canonical_keys = legacy_keys | {"source", "verbatim"}
-        if item is None or set(item) not in {
-            frozenset(legacy_keys),
-            frozenset(canonical_keys),
-            frozenset(canonical_keys | {"change"}),
-        }:
+        keys = set(item) if item is not None else set()
+        is_legacy = keys == legacy_keys
+        is_canonical = canonical_keys <= keys
+        if item is None or not (is_legacy or is_canonical):
             errors.append(f"{label}.invalid_object")
             continue
         identifier = item.get("id")
@@ -389,7 +388,7 @@ def _validate_v2_requirements(errors: list[str], value: object) -> dict[str, boo
             errors.append(f"{label}.source_paths.invalid_list")
         elif any(not _v2_path(path) for path in paths):
             errors.append(f"{label}.source_paths.invalid_relative_posix_path")
-        if "source" in item:
+        if is_canonical:
             source = item.get("source")
             source_path = source.partition("#")[0] if isinstance(source, str) else None
             if not _v2_path(source_path):

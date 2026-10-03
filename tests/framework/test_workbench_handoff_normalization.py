@@ -47,6 +47,15 @@ class WorkbenchHandoffNormalizationTests(unittest.TestCase):
             "operation": operation,
             "approval": {"state": "approved", "confirmed_by": "owner", "evidence": "record"},
             "approved_specification": {"state": "approved", "file": "design.md", "id": "SPEC-1", "version": "1"},
+            "approved_design_statement": {"state": "approved", "file": "design.md", "id": "DS-1", "version": "1"},
+            "workflow_definitions_and_instruction_modules": [],
+            "reference_material_inventory_evaluation_and_usage_map": [],
+            "application_invariants_and_hitl_checkpoints": [],
+            "deterministic_operation_candidates": [],
+            "tool_data_runtime_and_service_requirements": {"runtime_scope": "OPENAI_ONLY_PHASE_ONE"},
+            "acceptance_criteria_and_representative_scenarios": [],
+            "rights_and_redistribution_decisions": {"normalization_authority": "format-only"},
+            "explicit_exclusions": [],
             "requirements": [{"id": "D-01", "source": "design.md", "verbatim": source.decode("utf-8").rstrip("\n")}],
             "unresolved_owner_decisions": [],
         }
@@ -81,22 +90,35 @@ class WorkbenchHandoffNormalizationTests(unittest.TestCase):
 
     def full(self, *, exact: bool = True) -> dict[str, bytes]:
         source = b"Requirement DAC-01: exact full-design authority.\n"
+        statement = b"Approved design statement.\n"
         manifest: dict[str, object] = {
             "application": "Sample",
             "spec_version": "1.0",
-            "gate": "APPROVED",
+            "gate": "READY FOR WORKBENCH",
             "approval_evidence": "owner approved",
-            "artifacts": [{
-                "id": "SPEC-1", "file": "design.md", "version": "1.0", "state": "approved",
-                "provenance": "design assistant", "requirements": ["DAC-01"] if exact else "DAC-01",
-            }],
+            "artifacts": [
+                {
+                    "id": "SPEC-1", "file": "design.md", "version": "1.0", "state": "approved",
+                    "provenance": "design assistant", "requirements": ["DAC-01"] if exact else "DAC-01",
+                    "role": "approved_specification",
+                },
+                {
+                    "id": "DS-1", "file": "statement.md", "version": "1.0", "state": "approved",
+                    "provenance": "design assistant", "requirements": [],
+                    "role": "approved_design_statement",
+                },
+            ],
             "requirements": [{"id": "DAC-01", "source": "design.md", "verbatim": "Requirement DAC-01: exact full-design authority."}] if exact else [],
             "unresolved_owner_decisions": [],
             "exclusions": [],
             "reserved_workbench_decisions": ["Skill architecture"],
             "readiness_note": "ready",
         }
-        return {"design.md": source, "handoff_manifest.json": canonical_json_bytes(manifest)}
+        return {
+            "design.md": source,
+            "statement.md": statement,
+            "handoff_manifest.json": canonical_json_bytes(manifest),
+        }
 
     def delta(self) -> dict[str, bytes]:
         members = self.full()
@@ -191,6 +213,26 @@ class WorkbenchHandoffNormalizationTests(unittest.TestCase):
                 outcome = normalize_handoff_archive(source, self.root / operation, self.root / f"{operation}-out.zip")
                 self.assertEqual(outcome.status, "PASS", outcome.diagnostics)
                 self.assertEqual((self.root / operation / "design.md").read_bytes(), self.v11(operation)["design.md"])
+
+    def test_canonical_schema_or_integrity_error_fails_but_missing_authority_blocks(self) -> None:
+        invalid = self.v11()
+        handoff = json.loads(invalid["workbench-handoff.json"])
+        handoff.pop("approved_design_statement")
+        invalid["workbench-handoff.json"] = canonical_json_bytes(handoff)
+        manifest = json.loads(invalid["package-manifest.json"])
+        manifest["canonical_handoff"] = {"file": "workbench-handoff.json", **_member(invalid["workbench-handoff.json"])}
+        invalid["package-manifest.json"] = canonical_json_bytes(manifest)
+        failed = normalize_handoff_archive(self.archive("invalid-v11.zip", invalid), self.root / "invalid-v11")
+        self.assertEqual(failed.status, "FAIL")
+        self.assertIn("handoff.semantic_field_missing:approved_design_statement", failed.diagnostics)
+
+        pending = self.full()
+        legacy = json.loads(pending["handoff_manifest.json"])
+        legacy["approval_evidence"] = ""
+        pending["handoff_manifest.json"] = canonical_json_bytes(legacy)
+        blocked = normalize_handoff_archive(self.archive("pending-full.zip", pending), self.root / "pending-full")
+        self.assertEqual(blocked.status, "BLOCKED")
+        self.assertIn("approval.not_approved", blocked.diagnostics)
 
     def test_full_and_delta_profiles_normalize_to_v11(self) -> None:
         for name, members, operation in (("full", self.full(), "create"), ("delta", self.delta(), "update")):

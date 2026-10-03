@@ -23,6 +23,12 @@ inventory_archive = plugin_authoring.inventory_archive
 tree_sha256 = plugin_authoring.tree_sha256
 
 _REQUIREMENT = re.compile(r"\b(RQ|AC|T)(\d+)(?:[\u2013-](?:RQ|AC|T)?(\d+))?\b")
+_APPROVED_GATES = {
+    "APPROVED",
+    "APPROVED FOR IMPLEMENTATION",
+    "READY FOR WORKBENCH",
+    "APPROVED WITH NONBLOCKING DECISIONS",
+}
 
 
 @dataclass(frozen=True)
@@ -227,7 +233,7 @@ def inspect_design_package(
         if manifest is not None:
             if manifest.get("package_schema_version") != 1 or manifest.get("package_kind") != "normalized-workbench-handoff":
                 errors.append("package.manifest_unsupported")
-            if not isinstance(manifest.get("gate"), str) or not manifest["gate"].startswith("APPROVED"):
+            if manifest.get("gate") not in _APPROVED_GATES:
                 errors.append("package.gate_not_approved")
             declared = _declared_members(manifest, errors)
 
@@ -309,15 +315,9 @@ def inspect_design_package(
                         continue
                     source = item.get("source")
                     source_path = source.partition("#")[0] if isinstance(source, str) else ""
-                    record = {
-                        "id": item["id"],
-                        "required": True,
-                        "source": source,
-                        "source_paths": [f"input/{source_path}"],
-                        "verbatim": item.get("verbatim"),
-                    }
-                    if "change" in item:
-                        record["change"] = item["change"]
+                    record = dict(item)
+                    record["required"] = True
+                    record["source_paths"] = [f"input/{source_path}"]
                     requirement_records.append(record)
             if operation == "update":
                 try:

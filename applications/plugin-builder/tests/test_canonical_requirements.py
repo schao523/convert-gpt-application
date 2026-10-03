@@ -47,10 +47,20 @@ class CanonicalRequirementTests(unittest.TestCase):
             "operation": operation,
             "approval": {"state": "approved", "confirmed_by": "owner", "evidence": "record"},
             "approved_specification": {"state": "approved", "file": "design.md", "id": "SPEC-1", "version": "1"},
+            "approved_design_statement": {"state": "approved", "file": "design.md", "id": "DS-1", "version": "1"},
+            "workflow_definitions_and_instruction_modules": [],
+            "reference_material_inventory_evaluation_and_usage_map": [],
+            "application_invariants_and_hitl_checkpoints": [],
+            "deterministic_operation_candidates": [],
+            "tool_data_runtime_and_service_requirements": {"runtime_scope": "OPENAI_ONLY_PHASE_ONE"},
+            "acceptance_criteria_and_representative_scenarios": [],
+            "rights_and_redistribution_decisions": {"normalization_authority": "format-only"},
+            "explicit_exclusions": [],
             "requirements": [{
                 "id": "DAC-01",
                 "source": "design.md#requirements",
                 "verbatim": "Requirement DAC-01 keeps punctuation \u9177 and exact text.",
+                "owner_metadata": {"priority": "high", "reviewer": "decision owner"},
             }],
             "unresolved_owner_decisions": [],
         }
@@ -104,6 +114,7 @@ class CanonicalRequirementTests(unittest.TestCase):
             "id": "DAC-01", "required": True, "source": "design.md#requirements",
             "source_paths": ["input/design.md"],
             "verbatim": "Requirement DAC-01 keeps punctuation \u9177 and exact text.",
+            "owner_metadata": {"priority": "high", "reviewer": "decision owner"},
         }
         self.assertEqual(inspection["requirements"], [expected])
         self.assertEqual(session["requirements"], [expected])

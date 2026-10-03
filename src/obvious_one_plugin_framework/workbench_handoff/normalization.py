@@ -29,6 +29,11 @@ from .profiles import HandoffProfile, classify_handoff_profile
 
 
 ADAPTER_VERSION = "workbench-handoff-0.1.3"
+_DESIGN_ASSISTANT_APPROVED_GATES = {
+    "APPROVED",
+    "READY FOR WORKBENCH",
+    "APPROVED WITH NONBLOCKING DECISIONS",
+}
 
 
 @dataclass(frozen=True)
@@ -203,8 +208,7 @@ def _design_assistant_to_v11(
     approved = (
         isinstance(legacy.get("approval_evidence"), str)
         and bool(legacy["approval_evidence"].strip())
-        and isinstance(legacy.get("gate"), str)
-        and legacy["gate"].startswith("APPROVED")
+        and legacy.get("gate") in _DESIGN_ASSISTANT_APPROVED_GATES
         and len(authority) == 1
         and authority[0].get("state") == "approved"
     )
@@ -519,7 +523,7 @@ def normalize_handoff_archive(
     destination = Path(destination_root).absolute()
     zip_destination = Path(normalized_zip).absolute() if normalized_zip is not None else None
     if runtime_scope != RUNTIME_SCOPE:
-        return _outcome("BLOCKED", "UNKNOWN", ["handoff.runtime_scope_mismatch"], None, runtime_scope)
+        return _outcome("FAIL", "UNKNOWN", ["handoff.runtime_scope_mismatch"], None, runtime_scope)
     try:
         inventory = inventory_archive(source_path)
     except PluginAuthoringError as exc:
@@ -567,7 +571,29 @@ def normalize_handoff_archive(
 
         stable = sorted(set(diagnostics))
         if stable:
-            return _outcome("BLOCKED", classified.profile, stable, source_hash, runtime_scope)
+            authority_only = all(
+                diagnostic.startswith(("approval.", "owner_decisions.blocking:"))
+                for diagnostic in stable
+            )
+            legacy_mapping = classified.profile in {
+                "COOL_DESIGN_ASSISTANT_FULL_V1",
+                "COOL_DESIGN_ASSISTANT_DELTA_V1",
+                "LEGACY_WORKBENCH_V1",
+            }
+            hard_legacy_error = any(
+                diagnostic.startswith((
+                    "package.undeclared_member:",
+                    "package.declared_member_mismatch:",
+                    "package.canonical_handoff_mismatch",
+                    "requirements.duplicate_id:",
+                    "requirements.source_invalid:",
+                    "requirements.source_unreadable:",
+                    "requirements.text_mismatch:",
+                ))
+                for diagnostic in stable
+            )
+            status = "BLOCKED" if authority_only or (legacy_mapping and not hard_legacy_error) else "FAIL"
+            return _outcome(status, classified.profile, stable, source_hash, runtime_scope)
         output_tree_hash = tree_sha256(stage)
         staged_zip = temporary / "normalized.zip" if zip_destination is not None else None
         output_archive_hash = write_deterministic_zip(stage, staged_zip) if staged_zip is not None else None
