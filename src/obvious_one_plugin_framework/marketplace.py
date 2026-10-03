@@ -25,13 +25,17 @@ from .verification import (
 
 
 _CATALOG_KEYS = {"schema_version", "marketplace_id", "applications"}
-_ENTRY_KEYS = {
+_V1_ENTRY_KEYS = {
     "application_config",
     "distribution_contract",
     "codex_destination",
     "openclaw_destination",
     "mode",
 }
+_V2_ENTRY_KEYS = {"application_config", "distribution_contract", "targets"}
+_TARGET_NAMES = ("codex", "openclaw")
+_APPLICABLE_TARGET_MODES = {"build", "verify_existing"}
+_TARGET_MODES = _APPLICABLE_TARGET_MODES | {"not_applicable"}
 
 
 class MarketplaceError(ValueError):
@@ -41,12 +45,45 @@ class MarketplaceError(ValueError):
 
 
 @dataclass(frozen=True)
+class PreparationTarget:
+    mode: str
+    destination: str | None
+
+
+@dataclass(frozen=True)
 class PreparationEntry:
     application: ApplicationConfig
     contract: DistributionContract
-    codex_destination: str
-    openclaw_destination: str
-    mode: str
+    codex: PreparationTarget
+    openclaw: PreparationTarget
+
+    def target(self, name: str) -> PreparationTarget:
+        if name == "codex":
+            return self.codex
+        if name == "openclaw":
+            return self.openclaw
+        raise MarketplaceError("invalid_marketplace_catalog_target", name)
+
+    def applicable_targets(self) -> tuple[tuple[str, PreparationTarget], ...]:
+        return tuple(
+            (name, self.target(name))
+            for name in _TARGET_NAMES
+            if self.target(name).mode != "not_applicable"
+        )
+
+    @property
+    def mode(self) -> str:
+        if self.codex.mode != self.openclaw.mode:
+            raise MarketplaceError("runtime_catalog_target_mismatch", self.application.plugin_id)
+        return self.codex.mode
+
+    @property
+    def codex_destination(self) -> str:
+        return _required_target_destination(self.codex, "codex")
+
+    @property
+    def openclaw_destination(self) -> str:
+        return _required_target_destination(self.openclaw, "openclaw")
 
 
 @dataclass(frozen=True)
@@ -66,7 +103,8 @@ def load_preparation_catalog(path: Path, repository_root: Path) -> PreparationCa
     except (OSError, UnicodeError, json.JSONDecodeError) as exc:
         raise MarketplaceError("invalid_marketplace_catalog") from exc
     root = _strict_mapping(raw, _CATALOG_KEYS, "catalog")
-    if root["schema_version"] != 1:
+    schema_version = root["schema_version"]
+    if schema_version not in {1, 2}:
         raise MarketplaceError("unsupported_marketplace_catalog_schema")
     marketplace_id = _text(root["marketplace_id"], "marketplace_id")
     applications_raw = root["applications"]
@@ -78,7 +116,11 @@ def load_preparation_catalog(path: Path, repository_root: Path) -> PreparationCa
     destinations: set[str] = set()
     destination_parts: list[tuple[str, ...]] = []
     for index, item in enumerate(applications_raw):
-        entry = _strict_mapping(item, _ENTRY_KEYS, f"applications[{index}]")
+        entry = _strict_mapping(
+            item,
+            _V1_ENTRY_KEYS if schema_version == 1 else _V2_ENTRY_KEYS,
+            f"applications[{index}]",
+        )
         config_path = _within(repository, entry["application_config"], "application_config")
         contract_path = _within(repository, entry["distribution_contract"], "distribution_contract")
         application = load_application_config_path(config_path, repository)
@@ -87,20 +129,44 @@ def load_preparation_catalog(path: Path, repository_root: Path) -> PreparationCa
             raise MarketplaceError("distribution_contract_mismatch", application.application_id)
         if contract.plugin_id != application.plugin_id:
             raise MarketplaceError("marketplace_identity_mismatch", application.plugin_id)
-        mode = _text(entry["mode"], "mode")
-        if mode not in {"build", "verify_existing"}:
-            raise MarketplaceError("invalid_preparation_mode", mode)
-        if mode == "build":
+        if schema_version == 1:
+            mode = _text(entry["mode"], "mode")
+            if mode not in _APPLICABLE_TARGET_MODES:
+                raise MarketplaceError("invalid_preparation_mode", mode)
+            codex = PreparationTarget(
+                mode,
+                _destination(entry["codex_destination"], "codex_destination"),
+            )
+            openclaw = PreparationTarget(
+                mode,
+                _destination(entry["openclaw_destination"], "openclaw_destination"),
+            )
+        else:
+            targets = entry["targets"]
+            if not isinstance(targets, dict) or set(targets) != set(_TARGET_NAMES):
+                raise MarketplaceError("invalid_marketplace_catalog_target", f"applications[{index}].targets")
+            codex = _parse_target(targets["codex"], "codex")
+            openclaw = _parse_target(targets["openclaw"], "openclaw")
+            if codex.mode == "not_applicable" and openclaw.mode == "not_applicable":
+                raise MarketplaceError("marketplace_no_applicable_targets", application.plugin_id)
+            if (
+                openclaw.mode == "not_applicable"
+                and contract.publication is not None
+                and contract.publication.clawhub.enabled
+            ):
+                raise MarketplaceError("clawhub_requires_openclaw_target", application.plugin_id)
+        if any(target.mode == "build" for target in (codex, openclaw)):
             try:
                 require_buildable_contract(contract)
             except ContractError as exc:
                 raise MarketplaceError(exc.code, application.plugin_id) from exc
-        codex_destination = _destination(entry["codex_destination"], "codex_destination")
-        openclaw_destination = _destination(entry["openclaw_destination"], "openclaw_destination")
         if application.application_id in identities:
             raise MarketplaceError("duplicate_marketplace_application", application.application_id)
         identities.add(application.application_id)
-        for destination in (codex_destination, openclaw_destination):
+        for target in (codex, openclaw):
+            if target.destination is None:
+                continue
+            destination = target.destination
             identity = destination.casefold()
             if identity in destinations:
                 raise MarketplaceError("duplicate_marketplace_destination", destination)
@@ -117,12 +183,11 @@ def load_preparation_catalog(path: Path, repository_root: Path) -> PreparationCa
             PreparationEntry(
                 application,
                 contract,
-                codex_destination,
-                openclaw_destination,
-                mode,
+                codex,
+                openclaw,
             )
         )
-    return PreparationCatalog(1, marketplace_id, tuple(entries), repository, catalog_path)
+    return PreparationCatalog(schema_version, marketplace_id, tuple(entries), repository, catalog_path)
 
 
 def prepare_marketplace(
@@ -843,6 +908,31 @@ def _destination(value: object, field: str) -> str:
     ):
         raise MarketplaceError("catalog_path_escape", field)
     return path.as_posix()
+
+
+def _parse_target(value: object, name: str) -> PreparationTarget:
+    if not isinstance(value, dict) or "mode" not in value:
+        raise MarketplaceError("invalid_marketplace_catalog_target", name)
+    mode = value["mode"]
+    if not isinstance(mode, str) or mode not in _TARGET_MODES:
+        raise MarketplaceError("invalid_marketplace_catalog_target", name)
+    if mode == "not_applicable":
+        if set(value) != {"mode"}:
+            if "destination" in value:
+                raise MarketplaceError("marketplace_target_destination_forbidden", name)
+            raise MarketplaceError("invalid_marketplace_catalog_target", name)
+        return PreparationTarget(mode, None)
+    if "destination" not in value:
+        raise MarketplaceError("marketplace_target_destination_required", name)
+    if set(value) != {"mode", "destination"}:
+        raise MarketplaceError("invalid_marketplace_catalog_target", name)
+    return PreparationTarget(mode, _destination(value["destination"], f"targets.{name}.destination"))
+
+
+def _required_target_destination(target: PreparationTarget, name: str) -> str:
+    if target.destination is None:
+        raise MarketplaceError("marketplace_target_destination_required", name)
+    return target.destination
 
 
 def _strict_mapping(value: object, keys: set[str], label: str) -> dict[str, object]:

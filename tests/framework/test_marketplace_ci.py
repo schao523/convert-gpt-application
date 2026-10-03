@@ -12,6 +12,7 @@ from obvious_one_plugin_framework.contract import PublicationProfile, Publicatio
 from obvious_one_plugin_framework.marketplace import (
     MarketplaceError,
     PreparationCatalog,
+    PreparationTarget,
     load_preparation_catalog,
     prepare_marketplace,
 )
@@ -74,8 +75,8 @@ class MarketplaceCiTests(unittest.TestCase):
                 plugin_id="synthetic",
             ),
             contract=replace(self.catalog.applications[1].contract, plugin_id="synthetic"),
-            codex_destination="plugins/synthetic",
-            openclaw_destination="openclaw/synthetic",
+            codex=PreparationTarget("build", "plugins/synthetic"),
+            openclaw=PreparationTarget("build", "openclaw/synthetic"),
         )
         plan = replace(self.catalog, applications=self.catalog.applications + (extra,))
         codex, openclaw = self.catalogs(plan)

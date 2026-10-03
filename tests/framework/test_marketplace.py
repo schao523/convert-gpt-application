@@ -67,6 +67,44 @@ class MarketplaceTests(unittest.TestCase):
             },
         )
 
+    def _write_v2_catalog(
+        self,
+        *,
+        legacy_openclaw_mode: str = "verify_existing",
+        modern_openclaw_mode: str = "not_applicable",
+    ) -> None:
+        def target(mode: str, destination: str) -> dict[str, object]:
+            return {"mode": mode} if mode == "not_applicable" else {
+                "mode": mode,
+                "destination": destination,
+            }
+
+        _write_json(
+            self.catalog_path,
+            {
+                "schema_version": 2,
+                "marketplace_id": "test-marketplace",
+                "applications": [
+                    {
+                        "application_config": "applications/legacy/conversion.json",
+                        "distribution_contract": "applications/legacy/openclaw/distribution.json",
+                        "targets": {
+                            "codex": target("verify_existing", "plugins/legacy"),
+                            "openclaw": target(legacy_openclaw_mode, "openclaw/legacy"),
+                        },
+                    },
+                    {
+                        "application_config": "applications/modern/conversion.json",
+                        "distribution_contract": "applications/modern/openclaw/distribution.json",
+                        "targets": {
+                            "codex": target("build", "plugins/modern"),
+                            "openclaw": target(modern_openclaw_mode, "openclaw/modern"),
+                        },
+                    },
+                ],
+            },
+        )
+
     def _upgrade_to_v3(self, application: Path) -> None:
         contract_path = application / "openclaw" / "distribution.json"
         raw = json.loads(contract_path.read_text(encoding="utf-8"))
@@ -159,6 +197,137 @@ class MarketplaceTests(unittest.TestCase):
         raw["applications"][0]["mode"] = "build"
         _write_json(self.catalog_path, raw)
         with self.assertRaisesRegex(MarketplaceError, "legacy_contract_read_only"):
+            load_preparation_catalog(self.catalog_path, self.repository)
+
+    def test_v2_catalog_accepts_codex_only_and_dual_runtime_targets(self) -> None:
+        self._write_v2_catalog(modern_openclaw_mode="build")
+
+        catalog = load_preparation_catalog(self.catalog_path, self.repository)
+
+        self.assertEqual(catalog.schema_version, 2)
+        legacy, modern = catalog.applications
+        self.assertEqual(
+            [(name, target.mode, target.destination) for name, target in legacy.applicable_targets()],
+            [
+                ("codex", "verify_existing", "plugins/legacy"),
+                ("openclaw", "verify_existing", "openclaw/legacy"),
+            ],
+        )
+        self.assertEqual(modern.target("codex").mode, "build")
+        self.assertEqual(modern.target("codex").destination, "plugins/modern")
+        self.assertEqual(modern.target("openclaw").mode, "build")
+
+        self._write_v2_catalog()
+        codex_only = load_preparation_catalog(self.catalog_path, self.repository).applications[1]
+        self.assertEqual(
+            [(name, target.destination) for name, target in codex_only.applicable_targets()],
+            [("codex", "plugins/modern")],
+        )
+        self.assertEqual(codex_only.target("openclaw").mode, "not_applicable")
+        self.assertIsNone(codex_only.target("openclaw").destination)
+
+    def test_v2_target_shapes_and_no_applicable_targets_are_rejected(self) -> None:
+        cases = [
+            (
+                {"mode": "build"},
+                "marketplace_target_destination_required",
+            ),
+            (
+                {"mode": "not_applicable", "destination": "openclaw/modern"},
+                "marketplace_target_destination_forbidden",
+            ),
+            (
+                {"mode": "unsupported", "destination": "openclaw/modern"},
+                "invalid_marketplace_catalog_target",
+            ),
+            (
+                {"mode": "not_applicable", "extra": True},
+                "invalid_marketplace_catalog_target",
+            ),
+        ]
+        for target, diagnostic in cases:
+            with self.subTest(diagnostic=diagnostic):
+                self._write_v2_catalog()
+                raw = json.loads(self.catalog_path.read_text(encoding="utf-8"))
+                raw["applications"][1]["targets"]["openclaw"] = target
+                _write_json(self.catalog_path, raw)
+                with self.assertRaisesRegex(MarketplaceError, diagnostic):
+                    load_preparation_catalog(self.catalog_path, self.repository)
+
+        self._write_v2_catalog()
+        raw = json.loads(self.catalog_path.read_text(encoding="utf-8"))
+        raw["applications"][1]["targets"] = {
+            "codex": {"mode": "not_applicable"},
+            "openclaw": {"mode": "not_applicable"},
+        }
+        _write_json(self.catalog_path, raw)
+        with self.assertRaisesRegex(MarketplaceError, "marketplace_no_applicable_targets"):
+            load_preparation_catalog(self.catalog_path, self.repository)
+
+    def test_v2_destinations_are_unique_safe_and_non_overlapping_across_targets(self) -> None:
+        cases = [
+            ("plugins/legacy", "duplicate_marketplace_destination"),
+            ("plugins", "overlapping_marketplace_destination"),
+            ("../escape", "catalog_path_escape"),
+        ]
+        for destination, diagnostic in cases:
+            with self.subTest(destination=destination):
+                self._write_v2_catalog(modern_openclaw_mode="build")
+                raw = json.loads(self.catalog_path.read_text(encoding="utf-8"))
+                raw["applications"][1]["targets"]["openclaw"]["destination"] = destination
+                _write_json(self.catalog_path, raw)
+                with self.assertRaisesRegex(MarketplaceError, diagnostic):
+                    load_preparation_catalog(self.catalog_path, self.repository)
+
+    def test_v1_catalog_translates_to_two_targets_without_behavior_change(self) -> None:
+        catalog = load_preparation_catalog(self.catalog_path, self.repository)
+
+        self.assertEqual(catalog.schema_version, 1)
+        self.assertEqual(
+            [
+                [(name, target.mode, target.destination) for name, target in entry.applicable_targets()]
+                for entry in catalog.applications
+            ],
+            [
+                [
+                    ("codex", "verify_existing", "plugins/legacy"),
+                    ("openclaw", "verify_existing", "openclaw/legacy"),
+                ],
+                [
+                    ("codex", "build", "plugins/modern"),
+                    ("openclaw", "build", "openclaw/modern"),
+                ],
+            ],
+        )
+
+    def test_codex_only_target_requires_disabled_clawhub(self) -> None:
+        source = self.modern
+        _write_json(
+            source / "openclaw.plugin.json",
+            {"id": "modern", "configSchema": {"type": "object", "additionalProperties": False}},
+        )
+        (source / "index.js").write_text("export default {};\n", encoding="utf-8")
+        _write_json(
+            source / "package.json",
+            {
+                "name": "@example/modern",
+                "version": "1.2.3",
+                "openclaw": {"extensions": ["./index.js"]},
+            },
+        )
+        contract_path = source / "openclaw" / "distribution.json"
+        contract = json.loads(contract_path.read_text(encoding="utf-8"))
+        contract["include_files"].extend(["openclaw.plugin.json", "index.js"])
+        contract["content_rules"][0]["paths"].extend(["openclaw.plugin.json", "index.js"])
+        contract["publication"]["clawhub"] = {
+            "enabled": True,
+            "family": "native-plugin",
+            "native_manifest": "openclaw.plugin.json",
+        }
+        _write_json(contract_path, contract)
+        self._write_v2_catalog()
+
+        with self.assertRaisesRegex(MarketplaceError, "clawhub_requires_openclaw_target"):
             load_preparation_catalog(self.catalog_path, self.repository)
 
     def test_duplicate_destination_and_path_escape_are_rejected(self) -> None:

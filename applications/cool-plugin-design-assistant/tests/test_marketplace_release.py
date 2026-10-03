@@ -29,7 +29,8 @@ class MarketplaceReleaseTests(unittest.TestCase):
             REPOSITORY / "marketplaces" / "obvious-one.json", REPOSITORY
         )
         modes = {
-            entry.application.plugin_id: entry.mode for entry in catalog.applications
+            entry.application.plugin_id: entry.target("codex").mode
+            for entry in catalog.applications
         }
         self.assertEqual(modes["cool-bible-tutor"], "build")
         self.assertEqual(modes["vibe-coding-designer"], "build")

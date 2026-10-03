@@ -28,7 +28,7 @@ class MarketplaceReleaseTests(unittest.TestCase):
         )
 
         modes = {
-            entry.application.plugin_id: entry.mode
+            entry.application.plugin_id: entry.target("codex").mode
             for entry in catalog.applications
         }
         self.assertEqual(modes["cool-bible-tutor"], "build")
