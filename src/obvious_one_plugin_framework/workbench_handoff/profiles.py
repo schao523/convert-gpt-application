@@ -45,6 +45,13 @@ def _load_object(path: Path) -> dict[str, Any] | None:
     return value if isinstance(value, dict) else None
 
 
+def _legacy_role(value: object) -> str:
+    normalized = "_".join(str(value).casefold().replace("-", " ").split())
+    return "approved_specification" if normalized in {
+        "authoritative_specification", "approved_specification"
+    } else normalized
+
+
 def classify_handoff_profile(root: Path) -> HandoffProfile:
     """Classify one extracted package without choosing among competing authorities."""
     package_root = Path(root)
@@ -67,6 +74,16 @@ def classify_handoff_profile(root: Path) -> HandoffProfile:
         else:
             authorities.append("CANONICAL_V1")
     if legacy is not None and _LEGACY_WORKBENCH_FIELDS.issubset(legacy):
+        included = legacy.get("included_artifacts")
+        legacy_authorities = [
+            item for item in included if isinstance(item, dict)
+            and _legacy_role(item.get("relation")) == "approved_specification"
+        ] if isinstance(included, list) else []
+        if len(legacy_authorities) > 1:
+            return HandoffProfile(
+                "AMBIGUOUS",
+                ("profile.multiple_authorities", "profile.multiple_authoritative_specifications"),
+            )
         authorities.append("LEGACY_WORKBENCH_V1")
     if full is not None and _DESIGN_ASSISTANT_FIELDS.issubset(full):
         authorities.append("COOL_DESIGN_ASSISTANT_FULL_V1")

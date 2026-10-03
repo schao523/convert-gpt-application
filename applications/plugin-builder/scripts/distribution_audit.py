@@ -36,6 +36,11 @@ VENDOR_FILES = {
     "scripts/vendor/obvious_one_plugin_framework/plugin_authoring/manifests.py",
     "scripts/vendor/obvious_one_plugin_framework/plugin_authoring/tools.py",
     "scripts/vendor/obvious_one_plugin_framework/plugin_authoring/validation.py",
+    "scripts/vendor/obvious_one_plugin_framework/workbench_handoff/__init__.py",
+    "scripts/vendor/obvious_one_plugin_framework/workbench_handoff/contract.py",
+    "scripts/vendor/obvious_one_plugin_framework/workbench_handoff/identity.py",
+    "scripts/vendor/obvious_one_plugin_framework/workbench_handoff/normalization.py",
+    "scripts/vendor/obvious_one_plugin_framework/workbench_handoff/profiles.py",
 }
 FORBIDDEN_NAMES = {
     ".env",

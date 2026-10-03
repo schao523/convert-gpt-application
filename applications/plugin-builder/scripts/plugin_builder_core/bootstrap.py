@@ -23,4 +23,20 @@ def load_plugin_authoring() -> ModuleType:
     raise RuntimeError("plugin_authoring_runtime_unavailable")
 
 
+def load_workbench_handoff() -> ModuleType:
+    scripts_root = Path(__file__).resolve().parents[1]
+    vendor = scripts_root / "vendor"
+    if (vendor / "obvious_one_plugin_framework" / "workbench_handoff").is_dir():
+        sys.path.insert(0, str(vendor))
+        return importlib.import_module("obvious_one_plugin_framework.workbench_handoff")
+
+    for parent in Path(__file__).resolve().parents:
+        source = parent / "src"
+        if (source / "obvious_one_plugin_framework" / "workbench_handoff").is_dir():
+            sys.path.insert(0, str(source))
+            return importlib.import_module("obvious_one_plugin_framework.workbench_handoff")
+    raise RuntimeError("workbench_handoff_runtime_unavailable")
+
+
 plugin_authoring = load_plugin_authoring()
+workbench_handoff = load_workbench_handoff()

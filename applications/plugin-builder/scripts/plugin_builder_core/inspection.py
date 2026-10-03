@@ -12,7 +12,7 @@ import shutil
 import tempfile
 from typing import Any
 
-from .bootstrap import plugin_authoring
+from .bootstrap import plugin_authoring, workbench_handoff
 from .handoff_normalization import normalize_handoff_archive
 
 
@@ -163,12 +163,12 @@ def inspect_design_package(
         report_bytes = _canonical_bytes(normalization.report)
         _write_bytes(stage / "normalization-report.json", report_bytes)
         report_sha256 = sha256(report_bytes).hexdigest()
-        if normalization.profile in {"UNKNOWN", "AMBIGUOUS"}:
+        if normalization.status != "PASS":
             pending = [{
                 "blocking": True,
                 "id": "handoff-profile-selection",
                 "owner": "decision owner",
-                "summary": "Provide one supported canonical or legacy handoff authority.",
+                "summary": "Resolve the reported handoff intake diagnostics.",
             }]
             inspection = {
                 "schema": "plugin-builder-inspection-v1", "operation": operation,
@@ -285,6 +285,52 @@ def inspect_design_package(
                 for requirement_id in _expand_requirements(artifact.get("requirements")):
                     requirements.setdefault(requirement_id, set()).add(f"input/{path}")
 
+        requirement_records: list[dict[str, Any]] | None = None
+        baseline_identity = None
+        is_v11 = (
+            normalization.profile in {
+                "WORKBENCH_HANDOFF_V1_1",
+                "COOL_DESIGN_ASSISTANT_FULL_V1",
+                "COOL_DESIGN_ASSISTANT_DELTA_V1",
+            }
+            and isinstance(handoff, dict)
+            and handoff.get("schema") == workbench_handoff.HANDOFF_SCHEMA
+        )
+        if is_v11:
+            if handoff.get("operation") != operation:
+                errors.append("handoff.operation_mismatch")
+            raw_requirements = handoff.get("requirements")
+            if not isinstance(raw_requirements, list):
+                errors.append("requirements.explicit_records_required")
+            else:
+                requirement_records = []
+                for item in raw_requirements:
+                    if not isinstance(item, dict) or not isinstance(item.get("id"), str):
+                        continue
+                    source = item.get("source")
+                    source_path = source.partition("#")[0] if isinstance(source, str) else ""
+                    record = {
+                        "id": item["id"],
+                        "required": True,
+                        "source": source,
+                        "source_paths": [f"input/{source_path}"],
+                        "verbatim": item.get("verbatim"),
+                    }
+                    if "change" in item:
+                        record["change"] = item["change"]
+                    requirement_records.append(record)
+            if operation == "update":
+                try:
+                    baseline_identity = (
+                        workbench_handoff.baseline_identity_from_archive(Path(baseline))
+                        if baseline is not None else None
+                    )
+                except PluginAuthoringError as error:
+                    errors.append(f"baseline.{error.code}")
+                errors.extend(
+                    workbench_handoff.validate_update_baseline(handoff, baseline_identity)
+                )
+
         approved_spec_path = approved_specification.get("file") if isinstance(approved_specification, dict) else None
         approved_spec_member = by_path.get(approved_spec_path) if isinstance(approved_spec_path, str) else None
         if approved_spec_member is None:
@@ -314,7 +360,7 @@ def inspect_design_package(
             "approved_specification": approved_specification if isinstance(approved_specification, dict) else None,
             "authoritative_files": sorted(authoritative, key=lambda item: str(item["path"])),
             "resources": sorted(resources, key=lambda item: str(item["path"])),
-            "requirements": [
+            "requirements": requirement_records if requirement_records is not None else [
                 {"id": key, "required": True, "source_paths": sorted(value)}
                 for key, value in sorted(requirements.items())
             ],
@@ -326,6 +372,10 @@ def inspect_design_package(
                 "total_bytes": baseline_inventory.total_bytes,
                 "tree_sha256": tree_sha256(stage / "baseline"),
                 "envelope_profile": baseline_profile,
+                **({
+                    "plugin_id": baseline_identity.plugin_id,
+                    "version": baseline_identity.version,
+                } if baseline_identity is not None else {}),
             },
             "diagnostics": sorted(set(errors)),
         }

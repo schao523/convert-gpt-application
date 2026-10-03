@@ -364,7 +364,13 @@ def _validate_v2_requirements(errors: list[str], value: object) -> dict[str, boo
     for index, entry in enumerate(value):
         label = f"requirements[{index}]"
         item = _mapping(entry)
-        if item is None or set(item) != {"id", "required", "source_paths"}:
+        legacy_keys = {"id", "required", "source_paths"}
+        canonical_keys = legacy_keys | {"source", "verbatim"}
+        if item is None or set(item) not in {
+            frozenset(legacy_keys),
+            frozenset(canonical_keys),
+            frozenset(canonical_keys | {"change"}),
+        }:
             errors.append(f"{label}.invalid_object")
             continue
         identifier = item.get("id")
@@ -383,6 +389,15 @@ def _validate_v2_requirements(errors: list[str], value: object) -> dict[str, boo
             errors.append(f"{label}.source_paths.invalid_list")
         elif any(not _v2_path(path) for path in paths):
             errors.append(f"{label}.source_paths.invalid_relative_posix_path")
+        if "source" in item:
+            source = item.get("source")
+            source_path = source.partition("#")[0] if isinstance(source, str) else None
+            if not _v2_path(source_path):
+                errors.append(f"{label}.source.invalid_relative_posix_path")
+            if not isinstance(item.get("verbatim"), str) or not item["verbatim"]:
+                errors.append(f"{label}.verbatim.invalid")
+            if "change" in item and item.get("change") not in {"add", "modify", "remove", "preserve"}:
+                errors.append(f"{label}.change.unsupported")
     return registered
 
 
@@ -458,7 +473,15 @@ def _validate_v2(payload: object) -> list[str]:
                 errors.append("inspection.normalization.invalid_object")
             else:
                 profile = normalization.get("profile")
-                if profile not in {"CANONICAL_V1", "LEGACY_WORKBENCH_V1", "UNKNOWN", "AMBIGUOUS"}:
+                if profile not in {
+                    "WORKBENCH_HANDOFF_V1_1",
+                    "CANONICAL_V1",
+                    "LEGACY_WORKBENCH_V1",
+                    "COOL_DESIGN_ASSISTANT_FULL_V1",
+                    "COOL_DESIGN_ASSISTANT_DELTA_V1",
+                    "UNKNOWN",
+                    "AMBIGUOUS",
+                }:
                     errors.append("inspection.normalization.profile.unsupported")
                 for key in ("source_sha256", "report_sha256"):
                     if not _sha256(normalization.get(key)):

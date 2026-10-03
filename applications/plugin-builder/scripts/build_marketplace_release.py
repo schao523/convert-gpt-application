@@ -40,7 +40,7 @@ PUBLIC_DOCS = {
 }
 PREFIXES = {"scripts", "skills"}
 MANIFEST_FILES = {"plugin.json", ".codex-plugin/plugin.json"}
-VENDOR_PACKAGE = Path("scripts/vendor/obvious_one_plugin_framework/plugin_authoring")
+VENDOR_PACKAGES = ("plugin_authoring", "workbench_handoff")
 
 
 class ReleaseReport(NamedTuple):
@@ -222,22 +222,24 @@ def build_release(source: Path, destination: Path, version: str) -> ReleaseRepor
             shutil.copyfile(candidate, output)
 
         repository = source.parents[1]
-        framework_package = repository / "src" / "obvious_one_plugin_framework" / "plugin_authoring"
-        if not framework_package.is_dir():
-            package_spec = importlib.util.find_spec("obvious_one_plugin_framework.plugin_authoring")
-            if package_spec is not None and package_spec.submodule_search_locations:
-                framework_package = Path(next(iter(package_spec.submodule_search_locations)))
-        if not framework_package.is_dir():
-            raise ValueError("plugin authoring runtime is unavailable")
+        framework_root = repository / "src" / "obvious_one_plugin_framework"
         vendor_parent = staged_plugin / "scripts/vendor/obvious_one_plugin_framework"
         vendor_parent.mkdir(parents=True, exist_ok=True)
         (vendor_parent / "__init__.py").write_text(
             '"""Vendored standalone runtime namespace."""\n', encoding="utf-8", newline="\n"
         )
-        vendor_package = staged_plugin / VENDOR_PACKAGE
-        vendor_package.mkdir(parents=True, exist_ok=True)
-        for candidate in sorted(framework_package.glob("*.py"), key=lambda path: path.name):
-            shutil.copyfile(candidate, vendor_package / candidate.name)
+        for package_name in VENDOR_PACKAGES:
+            framework_package = framework_root / package_name
+            if not framework_package.is_dir():
+                package_spec = importlib.util.find_spec(f"obvious_one_plugin_framework.{package_name}")
+                if package_spec is not None and package_spec.submodule_search_locations:
+                    framework_package = Path(next(iter(package_spec.submodule_search_locations)))
+            if not framework_package.is_dir():
+                raise ValueError(f"shared runtime is unavailable: {package_name}")
+            vendor_package = vendor_parent / package_name
+            vendor_package.mkdir(parents=True, exist_ok=True)
+            for candidate in sorted(framework_package.glob("*.py"), key=lambda path: path.name):
+                shutil.copyfile(candidate, vendor_package / candidate.name)
 
         errors = audit.audit_tree(staged_plugin)
         if errors:

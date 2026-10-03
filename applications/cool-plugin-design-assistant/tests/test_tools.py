@@ -149,7 +149,7 @@ class ToolTests(unittest.TestCase):
             with zipfile.ZipFile(output) as archive:
                 names = archive.namelist()
                 self.assertEqual(names, sorted(names))
-                self.assertIn("handoff_manifest.json", names)
+                self.assertNotIn("handoff_manifest.json", names)
                 self.assertIn("package-manifest.json", names)
                 self.assertIn("workbench-handoff.json", names)
                 for name, content in artifacts.items():

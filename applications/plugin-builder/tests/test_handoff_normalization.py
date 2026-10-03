@@ -94,8 +94,7 @@ class HandoffNormalizationTests(unittest.TestCase):
     def test_missing_approval_evidence_remains_pending(self) -> None:
         outcome = self.normalize(self.legacy_source(lambda payload, source: payload.__setitem__("approval_evidence", "")))
         self.assertEqual(outcome.status, "BLOCKED")
-        handoff = json.loads((self.root / "normalized/workbench-handoff.json").read_text(encoding="utf-8"))
-        self.assertEqual(handoff["approval"]["state"], "pending")
+        self.assertFalse((self.root / "normalized").exists())
 
     def test_blocking_owner_decision_prevents_approval(self) -> None:
         def mutate(payload, source):
@@ -143,7 +142,11 @@ class HandoffNormalizationTests(unittest.TestCase):
         self.assertIn(self.normalize(archive).status, {"PASS", "BLOCKED"})
         normalized = plugin_authoring.inventory_archive(self.root / "normalized.zip")
         by_path = {item.path: item.sha256 for item in normalized.members}
-        self.assertTrue(all(by_path[item.path] == item.sha256 for item in original.members))
+        self.assertTrue(all(
+            by_path[item.path] == item.sha256
+            for item in original.members
+            if item.path != "workbench_handoff_manifest.json"
+        ))
         self.assertEqual(archive.read_bytes(), source_hash)
 
     def test_canonical_filename_collision_blocks_without_overwrite(self) -> None:

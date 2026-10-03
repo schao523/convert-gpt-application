@@ -61,6 +61,14 @@ def _safe_path(value: object) -> str | None:
     return path.as_posix()
 
 
+def _safe_declared_path(value: object) -> tuple[str, bool] | None:
+    if not isinstance(value, str) or not value or "\\" in value or value.startswith("/"):
+        return None
+    prefix = value.endswith("/")
+    path = _safe_path(value[:-1] if prefix else value)
+    return None if path is None else (path, prefix)
+
+
 def _report(
     status: str,
     profile: str,
@@ -306,7 +314,7 @@ def _design_assistant_to_v11(
     represented.add(filename)
     supporting: list[dict[str, Any]] = []
     for path, (size, digest) in sorted(members.items()):
-        if path not in {item["file"] for item in normalized_artifacts}:
+        if path != filename and path not in {item["file"] for item in normalized_artifacts}:
             supporting.append({"file": path, "sha256": digest, "size": size})
     manifest = {
         "application": legacy.get("application", ""),
@@ -328,6 +336,7 @@ def _design_assistant_to_v11(
         "supporting_files": supporting,
     }
     (root / "package-manifest.json").write_bytes(canonical_json_bytes(manifest))
+    (root / filename).unlink()
     return diagnostics
 
 
@@ -346,35 +355,78 @@ def _legacy_workbench_to_canonical(root: Path, source_hash: str, runtime_scope: 
     diagnostics: list[str] = []
     artifacts: list[dict[str, Any]] = []
     authorities: list[dict[str, Any]] = []
-    for index, raw in enumerate(legacy.get("included_artifacts", [])):
+    included = legacy.get("included_artifacts", [])
+    if not isinstance(included, list):
+        return ["legacy.included_artifacts_invalid"]
+    seen: set[str] = set()
+    for index, raw in enumerate(included):
         if not isinstance(raw, dict):
             diagnostics.append(f"legacy.artifact_invalid:{index}")
             continue
-        path = _safe_path(raw.get("path"))
-        if path is None or path not in members:
-            diagnostics.append(f"legacy.artifact_missing:{path or ''}")
+        identifier = raw.get("artifact_id")
+        if not isinstance(identifier, str) or not identifier.strip():
+            diagnostics.append("legacy.artifact_id_invalid")
+        for field in ("provenance", "state", "version"):
+            value = raw.get(field)
+            if not isinstance(value, str) or not value.strip():
+                diagnostics.append(f"legacy.artifact_{field}_invalid:{identifier or ''}")
+        declared = _safe_declared_path(raw.get("path"))
+        if declared is None:
+            diagnostics.append(f"legacy.artifact_path_invalid:{identifier or ''}")
             continue
-        size, digest = members[path]
-        row = {
-            "file": path,
-            "id": raw.get("artifact_id", ""),
-            "provenance": raw.get("provenance", ""),
-            "requirements": raw.get("requirements", ""),
-            "role": _legacy_role(raw.get("relation")),
-            "sha256": digest,
-            "size": size,
-            "state": raw.get("state", ""),
-            "version": raw.get("version", ""),
-        }
-        artifacts.append(row)
-        if row["role"] == "approved_specification":
-            authorities.append(row)
+        path, prefix = declared
+        matches = (
+            [(member_path, value) for member_path, value in sorted(members.items()) if member_path.startswith(f"{path}/")]
+            if prefix else ([(path, members[path])] if path in members else [])
+        )
+        if not matches:
+            diagnostics.append(f"legacy.artifact_missing:{path}")
+            continue
+        for member_path, (size, digest) in matches:
+            if member_path.casefold() in seen:
+                diagnostics.append(f"legacy.artifact_collision:{member_path}")
+                continue
+            seen.add(member_path.casefold())
+            relative = member_path[len(path) + 1:] if prefix else ""
+            row = {
+                "file": member_path,
+                "id": identifier if not relative else f"{identifier}/{relative}",
+                "provenance": raw.get("provenance", ""),
+                "role": _legacy_role(raw.get("relation")),
+                "sha256": digest,
+                "size": size,
+                "state": raw.get("state", ""),
+                "version": raw.get("version", ""),
+            }
+            if "requirements" in raw:
+                row["requirements"] = raw["requirements"]
+            artifacts.append(row)
+            if row["role"] == "approved_specification":
+                authorities.append(row)
     if len(authorities) != 1:
         diagnostics.append("normalization.authoritative_specification_required")
+    elif authorities[0].get("state") != "approved":
+        diagnostics.append("legacy.artifact_authority_state_invalid")
+    elif authorities[0].get("version") != legacy.get("specification_version"):
+        diagnostics.append("legacy.artifact_authority_version_mismatch")
     decisions = legacy.get("unresolved_owner_decisions", [])
     if not isinstance(decisions, list):
         diagnostics.append("legacy.owner_decisions_invalid")
         decisions = []
+    else:
+        normalized_decisions = []
+        for item in decisions:
+            valid = (
+                isinstance(item, dict)
+                and set(item) == {"blocking", "decision_id", "impact", "owner", "summary"}
+                and type(item.get("blocking")) is bool
+                and all(isinstance(item.get(key), str) and item[key].strip() for key in ("decision_id", "impact", "owner", "summary"))
+            )
+            if not valid:
+                diagnostics.append("legacy.owner_decision_invalid")
+            else:
+                normalized_decisions.append(item)
+        decisions = normalized_decisions
     approved = (
         legacy.get("specification_state") == "approved"
         and isinstance(legacy.get("approval_evidence"), str)
@@ -383,7 +435,11 @@ def _legacy_workbench_to_canonical(root: Path, source_hash: str, runtime_scope: 
         and legacy["gate_result"].startswith("APPROVED")
         and len(authorities) == 1
         and authorities[0]["state"] == "approved"
+        and not any(item["blocking"] for item in decisions)
+        and not diagnostics
     )
+    if not approved:
+        diagnostics.append("approval.not_approved")
     authority = authorities[0] if len(authorities) == 1 else {"file": "", "id": "", "version": ""}
     handoff = {
         "approval": {
@@ -405,7 +461,8 @@ def _legacy_workbench_to_canonical(root: Path, source_hash: str, runtime_scope: 
     represented = {item["file"] for item in artifacts}
     supporting = [
         {"file": path, "size": size, "sha256": digest}
-        for path, (size, digest) in sorted(members.items()) if path not in represented
+        for path, (size, digest) in sorted(members.items())
+        if path not in represented and path != "workbench_handoff_manifest.json"
     ]
     manifest = {
         "application": legacy.get("application_name", ""),
@@ -421,6 +478,7 @@ def _legacy_workbench_to_canonical(root: Path, source_hash: str, runtime_scope: 
         "supporting_files": supporting,
     }
     (root / "package-manifest.json").write_bytes(canonical_json_bytes(manifest))
+    (root / "workbench_handoff_manifest.json").unlink()
     return diagnostics
 
 
@@ -482,6 +540,16 @@ def normalize_handoff_archive(
         if classified.profile in {"COOL_DESIGN_ASSISTANT_FULL_V1", "COOL_DESIGN_ASSISTANT_DELTA_V1"}:
             diagnostics.extend(_design_assistant_to_v11(stage, classified.profile, source_hash, runtime_scope))
         elif classified.profile == "LEGACY_WORKBENCH_V1":
+            collisions = sorted(
+                name for name in ("package-manifest.json", "workbench-handoff.json")
+                if (stage / name).exists()
+            )
+            if collisions:
+                return _outcome(
+                    "BLOCKED", classified.profile,
+                    [f"normalization.canonical_collision:{name}" for name in collisions],
+                    source_hash, runtime_scope,
+                )
             diagnostics.extend(_legacy_workbench_to_canonical(stage, source_hash, runtime_scope))
 
         if classified.profile in {

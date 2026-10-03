@@ -146,6 +146,29 @@ class SessionContractTests(unittest.TestCase):
         errors = validate_session(payload)
         self.assertIn("inspection.normalization.invalid_object", errors)
 
+    def test_v2_accepts_only_named_handoff_profiles(self) -> None:
+        supported = {
+            "WORKBENCH_HANDOFF_V1_1",
+            "CANONICAL_V1",
+            "LEGACY_WORKBENCH_V1",
+            "COOL_DESIGN_ASSISTANT_FULL_V1",
+            "COOL_DESIGN_ASSISTANT_DELTA_V1",
+            "UNKNOWN",
+            "AMBIGUOUS",
+        }
+        for profile in supported:
+            with self.subTest(profile=profile):
+                payload = inspected_v2()
+                payload["inspection"]["normalization"]["profile"] = profile
+                if profile in {"UNKNOWN", "AMBIGUOUS"}:
+                    payload["stage"] = "F1"
+                    payload["inspection"]["normalization"]["normalized_tree_sha256"] = None
+                    payload["inspection"]["normalization"]["normalized_archive_sha256"] = None
+                self.assertNotIn("inspection.normalization.profile.unsupported", validate_session(payload))
+        payload = inspected_v2()
+        payload["inspection"]["normalization"]["profile"] = "UNOFFICIAL"
+        self.assertIn("inspection.normalization.profile.unsupported", validate_session(payload))
+
     def test_v2_rejects_unknown_keys_and_stale_baseline_binding(self) -> None:
         payload = inspected_v2()
         payload["surprise"] = True
