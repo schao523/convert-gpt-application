@@ -389,6 +389,67 @@ class MarketplaceTests(unittest.TestCase):
         self.assertTrue((self.output / "plugins/modern/.codex-plugin/plugin.json").is_file())
         self.assertTrue((self.output / "openclaw/modern/CONTENT-MANIFEST.json").is_file())
 
+    def test_codex_only_build_emits_no_openclaw_artifact(self) -> None:
+        self._write_v2_catalog()
+        catalog = load_preparation_catalog(self.catalog_path, self.repository)
+
+        with patch("obvious_one_plugin_framework.marketplace._write_generated_controls"):
+            result = prepare_marketplace(catalog, self.baseline, self.output)
+
+        self.assertEqual(result.status, "PASS")
+        self.assertTrue((self.output / "plugins/modern/.codex-plugin/plugin.json").is_file())
+        self.assertFalse((self.output / "openclaw/modern").exists())
+        self.assertTrue((self.output / "openclaw/legacy/CONTENT-MANIFEST.json").is_file())
+
+    def test_dual_runtime_build_still_emits_both_artifacts(self) -> None:
+        self._write_v2_catalog(modern_openclaw_mode="build")
+        catalog = load_preparation_catalog(self.catalog_path, self.repository)
+
+        with patch("obvious_one_plugin_framework.marketplace._write_generated_controls"):
+            result = prepare_marketplace(catalog, self.baseline, self.output)
+
+        self.assertEqual(result.status, "PASS")
+        self.assertTrue((self.output / "plugins/modern/.codex-plugin/plugin.json").is_file())
+        self.assertTrue((self.output / "openclaw/modern/CONTENT-MANIFEST.json").is_file())
+
+    def test_not_applicable_catalog_entry_blocks_without_deleting_or_replacing_output(self) -> None:
+        self._write_v2_catalog()
+        _write_json(
+            self.baseline / ".claude-plugin/marketplace.json",
+            {
+                "plugins": [
+                    {
+                        "name": "modern",
+                        "version": "1.2.2",
+                        "source": "./openclaw/modern",
+                    }
+                ]
+            },
+        )
+        self.output.mkdir()
+        (self.output / "keep.txt").write_bytes(b"keep\r\n")
+        catalog = load_preparation_catalog(self.catalog_path, self.repository)
+
+        with patch("obvious_one_plugin_framework.marketplace._write_generated_controls") as controls:
+            with self.assertRaisesRegex(MarketplaceError, "not_applicable_target_already_published"):
+                prepare_marketplace(catalog, self.baseline, self.output)
+
+        controls.assert_not_called()
+        self.assertEqual(self._tree(self.output), {"keep.txt": b"keep\r\n"})
+        self.assertTrue((self.baseline / ".claude-plugin/marketplace.json").is_file())
+
+    def test_repeated_target_aware_preparation_is_byte_identical(self) -> None:
+        self._write_v2_catalog()
+        catalog = load_preparation_catalog(self.catalog_path, self.repository)
+        second = self.root / "staged-again"
+
+        with patch("obvious_one_plugin_framework.marketplace._write_generated_controls"):
+            first_result = prepare_marketplace(catalog, self.baseline, self.output)
+            second_result = prepare_marketplace(catalog, self.baseline, second)
+
+        self.assertEqual(first_result.artifacts[0].sha256, second_result.artifacts[0].sha256)
+        self.assertEqual(self._tree(self.output), self._tree(second))
+
     def test_failed_product_audit_preserves_existing_output(self) -> None:
         hook = self.modern / "audit.py"
         hook.write_text("def audit(stage, contract):\n    return ['blocked']\n", encoding="utf-8")

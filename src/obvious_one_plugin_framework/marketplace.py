@@ -205,21 +205,40 @@ def prepare_marketplace(
         temporary_root = Path(temporary)
         stage = temporary_root / "marketplace"
         _copy_marketplace_tree(baseline_root, stage)
+        _ensure_not_applicable_targets_absent(catalog, stage)
         for entry in catalog.applications:
-            if entry.mode == "build":
-                _build_entry(entry, stage, temporary_root / entry.application.plugin_id)
-            else:
-                _verify_existing_entry(entry, baseline_root, stage)
+            for target_name, target in entry.applicable_targets():
+                if target.mode == "build":
+                    _build_target(
+                        entry,
+                        target_name,
+                        target,
+                        stage,
+                        temporary_root / entry.application.plugin_id,
+                    )
+                else:
+                    _verify_existing_target(
+                        entry,
+                        target_name,
+                        target,
+                        baseline_root,
+                        stage,
+                    )
         _write_generated_controls(catalog, stage)
         comparison = temporary_root / "comparison"
         _copy_marketplace_tree(baseline_root, comparison)
         if _is_git_root(baseline_root):
             for entry in catalog.applications:
-                if entry.mode == "verify_existing":
+                destinations = tuple(
+                    target.destination
+                    for _, target in entry.applicable_targets()
+                    if target.mode == "verify_existing" and target.destination is not None
+                )
+                if destinations:
                     _materialize_committed_destinations(
                         baseline_root,
                         comparison,
-                        (entry.codex_destination, entry.openclaw_destination),
+                        destinations,
                     )
         delta = _tree_delta(comparison, stage)
         aggregate, total_bytes = _tree_identity(stage)
@@ -368,10 +387,23 @@ def verify_marketplace(
     )
 
 
-def _build_entry(entry: PreparationEntry, stage: Path, work: Path) -> None:
-    work.mkdir(parents=True)
+def _build_target(
+    entry: PreparationEntry,
+    target_name: str,
+    target: PreparationTarget,
+    stage: Path,
+    work: Path,
+) -> None:
+    destination = _required_target_destination(target, target_name)
+    work.mkdir(parents=True, exist_ok=True)
+    if target_name == "openclaw":
+        artifact = work / "openclaw" / entry.application.plugin_id
+        build_package(entry.contract, artifact)
+        verify_package(entry.contract, artifact)
+        _replace_destination(artifact, _stage_destination(stage, destination))
+        return
     diagnostics = work / "diagnostics"
-    diagnostics.mkdir()
+    diagnostics.mkdir(exist_ok=True)
     context = ExpansionContext(
         python=sys.executable,
         repository_root=entry.application.root,
@@ -400,38 +432,70 @@ def _build_entry(entry: PreparationEntry, stage: Path, work: Path) -> None:
     if not codex_artifact.is_dir():
         raise MarketplaceError("codex_artifact_missing", entry.application.plugin_id)
     _check_plugin_manifest(codex_artifact, entry.application.plugin_id, entry.application.version)
-
-    openclaw_artifact = work / "openclaw" / entry.application.plugin_id
-    build_package(entry.contract, openclaw_artifact)
-    verify_package(entry.contract, openclaw_artifact)
-    _replace_destination(codex_artifact, _stage_destination(stage, entry.codex_destination))
-    _replace_destination(openclaw_artifact, _stage_destination(stage, entry.openclaw_destination))
+    _replace_destination(codex_artifact, _stage_destination(stage, destination))
 
 
-def _verify_existing_entry(entry: PreparationEntry, baseline: Path, stage: Path) -> None:
+def _verify_existing_target(
+    entry: PreparationEntry,
+    target_name: str,
+    target: PreparationTarget,
+    baseline: Path,
+    stage: Path,
+) -> None:
+    destination = _required_target_destination(target, target_name)
     committed = _is_git_root(baseline)
     if committed:
         _materialize_committed_destinations(
             baseline,
             stage,
-            (entry.codex_destination, entry.openclaw_destination),
+            (destination,),
         )
-    codex = _stage_destination(stage, entry.codex_destination)
-    openclaw = _stage_destination(stage, entry.openclaw_destination)
-    _check_plugin_manifest(codex, entry.application.plugin_id, entry.application.version)
-    if entry.contract.schema_version == 3:
-        verify_package(entry.contract, openclaw)
+    artifact = _stage_destination(stage, destination)
+    if target_name == "codex":
+        _check_plugin_manifest(artifact, entry.application.plugin_id, entry.application.version)
+    elif entry.contract.schema_version == 3:
+        verify_package(entry.contract, artifact)
     else:
         _check_legacy_content_manifest(
-            openclaw,
+            artifact,
             entry.application.plugin_id,
             entry.application.version,
         )
-    if not committed:
-        if _tree_files(baseline / Path(entry.codex_destination)) != _tree_files(codex):
-            raise MarketplaceError("verify_existing_mutated", entry.application.plugin_id)
-        if _tree_files(baseline / Path(entry.openclaw_destination)) != _tree_files(openclaw):
-            raise MarketplaceError("verify_existing_mutated", entry.application.plugin_id)
+    if not committed and _tree_files(baseline / Path(destination)) != _tree_files(artifact):
+        raise MarketplaceError("verify_existing_mutated", entry.application.plugin_id)
+
+
+def _ensure_not_applicable_targets_absent(
+    catalog: PreparationCatalog,
+    stage: Path,
+) -> None:
+    candidates = {
+        "codex": (".agents/plugins/marketplace.json", ".codex-plugin/marketplace.json"),
+        "openclaw": (".claude-plugin/marketplace.json", "openclaw/marketplace.json"),
+    }
+    loaded: dict[str, dict[str, object] | None] = {}
+    for entry in catalog.applications:
+        for target_name in _TARGET_NAMES:
+            if entry.target(target_name).mode != "not_applicable":
+                continue
+            if target_name not in loaded:
+                path = _first_catalog(stage, candidates[target_name])
+                loaded[target_name] = _load_json_mapping(path) if path.is_file() else None
+            runtime_catalog = loaded[target_name]
+            if runtime_catalog is None:
+                continue
+            records = runtime_catalog.get("plugins")
+            if not isinstance(records, list):
+                raise MarketplaceError("runtime_catalog_invalid", target_name)
+            if any(
+                isinstance(record, dict)
+                and record.get("name") == entry.application.plugin_id
+                for record in records
+            ):
+                raise MarketplaceError(
+                    "not_applicable_target_already_published",
+                    f"{entry.application.plugin_id}:{target_name}",
+                )
 
 
 def _check_legacy_content_manifest(root: Path, plugin_id: str, version: str) -> None:
