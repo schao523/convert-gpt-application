@@ -9,6 +9,8 @@ from .contract import (
     validate_canonical_handoff,
 )
 from .identity import BaselineIdentity, baseline_identity_from_archive, validate_update_baseline
+from .normalization import ADAPTER_VERSION, HandoffNormalizationOutcome, normalize_handoff_archive
+from .profiles import HandoffProfile, classify_handoff_profile
 
 __all__ = [
     "HANDOFF_CONTRACT",
@@ -20,4 +22,9 @@ __all__ = [
     "validate_canonical_handoff",
     "baseline_identity_from_archive",
     "validate_update_baseline",
+    "ADAPTER_VERSION",
+    "HandoffProfile",
+    "HandoffNormalizationOutcome",
+    "classify_handoff_profile",
+    "normalize_handoff_archive",
 ]
