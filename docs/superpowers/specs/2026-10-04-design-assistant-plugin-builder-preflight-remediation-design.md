@@ -1,9 +1,15 @@
 # Design Assistant and Plugin Builder Preflight Remediation Design
 
-Status: **OWNER REVIEW**  
-Date: 2026-10-04  
-Affected applications: Cool Plugin Design Assistant and Plugin Builder  
+Status: **APPROVED**
+
+Date: 2026-10-04
+
+Affected applications: Cool Plugin Design Assistant and Plugin Builder
+
 Plugin Builder runtime scope: `OPENAI_ONLY_PHASE_ONE`
+
+Approval evidence: the decision owner explicitly approved this written
+specification in the originating Codex conversation on 2026-10-04.
 
 ## 1. Purpose
 
