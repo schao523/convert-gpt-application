@@ -1,6 +1,6 @@
 # Design Assistant and Plugin Builder Preflight Remediation Design
 
-Status: **OWNER REVIEW — REVISION 1**
+Status: **APPROVED — REVISION 1**
 
 Date: 2026-10-04
 
@@ -11,8 +11,10 @@ Plugin Builder runtime scope: `OPENAI_ONLY_PHASE_ONE`
 Approval history: the decision owner explicitly approved the original written
 specification in the originating Codex conversation on 2026-10-04. Revision 1
 adds controls derived from independent inspection of two generated plugin ZIPs.
-Because those additions change the implementation scope and acceptance gates,
-the prior approval is preserved as history but does not approve Revision 1.
+The decision owner explicitly approved Revision 1 in the originating Codex
+conversation on 2026-10-04. That approval authorizes Revision 1 as the design
+baseline; it does not authorize implementation, publication, or external
+release actions.
 
 Revision 1 also corrects one earlier assumption: both inspected ZIPs, although
 wrapped in a plugin-name directory, were successfully uploaded to ChatGPT
