@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from hashlib import sha256
 import json
 from pathlib import Path
 import subprocess
@@ -68,16 +69,98 @@ class PlanningWorkflowTests(unittest.TestCase):
     def write_proposal(self, payload: dict) -> None:
         self.proposal_path.write_text(json.dumps(payload, sort_keys=True), encoding="utf-8")
 
+    def refresh_recipe_hash(self, recipe: dict) -> None:
+        if "inline_json" in recipe:
+            payload = (
+                json.dumps(recipe["inline_json"], ensure_ascii=True, indent=2, sort_keys=True)
+                + "\n"
+            ).encode("ascii")
+        else:
+            payload = recipe["inline_text"].replace("\r\n", "\n").replace("\r", "\n").encode("utf-8")
+        recipe["source_sha256"] = sha256(payload).hexdigest()
+
     def test_plan_covers_every_design_requirement_and_derives_multiple_skills(self) -> None:
         document, plan = self.plan()
         self.assertEqual(document["stage"], "W1")
-        self.assertEqual(plan["schema"], "plugin-builder-implementation-plan-v1")
+        self.assertEqual(plan["schema"], "plugin-builder-implementation-plan-v2")
+        self.assertEqual(plan["preflight_evidence"]["schema"], "plugin-builder-preflight-v1")
+        self.assertRegex(plan["preflight_evidence"]["materialized_tree_sha256"], r"^[0-9a-f]{64}$")
         self.assertEqual([item["id"] for item in plan["requirements"]], ["AC1", "RQ1"])
         self.assertEqual(
             [item["name"] for item in plan["skills"]],
             ["answering-structured-requests", "checking-traceability"],
         )
         self.assertTrue(all(item["implementation_paths"] and item["evidence_targets"] for item in plan["requirements"]))
+
+    def test_plan_preflight_rejects_missing_author_and_interface_before_w1(self) -> None:
+        payload = self.proposal()
+        manifest = next(item for item in payload["files"] if item["path"] == "plugin.json")
+        manifest["inline_json"].pop("author")
+        manifest["inline_json"]["extensions"]["com.openai"].pop("interface")
+        self.refresh_recipe_hash(manifest)
+        self.write_proposal(payload)
+
+        completed = self.run_cli(
+            "plan", "--session", str(self.session_path), "--proposal", str(self.proposal_path), "--json"
+        )
+
+        self.assertEqual(completed.returncode, 3)
+        errors = self.document(completed)["errors"]
+        self.assertIn("plan.preflight.portable_author_invalid:plugin.json", errors)
+        self.assertIn("plan.preflight.portable_interface_invalid:plugin.json", errors)
+        session = json.loads(self.session_path.read_text(encoding="utf-8"))
+        self.assertIsNone(session["plan"])
+        self.assertFalse((self.workspace / "candidate").exists())
+
+    def test_plan_preflight_rejects_escaping_skill_reference_before_w1(self) -> None:
+        payload = self.proposal()
+        skill = next(
+            item for item in payload["files"]
+            if item["path"] == "skills/answering-structured-requests/SKILL.md"
+        )
+        skill["inline_text"] += "\n[escape](../../resources/Reference.md)\n"
+        self.refresh_recipe_hash(skill)
+        self.write_proposal(payload)
+
+        completed = self.run_cli(
+            "plan", "--session", str(self.session_path), "--proposal", str(self.proposal_path), "--json"
+        )
+
+        self.assertEqual(completed.returncode, 3)
+        self.assertIn(
+            "plan.preflight.reference_path_invalid:skills/answering-structured-requests/SKILL.md:../../resources/Reference.md",
+            self.document(completed)["errors"],
+        )
+        self.assertFalse((self.workspace / "implementation-plan.json").exists())
+
+    def test_plan_preflight_aggregates_static_failures_and_cleans_temporary_tree(self) -> None:
+        candidate = self.workspace / "candidate"
+        candidate.mkdir()
+        sentinel = candidate / "sentinel.txt"
+        sentinel.write_bytes(b"preserve me")
+        payload = self.proposal()
+        manifest = next(item for item in payload["files"] if item["path"] == "plugin.json")
+        manifest["inline_json"].pop("author")
+        self.refresh_recipe_hash(manifest)
+        skill = next(
+            item for item in payload["files"]
+            if item["path"] == "skills/answering-structured-requests/SKILL.md"
+        )
+        skill["inline_text"] += "\n[escape](../../outside.md)\n"
+        self.refresh_recipe_hash(skill)
+        self.write_proposal(payload)
+
+        completed = self.run_cli(
+            "plan", "--session", str(self.session_path), "--proposal", str(self.proposal_path), "--json"
+        )
+
+        self.assertEqual(completed.returncode, 3)
+        errors = self.document(completed)["errors"]
+        self.assertEqual(errors, sorted(set(errors)))
+        self.assertTrue(any("portable_author_invalid" in error for error in errors))
+        self.assertTrue(any("reference_path_invalid" in error for error in errors))
+        self.assertEqual(sentinel.read_bytes(), b"preserve me")
+        self.assertEqual(list(self.workspace.glob(".plan-preflight-*")), [])
 
     def test_plan_records_reuse_bundle_and_validation_decisions(self) -> None:
         _, plan = self.plan()
@@ -120,6 +203,7 @@ class PlanningWorkflowTests(unittest.TestCase):
         first_hash = planned["plan_sha256"]
         payload = self.proposal()
         payload["files"][0]["inline_json"]["extensions"]["com.openai"]["interface"]["defaultPrompt"] = ["First", "Second"]
+        self.refresh_recipe_hash(payload["files"][0])
         self.write_proposal(payload)
         revised, _ = self.plan()
         self.assertNotEqual(revised["plan_sha256"], first_hash)
@@ -226,6 +310,7 @@ class PlanningWorkflowTests(unittest.TestCase):
         payload = self.proposal()
         payload["plugin"]["description"] = "Revised non-behavioral description."
         payload["files"][0]["inline_json"]["description"] = "Revised non-behavioral description."
+        self.refresh_recipe_hash(payload["files"][0])
         self.write_proposal(payload)
 
         completed = self.run_cli(

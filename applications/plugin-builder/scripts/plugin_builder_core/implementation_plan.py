@@ -11,6 +11,7 @@ import tempfile
 from typing import Any
 
 from .bootstrap import plugin_authoring
+from .proposed_tree import preflight_proposed_tree
 from .tool_contract import validate_tool_contract
 
 
@@ -354,10 +355,17 @@ def compile_plan(inspection: object, proposal: object, output: Path) -> PlanOutc
             if isinstance(owner, dict) and identifier not in owner.get("requirement_ids", []):
                 errors.append(f"plan.requirement_evidence_unowned:{identifier}:{target}")
 
+    preflight_evidence: dict[str, Any] | None = None
+    if not errors:
+        preflight = preflight_proposed_tree(proposal_payload, workspace_root)
+        errors.extend(preflight.diagnostics)
+        preflight_evidence = preflight.evidence
+
     if errors:
         return PlanOutcome("FAIL", tuple(sorted(set(errors))), tuple(sorted(set(blockers))))
     plan = dict(proposal_payload)
-    plan["schema"] = "plugin-builder-implementation-plan-v1"
+    plan["schema"] = "plugin-builder-implementation-plan-v2"
+    plan["preflight_evidence"] = preflight_evidence
     plan["requirements"] = sorted(plan["requirements"], key=lambda item: item["id"])
     plan["skills"] = sorted(plan["skills"], key=lambda item: item["name"])
     plan["files"] = sorted(plan["files"], key=lambda item: item["path"])

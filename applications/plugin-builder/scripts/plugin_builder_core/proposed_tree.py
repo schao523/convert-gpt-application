@@ -2,10 +2,18 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from pathlib import Path
+import tempfile
 from typing import Any
 
 from .bootstrap import plugin_authoring
+
+
+@dataclass(frozen=True)
+class ProposedTreePreflight:
+    diagnostics: tuple[str, ...]
+    evidence: dict[str, Any]
 
 
 def agent_yaml(skill: dict[str, Any]) -> bytes:
@@ -43,4 +51,54 @@ def materialize_proposed_tree(
     plugin_authoring.materialize_manifest_pair(Path(destination))
 
 
-__all__ = ["agent_yaml", "materialize_proposed_tree"]
+def _issue_diagnostic(issue: Any) -> str:
+    fields = [f"plan.preflight.{issue.code}"]
+    if issue.path:
+        fields.append(issue.path)
+    if issue.detail:
+        fields.append(issue.detail)
+    return ":".join(fields)
+
+
+def preflight_proposed_tree(
+    proposal: dict[str, Any],
+    workspace_root: Path,
+) -> ProposedTreePreflight:
+    """Materialize and validate a proposal without changing persistent state."""
+
+    root = Path(workspace_root)
+    diagnostics: list[str] = []
+    tree_hash: str | None = None
+    try:
+        with tempfile.TemporaryDirectory(dir=root, prefix=".plan-preflight-") as name:
+            plugin = Path(name) / "plugin"
+            try:
+                materialize_proposed_tree(proposal, root, plugin)
+            except plugin_authoring.PluginAuthoringError as error:
+                diagnostic = f"plan.preflight.{error.code}"
+                if error.detail:
+                    diagnostic = f"{diagnostic}:{error.detail}"
+                diagnostics.append(diagnostic)
+            if plugin.is_dir():
+                diagnostics.extend(
+                    _issue_diagnostic(issue)
+                    for issue in plugin_authoring.validate_plugin_tree(plugin)
+                )
+                tree_hash = plugin_authoring.tree_sha256(plugin)
+    except OSError:
+        diagnostics.append("plan.preflight.local_io_failure")
+    return ProposedTreePreflight(
+        tuple(sorted(set(diagnostics))),
+        {
+            "schema": "plugin-builder-preflight-v1",
+            "materialized_tree_sha256": tree_hash,
+        },
+    )
+
+
+__all__ = [
+    "ProposedTreePreflight",
+    "agent_yaml",
+    "materialize_proposed_tree",
+    "preflight_proposed_tree",
+]
