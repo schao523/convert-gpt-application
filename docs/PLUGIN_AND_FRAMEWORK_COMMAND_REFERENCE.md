@@ -14,6 +14,50 @@ There are three command surfaces:
 
 A product may provide a local browser interface for review or administration, but PowerShell remains the stable entry point that starts it.
 
+### Canonical Windows test environment
+
+Before implementation or verification on Windows, probe and establish the
+repository test environment once for that command invocation:
+
+```powershell
+& .\scripts\invoke_windows_test_environment.ps1 -ProbeOnly
+```
+
+Run a test command through the same direct-argument runner:
+
+```powershell
+& .\scripts\invoke_windows_test_environment.ps1 `
+  -Executable python `
+  -CommandArgument @("-B", "-m", "unittest", "tests.test_application_config", "-v")
+```
+
+The runner ignores caller-supplied `TEMP` and `TMP` when selecting its base. It
+creates one unique owned root below the genuine Windows user system temp
+directory, points child-process `TEMP` and `TMP` there, and forces
+`PYTHONUTF8=1` plus `PYTHONIOENCODING=utf-8`. It probes UTF-8 filesystem I/O,
+hard links, atomic replacement, ZIP packaging, and a disposable Git repository
+with `git clone --no-hardlinks --no-checkout`. The root is removed after the
+probe or command unless `-KeepRoot` is explicitly supplied for diagnostics.
+Never relocate `TEMP` or `TMP` below this repository unless a test explicitly
+requires repository containment; doing so changes whether nominally non-Git
+fixtures inherit the repository's Git identity.
+
+The final JSON document uses `windows-test-environment-v1`. A failed capability
+probe is `BLOCKED` and classified as `ENVIRONMENT`. A nonzero test command is
+`REQUIRES_TRIAGE`; classify it before changing production code:
+
+| Classification | Meaning and next action |
+| --- | --- |
+| `IMPLEMENTATION` | The failure repeats in the canonical environment and demonstrates incorrect product or framework behavior. Add or retain a focused regression before changing production code. |
+| `TEST_FIXTURE` | The test setup violates its own isolation or identity assumption, such as placing a non-Git fixture inside the repository. Correct the fixture without weakening the asserted behavior. |
+| `ENVIRONMENT` | A required OS, Git, hard-link, permission, encoding, temp-root, or packaging capability is absent or blocked. Correct the environment without changing product behavior. |
+| `TRANSIENT` | The identical focused command passes without code or fixture changes after a one-off filesystem or process race. Record the incident and establish recurrence before modifying code. |
+
+After correcting an environment-only, fixture-only, or transient cause, run the
+smallest affected regression set first. Run the complete applicable suite only
+after that focused set passes. A passing environment probe is prerequisite
+evidence, not evidence that a product test or runtime behavior passed.
+
 ## 2. Product launcher commands
 
 The launcher lives at `plugins/<plugin-id>/scripts/<launcher>.py` in the public marketplace repository. Cool Bible Tutor currently provides the reference implementation.
