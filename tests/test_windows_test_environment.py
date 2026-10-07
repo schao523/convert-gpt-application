@@ -156,10 +156,33 @@ class WindowsTestEnvironmentContractTests(unittest.TestCase):
         lines = [line for line in completed.stdout.splitlines() if line]
         self.assertTrue(lines, completed.stderr)
         report = json.loads(lines[-1])
-        self.assertEqual(report["schema"], "windows-test-environment-v1")
-        self.assertEqual(report["status"], "BLOCKED")
-        self.assertEqual(report["classification"], "ENVIRONMENT")
-        self.assertTrue(any("cleanup failed" in item for item in report["diagnostics"]))
+        disposable_root = Path(report["disposable_root"])
+        expected_parent = Path(report["system_temp"]) / "obvious-one-plugin-tests"
+        try:
+            self.assertEqual(disposable_root.parent.resolve(), expected_parent.resolve())
+            self.assertTrue(disposable_root.is_dir())
+            self.assertEqual(report["schema"], "windows-test-environment-v1")
+            self.assertEqual(report["status"], "BLOCKED")
+            self.assertEqual(report["classification"], "ENVIRONMENT")
+            self.assertTrue(any("cleanup failed" in item for item in report["diagnostics"]))
+        finally:
+            if disposable_root.parent.resolve() == expected_parent.resolve():
+                quoted_root = str(disposable_root).replace("'", "''")
+                cleanup = subprocess.run(
+                    [
+                        "powershell.exe",
+                        "-NoProfile",
+                        "-Command",
+                        f"Remove-Item -LiteralPath '{quoted_root}' -Recurse -Force",
+                    ],
+                    text=True,
+                    encoding="utf-8",
+                    errors="replace",
+                    capture_output=True,
+                    check=False,
+                )
+                self.assertEqual(cleanup.returncode, 0, cleanup.stdout + cleanup.stderr)
+        self.assertFalse(disposable_root.exists())
 
 
 if __name__ == "__main__":
