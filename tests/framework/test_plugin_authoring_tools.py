@@ -33,6 +33,89 @@ def bundled_tool() -> dict:
     }
 
 
+def bundled_tool_v2() -> dict:
+    payload = bundled_tool()
+    payload.update({
+        "schema": "plugin-builder-application-tool-v2",
+        "capability_ids": ["normalize-content"],
+        "operation": {
+            "id": "normalize-input",
+            "protocol": "MCP_TOOL_CALL",
+            "input_schema_sha256": "59dd9138acc693310fce4722159a02240f995b2be524301ba57548a1aa7b10fa",
+            "output_schema_sha256": "59dd9138acc693310fce4722159a02240f995b2be524301ba57548a1aa7b10fa",
+            "side_effect_class": "NONE",
+            "idempotent": True,
+            "capability_ids": ["normalize-content"],
+        },
+        "dependencies": [{
+            "id": "mcp-service",
+            "type": "SERVICE",
+            "provider": "REMOTE_SERVICE",
+            "version": None,
+            "sha256": None,
+            "runtime_targets": ["ChatGPT Work Local/Desktop", "Codex"],
+            "setup_owner": "SERVICE_OPERATOR",
+            "required": True,
+            "absence_policy": "BLOCK",
+        }],
+        "permissions": [
+            {
+                "id": "network",
+                "target_runtime": "Codex",
+                "grant_source": "OWNER",
+                "required": True,
+                "purpose": "Reach the approved MCP service.",
+                "verification": "Observe the installed tool call.",
+            },
+            {
+                "id": "network",
+                "target_runtime": "ChatGPT Work Local/Desktop",
+                "grant_source": "OWNER",
+                "required": True,
+                "purpose": "Reach the approved MCP service.",
+                "verification": "Observe the installed tool call.",
+            },
+        ],
+        "fallback": {
+            "policy": "BLOCK",
+            "trigger_conditions": ["The approved MCP service is unavailable."],
+            "alternative_operation_id": None,
+            "preserved_requirement_ids": [],
+            "degraded_requirement_ids": ["RQ1"],
+        },
+        "mcp": {
+            "server_id": "normalizer",
+            "config_file": "mcp.json",
+            "transport": "streamable-http",
+            "permission_scopes": ["normalize:execute"],
+            "authentication": "NOT_REQUIRED",
+            "setup": "SERVICE_OPERATOR",
+            "service_boundary": "Normalize approved content.",
+            "url": "https://example.com/mcp",
+        },
+        "realizations": [
+            {
+                "target_runtime": target,
+                "mechanism": "MCP_REMOTE_HTTPS",
+                "adapter_id": "mcp-streamable-http",
+                "adapter_version": "1",
+                "exposed_capability": "normalize-input",
+                "operation_id": "normalize-input",
+                "transport": "MCP_STREAMABLE_HTTP",
+                "execution_location": "REMOTE_SERVICE",
+                "dependency_ids": ["mcp-service"],
+                "permission_ids": ["network"],
+                "setup_requirements": ["Configure the approved HTTPS MCP endpoint."],
+                "setup_owner": "SERVICE_OPERATOR",
+                "feasibility_state": "FEASIBLE_WITH_SETUP",
+                "evidence_policy": "DEFERRED_ALLOWED",
+            }
+            for target in ("ChatGPT Work Local/Desktop", "Codex")
+        ],
+    })
+    return payload
+
+
 class ApplicationToolContractTests(unittest.TestCase):
     def codes(self, payload: dict) -> set[str]:
         result = validate_application_tool_contract(payload)
@@ -136,6 +219,73 @@ class ApplicationToolContractTests(unittest.TestCase):
                 "tool.normalize-input.permissions_invalid",
             },
         )
+
+    def test_v2_contract_binds_operation_dependencies_permissions_and_realizations(self) -> None:
+        self.assertEqual(self.codes(bundled_tool_v2()), set())
+
+        invalid = bundled_tool_v2()
+        invalid["operation"]["input_schema_sha256"] = "0" * 64
+        invalid["operation"]["capability_ids"] = ["other-capability"]
+        invalid["realizations"][0]["dependency_ids"] = ["missing"]
+        invalid["realizations"][0]["permission_ids"] = ["missing"]
+        self.assertEqual(
+            self.codes(invalid),
+            {
+                "tool.normalize-input.operation_capability_mismatch",
+                "tool.normalize-input.operation_input_schema_mismatch",
+                "realization.ChatGPT Work Local/Desktop.dependency_unknown:missing",
+                "realization.ChatGPT Work Local/Desktop.permission_unknown:missing",
+            },
+        )
+
+    def test_v2_requires_exactly_one_realization_per_runtime_target(self) -> None:
+        invalid = bundled_tool_v2()
+        invalid["realizations"] = [invalid["realizations"][0], copy.deepcopy(invalid["realizations"][0])]
+        self.assertEqual(
+            self.codes(invalid),
+            {
+                "tool.normalize-input.realization_duplicate:ChatGPT Work Local/Desktop",
+                "tool.normalize-input.realization_missing:Codex",
+            },
+        )
+
+    def test_v2_rejects_unsafe_endpoint_credentials_and_invalid_structured_fallback(self) -> None:
+        invalid = bundled_tool_v2()
+        invalid["mcp"]["url"] = "http://user:secret@localhost:3000/mcp"
+        invalid["fallback"]["alternative_operation_id"] = "other-operation"
+        self.assertEqual(
+            self.codes(invalid),
+            {
+                "tool.normalize-input.credential_material_forbidden",
+                "tool.normalize-input.fallback_alternative_forbidden",
+                "tool.normalize-input.mcp_url_invalid",
+            },
+        )
+
+    def test_v2_uses_the_locked_operation_dependency_and_permission_enums(self) -> None:
+        invalid = bundled_tool_v2()
+        invalid["operation"]["protocol"] = "DIRECT_ARGV"
+        invalid["operation"]["side_effect_class"] = "EXTERNAL_MUTATION"
+        invalid["dependencies"][0]["type"] = "PYTHON"
+        invalid["dependencies"][0]["provider"] = "USER_DEVICE"
+        invalid["dependencies"][0]["absence_policy"] = "OMIT_OPTIONAL"
+        invalid["permissions"][0]["grant_source"] = "SERVICE_OPERATOR"
+        self.assertEqual(
+            self.codes(invalid),
+            {
+                "tool.normalize-input.dependency_absence_policy_invalid:mcp-service",
+                "tool.normalize-input.dependency_provider_invalid:mcp-service",
+                "tool.normalize-input.dependency_type_invalid:mcp-service",
+                "tool.normalize-input.operation_protocol_invalid",
+                "tool.normalize-input.operation_side_effect_class_invalid",
+                "tool.normalize-input.permission_grant_source_invalid:network",
+            },
+        )
+
+    def test_v1_contract_remains_unchanged(self) -> None:
+        result = validate_application_tool_contract(bundled_tool())
+        self.assertEqual(result.errors, ())
+        self.assertEqual(result.blockers, ())
 
 
 if __name__ == "__main__":

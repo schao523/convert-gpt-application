@@ -29,6 +29,12 @@ from .validation import (
     validate_skill_tree,
 )
 from .tools import ApplicationToolContract, validate_application_tool_contract
+from .capabilities import (
+    CapabilityContract,
+    validate_capability_contract,
+    validate_capability_register,
+)
+from .runtime_realization import RuntimeRealizationContract, validate_runtime_realization
 from .materialize import materialize_files, overlay_files
 
 __all__ = [
@@ -59,6 +65,11 @@ __all__ = [
     "validate_skill_tree",
     "ApplicationToolContract",
     "validate_application_tool_contract",
+    "CapabilityContract",
+    "validate_capability_contract",
+    "validate_capability_register",
+    "RuntimeRealizationContract",
+    "validate_runtime_realization",
     "materialize_files",
     "overlay_files",
 ]
