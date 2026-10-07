@@ -136,6 +136,8 @@ class CreateCandidateTests(unittest.TestCase):
         self.assertEqual(manifest["operation"], "create")
         self.assertEqual(manifest["file_roles"]["plugin.json"], "PLUGIN_MANIFEST")
         self.assertRegex(manifest["preflight_evidence_sha256"], r"^[0-9a-f]{64}$")
+        self.assertEqual(manifest["manifest_profile"]["profile"], "PRIVATE_LOCAL")
+        self.assertRegex(manifest["manifest_profile_sha256"], r"^[0-9a-f]{64}$")
         self.assertEqual(session["candidate"]["sha256"], plugin_authoring.tree_sha256(workspace / "candidate"))
         self.assertEqual(document["candidate_sha256"], session["candidate"]["sha256"])
         self.assertEqual(session["candidate"]["manifest_sha256"], __import__("hashlib").sha256(manifest_path.read_bytes()).hexdigest())

@@ -176,6 +176,42 @@ class PlanningWorkflowTests(unittest.TestCase):
         self.assertEqual(sentinel.read_bytes(), b"preserve me")
         self.assertEqual(list(self.workspace.glob(".plan-preflight-*")), [])
 
+    def test_preflight_aggregates_quality_path_command_and_manifest_diagnostics(self) -> None:
+        payload = self.proposal()
+        manifest = next(item for item in payload["files"] if item["path"] == "plugin.json")
+        manifest["inline_json"]["extensions"]["com.openai"]["interface"]["category"] = "education"
+        self.refresh_recipe_hash(manifest)
+        alpha = next(item for item in payload["files"] if item["path"] == "skills/answering-structured-requests/SKILL.md")
+        alpha["inline_text"] += "\n[hidden](../../outside.md)\n"
+        self.refresh_recipe_hash(alpha)
+        beta = next(item for item in payload["files"] if item["path"] == "skills/checking-traceability/SKILL.md")
+        beta["inline_text"] += "\nRead [the owned copy](references/Reference.md).\n"
+        self.refresh_recipe_hash(beta)
+        original = next(item for item in payload["files"] if item["path"].endswith("references/Reference.md"))
+        duplicate = dict(original)
+        duplicate["path"] = "skills/checking-traceability/references/Reference.md"
+        duplicate["requirement_ids"] = ["AC1"]
+        payload["files"].append(duplicate)
+        payload["expected_members"].append(duplicate["path"])
+        payload["tools"][0]["verification"]["argv"] = ["definitely-missing-executable"]
+        payload["checks"][-1]["argv"] = ["definitely-missing-executable"]
+        self.write_proposal(payload)
+
+        completed = self.run_cli(
+            "plan", "--session", str(self.session_path), "--proposal", str(self.proposal_path), "--json"
+        )
+
+        self.assertEqual(completed.returncode, 3)
+        errors = self.document(completed)["errors"]
+        self.assertEqual(errors, sorted(set(errors)))
+        self.assertTrue(any("professional_duplicate_ownership_required" in item for item in errors))
+        self.assertTrue(any("path_binding_invalid" in item for item in errors))
+        self.assertTrue(any("command_unresolved" in item for item in errors))
+        self.assertIn("plan.preflight.manifest.category_unknown:education", errors)
+        self.assertFalse((self.workspace / "implementation-plan.json").exists())
+        self.assertIsNone(json.loads(self.session_path.read_text(encoding="utf-8"))["plan"])
+        self.assertFalse((self.workspace / "candidate").exists())
+
     def test_plan_records_reuse_bundle_and_validation_decisions(self) -> None:
         _, plan = self.plan()
         self.assertEqual(plan["implementation_decisions"]["reuse"], ["portable plugin validators"])
@@ -216,7 +252,7 @@ class PlanningWorkflowTests(unittest.TestCase):
         self.assertTrue({"plugin.json", ".codex-plugin/plugin.json"}.issubset(plan["expected_members"]))
         first_hash = planned["plan_sha256"]
         payload = self.proposal()
-        payload["files"][0]["inline_json"]["extensions"]["com.openai"]["interface"]["defaultPrompt"] = ["First", "Second"]
+        payload["files"][0]["inline_json"]["extensions"]["com.openai"]["interface"]["defaultPrompt"] = "Use the revised approved prompt."
         self.refresh_recipe_hash(payload["files"][0])
         self.write_proposal(payload)
         revised, _ = self.plan()

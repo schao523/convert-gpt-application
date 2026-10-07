@@ -185,6 +185,8 @@ def build_update_candidate(session_path: Path) -> CandidateOutcome:
                 "plan_sha256": plan_hash, "tools_sha256": tools_hash,
                 "preflight_evidence_sha256": preflight_hash,
                 "file_roles": approved_preflight["artifact_quality"]["file_roles"],
+                "manifest_profile": approved_preflight["manifest_profile"],
+                "manifest_profile_sha256": sha256(canonical_bytes(approved_preflight["manifest_profile"])).hexdigest(),
                 "content_tree_sha256": plugin_authoring.tree_sha256(stage),
                 "expected_members": sorted(expected), "members": [asdict(item) for item in members],
                 "tool_bindings": bindings, "tool_contracts": sorted(tool_contracts, key=lambda item: item["id"]),

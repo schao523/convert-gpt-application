@@ -10,6 +10,7 @@ from typing import Any
 
 from .bootstrap import plugin_authoring
 from .artifact_quality import audit_artifact_quality
+from .manifest_profile import validate_manifest_profile
 from .runtime_commands import resolve_direct_argv
 
 
@@ -92,6 +93,7 @@ def preflight_proposed_tree(
     tree_hash: str | None = None
     quality_evidence: dict[str, Any] | None = None
     command_evidence: list[dict[str, Any]] = []
+    manifest_evidence: dict[str, Any] | None = None
     try:
         with tempfile.TemporaryDirectory(dir=root, prefix=".plan-preflight-") as name:
             plugin = Path(name) / "plugin"
@@ -122,6 +124,16 @@ def preflight_proposed_tree(
                 )
                 diagnostics.extend(f"plan.preflight.{item}" for item in quality.diagnostics)
                 quality_evidence = quality.as_dict()
+                decisions = proposal.get("implementation_decisions")
+                manifest_decision = decisions.get("manifest_profile") if isinstance(decisions, dict) else None
+                vocabulary = Path(__file__).resolve().parents[2] / "contracts" / "openai-interface-vocabulary-v1.json"
+                manifest_report = validate_manifest_profile(
+                    plugin,
+                    manifest_decision if isinstance(manifest_decision, dict) else {},
+                    vocabulary,
+                )
+                diagnostics.extend(f"plan.preflight.{item}" for item in manifest_report.diagnostics)
+                manifest_evidence = manifest_report.as_dict()
                 for tool in proposal.get("tools", []):
                     if not isinstance(tool, dict) or tool.get("implementation_kind") not in {"BUNDLED_LOCAL", "FRAMEWORK_ADAPTER"}:
                         continue
@@ -158,6 +170,7 @@ def preflight_proposed_tree(
                 command_evidence,
                 key=lambda item: (str(item["tool_id"]), str(item["purpose"])),
             ),
+            "manifest_profile": manifest_evidence,
         },
     )
 

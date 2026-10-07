@@ -124,6 +124,7 @@ class UpdateCandidateTests(unittest.TestCase):
         self.assertEqual(manifest["schema"], "plugin-builder-candidate-manifest-v2")
         self.assertEqual(manifest["operation"], "update")
         self.assertEqual(manifest["file_roles"]["owner-notes.txt"], "INHERITED_UNCLASSIFIED")
+        self.assertEqual(manifest["manifest_profile"]["target"], "OPENAI_DESKTOP")
         self.assertIn("owner-notes.txt", changes["preserved"])
         self.assertIn("skills/checking-traceability/SKILL.md", changes["changed"])
 

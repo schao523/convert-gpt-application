@@ -142,7 +142,16 @@
       "adopt_general_knowledge": false,
       "consultation_skill": null
     },
-    "reference_ownership": {}
+    "reference_ownership": {},
+    "manifest_profile": {
+      "target": "OPENAI_DESKTOP",
+      "profile": "PRIVATE_LOCAL",
+      "vocabulary_version": "obvious-one-openai-interface-v1",
+      "extensions": {
+        "categories": [],
+        "capabilities": []
+      }
+    }
   },
   "checks": [
     {"id": "plugin-structure", "kind": "PLUGIN_STRUCTURE", "required": true, "requirement_ids": ["RQ1"]},
