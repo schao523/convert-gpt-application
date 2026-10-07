@@ -109,6 +109,58 @@ class WindowsTestEnvironmentContractTests(unittest.TestCase):
         self.assertEqual(report["command"]["status"], "FAIL")
         self.assertTrue(report["diagnostics"])
 
+    @unittest.skipUnless(os.name == "nt", "Windows-only environment probe")
+    def test_in_process_invocation_restores_caller_environment(self) -> None:
+        command = (
+            "$env:TEMP='caller-temp'; $env:TMP='caller-tmp'; "
+            "$env:PYTHONUTF8='caller-utf8'; Remove-Item Env:PYTHONIOENCODING -ErrorAction SilentlyContinue; "
+            f"& '{RUNNER}' -ProbeOnly; "
+            "[pscustomobject]@{TEMP=$env:TEMP;TMP=$env:TMP;PYTHONUTF8=$env:PYTHONUTF8;"
+            "PYTHONIOENCODING=[Environment]::GetEnvironmentVariable('PYTHONIOENCODING')} | "
+            "ConvertTo-Json -Compress"
+        )
+        completed = subprocess.run(
+            ["powershell.exe", "-NoProfile", "-Command", command],
+            cwd=ROOT,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            capture_output=True,
+            check=False,
+        )
+
+        self.assertEqual(completed.returncode, 0, completed.stdout + completed.stderr)
+        restored = json.loads([line for line in completed.stdout.splitlines() if line][-1])
+        self.assertEqual(restored["TEMP"], "caller-temp")
+        self.assertEqual(restored["TMP"], "caller-tmp")
+        self.assertEqual(restored["PYTHONUTF8"], "caller-utf8")
+        self.assertIsNone(restored["PYTHONIOENCODING"])
+
+    @unittest.skipUnless(os.name == "nt", "Windows-only environment probe")
+    def test_cleanup_failure_still_emits_structured_environment_result(self) -> None:
+        command = (
+            "function Remove-Item { throw 'simulated cleanup failure' }; "
+            f"& '{RUNNER}' -ProbeOnly"
+        )
+        completed = subprocess.run(
+            ["powershell.exe", "-NoProfile", "-Command", command],
+            cwd=ROOT,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            capture_output=True,
+            check=False,
+        )
+
+        self.assertNotEqual(completed.returncode, 0)
+        lines = [line for line in completed.stdout.splitlines() if line]
+        self.assertTrue(lines, completed.stderr)
+        report = json.loads(lines[-1])
+        self.assertEqual(report["schema"], "windows-test-environment-v1")
+        self.assertEqual(report["status"], "BLOCKED")
+        self.assertEqual(report["classification"], "ENVIRONMENT")
+        self.assertTrue(any("cleanup failed" in item for item in report["diagnostics"]))
+
 
 if __name__ == "__main__":
     unittest.main()

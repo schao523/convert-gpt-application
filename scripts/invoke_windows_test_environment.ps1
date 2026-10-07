@@ -89,6 +89,13 @@ $commandResult = [ordered]@{ status = "NOT APPLICABLE"; exit_code = $null }
 $status = "PASS"
 $classification = "NONE"
 $exitCode = 0
+$originalEnvironment = [ordered]@{}
+foreach ($name in @("TEMP", "TMP", "PYTHONUTF8", "PYTHONIOENCODING")) {
+    $originalEnvironment[$name] = [pscustomobject]@{
+        exists = Test-Path -LiteralPath "Env:$name"
+        value = [Environment]::GetEnvironmentVariable($name, "Process")
+    }
+}
 
 try {
     New-Item -ItemType Directory -Path $disposableRoot -Force | Out-Null
@@ -204,11 +211,32 @@ catch {
     $exitCode = 2
 }
 finally {
-    if (-not $KeepRoot -and (Test-Path -LiteralPath $disposableRoot)) {
-        if (-not (Test-ContainedPath -Child $disposableRoot -Parent $testRoot)) {
-            throw "refusing cleanup outside the owned disposable test root"
+    try {
+        if (-not $KeepRoot -and (Test-Path -LiteralPath $disposableRoot)) {
+            if (-not (Test-ContainedPath -Child $disposableRoot -Parent $testRoot)) {
+                throw "refusing cleanup outside the owned disposable test root"
+            }
+            Remove-Item -LiteralPath $disposableRoot -Recurse -Force
         }
-        Remove-Item -LiteralPath $disposableRoot -Recurse -Force
+    }
+    catch {
+        $diagnostics.Add("cleanup failed: $($_.Exception.Message)")
+        if ($status -ne "FAIL") {
+            $status = "BLOCKED"
+            $classification = "ENVIRONMENT"
+            $exitCode = 2
+        }
+    }
+    finally {
+        foreach ($name in $originalEnvironment.Keys) {
+            $saved = $originalEnvironment[$name]
+            if ($saved.exists) {
+                [Environment]::SetEnvironmentVariable($name, $saved.value, "Process")
+            }
+            else {
+                [Environment]::SetEnvironmentVariable($name, $null, "Process")
+            }
+        }
     }
 }
 
