@@ -2,7 +2,13 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Plan status:** PENDING OWNER APPROVAL
+**Plan status:** APPROVED — NATIVE/SEQUENTIAL EXECUTION
+
+**Approval evidence:** The decision owner approved this implementation plan
+and selected Native/sequential execution in the originating Codex conversation
+on 2026-10-08. This authorizes scoped local implementation and verification;
+dependency installation, hosted deployment, publication, and other external
+release actions remain unauthorized.
 
 **Goal:** Extend Plugin Builder's existing tool foundation with target-aware capability realization, pre-W1 feasibility enforcement, deterministic MCP Streamable HTTP exposure, and digest-closed installed Skill-to-result evidence without weakening existing approval, preservation, or build guarantees.
 
