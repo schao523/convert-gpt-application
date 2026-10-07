@@ -1,9 +1,14 @@
 # Plugin Builder Runtime Capability Realization v2 Design
 
-**Status:** DRAFT FOR OWNER REVIEW  
+**Status:** APPROVED
 **Date:** 2026-10-07  
 **Product:** Plugin Builder  
 **Runtime scope:** `OPENAI_ONLY_PHASE_ONE`
+
+**Approval evidence:** The decision owner approved this exact written
+specification in the originating Codex conversation on 2026-10-07. The
+approval authorizes implementation planning, not implementation, dependency
+installation, hosted deployment, publication, or external release actions.
 
 ## 1. Purpose
 
