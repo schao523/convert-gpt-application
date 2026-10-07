@@ -95,6 +95,11 @@ class WorkbenchHandoffInteroperabilityTests(unittest.TestCase):
             source, output, confirmed_by="fixture decision owner"
         )
         self.assertEqual(report["status"], "PASS", report)
+        self.assertEqual(report["output_profile"], "WORKBENCH_HANDOFF_V1_1")
+        self.assertEqual(
+            report["output_archive_sha256"],
+            sha256(output.read_bytes()).hexdigest(),
+        )
         return output
 
     def test_design_assistant_full_output_enters_plugin_builder_s2_without_repair(self) -> None:

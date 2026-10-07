@@ -7,6 +7,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from unittest import mock
 import zipfile
 
 
@@ -130,6 +131,78 @@ def write_approved_handoff_package(
 
 
 class ToolTests(unittest.TestCase):
+    def test_normalization_report_binds_input_output_profiles_and_final_zip_digest(self) -> None:
+        with test_temp_directory() as temp:
+            root = Path(temp)
+            source = root / "approved.zip"
+            output = root / "approved-normalized.zip"
+            write_approved_handoff_package(source)
+
+            result = tool.normalize_handoff_package(
+                source,
+                output,
+                confirmed_by="decision owner",
+            )
+
+            self.assertEqual(result["status"], "PASS")
+            self.assertEqual(result["input_profile"], "COOL_DESIGN_ASSISTANT_FULL_V1")
+            self.assertEqual(result["profile"], result["input_profile"])
+            self.assertEqual(result["output_profile"], "WORKBENCH_HANDOFF_V1_1")
+            self.assertEqual(
+                result["source_archive_sha256"],
+                hashlib.sha256(source.read_bytes()).hexdigest(),
+            )
+            self.assertEqual(
+                result["output_archive_sha256"],
+                hashlib.sha256(output.read_bytes()).hexdigest(),
+            )
+            with zipfile.ZipFile(output) as archive:
+                self.assertIn("package-manifest.json", archive.namelist())
+                self.assertIn("workbench-handoff.json", archive.namelist())
+
+    def test_normalization_removes_new_output_when_final_zip_digest_mismatches(self) -> None:
+        with test_temp_directory() as temp:
+            root = Path(temp)
+            source = root / "approved.zip"
+            output = root / "approved-normalized.zip"
+            write_approved_handoff_package(source)
+            runtime = tool._load_workbench_handoff()
+
+            class MismatchingRuntime:
+                @staticmethod
+                def normalize_handoff_archive(*args, **kwargs):
+                    outcome = runtime.normalize_handoff_archive(*args, **kwargs)
+                    report = dict(outcome.report)
+                    report["output_archive_sha256"] = "0" * 64
+                    return type(
+                        "Outcome",
+                        (),
+                        {
+                            "status": outcome.status,
+                            "report": report,
+                            "output_archive_sha256": "0" * 64,
+                        },
+                    )()
+
+            with mock.patch.object(
+                tool,
+                "_load_workbench_handoff",
+                return_value=MismatchingRuntime,
+            ):
+                result = tool.normalize_handoff_package(
+                    source,
+                    output,
+                    confirmed_by="decision owner",
+                )
+
+            self.assertEqual(result["status"], "FAIL")
+            self.assertEqual(result["output_profile"], None)
+            self.assertIn(
+                "handoff.output_archive_sha256_mismatch",
+                result["diagnostics"],
+            )
+            self.assertFalse(output.exists())
+
     def test_normalizes_approved_package_into_valid_workbench_handoff(self) -> None:
         with test_temp_directory() as temp:
             root = Path(temp)

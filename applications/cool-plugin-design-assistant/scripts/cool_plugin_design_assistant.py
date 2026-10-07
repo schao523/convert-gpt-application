@@ -4,12 +4,14 @@ from __future__ import annotations
 
 import argparse
 from collections import Counter, deque
+from hashlib import sha256
 import importlib.util
 import json
 from pathlib import Path
 import re
 import sys
 import tempfile
+from types import SimpleNamespace
 from typing import Any
 import zipfile
 
@@ -715,8 +717,75 @@ def normalize_handoff_package(
         else "HANDOFF BLOCKED"
     )
     if outcome.status == "PASS":
-        with zipfile.ZipFile(destination_path) as archive:
-            manifest = json.loads(archive.read("package-manifest.json"))
+        actual_archive_hash = sha256(destination_path.read_bytes()).hexdigest()
+        expected_archive_hash = outcome.output_archive_sha256
+        if (
+            expected_archive_hash is None
+            or report.get("output_archive_sha256") != expected_archive_hash
+            or actual_archive_hash != expected_archive_hash
+        ):
+            destination_path.unlink(missing_ok=True)
+            report.update(
+                {
+                    "status": "FAIL",
+                    "output_profile": None,
+                    "output_archive_sha256": None,
+                    "diagnostics": ["handoff.output_archive_sha256_mismatch"],
+                    "gate_state": "HANDOFF BLOCKED",
+                }
+            )
+            return report
+        try:
+            with tempfile.TemporaryDirectory(
+                dir=destination_path.parent,
+                prefix=f".{destination_path.name}.verify-",
+            ) as verify_name:
+                verify_root = Path(verify_name)
+                with zipfile.ZipFile(destination_path) as archive:
+                    names = archive.namelist()
+                    if (
+                        "package-manifest.json" not in names
+                        or "workbench-handoff.json" not in names
+                    ):
+                        raise ValueError("handoff.canonical_authority_missing")
+                    archive.extractall(verify_root)
+                    manifest = json.loads(archive.read("package-manifest.json"))
+                    handoff = json.loads(archive.read("workbench-handoff.json"))
+                    inventory = SimpleNamespace(
+                        members=tuple(
+                            SimpleNamespace(
+                                path=name,
+                                size=len(payload),
+                                sha256=sha256(payload).hexdigest(),
+                            )
+                            for name in names
+                            if not name.endswith("/")
+                            for payload in (archive.read(name),)
+                        )
+                    )
+                validation = runtime.validate_canonical_handoff(
+                    manifest,
+                    handoff,
+                    inventory,
+                    verify_root,
+                )
+                if validation.status != "PASS":
+                    raise ValueError(*validation.diagnostics)
+        except (OSError, ValueError, KeyError, UnicodeError, json.JSONDecodeError, zipfile.BadZipFile) as exc:
+            destination_path.unlink(missing_ok=True)
+            report.update(
+                {
+                    "status": "FAIL",
+                    "output_profile": None,
+                    "output_archive_sha256": None,
+                    "diagnostics": sorted(
+                        set(str(item) for item in (exc.args or ("handoff.final_archive_validation_failed",)))
+                    ),
+                    "gate_state": "HANDOFF BLOCKED",
+                }
+            )
+            return report
+        report["output_archive_sha256"] = actual_archive_hash
         report["artifact_count"] = len(manifest.get("artifacts", []))
     return report
 

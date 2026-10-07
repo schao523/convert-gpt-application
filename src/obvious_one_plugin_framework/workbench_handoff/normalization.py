@@ -87,6 +87,8 @@ def _report(
         "schema": "workbench-handoff-normalization-v1",
         "status": status,
         "profile": profile,
+        "input_profile": profile,
+        "output_profile": HANDOFF_CONTRACT if status == "PASS" else None,
         "adapter_version": ADAPTER_VERSION,
         "runtime_scope": runtime_scope,
         "source_archive_sha256": source_hash,

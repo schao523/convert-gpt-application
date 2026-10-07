@@ -17,6 +17,21 @@ def read_reference(skill: str, filename: str) -> str:
 
 
 class SkillContractTests(unittest.TestCase):
+    def test_handoff_packaging_requires_deterministic_digest_bound_normalization(self) -> None:
+        skill = read_skill("creating-application-plugin-design-specifications")
+        contract = read_reference(
+            "creating-application-plugin-design-specifications",
+            "workbench-handoff-contract.md",
+        )
+        combined = f"{skill}\n{contract}"
+
+        self.assertIn("normalize-handoff-package", combined)
+        self.assertIn("must not manually", combined)
+        self.assertIn("output_archive_sha256", combined)
+        self.assertIn("final ZIP", combined)
+        self.assertIn("full canonical validation", combined)
+        self.assertIn("HANDOFF BLOCKED", combined)
+
     def test_guiding_session_preserves_draft_and_waiting_states(self) -> None:
         text = read_skill("guiding-ai-application-design-sessions")
         for phrase in (
