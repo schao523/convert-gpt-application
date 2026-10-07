@@ -152,11 +152,14 @@ def main(argv: list[str] | None = None) -> int:
         inspection_path = root / session["inspection"].get("path", "")
         output = root / "implementation-plan.json"
         outcome = compile_plan(inspection_path, arguments.proposal, output)
-        if outcome.status != "FAIL":
+        if outcome.status != "FAIL" and outcome.plan_sha256 is not None:
             session["plan"] = {
                 "path": "implementation-plan.json",
                 "sha256": outcome.plan_sha256,
                 "tools_sha256": outcome.tools_sha256,
+                "capabilities_sha256": outcome.capabilities_sha256,
+                "realizations_sha256": outcome.realizations_sha256,
+                "adapter_registry_sha256": outcome.adapter_registry_sha256,
             }
             for key in ("w1", "candidate", "verification", "w2", "package"):
                 session[key] = None
@@ -168,6 +171,9 @@ def main(argv: list[str] | None = None) -> int:
             stage="W1" if outcome.status != "FAIL" else "F1",
             plan_sha256=outcome.plan_sha256,
             tools_sha256=outcome.tools_sha256,
+            capabilities_sha256=outcome.capabilities_sha256,
+            realizations_sha256=outcome.realizations_sha256,
+            adapter_registry_sha256=outcome.adapter_registry_sha256,
         ))
         return 0 if outcome.status == "PASS" else 2 if outcome.status == "BLOCKED" else 3
 

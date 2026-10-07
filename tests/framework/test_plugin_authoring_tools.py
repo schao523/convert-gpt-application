@@ -282,6 +282,14 @@ class ApplicationToolContractTests(unittest.TestCase):
             },
         )
 
+    def test_v2_permission_ids_accept_registered_scoped_vocabulary(self) -> None:
+        payload = bundled_tool_v2()
+        for permission in payload["permissions"]:
+            permission["id"] = "runtime:native"
+        for realization in payload["realizations"]:
+            realization["permission_ids"] = ["runtime:native"]
+        self.assertEqual(self.codes(payload), set())
+
     def test_v1_contract_remains_unchanged(self) -> None:
         result = validate_application_tool_contract(bundled_tool())
         self.assertEqual(result.errors, ())

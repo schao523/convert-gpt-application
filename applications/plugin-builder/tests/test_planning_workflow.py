@@ -261,7 +261,12 @@ class PlanningWorkflowTests(unittest.TestCase):
     def test_plan_classifies_and_binds_every_application_tool(self) -> None:
         _, plan = self.plan()
         tool = plan["tools"][0]
-        self.assertEqual(tool["schema"], "plugin-builder-application-tool-v1")
+        self.assertEqual(tool["schema"], "plugin-builder-application-tool-v2")
+        self.assertEqual(tool["capability_ids"], ["normalize-content"])
+        self.assertEqual(
+            {item["target_runtime"] for item in tool["realizations"]},
+            {"ChatGPT Work Local/Desktop", "Codex"},
+        )
         self.assertEqual(tool["implementation_kind"], "BUNDLED_LOCAL")
         self.assertEqual(tool["skill_bindings"], ["answering-structured-requests"])
         self.assertEqual(tool["requirement_ids"], ["RQ1"])
@@ -341,7 +346,30 @@ class PlanningWorkflowTests(unittest.TestCase):
         self.assertEqual(session["stage"], "S3")
         self.assertEqual(session["w1"]["plan_sha256"], planned["plan_sha256"])
         self.assertEqual(session["w1"]["tools_sha256"], planned["tools_sha256"])
+        for key in ("capabilities_sha256", "realizations_sha256", "adapter_registry_sha256"):
+            self.assertEqual(session["w1"][key], planned[key])
+            self.assertEqual(document[key], planned[key])
+        self.assertEqual(
+            [item["id"] for item in document["capability_summary"]],
+            ["normalize-content", "traceability-review"],
+        )
         self.assertEqual(document["plan_sha256"], session["plan"]["sha256"])
+
+    def test_new_legacy_proposal_is_blocked_without_session_or_plan_mutation(self) -> None:
+        self.plan()
+        session_before = self.session_path.read_bytes()
+        plan_path = self.workspace / "implementation-plan.json"
+        plan_before = plan_path.read_bytes()
+        legacy = Path(__file__).parent / "fixtures" / "plan-create-v1-legacy.json"
+
+        completed = self.run_cli(
+            "plan", "--session", str(self.session_path), "--proposal", str(legacy), "--json"
+        )
+
+        self.assertEqual(completed.returncode, 2)
+        self.assertEqual(self.document(completed)["errors"], ["plan.proposal_v2_required"])
+        self.assertEqual(self.session_path.read_bytes(), session_before)
+        self.assertEqual(plan_path.read_bytes(), plan_before)
 
     def test_plan_change_invalidates_w1_and_downstream_evidence(self) -> None:
         self.plan()

@@ -28,8 +28,38 @@ def _runtime_native_optional(proposal: dict) -> None:
         "required": False, "implementation_kind": "RUNTIME_NATIVE", "files": [],
         "execution": None, "fixtures": None, "mcp": None,
         "runtime_capability": {"name": "desktop-picker", "runtimes": tool["runtime_targets"]},
-        "fallback": {"policy": "OPTIONAL", "description": "manual selection is available"},
+        "dependencies": [{
+            "id": "desktop-picker-runtime", "type": "RUNTIME_CAPABILITY",
+            "provider": "RUNTIME_PROVIDED", "version": None, "sha256": None,
+            "runtime_targets": tool["runtime_targets"], "setup_owner": "RUNTIME",
+            "required": False, "absence_policy": "FALLBACK",
+        }],
+        "permissions": [{
+            "id": "runtime:native", "target_runtime": target,
+            "grant_source": "RUNTIME", "required": False,
+            "purpose": "Use the runtime-provided desktop picker.",
+            "verification": "Observe installed runtime capability discovery.",
+        } for target in tool["runtime_targets"]],
+        "fallback": {
+            "policy": "OMIT_OPTIONAL",
+            "trigger_conditions": ["The runtime-native picker is unavailable."],
+            "alternative_operation_id": None,
+            "preserved_requirement_ids": [],
+            "degraded_requirement_ids": ["RQ1"],
+        },
+        "verification": {"kind": "RUNTIME_CAPABILITY", "argv": [], "network": False},
+        "realizations": [{
+            "target_runtime": target, "mechanism": "RUNTIME_NATIVE",
+            "adapter_id": "runtime-native", "adapter_version": "1",
+            "exposed_capability": "desktop-picker", "operation_id": "normalize-input",
+            "transport": "RUNTIME_API", "execution_location": "RUNTIME_HOST",
+            "dependency_ids": ["desktop-picker-runtime"],
+            "permission_ids": ["runtime:native"], "setup_requirements": [],
+            "setup_owner": "RUNTIME", "feasibility_state": "NOT VERIFIED",
+            "evidence_policy": "DEFERRED_ALLOWED",
+        } for target in tool["runtime_targets"]],
     })
+    tool["operation"]["protocol"] = "RUNTIME_API"
     proposal["files"] = [item for item in proposal["files"] if item["path"] != "tools/normalize.py"]
     proposal["expected_members"].remove("tools/normalize.py")
     proposal["checks"] = [item for item in proposal["checks"] if item["id"] != "normalize-self-test"]
@@ -58,11 +88,16 @@ def _mcp_optional(proposal: dict) -> None:
     tool.update({
         "required": False, "implementation_kind": "MCP_ADAPTER", "files": ["mcp/example.json"],
         "execution": None, "fixtures": None, "runtime_capability": None,
-        "permissions": ["workspace:read", "network"],
         "configuration": {"authentication": "USER_CONFIGURED", "setup": "OWNER_CONFIGURED"},
-        "fallback": {"policy": "OPTIONAL", "description": "continue without external enrichment"},
-        "mcp": {"server_id": "example", "config_file": "mcp/example.json", "transport": "stdio", "permission_scopes": ["read"], "authentication": "USER_CONFIGURED", "setup": "OWNER_CONFIGURED", "service_boundary": "external example"},
+        "fallback": {
+            "policy": "OMIT_OPTIONAL",
+            "trigger_conditions": ["The external enrichment service is unavailable."],
+            "alternative_operation_id": None,
+            "preserved_requirement_ids": [],
+            "degraded_requirement_ids": ["RQ1"],
+        },
     })
+    tool["mcp"].update({"server_id": "example", "config_file": "mcp/example.json", "service_boundary": "external example"})
 
 
 class EndToEndScenarios(unittest.TestCase):

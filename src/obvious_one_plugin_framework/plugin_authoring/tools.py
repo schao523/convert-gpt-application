@@ -19,6 +19,7 @@ IMPLEMENTATION_KINDS = frozenset({
 RUNTIME_TARGETS = frozenset({"ChatGPT Work Local/Desktop", "Codex"})
 PERMISSIONS = frozenset({"workspace:read", "workspace:write", "network", "runtime:native"})
 _ID = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
+_PERMISSION_ID = re.compile(r"^[a-z0-9]+(?:(?:-|:)[a-z0-9]+)*$")
 _SHA256 = re.compile(r"^[0-9a-f]{64}$")
 _V1_KEYS = {
     "schema", "id", "required", "implementation_kind", "requirement_ids", "skill_bindings",
@@ -344,7 +345,7 @@ def _validate_v2_application_tool_contract(payload: dict[str, Any]) -> Applicati
                 continue
             permission_id = item.get("id")
             target = item.get("target_runtime")
-            if not isinstance(permission_id, str) or _ID.fullmatch(permission_id) is None:
+            if not isinstance(permission_id, str) or _PERMISSION_ID.fullmatch(permission_id) is None:
                 errors.append(f"{prefix}.permission_id_invalid")
                 continue
             if target not in RUNTIME_TARGETS:

@@ -1,5 +1,5 @@
 {
-  "schema": "plugin-builder-plan-proposal-v2",
+  "schema": "plugin-builder-plan-proposal-v1",
   "operation": "create",
   "plugin": {
     "name": "sample-plugin",
@@ -16,28 +16,6 @@
       "defaultPrompt": "Help me answer this structured request."
     }
   },
-  "capabilities": [
-    {
-      "schema": "plugin-builder-capability-v1",
-      "id": "normalize-content",
-      "requirement_ids": ["RQ1"],
-      "skill_bindings": ["answering-structured-requests"],
-      "realization_need": "TOOL_REQUIRED",
-      "tool_id": "normalize-input",
-      "runtime_targets": ["ChatGPT Work Local/Desktop", "Codex"],
-      "evidence_targets": ["STRUCTURE", "OPERATION", "INSTALLED_REALIZATION", "BEHAVIOR"]
-    },
-    {
-      "schema": "plugin-builder-capability-v1",
-      "id": "traceability-review",
-      "requirement_ids": ["AC1"],
-      "skill_bindings": ["checking-traceability"],
-      "realization_need": "SKILL_ONLY",
-      "tool_id": null,
-      "runtime_targets": ["ChatGPT Work Local/Desktop", "Codex"],
-      "evidence_targets": ["STRUCTURE", "BEHAVIOR"]
-    }
-  ],
   "requirements": [
     {
       "id": "AC1",
@@ -132,47 +110,28 @@
   ],
   "tools": [
     {
-      "schema": "plugin-builder-application-tool-v2",
+      "schema": "plugin-builder-application-tool-v1",
       "id": "normalize-input",
       "required": true,
       "implementation_kind": "BUNDLED_LOCAL",
       "requirement_ids": ["RQ1"],
       "skill_bindings": ["answering-structured-requests"],
-      "capability_ids": ["normalize-content"],
-      "operation": {
-        "id": "normalize-input",
-        "protocol": "MCP_TOOL_CALL",
-        "input_schema_sha256": "679e4be1b5d4478c7763d67e36a41e5099352e6968537c4fb676163d7f79eed6",
-        "output_schema_sha256": "5de0eee452b7488a2ba12c38d772583fecbfbe060153fddb0cf7739acadfd8e3",
-        "side_effect_class": "NONE",
-        "idempotent": true,
-        "capability_ids": ["normalize-content"]
-      },
       "files": ["tools/normalize.py"],
       "input_schema": {"type": "object", "properties": {"text": {"type": "string"}}, "required": ["text"]},
       "output_schema": {"type": "object", "properties": {"normalized": {"type": "string"}}, "required": ["normalized"]},
       "side_effects": [],
-      "permissions": [
-        {"id": "network", "target_runtime": "ChatGPT Work Local/Desktop", "grant_source": "OWNER", "required": true, "purpose": "Reach the approved normalization service.", "verification": "Observe installed Skill-to-tool evidence."},
-        {"id": "network", "target_runtime": "Codex", "grant_source": "OWNER", "required": true, "purpose": "Reach the approved normalization service.", "verification": "Observe installed Skill-to-tool evidence."}
-      ],
+      "permissions": ["workspace:read"],
       "runtime_targets": ["ChatGPT Work Local/Desktop", "Codex"],
-      "dependencies": [
-        {"id": "normalizer-service", "type": "SERVICE", "provider": "REMOTE_SERVICE", "version": null, "sha256": null, "runtime_targets": ["ChatGPT Work Local/Desktop", "Codex"], "setup_owner": "SERVICE_OPERATOR", "required": true, "absence_policy": "BLOCK"}
-      ],
+      "dependencies": [],
       "configuration": {"authentication": "NOT_REQUIRED", "setup": "BUNDLED"},
-      "fallback": {"policy": "BLOCK", "trigger_conditions": ["The approved service is unavailable."], "alternative_operation_id": null, "preserved_requirement_ids": [], "degraded_requirement_ids": ["RQ1"]},
+      "fallback": {"policy": "BLOCK", "description": "Normalization is required."},
       "verification": {"kind": "PYTHON_ARGV", "argv": ["{python}", "tools/normalize.py", "--self-test"], "network": false},
       "redistribution": {"state": "APPROVED", "evidence": "generated for this plugin"}
       ,"execution": {"argv": ["{python}", "tools/normalize.py"], "clean_environment": true, "timeout_seconds": 30}
       ,"fixtures": {"input": {"text": " A "}, "output": {"normalized": "A"}}
       ,"runtime_capability": null
       ,"adapter": null
-      ,"mcp": {"server_id": "normalizer", "config_file": "mcp.json", "transport": "streamable-http", "permission_scopes": ["normalize:execute"], "authentication": "NOT_REQUIRED", "setup": "SERVICE_OPERATOR", "service_boundary": "Normalize approved structured content.", "url": "https://example.com/mcp"}
-      ,"realizations": [
-        {"target_runtime": "ChatGPT Work Local/Desktop", "mechanism": "MCP_REMOTE_HTTPS", "adapter_id": "mcp-streamable-http", "adapter_version": "1", "exposed_capability": "normalize-input", "operation_id": "normalize-input", "transport": "MCP_STREAMABLE_HTTP", "execution_location": "REMOTE_SERVICE", "dependency_ids": ["normalizer-service"], "permission_ids": ["network"], "setup_requirements": ["Configure the approved HTTPS MCP endpoint."], "setup_owner": "SERVICE_OPERATOR", "feasibility_state": "FEASIBLE_WITH_SETUP", "evidence_policy": "DEFERRED_ALLOWED"},
-        {"target_runtime": "Codex", "mechanism": "MCP_REMOTE_HTTPS", "adapter_id": "mcp-streamable-http", "adapter_version": "1", "exposed_capability": "normalize-input", "operation_id": "normalize-input", "transport": "MCP_STREAMABLE_HTTP", "execution_location": "REMOTE_SERVICE", "dependency_ids": ["normalizer-service"], "permission_ids": ["network"], "setup_requirements": ["Configure the approved HTTPS MCP endpoint."], "setup_owner": "SERVICE_OPERATOR", "feasibility_state": "FEASIBLE_WITH_SETUP", "evidence_policy": "DEFERRED_ALLOWED"}
-      ]
+      ,"mcp": null
     }
   ],
   "implementation_decisions": {

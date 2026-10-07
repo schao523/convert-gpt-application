@@ -536,16 +536,35 @@ def _validate_v2(payload: object) -> list[str]:
 
     plan = None
     if session.get("plan") is not None:
-        plan = _v2_exact_identity(errors, session["plan"], "plan", {"path", "sha256", "tools_sha256"})
+        item = _mapping(session["plan"])
+        legacy_plan_keys = {"path", "sha256", "tools_sha256"}
+        runtime_plan_keys = legacy_plan_keys | {
+            "capabilities_sha256", "realizations_sha256", "adapter_registry_sha256"
+        }
+        if item is None or frozenset(item) not in {frozenset(legacy_plan_keys), frozenset(runtime_plan_keys)}:
+            errors.append("plan.invalid_object")
+        else:
+            plan = item
+            if not _v2_path(item.get("path")):
+                errors.append("plan.path.invalid_relative_posix_path")
+            for key in sorted(set(item) - {"path"}):
+                if not _sha256(item.get(key)):
+                    errors.append(f"plan.{key}.invalid")
     w1 = None
     if session.get("w1") is not None:
         item = _mapping(session["w1"])
-        keys = {"approved", "confirmed_by", "evidence", "plan_sha256", "tools_sha256"}
-        if item is None or set(item) != keys or item.get("approved") is not True:
+        legacy_w1_keys = {"approved", "confirmed_by", "evidence", "plan_sha256", "tools_sha256"}
+        runtime_w1_keys = legacy_w1_keys | {
+            "capabilities_sha256", "realizations_sha256", "adapter_registry_sha256"
+        }
+        if item is None or frozenset(item) not in {frozenset(legacy_w1_keys), frozenset(runtime_w1_keys)} or item.get("approved") is not True:
             errors.append("w1.invalid_approval")
         else:
             w1 = item
-            for key in ("plan_sha256", "tools_sha256"):
+            for key in sorted(set(item) & {
+                "plan_sha256", "tools_sha256", "capabilities_sha256",
+                "realizations_sha256", "adapter_registry_sha256",
+            }):
                 if not _sha256(item.get(key)):
                     errors.append(f"w1.{key}.invalid")
             for key in ("confirmed_by", "evidence"):
@@ -555,6 +574,9 @@ def _validate_v2(payload: object) -> list[str]:
                 errors.append("w1.plan_sha256_mismatch")
             if plan is not None and item.get("tools_sha256") != plan.get("tools_sha256"):
                 errors.append("w1.tools_sha256_mismatch")
+            for key in ("capabilities_sha256", "realizations_sha256", "adapter_registry_sha256"):
+                if key in item and plan is not None and item.get(key) != plan.get(key):
+                    errors.append(f"w1.{key}_mismatch")
 
     candidate = None
     if session.get("candidate") is not None:

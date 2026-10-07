@@ -17,6 +17,26 @@ def _digest(payload: bytes) -> str:
     return sha256(payload).hexdigest()
 
 
+def _permission_records(tool: dict[str, Any]) -> tuple[list[Any], frozenset[str]]:
+    """Return deterministically ordered permissions and their declared IDs.
+
+    Application-tool v1 stores permissions as strings. Version 2 stores exact
+    per-runtime permission records. Build-host verification preserves either
+    representation in evidence, but authorization decisions use only the
+    declared identifiers.
+    """
+    permissions = tool.get("permissions", [])
+    if not isinstance(permissions, list):
+        return [], frozenset()
+    ordered = sorted(permissions, key=canonical_bytes)
+    identifiers = frozenset(
+        item if isinstance(item, str) else str(item.get("id", ""))
+        for item in permissions
+        if isinstance(item, (str, dict))
+    )
+    return ordered, identifiers
+
+
 def execute_direct(argv: list[str], candidate: Path, timeout: int, stdin_payload: bytes | None = None) -> dict[str, Any]:
     recorded = list(argv)
     resolution = resolve_direct_argv(argv, candidate)
@@ -76,12 +96,13 @@ def verify_application_tool(
     allow_network: bool = False,
 ) -> dict[str, Any]:
     kind = str(tool.get("implementation_kind", ""))
+    permissions, permission_ids = _permission_records(tool)
     base: dict[str, Any] = {
         "tool_id": str(tool.get("id", "")), "implementation_kind": kind,
         "required": tool.get("required") is True,
         "requirement_ids": sorted(tool.get("requirement_ids", [])),
         "skill_bindings": sorted(tool.get("skill_bindings", [])),
-        "permissions": sorted(tool.get("permissions", [])),
+        "permissions": permissions,
         "fallback": tool.get("fallback"), "executed": False,
         "argv": list((tool.get("verification") or {}).get("argv", [])),
         "declared_argv": list((tool.get("verification") or {}).get("argv", [])),
@@ -101,9 +122,15 @@ def verify_application_tool(
     if kind not in {"BUNDLED_LOCAL", "FRAMEWORK_ADAPTER"}:
         return {**base, "state": "NOT VERIFIED", "diagnostics": ["tool_implementation_unavailable"]}
     authentication = (tool.get("configuration") or {}).get("authentication")
-    if "network" in tool.get("permissions", []) and not allow_network or authentication != "NOT_REQUIRED":
-        return {**base, "state": "NOT VERIFIED", "diagnostics": ["runtime_authorization_required"]}
     verification = tool.get("verification") or {}
+    contract_version = str(tool.get("schema", ""))
+    verification_uses_network = (
+        verification.get("network") is True
+        if contract_version == "plugin-builder-application-tool-v2"
+        else "network" in permission_ids
+    )
+    if verification_uses_network and not allow_network or authentication != "NOT_REQUIRED":
+        return {**base, "state": "NOT VERIFIED", "diagnostics": ["runtime_authorization_required"]}
     argv = verification.get("argv")
     execution = tool.get("execution") or {}
     if not isinstance(argv, list) or not argv:

@@ -63,16 +63,10 @@ class CandidateApplicationToolTests(unittest.TestCase):
             tool = proposal["tools"][0]
             tool.update({
                 "implementation_kind": "MCP_ADAPTER",
-                "permissions": ["network"],
                 "configuration": {"authentication": "USER_CONFIGURED", "setup": "USER_CONFIGURED"},
                 "execution": None,
                 "fixtures": None,
                 "verification": {"kind": "MCP_CONTRACT", "argv": [], "network": True},
-                "mcp": {
-                    "server_id": "records", "config_file": "tools/normalize.py", "transport": "stdio",
-                    "permission_scopes": ["records:read"], "authentication": "USER_CONFIGURED",
-                    "setup": "USER_CONFIGURED", "service_boundary": "Read user-selected records."
-                },
             })
         workspace, completed = self.build(mutate)
         self.assertEqual(completed.returncode, 0, completed.stdout)

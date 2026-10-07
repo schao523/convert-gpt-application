@@ -98,7 +98,6 @@ class CandidateVerificationTests(unittest.TestCase):
 
     def test_network_or_auth_tool_is_not_executed_without_explicit_runtime_authorization(self) -> None:
         def mutate(proposal):
-            proposal["tools"][0]["permissions"].append("network")
             proposal["tools"][0]["configuration"]["authentication"] = "USER_CONFIGURED"
         workspace = self._workspace(mutate)
         completed = self._verify(workspace)
