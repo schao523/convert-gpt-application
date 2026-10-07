@@ -42,7 +42,7 @@ def _mcp_optional(proposal: dict) -> None:
     tool = proposal["tools"][0]
     config = {"server": "example", "transport": "stdio"}
     recipe = {
-        "path": "mcp/example.json", "classification": "generated_json",
+        "path": "mcp/example.json", "classification": "generated_json", "content_role": "STATIC_ASSET",
         "source_sha256": sha256((json.dumps(config, ensure_ascii=True, indent=2, sort_keys=True) + "\n").encode("ascii")).hexdigest(),
         "redistribution": {"state": "APPROVED", "evidence": "generated non-secret configuration"},
         "inline_json": config, "requirement_ids": ["RQ1"],

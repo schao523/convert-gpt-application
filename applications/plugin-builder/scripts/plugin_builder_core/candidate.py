@@ -11,7 +11,7 @@ import tempfile
 
 from .bootstrap import plugin_authoring
 from .implementation_plan import canonical_bytes, write_bytes_transactionally
-from .proposed_tree import materialize_proposed_tree
+from .proposed_tree import materialize_proposed_tree, preflight_proposed_tree
 
 
 @dataclass(frozen=True)
@@ -72,6 +72,8 @@ def build_candidate(session_path: Path) -> CandidateOutcome:
         return CandidateOutcome("FAIL", ("build.plan_unreadable",))
     if not isinstance(plan, dict):
         return CandidateOutcome("FAIL", ("build.plan_invalid",))
+    if plan.get("schema") != "plugin-builder-implementation-plan-v2":
+        return CandidateOutcome("BLOCKED", ("build.plan_schema_upgrade_required",))
     plan_hash = sha256(plan_bytes).hexdigest()
     tools = plan.get("tools")
     tools_hash = sha256(canonical_bytes(tools)).hexdigest() if isinstance(tools, list) else ""
@@ -82,6 +84,13 @@ def build_candidate(session_path: Path) -> CandidateOutcome:
         binding_errors.append("build.tools_sha256_mismatch")
     if binding_errors:
         return CandidateOutcome("BLOCKED", tuple(sorted(binding_errors)))
+    preflight = preflight_proposed_tree(plan, root)
+    if preflight.diagnostics:
+        return CandidateOutcome("FAIL", tuple(f"build.{item}" for item in preflight.diagnostics))
+    approved_preflight = plan.get("preflight_evidence")
+    if canonical_bytes(preflight.evidence) != canonical_bytes(approved_preflight):
+        return CandidateOutcome("BLOCKED", ("build.preflight_evidence_mismatch",))
+    preflight_hash = sha256(canonical_bytes(approved_preflight)).hexdigest()
 
     diagnostics: list[str] = []
     blockers: list[str] = []
@@ -143,9 +152,12 @@ def build_candidate(session_path: Path) -> CandidateOutcome:
                     "tool_id": tool["id"],
                 })
             manifest = {
-                "schema": "plugin-builder-candidate-manifest-v1",
+                "schema": "plugin-builder-candidate-manifest-v2",
+                "operation": "create",
                 "plan_sha256": plan_hash,
                 "tools_sha256": tools_hash,
+                "preflight_evidence_sha256": preflight_hash,
+                "file_roles": approved_preflight["artifact_quality"]["file_roles"],
                 "content_tree_sha256": plugin_authoring.tree_sha256(stage),
                 "expected_members": sorted(expected),
                 "members": [asdict(member) for member in members],

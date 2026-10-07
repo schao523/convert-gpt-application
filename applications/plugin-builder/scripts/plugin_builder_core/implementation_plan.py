@@ -11,6 +11,7 @@ import tempfile
 from typing import Any
 
 from .bootstrap import plugin_authoring
+from .artifact_quality import CONTENT_ROLES
 from .proposed_tree import preflight_proposed_tree
 from .tool_contract import validate_tool_contract
 
@@ -214,11 +215,16 @@ def compile_plan(inspection: object, proposal: object, output: Path) -> PlanOutc
         recipes_by_path[path] = item
         origins = [key for key in ("inline_text", "inline_json", "source_path") if key in item]
         allowed = {
-            "path", "requirement_ids", "classification", "source_sha256",
+            "path", "requirement_ids", "classification", "content_role", "source_sha256",
             "redistribution", *origins,
         }
         if set(item) != allowed or len(origins) != 1:
             errors.append(f"plan.file_origin_invalid:{path}")
+        role = item.get("content_role")
+        if role is None:
+            errors.append(f"plan.content_role_missing:{path}")
+        elif role not in CONTENT_ROLES:
+            errors.append(f"plan.content_role_invalid:{path}")
         if any(req not in inspected_requirements for req in item.get("requirement_ids", [])):
             errors.append(f"plan.file_requirement_unknown:{path}")
         redistribution = item.get("redistribution")

@@ -46,6 +46,7 @@
     {
       "path": "plugin.json",
       "classification": "generated_json",
+      "content_role": "PLUGIN_MANIFEST",
       "source_sha256": "7e8095cc129d2c8d66a4a7ec09ab2529d1ee613c0c73dbb1ce55fdad45d5a34c",
       "redistribution": {"state": "APPROVED", "evidence": "generated for this plugin"},
       "inline_json": {
@@ -73,6 +74,7 @@
     {
       "path": "skills/answering-structured-requests/SKILL.md",
       "classification": "generated_text",
+      "content_role": "SKILL_ENTRYPOINT",
       "source_sha256": "eefa26f5b10d77e91a4d1eed1b956c89de73ef4ba3886fc543e8f2b9ba206160",
       "redistribution": {"state": "APPROVED", "evidence": "generated for this plugin"},
       "inline_text": "---\nname: answering-structured-requests\ndescription: Answer structured user requests using the approved method.\n---\n\n# Answering structured requests\n\nRead [the approved method](references/Reference.md), then invoke the `normalize-input` application tool.\n",
@@ -81,6 +83,7 @@
     {
       "path": "skills/answering-structured-requests/references/Reference.md",
       "classification": "approved_source",
+      "content_role": "PROFESSIONAL_KNOWLEDGE",
       "source_sha256": "6f40ff0bc95d7e03248b5ca370998159f36ab0dcf9a7c170d887d1202ff4a0fd",
       "redistribution": {"state": "APPROVED", "evidence": "fixture owner approval"},
       "source_path": "input/Reference.md",
@@ -89,6 +92,7 @@
     {
       "path": "skills/checking-traceability/SKILL.md",
       "classification": "generated_text",
+      "content_role": "SKILL_ENTRYPOINT",
       "source_sha256": "45d4a9bbb506ed5b4dea62e46c10251f2b148802b965a09d59ab0095de0965fc",
       "redistribution": {"state": "APPROVED", "evidence": "generated for this plugin"},
       "inline_text": "---\nname: checking-traceability\ndescription: Check that generated answers retain requirement traceability.\n---\n\n# Checking traceability\n\nConfirm every output maps to its approved requirement.\n",
@@ -97,6 +101,7 @@
     {
       "path": "tools/normalize.py",
       "classification": "generated_text",
+      "content_role": "EXECUTABLE_TOOL",
       "source_sha256": "b4e1e4cda3a068491025a691234c9200ff50808d1afdb5b472a8dc144fe54f18",
       "redistribution": {"state": "APPROVED", "evidence": "generated for this plugin"},
       "inline_text": "import json\nimport sys\nif __name__ == '__main__':\n    value = json.load(sys.stdin)\n    print(json.dumps({'normalized': value['text'].strip()}, sort_keys=True))\n",
@@ -132,7 +137,12 @@
   "implementation_decisions": {
     "reuse": ["portable plugin validators"],
     "bundle": ["tools/normalize.py"],
-    "validation": ["plugin structure", "skill structure", "normalize self-test"]
+    "validation": ["plugin structure", "skill structure", "normalize self-test"],
+    "knowledge_policy": {
+      "adopt_general_knowledge": false,
+      "consultation_skill": null
+    },
+    "reference_ownership": {}
   },
   "checks": [
     {"id": "plugin-structure", "kind": "PLUGIN_STRUCTURE", "required": true, "requirement_ids": ["RQ1"]},

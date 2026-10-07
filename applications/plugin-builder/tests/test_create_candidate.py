@@ -132,6 +132,10 @@ class CreateCandidateTests(unittest.TestCase):
         session = json.loads((workspace / "session.json").read_text(encoding="utf-8"))
         manifest_path = workspace / "candidate/PLUGIN-BUILDER-MANIFEST.json"
         manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        self.assertEqual(manifest["schema"], "plugin-builder-candidate-manifest-v2")
+        self.assertEqual(manifest["operation"], "create")
+        self.assertEqual(manifest["file_roles"]["plugin.json"], "PLUGIN_MANIFEST")
+        self.assertRegex(manifest["preflight_evidence_sha256"], r"^[0-9a-f]{64}$")
         self.assertEqual(session["candidate"]["sha256"], plugin_authoring.tree_sha256(workspace / "candidate"))
         self.assertEqual(document["candidate_sha256"], session["candidate"]["sha256"])
         self.assertEqual(session["candidate"]["manifest_sha256"], __import__("hashlib").sha256(manifest_path.read_bytes()).hexdigest())

@@ -102,18 +102,30 @@ class FinalReviewRegressionTests(unittest.TestCase):
             skill["inline_text"] = skill["inline_text"].replace("[the approved method](references/Reference.md)", "[the knowledge index](references/knowledge-index.json)")
             skill["source_sha256"] = sha256(skill["inline_text"].encode()).hexdigest()
             index = {"path": "skills/answering-structured-requests/references/knowledge-index.json",
-                "classification": "generated_json", "source_sha256": "0" * 64,
+                "classification": "generated_json", "content_role": "GENERAL_KNOWLEDGE", "source_sha256": "0" * 64,
                 "redistribution": {"state": "APPROVED", "evidence": "owner approved index"},
-                "inline_json": {"topics": [{"references": ["Reference.md"]}]}, "requirement_ids": ["RQ1"]}
+                "inline_json": {
+                    "schema_version": 1,
+                    "files": [{
+                        "path": "Reference.md",
+                        "purpose": "Approved general method reference.",
+                        "topics": ["structured requests"],
+                    }],
+                },
+                "requirement_ids": ["RQ1"]}
             index["source_sha256"] = sha256((json.dumps(index["inline_json"], ensure_ascii=True, indent=2, sort_keys=True) + "\n").encode("ascii")).hexdigest()
             proposal["files"].append(index)
             proposal["expected_members"].append(index["path"])
+            proposal["implementation_decisions"]["knowledge_policy"] = {
+                "adopt_general_knowledge": True,
+                "consultation_skill": "answering-structured-requests",
+            }
         outcome = self._compile(mutate)
         self.assertEqual(outcome.status, "PASS", outcome.errors)
 
     def test_distribution_credential_file_blocks_verification(self) -> None:
         def mutate(proposal):
-            proposal["files"].append({"path": ".env", "classification": "generated_text",
+            proposal["files"].append({"path": ".env", "classification": "generated_text", "content_role": "OTHER",
                 "source_sha256": sha256(b"API_KEY=fake\n").hexdigest(),
                 "redistribution": {"state": "APPROVED", "evidence": "negative fixture"},
                 "inline_text": "API_KEY=fake\n", "requirement_ids": ["RQ1"]})

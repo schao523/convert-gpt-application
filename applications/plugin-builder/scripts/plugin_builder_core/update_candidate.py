@@ -11,7 +11,7 @@ import tempfile
 from .bootstrap import plugin_authoring
 from .candidate import CandidateOutcome, _load, _replace_candidate
 from .implementation_plan import canonical_bytes, write_bytes_transactionally
-from .proposed_tree import materialize_proposed_tree
+from .proposed_tree import materialize_proposed_tree, preflight_proposed_tree
 
 
 def _hashes(root: Path, *, controls: bool = False) -> dict[str, str]:
@@ -56,6 +56,8 @@ def build_update_candidate(session_path: Path) -> CandidateOutcome:
     plan, error = _load(plan_path, "build.plan_unreadable")
     if error is not None or plan is None or plan.get("operation") != "update":
         return CandidateOutcome("FAIL", (error or "build.plan_invalid",))
+    if plan.get("schema") != "plugin-builder-implementation-plan-v2":
+        return CandidateOutcome("BLOCKED", ("build.plan_schema_upgrade_required",))
     plan_bytes = plan_path.read_bytes()
     plan_hash = sha256(plan_bytes).hexdigest()
     tools = plan.get("tools") if isinstance(plan.get("tools"), list) else []
@@ -89,6 +91,13 @@ def build_update_candidate(session_path: Path) -> CandidateOutcome:
         return CandidateOutcome("FAIL", ("build.baseline_plugin_invalid",))
     except plugin_authoring.PluginAuthoringError:
         return CandidateOutcome("FAIL", ("build.baseline_plugin_invalid",))
+    preflight = preflight_proposed_tree(plan, root)
+    if preflight.diagnostics:
+        return CandidateOutcome("FAIL", tuple(f"build.{item}" for item in preflight.diagnostics))
+    approved_preflight = plan.get("preflight_evidence")
+    if canonical_bytes(preflight.evidence) != canonical_bytes(approved_preflight):
+        return CandidateOutcome("BLOCKED", ("build.preflight_evidence_mismatch",))
+    preflight_hash = sha256(canonical_bytes(approved_preflight)).hexdigest()
     planned_plugin = plan.get("plugin") or {}
     if any(baseline_plugin.get(key) != planned_plugin.get(key) for key in ("name", "version")):
         return CandidateOutcome("BLOCKED", ("build.plugin_identity_change_forbidden",))
@@ -172,8 +181,10 @@ def build_update_candidate(session_path: Path) -> CandidateOutcome:
             if {item.path for item in members} != expected - {"PLUGIN-BUILDER-MANIFEST.json"}:
                 return CandidateOutcome("FAIL", ("build.expected_members_mismatch",))
             manifest = {
-                "schema": "plugin-builder-candidate-manifest-v1", "operation": "update",
+                "schema": "plugin-builder-candidate-manifest-v2", "operation": "update",
                 "plan_sha256": plan_hash, "tools_sha256": tools_hash,
+                "preflight_evidence_sha256": preflight_hash,
+                "file_roles": approved_preflight["artifact_quality"]["file_roles"],
                 "content_tree_sha256": plugin_authoring.tree_sha256(stage),
                 "expected_members": sorted(expected), "members": [asdict(item) for item in members],
                 "tool_bindings": bindings, "tool_contracts": sorted(tool_contracts, key=lambda item: item["id"]),

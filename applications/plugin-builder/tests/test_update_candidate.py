@@ -120,6 +120,10 @@ class UpdateCandidateTests(unittest.TestCase):
         for path, payload in expected.items():
             self.assertEqual((workspace / "candidate" / path).read_bytes(), payload)
         changes = json.loads((workspace / "candidate/PLUGIN-BUILDER-CHANGES.json").read_text(encoding="utf-8"))
+        manifest = json.loads((workspace / "candidate/PLUGIN-BUILDER-MANIFEST.json").read_text(encoding="utf-8"))
+        self.assertEqual(manifest["schema"], "plugin-builder-candidate-manifest-v2")
+        self.assertEqual(manifest["operation"], "update")
+        self.assertEqual(manifest["file_roles"]["owner-notes.txt"], "INHERITED_UNCLASSIFIED")
         self.assertIn("owner-notes.txt", changes["preserved"])
         self.assertIn("skills/checking-traceability/SKILL.md", changes["changed"])
 

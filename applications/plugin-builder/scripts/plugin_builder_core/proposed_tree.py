@@ -3,11 +3,13 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import json
 from pathlib import Path
 import tempfile
 from typing import Any
 
 from .bootstrap import plugin_authoring
+from .artifact_quality import audit_artifact_quality
 
 
 @dataclass(frozen=True)
@@ -87,6 +89,7 @@ def preflight_proposed_tree(
     root = Path(workspace_root)
     diagnostics: list[str] = []
     tree_hash: str | None = None
+    quality_evidence: dict[str, Any] | None = None
     try:
         with tempfile.TemporaryDirectory(dir=root, prefix=".plan-preflight-") as name:
             plugin = Path(name) / "plugin"
@@ -102,6 +105,21 @@ def preflight_proposed_tree(
                     _issue_diagnostic(issue)
                     for issue in plugin_authoring.validate_plugin_tree(plugin)
                 )
+                baseline_manifest: dict[str, Any] | None = None
+                baseline_manifest_path = root / "baseline" / "PLUGIN-BUILDER-MANIFEST.json"
+                if proposal.get("operation") == "update" and baseline_manifest_path.is_file():
+                    try:
+                        loaded = json.loads(baseline_manifest_path.read_text(encoding="utf-8"))
+                        baseline_manifest = loaded if isinstance(loaded, dict) else None
+                    except (OSError, UnicodeError, json.JSONDecodeError):
+                        diagnostics.append("plan.preflight.baseline_manifest_invalid")
+                quality = audit_artifact_quality(
+                    proposal,
+                    plugin,
+                    baseline_manifest=baseline_manifest,
+                )
+                diagnostics.extend(f"plan.preflight.{item}" for item in quality.diagnostics)
+                quality_evidence = quality.as_dict()
                 tree_hash = plugin_authoring.tree_sha256(plugin)
     except OSError:
         diagnostics.append("plan.preflight.local_io_failure")
@@ -110,6 +128,7 @@ def preflight_proposed_tree(
         {
             "schema": "plugin-builder-preflight-v1",
             "materialized_tree_sha256": tree_hash,
+            "artifact_quality": quality_evidence,
         },
     )
 

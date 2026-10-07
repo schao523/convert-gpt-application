@@ -112,6 +112,20 @@ class PlanningWorkflowTests(unittest.TestCase):
         self.assertIsNone(session["plan"])
         self.assertFalse((self.workspace / "candidate").exists())
 
+    def test_plan_rejects_missing_semantic_content_role_before_w1(self) -> None:
+        payload = self.proposal()
+        payload["files"][0].pop("content_role")
+        self.write_proposal(payload)
+
+        completed = self.run_cli(
+            "plan", "--session", str(self.session_path), "--proposal", str(self.proposal_path), "--json"
+        )
+
+        self.assertEqual(completed.returncode, 3)
+        errors = self.document(completed)["errors"]
+        self.assertIn("plan.content_role_missing:plugin.json", errors)
+        self.assertFalse((self.workspace / "implementation-plan.json").exists())
+
     def test_plan_preflight_rejects_escaping_skill_reference_before_w1(self) -> None:
         payload = self.proposal()
         skill = next(
