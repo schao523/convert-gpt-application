@@ -8,6 +8,18 @@
 | OUTPUT | REQUIREMENT_COVERAGE_PLAN |
 | BEHAVIOR_CHANGE | RETURN_FOR_NEW_APPROVAL |
 
+## Pre-W1 preflight contract
+
+| Key | Outcome |
+| --- | --- |
+| TREE | MATERIALIZE_PROPOSED_FINAL_TREE |
+| ARTIFACT_ROLES | REQUIRE_SEMANTIC_ROLE_AND_KNOWLEDGE_OWNERSHIP |
+| DUPLICATES | REPORT_GROUPS_BYTES_AND_APPROVED_RATIONALES |
+| PATHS | REJECT_ESCAPES_IN_STRUCTURE_TEXT_AND_ARGV |
+| COMMANDS | RESOLVE_DECLARED_AND_OBSERVED_WITH_EXPLICIT_ADAPTER |
+| MANIFEST | APPLY_TARGET_AWARE_PROFILE |
+| FAILURE | NO_W1_IDENTITY_OR_CANDIDATE_MUTATION |
+
 Run `plan` only from a valid inspected session. Classify each application capability as bundled local, framework adapter, runtime native, MCP adapter, or unresolved; include permissions, configuration, fallback, files, bindings, fixtures, and evidence targets. Present these decisions at W1 and use `approve-w1` only after explicit owner confirmation.
 
 Handoff normalization does not establish approval. Plan only when the canonical handoff records sufficient explicit approval evidence; a filename containing `APPROVED`, a generated sidecar, or a successful format conversion is not planning authority.

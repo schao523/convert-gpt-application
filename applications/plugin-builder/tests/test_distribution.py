@@ -18,6 +18,7 @@ PUBLIC_DOCS = {
     "docs/application-invariants.md",
     "docs/runtime-compatibility.md",
 }
+PUBLIC_CONTRACTS = {"contracts/openai-interface-vocabulary-v1.json"}
 ROOT_PUBLIC_FILES = {
     "plugin.json",
     ".codex-plugin/plugin.json",
@@ -62,19 +63,19 @@ class DistributionTests(unittest.TestCase):
         self.assertIsNone(contract.rag)
         self.assertTrue(contract.publication.github_marketplace.enabled)
         self.assertFalse(contract.publication.clawhub.enabled)
-        self.assertEqual(raw["version"], "1.0.0")
+        self.assertEqual(raw["version"], "1.0.1")
         self.assertEqual(raw["release_repository"], "schao523/obvious-one-plugins")
         self.assertEqual(
             contract.audit_hook,
             "scripts/distribution_audit.py:audit_distribution",
         )
-        self.assertEqual(set(raw["include_files"]), ROOT_PUBLIC_FILES | PUBLIC_DOCS)
+        self.assertEqual(set(raw["include_files"]), ROOT_PUBLIC_FILES | PUBLIC_DOCS | PUBLIC_CONTRACTS)
         self.assertEqual(set(raw["include_prefixes"]), {"scripts", "skills"})
         self.assertNotIn("docs", raw["include_prefixes"])
         self.assertEqual(len(contract.content_rules), 1)
         rule = raw["content_rules"][0]
         self.assertEqual(rule["classification"], "text")
-        self.assertEqual(set(rule["paths"]), ROOT_PUBLIC_FILES | PUBLIC_DOCS)
+        self.assertEqual(set(rule["paths"]), ROOT_PUBLIC_FILES | PUBLIC_DOCS | PUBLIC_CONTRACTS)
         self.assertEqual(set(rule["prefixes"]), {"scripts", "skills"})
 
     def test_source_boundary_ignores_internal_inputs_but_built_tree_rejects_them(self) -> None:
@@ -151,7 +152,7 @@ class DistributionTests(unittest.TestCase):
                 if path.is_file()
             }
 
-        self.assertTrue(ROOT_PUBLIC_FILES | PUBLIC_DOCS <= members)
+        self.assertTrue(ROOT_PUBLIC_FILES | PUBLIC_DOCS | PUBLIC_CONTRACTS <= members)
         self.assertIn("package.json", members)
         self.assertIn("CONTENT-MANIFEST.json", members)
         for internal in INTERNAL_PATHS:

@@ -1,5 +1,7 @@
 # Cool Plugin Design Assistant
 
+Version 1.0.2 strengthens the Workbench handoff boundary without changing approved application behavior. Chat-driven handoff delivery now binds the returned canonical ZIP to its final SHA-256, reopens that exact ZIP for canonical validation, and reports one `workbench-handoff.json` semantic authority before delivery.
+
 Cool Plugin Design Assistant 1.0 guides a human from an AI Application idea to
 an approval-gated Application Plugin Design Specification and structured
 Application Workbench handoff. It also supports implementation conformance

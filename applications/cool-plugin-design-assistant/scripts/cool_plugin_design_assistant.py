@@ -846,7 +846,7 @@ def status() -> dict[str, Any]:
     return {
         "status": "PASS",
         "plugin_id": "cool-plugin-design-assistant",
-        "version": "1.0.1",
+        "version": "1.0.2",
         "skills": list(SKILL_NAMES),
         "rag": "NOT APPLICABLE",
         "clawhub": "NOT APPLICABLE",

@@ -40,8 +40,8 @@ class MarketplaceReleaseTests(unittest.TestCase):
         release = load_script("build_marketplace_release.py")
         with tempfile.TemporaryDirectory() as temp:
             destination = Path(temp) / "marketplace"
-            first = release.build_release(ROOT, destination, "1.0.1")
-            second = release.build_release(ROOT, destination, "1.0.1")
+            first = release.build_release(ROOT, destination, "1.0.2")
+            second = release.build_release(ROOT, destination, "1.0.2")
             self.assertEqual(first.sha256, second.sha256)
             self.assertEqual(first.paths, second.paths)
             plugin = destination / "plugins" / "cool-plugin-design-assistant"
@@ -68,7 +68,7 @@ class MarketplaceReleaseTests(unittest.TestCase):
             (copied_source / "docs" / "source-decisions.md").unlink()
             destination = Path(temp) / "marketplace"
             with self.assertRaisesRegex(ValueError, "rights and provenance evidence missing"):
-                release.build_release(copied_source, destination, "1.0.1")
+                release.build_release(copied_source, destination, "1.0.2")
             self.assertFalse(destination.exists())
 
     def test_codex_release_detects_windows_reparse_points(self) -> None:

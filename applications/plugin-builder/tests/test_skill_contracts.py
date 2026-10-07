@@ -176,6 +176,37 @@ class SkillContractTests(unittest.TestCase):
         self.assertIn("application-tool-contract.md", building)
         self.assertIn("tool-evidence-contract.md", verifying)
 
+    def test_revision_one_preflight_and_evidence_contracts_are_explicit(self) -> None:
+        planning = SKILLS / "planning-plugin-implementations" / "references" / "input-and-plan-contract.md"
+        preflight = contract_rows(planning, "Pre-W1 preflight contract")
+        self.assertEqual(
+            set(preflight),
+            {"TREE", "ARTIFACT_ROLES", "DUPLICATES", "PATHS", "COMMANDS", "MANIFEST", "FAILURE"},
+        )
+        self.assertEqual(preflight["FAILURE"], "NO_W1_IDENTITY_OR_CANDIDATE_MUTATION")
+
+        candidate = SKILLS / "building-and-updating-plugins" / "references" / "candidate-and-update-contract.md"
+        self.assertEqual(
+            contract_rows(candidate, "Candidate contract")["PREFLIGHT_IDENTITY"],
+            "MATCH_APPROVED_W1_EVIDENCE",
+        )
+
+        evidence_path = SKILLS / "verifying-and-packaging-plugins" / "references" / "evidence-and-package-contract.md"
+        layers = contract_rows(evidence_path, "Evidence layers")
+        self.assertEqual(
+            set(layers),
+            {"structural_validation", "installation", "tool_execution", "reference_consultation", "conversation"},
+        )
+        package = contract_rows(evidence_path, "Packaging contract")
+        self.assertEqual(package["ENVELOPE"], "PORTABLE_SINGLE_DIRECTORY")
+        self.assertEqual(package["SIDECAR"], "DIGEST_BOUND_OUTSIDE_ZIP")
+
+        tool_path = SKILLS / "verifying-and-packaging-plugins" / "references" / "tool-evidence-contract.md"
+        command = contract_rows(tool_path, "Command evidence")
+        self.assertEqual(command["DECLARED_ARGV"], "PRESERVE_EXACTLY")
+        self.assertEqual(command["OBSERVED_ARGV"], "RECORD_ACTUAL_EXECUTION")
+        self.assertEqual(command["ADAPTER"], "EXPLICIT_OR_NULL")
+
 
 if __name__ == "__main__":
     unittest.main()

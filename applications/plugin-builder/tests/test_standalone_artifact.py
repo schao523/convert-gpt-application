@@ -50,7 +50,7 @@ class StandaloneArtifactTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
             release_root = root / "release"
-            _release_module().build_release(ROOT, release_root, "1.0.0")
+            _release_module().build_release(ROOT, release_root, "1.0.1")
             plugin = release_root / "plugins/plugin-builder"
 
             full_source = root / "full-source.zip"
@@ -111,7 +111,7 @@ class StandaloneArtifactTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
             release_root = root / "release"
-            _release_module().build_release(ROOT, release_root, "1.0.0")
+            _release_module().build_release(ROOT, release_root, "1.0.1")
             plugin = release_root / "plugins/plugin-builder"
             self.assertTrue((plugin / "scripts/vendor/obvious_one_plugin_framework/plugin_authoring/__init__.py").is_file())
             external = root / "external"

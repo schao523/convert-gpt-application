@@ -34,13 +34,26 @@ class ConversionContractTests(unittest.TestCase):
         self.assertEqual(
             manifest["interface"]["displayName"], "Cool Plugin Design Assistant"
         )
-        self.assertEqual(manifest["version"], "1.0.1")
+        self.assertEqual(manifest["version"], "1.0.2")
+        distribution = json.loads(
+            (ROOT / "openclaw/distribution.json").read_text(encoding="utf-8")
+        )
+        self.assertEqual(distribution["version"], "1.0.2")
         self.assertEqual(len(inventory["source_inventory"]), 16)
         self.assertFalse(
             any(":\\Users\\" in item["path"] for item in inventory["source_inventory"])
         )
         for number in range(1, 16):
             self.assertIn(f"INV-{number:03d}", invariants)
+
+    def test_handoff_delivery_contract_is_digest_bound_and_reopened(self) -> None:
+        distribution = (ROOT / "DISTRIBUTION.md").read_text(encoding="utf-8")
+        for invariant in (
+            "FINAL_ZIP_SHA256",
+            "REOPEN_CANONICAL_VALIDATION",
+            "ONE_SEMANTIC_AUTHORITY",
+        ):
+            self.assertIn(invariant, distribution)
 
 
 if __name__ == "__main__":

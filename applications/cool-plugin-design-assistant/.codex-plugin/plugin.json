@@ -1,6 +1,6 @@
 {
   "name": "cool-plugin-design-assistant",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Guide human-centered AI Application design and produce approval-gated specifications for an Application Workbench.",
   "author": {
     "name": "schao523",
