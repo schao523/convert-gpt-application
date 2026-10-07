@@ -13,10 +13,10 @@ publication behavior.
 
 ## Product launcher
 
-Run the standard-library launcher from the repository root:
+Run the standard-library launcher from the plugin root:
 
 ```powershell
-python -B applications\cool-plugin-design-assistant\scripts\cool_plugin_design_assistant.py status --json
+python -B scripts/cool_plugin_design_assistant.py status --json
 ```
 
 Commands:

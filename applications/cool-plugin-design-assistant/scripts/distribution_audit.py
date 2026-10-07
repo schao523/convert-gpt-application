@@ -10,6 +10,7 @@ import re
 
 
 ROOT_FILES = {
+    "plugin.json",
     "README.md",
     "DISTRIBUTION.md",
     "LICENSE",

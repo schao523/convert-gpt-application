@@ -131,7 +131,7 @@ class ApplicationConfigTests(unittest.TestCase):
         configs = {item.plugin_id: item for item in discover_applications(ROOT)}
         builder = configs["plugin-builder"]
 
-        self.assertEqual(builder.version, "1.0.0")
+        self.assertEqual(builder.version, "1.0.1")
         self.assertIsNone(builder.verification.marketplace)
         self.assertEqual(
             {

@@ -38,6 +38,11 @@ class DistributionTests(unittest.TestCase):
         )
         self.assertEqual(len(contract.content_rules), 1)
         self.assertEqual(contract.content_rules[0].classification, "text")
+        raw = json.loads(
+            (ROOT / "openclaw" / "distribution.json").read_text(encoding="utf-8")
+        )
+        self.assertIn("plugin.json", raw["include_files"])
+        self.assertIn("plugin.json", raw["content_rules"][0]["paths"])
 
     def test_public_artifacts_exclude_tests_conversion_and_raw_sources(self) -> None:
         raw = json.loads(
@@ -52,6 +57,7 @@ class DistributionTests(unittest.TestCase):
             public_files = [path for path in result.output.rglob("*") if path.is_file()]
             self.assertEqual(verify_package(contract, result.output), result)
             self.assertEqual(load_audit().audit_tree(result.output), [])
+            self.assertTrue((result.output / "plugin.json").is_file())
         self.assertFalse(
             any(path.suffix.lower() in {".pdf", ".docx", ".png"} for path in public_files)
         )

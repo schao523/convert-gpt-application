@@ -2,6 +2,8 @@ import json
 from pathlib import Path
 import unittest
 
+from obvious_one_plugin_framework.plugin_authoring import validate_manifest_pair
+
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -10,6 +12,7 @@ class ConversionContractTests(unittest.TestCase):
     def test_identity_inventory_and_invariants_are_complete(self) -> None:
         required = (
             ROOT / "conversion.json",
+            ROOT / "plugin.json",
             ROOT / ".codex-plugin/plugin.json",
             ROOT / "docs/source-inventory.json",
             ROOT / "docs/application-invariants.md",
@@ -21,6 +24,7 @@ class ConversionContractTests(unittest.TestCase):
         manifest = json.loads(
             (ROOT / ".codex-plugin/plugin.json").read_text(encoding="utf-8")
         )
+        portable = json.loads((ROOT / "plugin.json").read_text(encoding="utf-8"))
         inventory = json.loads(
             (ROOT / "docs/source-inventory.json").read_text(encoding="utf-8")
         )
@@ -35,6 +39,19 @@ class ConversionContractTests(unittest.TestCase):
             manifest["interface"]["displayName"], "Cool Plugin Design Assistant"
         )
         self.assertEqual(manifest["version"], "1.0.2")
+        self.assertEqual(
+            portable["$schema"],
+            "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+        )
+        self.assertEqual(
+            (portable["name"], portable["version"]),
+            (manifest["name"], manifest["version"]),
+        )
+        self.assertEqual(
+            portable["extensions"]["com.openai"]["interface"],
+            manifest["interface"],
+        )
+        self.assertEqual(validate_manifest_pair(ROOT), ())
         distribution = json.loads(
             (ROOT / "openclaw/distribution.json").read_text(encoding="utf-8")
         )

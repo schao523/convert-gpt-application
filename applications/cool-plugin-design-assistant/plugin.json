@@ -1,0 +1,40 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "author": {
+    "name": "schao523"
+  },
+  "description": "Guide human-centered AI Application design and produce approval-gated specifications for an Application Workbench.",
+  "extensions": {
+    "com.openai": {
+      "interface": {
+        "capabilities": [
+          "Interactive",
+          "Read",
+          "Write"
+        ],
+        "category": "Productivity",
+        "defaultPrompt": [
+          "引導我從想法開始設計一個 AI Application。",
+          "協助我設計任務工作流程、Instruction Modules 與 user-interaction protocols。",
+          "把已確認的設計整理成 Application Plugin Design Specification。"
+        ],
+        "developerName": "schao523",
+        "displayName": "Cool Plugin Design Assistant",
+        "longDescription": "Guides discovery, Design Statements, behavioral workflows, logical Instruction Modules, Reference Material evaluation, approval-gated Application Plugin Design Specifications, implementation review, and traceable Application Testing without prescribing the designed application's Skill Architecture.",
+        "shortDescription": "Design AI applications"
+      }
+    }
+  },
+  "homepage": "https://github.com/schao523/obvious-one-plugins/tree/main/plugins/cool-plugin-design-assistant",
+  "keywords": [
+    "ai-application-design",
+    "plugin-design",
+    "human-in-the-loop",
+    "instruction-modules",
+    "traditional-chinese"
+  ],
+  "license": "MIT",
+  "name": "cool-plugin-design-assistant",
+  "repository": "https://github.com/schao523/obvious-one-plugins",
+  "version": "1.0.2"
+}

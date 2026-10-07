@@ -8,6 +8,7 @@ import unittest
 from unittest import mock
 
 from obvious_one_plugin_framework.marketplace import load_preparation_catalog
+from obvious_one_plugin_framework.plugin_authoring import validate_plugin_tree
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -45,7 +46,9 @@ class MarketplaceReleaseTests(unittest.TestCase):
             self.assertEqual(first.sha256, second.sha256)
             self.assertEqual(first.paths, second.paths)
             plugin = destination / "plugins" / "cool-plugin-design-assistant"
+            self.assertTrue((plugin / "plugin.json").is_file())
             self.assertTrue((plugin / ".codex-plugin/plugin.json").is_file())
+            self.assertEqual(validate_plugin_tree(plugin), ())
             self.assertTrue(
                 (plugin / "skills/guiding-ai-application-design-sessions/SKILL.md").is_file()
             )

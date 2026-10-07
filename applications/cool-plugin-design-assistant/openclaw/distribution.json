@@ -6,6 +6,7 @@
   "version": "1.0.2",
   "source_root": "..",
   "include_files": [
+    "plugin.json",
     ".codex-plugin/plugin.json",
     "README.md",
     "DISTRIBUTION.md",
@@ -27,6 +28,7 @@
     {
       "id": "redistributable-text",
       "paths": [
+        "plugin.json",
         ".codex-plugin/plugin.json",
         "README.md",
         "DISTRIBUTION.md",
