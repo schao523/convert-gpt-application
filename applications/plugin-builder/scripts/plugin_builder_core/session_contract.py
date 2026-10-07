@@ -605,7 +605,10 @@ def _validate_v2(payload: object) -> list[str]:
             errors,
             session["package"],
             "package",
-            {"path", "sha256", "candidate_sha256", "verification_sha256", "member_manifest_sha256"},
+            {
+                "path", "sha256", "candidate_sha256", "verification_sha256",
+                "member_manifest_sha256", "metadata_path", "metadata_sha256",
+            },
         )
         if package is not None and candidate is not None and package.get("candidate_sha256") != candidate.get("sha256"):
             errors.append("package.candidate_sha256_mismatch")
@@ -613,6 +616,8 @@ def _validate_v2(payload: object) -> list[str]:
             errors.append("package.verification_sha256_mismatch")
         if package is not None and w2 is None:
             errors.append("package.requires_approved_w2")
+        if package is not None and package.get("metadata_path") != "dist/package-metadata.json":
+            errors.append("package.metadata_path.unsupported")
 
     if isinstance(stage, str) and stage in STAGES:
         required = {

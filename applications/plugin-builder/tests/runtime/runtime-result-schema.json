@@ -1,23 +1,25 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://obvious.one/schemas/plugin-builder-runtime-result-v1.json",
+  "$id": "https://obvious.one/schemas/plugin-builder-runtime-result-v2.json",
   "title": "Plugin Builder installed-runtime result",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schema", "runtime", "artifact", "scenarios", "tools", "overall_state"],
+  "required": ["schema", "runtime", "artifact", "scenarios", "tools", "evidence_states", "overall_state"],
   "properties": {
-    "schema": {"const": "plugin-builder-runtime-result-v1"},
+    "schema": {"const": "plugin-builder-runtime-result-v2"},
     "runtime": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["name", "version", "os", "clean_workspace", "discovery_observed", "repository_absent"],
+      "required": ["name", "version", "os", "clean_workspace", "upload_observed", "discovery_observed", "repository_absent", "envelope_profile"],
       "properties": {
         "name": {"enum": ["Codex", "ChatGPT Work Local/Desktop"]},
         "version": {"type": "string", "minLength": 1},
         "os": {"type": "string", "minLength": 1},
         "clean_workspace": {"type": "boolean"},
+        "upload_observed": {"type": "boolean"},
         "discovery_observed": {"type": "boolean"},
-        "repository_absent": {"type": "boolean"}
+        "repository_absent": {"type": "boolean"},
+        "envelope_profile": {"const": "PORTABLE_SINGLE_DIRECTORY"}
       }
     },
     "artifact": {
@@ -54,7 +56,7 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["tool_id", "implementation_kind", "state", "executed", "network_contacted", "contract_sha256", "skill_bindings"],
+        "required": ["tool_id", "implementation_kind", "state", "executed", "network_contacted", "contract_sha256", "skill_bindings", "declared_argv", "observed_argv", "adapter"],
         "properties": {
           "tool_id": {"type": "string", "minLength": 1},
           "implementation_kind": {"enum": ["BUNDLED_LOCAL", "FRAMEWORK_ADAPTER", "RUNTIME_NATIVE", "MCP_ADAPTER"]},
@@ -62,14 +64,30 @@
           "executed": {"type": "boolean"},
           "network_contacted": {"type": "boolean"},
           "contract_sha256": {"$ref": "#/$defs/sha256"},
-          "skill_bindings": {"type": "array", "minItems": 1, "items": {"type": "string"}, "uniqueItems": true}
+          "skill_bindings": {"type": "array", "minItems": 1, "items": {"type": "string"}, "uniqueItems": true},
+          "declared_argv": {"$ref": "#/$defs/argv"},
+          "observed_argv": {"anyOf": [{"$ref": "#/$defs/argv"}, {"type": "null"}]},
+          "adapter": {"enum": ["CURRENT_PYTHON", null]}
         }
+      }
+    },
+    "evidence_states": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["structural_validation", "installation", "tool_execution", "reference_consultation", "conversation"],
+      "properties": {
+        "structural_validation": {"$ref": "#/$defs/evidence_state"},
+        "installation": {"$ref": "#/$defs/evidence_state"},
+        "tool_execution": {"$ref": "#/$defs/evidence_state"},
+        "reference_consultation": {"$ref": "#/$defs/evidence_state"},
+        "conversation": {"$ref": "#/$defs/evidence_state"}
       }
     },
     "overall_state": {"$ref": "#/$defs/evidence_state"}
   },
   "$defs": {
     "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "argv": {"type": "array", "items": {"type": "string", "minLength": 1}},
     "evidence_state": {
       "enum": ["EXPECTED", "STATICALLY VERIFIED", "RUNTIME VERIFIED", "NOT VERIFIED", "NOT APPLICABLE"]
     }

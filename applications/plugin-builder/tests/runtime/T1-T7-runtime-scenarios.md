@@ -7,7 +7,9 @@ Use this contract only with the generated Plugin Builder artifact. It records ap
 - Start in a new empty workspace with no pre-existing generated outputs.
 - Install or copy the reviewed artifact, then invoke its `scripts/plugin_builder.py`; do not invoke development-source files.
 - Clear `PYTHONPATH` and `PYTHONHOME`, use a working directory outside the repository, and reject any repository or Workbench import.
-- Record runtime/app version, operating system, artifact ZIP SHA-256, exact member-manifest SHA-256, and whether plugin discovery was directly observed.
+- Start from `runtime-result-v2-template.json`. Record runtime/app version, operating system, artifact ZIP SHA-256, exact member-manifest SHA-256, and wrapped `PORTABLE_SINGLE_DIRECTORY` upload and discovery as separate observations.
+- For every tool, preserve `declared_argv` exactly and record the actual `observed_argv` plus `adapter`; never rewrite a declaration to resemble the host command.
+- Record `structural_validation`, `installation`, `tool_execution`, `reference_consultation`, and `conversation` independently. Upload or discovery evidence must not promote tool, reference, or conversation evidence.
 - Do not place credentials, tokens, private paths, or source-package contents in the result. Network access is forbidden unless separately authorized for the named scenario.
 - Preserve each outcome as `EXPECTED`, `STATICALLY VERIFIED`, `RUNTIME VERIFIED`, `NOT VERIFIED`, or `NOT APPLICABLE`; absence of a capability is never `PASS`.
 
@@ -43,6 +45,6 @@ From the installed artifact copy, with the repository absent from environment va
 
 ## Result delivery
 
-Return one JSON document conforming to `runtime-result-schema.json`. Include all T1–T7 rows even when a scenario could not run. Store each scenario evidence file under its exact SHA-256 filename and run `plugin_builder.py package-runtime-evidence --result <result.json> --evidence-root <digest-files> --output <evidence.zip> --json`; do not manually construct the evidence ZIP. The command rejects absent, duplicated, altered, or unindexed evidence and embeds the result under its own digest.
+Return one `plugin-builder-runtime-result-v2` JSON document conforming to `runtime-result-schema.json`. Include all T1–T7 rows even when a scenario could not run. A `RUNTIME VERIFIED` reference-consultation or conversation claim requires a digest-addressed scenario evidence record. Store each scenario evidence file under its exact SHA-256 filename and run `plugin_builder.py package-runtime-evidence --result <result.json> --evidence-root <digest-files> --output <evidence.zip> --json`; do not manually construct the evidence ZIP. The command retains read-only validation and deterministic bundling of historical v1 results, rejects absent, duplicated, altered, or unindexed evidence, and embeds the result under its own digest.
 
 Attach only that validated digest-addressed bundle; never include credentials. Keep network access prohibited unless a named scenario received separate authorization. A clean local-copy run does not prove Codex or ChatGPT Work installed discovery unless `discovery_observed` is true for that named runtime.

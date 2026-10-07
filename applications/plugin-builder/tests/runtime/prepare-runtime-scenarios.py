@@ -51,7 +51,53 @@ def derive(base: dict, output: Path, baseline: Path | None = None) -> dict[str, 
     requirement["evidence_targets"].remove("normalize-self-test")
     write_plan(output / "t6-runtime-native-plan.json", limited)
 
-    result = {"t3": "t3-unresolved-plan.json", "t5": "t5-failing-tool-plan.json", "t6": "t6-runtime-native-plan.json"}
+    runtime_tools = []
+    for item in base.get("tools", []):
+        declared = list((item.get("verification") or {}).get("argv", []))
+        runtime_tools.append({
+            "tool_id": item["id"],
+            "implementation_kind": item["implementation_kind"],
+            "state": "NOT VERIFIED",
+            "executed": False,
+            "network_contacted": False,
+            "contract_sha256": sha256(canonical(item)).hexdigest(),
+            "skill_bindings": sorted(item.get("skill_bindings", [])),
+            "declared_argv": declared,
+            "observed_argv": None,
+            "adapter": None,
+        })
+    runtime_template = {
+        "schema": "plugin-builder-runtime-result-v2",
+        "runtime": {
+            "name": "Codex", "version": "UNRECORDED", "os": "UNRECORDED",
+            "clean_workspace": True, "upload_observed": False,
+            "discovery_observed": False, "repository_absent": True,
+            "envelope_profile": "PORTABLE_SINGLE_DIRECTORY",
+        },
+        "artifact": {"zip_sha256": "0" * 64, "member_manifest_sha256": "0" * 64},
+        "scenarios": [
+            {
+                "id": f"T{index}", "state": "NOT VERIFIED", "result": "NOT VERIFIED",
+                "evidence_sha256": None, "limitations": ["replace template values with observed evidence"],
+            }
+            for index in range(1, 8)
+        ],
+        "tools": runtime_tools,
+        "evidence_states": {
+            "structural_validation": "STATICALLY VERIFIED",
+            "installation": "NOT VERIFIED",
+            "tool_execution": "NOT VERIFIED",
+            "reference_consultation": "NOT VERIFIED",
+            "conversation": "NOT VERIFIED",
+        },
+        "overall_state": "NOT VERIFIED",
+    }
+    write_plan(output / "runtime-result-v2-template.json", runtime_template)
+
+    result = {
+        "t3": "t3-unresolved-plan.json", "t5": "t5-failing-tool-plan.json",
+        "t6": "t6-runtime-native-plan.json", "runtime_result": "runtime-result-v2-template.json",
+    }
     if baseline is not None:
         members: dict[str, bytes] = {}
         with zipfile.ZipFile(baseline) as source:

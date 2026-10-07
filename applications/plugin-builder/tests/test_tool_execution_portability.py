@@ -6,12 +6,14 @@ import tempfile
 import unittest
 from unittest import mock
 
-from .test_create_candidate import PLAN_FIXTURE
-
 SCRIPTS = Path(__file__).resolve().parents[1] / "scripts"
+TESTS = Path(__file__).resolve().parent
+if str(TESTS) not in sys.path:
+    sys.path.insert(0, str(TESTS))
 if str(SCRIPTS) not in sys.path:
     sys.path.insert(0, str(SCRIPTS))
 
+from test_create_candidate import PLAN_FIXTURE
 from plugin_builder_core.runtime_commands import resolve_direct_argv
 from plugin_builder_core.tool_verification import execute_direct, verify_application_tool
 

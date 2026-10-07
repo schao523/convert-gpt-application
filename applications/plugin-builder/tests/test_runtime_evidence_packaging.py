@@ -37,6 +37,25 @@ def valid_result(evidence_digest: str | None) -> dict:
     }
 
 
+def valid_result_v2(evidence_digest: str | None) -> dict:
+    payload = valid_result(evidence_digest)
+    payload["schema"] = "plugin-builder-runtime-result-v2"
+    payload["runtime"].update({"upload_observed": True, "envelope_profile": "PORTABLE_SINGLE_DIRECTORY"})
+    payload["tools"][0].update({
+        "declared_argv": ["{python}", "tools/normalize.py", "--self-test"],
+        "observed_argv": [sys.executable, "tools/normalize.py", "--self-test"],
+        "adapter": "CURRENT_PYTHON",
+    })
+    payload["evidence_states"] = {
+        "structural_validation": "STATICALLY VERIFIED",
+        "installation": "RUNTIME VERIFIED",
+        "tool_execution": "RUNTIME VERIFIED",
+        "reference_consultation": "NOT VERIFIED",
+        "conversation": "NOT VERIFIED",
+    }
+    return payload
+
+
 class RuntimeEvidencePackagingTests(unittest.TestCase):
     def setUp(self) -> None:
         self.temporary = tempfile.TemporaryDirectory()
@@ -78,6 +97,22 @@ class RuntimeEvidencePackagingTests(unittest.TestCase):
     def test_tool_contract_identity_is_not_mistaken_for_scenario_evidence(self) -> None:
         errors = validate_runtime_result(valid_result(None))
         self.assertEqual(errors, ())
+
+    def test_runtime_result_v2_records_wrapped_installation_commands_and_layers(self) -> None:
+        self.assertEqual(validate_runtime_result(valid_result_v2(self.digest)), ())
+
+    def test_runtime_result_v2_requires_digest_evidence_for_reference_or_conversation_claims(self) -> None:
+        payload = valid_result_v2(None)
+        payload["evidence_states"]["reference_consultation"] = "RUNTIME VERIFIED"
+        self.assertIn("result.layer_evidence_required:reference_consultation", validate_runtime_result(payload))
+        payload["evidence_states"]["reference_consultation"] = "NOT VERIFIED"
+        payload["evidence_states"]["conversation"] = "RUNTIME VERIFIED"
+        self.assertIn("result.layer_evidence_required:conversation", validate_runtime_result(payload))
+
+    def test_runtime_result_v2_rejects_conflated_declared_and_observed_command_shape(self) -> None:
+        payload = valid_result_v2(self.digest)
+        payload["tools"][0].pop("observed_argv")
+        self.assertIn("result.tool_invalid", validate_runtime_result(payload))
 
     def test_bundle_contains_digest_named_result_evidence_and_index(self) -> None:
         outcome = build_runtime_evidence_bundle(self.result, self.evidence, self.root / "bundle.zip")

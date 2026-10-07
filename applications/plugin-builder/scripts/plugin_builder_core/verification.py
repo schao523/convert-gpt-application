@@ -138,6 +138,21 @@ def verify_candidate(session_path: Path) -> VerificationOutcome:
     identity_errors = [code for expected, code in identities if expected != plan_hash]
     if (session.get("plan") or {}).get("tools_sha256") != tools_hash or (session.get("w1") or {}).get("tools_sha256") != tools_hash or manifest.get("tools_sha256") != tools_hash:
         identity_errors.append("verify.tools_sha256_mismatch")
+    preflight_evidence = plan.get("preflight_evidence")
+    if not isinstance(preflight_evidence, dict):
+        identity_errors.append("verify.preflight_evidence_missing")
+    else:
+        preflight_hash = sha256(canonical_bytes(preflight_evidence)).hexdigest()
+        if manifest.get("preflight_evidence_sha256") != preflight_hash:
+            identity_errors.append("verify.preflight_evidence_sha256_mismatch")
+        artifact_quality = preflight_evidence.get("artifact_quality")
+        if not isinstance(artifact_quality, dict) or manifest.get("file_roles") != artifact_quality.get("file_roles"):
+            identity_errors.append("verify.artifact_quality_mismatch")
+        manifest_profile = preflight_evidence.get("manifest_profile")
+        if manifest.get("manifest_profile") != manifest_profile:
+            identity_errors.append("verify.manifest_profile_mismatch")
+        if manifest.get("manifest_profile_sha256") != sha256(canonical_bytes(manifest_profile)).hexdigest():
+            identity_errors.append("verify.manifest_profile_sha256_mismatch")
     if identity_errors:
         session["verification"] = session["w2"] = session["package"] = None
         write_bytes_transactionally(session_file, canonical_bytes(session))
@@ -182,13 +197,29 @@ def verify_candidate(session_path: Path) -> VerificationOutcome:
         for item in tool_results
     )
     blocked = blocked_tool or any(item["required"] and item["state"] != "PASS" for item in requirements) or any(item["required"] and item["state"] != "PASS" for item in checks)
+    structural_pass = all(item["state"] == "PASS" for item in checks if item["required"])
+    if not tool_results:
+        tool_state = "NOT APPLICABLE"
+    elif all(item["state"] == "PASS" and item["executed"] for item in tool_results):
+        tool_state = "STATICALLY VERIFIED"
+    else:
+        tool_state = "NOT VERIFIED"
+    evidence_states = {
+        "structural_validation": "STATICALLY VERIFIED" if structural_pass else "NOT VERIFIED",
+        "installation": "NOT VERIFIED",
+        "tool_execution": tool_state,
+        "reference_consultation": "NOT VERIFIED",
+        "conversation": "NOT VERIFIED",
+    }
     report = {
-        "schema": "plugin-builder-verification-report-v1",
+        "schema": "plugin-builder-verification-report-v2",
         "candidate_sha256": session["candidate"]["sha256"],
         "plan_sha256": session["candidate"]["plan_sha256"],
+        "preflight_evidence": preflight_evidence,
         "checks": sorted(checks, key=lambda item: item["id"]),
         "tools": sorted(tool_results, key=lambda item: item["tool_id"]),
         "requirements": sorted(requirements, key=lambda item: item["id"]),
+        "evidence_states": evidence_states,
         "status": "BLOCKED" if blocked else "PASS",
     }
     report_bytes = canonical_bytes(report)

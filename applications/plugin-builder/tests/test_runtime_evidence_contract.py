@@ -34,6 +34,15 @@ class RuntimeEvidenceContractTests(unittest.TestCase):
         states = set(schema["$defs"]["evidence_state"]["enum"])
         self.assertEqual(states, {"EXPECTED", "STATICALLY VERIFIED", "RUNTIME VERIFIED", "NOT VERIFIED", "NOT APPLICABLE"})
         self.assertEqual(schema["properties"]["scenarios"]["minItems"], 7)
+        self.assertEqual(schema["properties"]["schema"]["const"], "plugin-builder-runtime-result-v2")
+        self.assertGreaterEqual(
+            set(schema["properties"]["tools"]["items"]["required"]),
+            {"declared_argv", "observed_argv", "adapter"},
+        )
+        self.assertEqual(
+            set(schema["properties"]["evidence_states"]["required"]),
+            {"structural_validation", "installation", "tool_execution", "reference_consultation", "conversation"},
+        )
 
     def test_runtime_scenario_preparer_emits_exact_t3_t4_t5_t6_inputs(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
@@ -52,11 +61,19 @@ class RuntimeEvidenceContractTests(unittest.TestCase):
             expected = {
                 "t3-unresolved-plan.json", "t4-update-baseline.zip", "t4-update-plan.json",
                 "t5-failing-tool-plan.json", "t6-runtime-native-plan.json",
+                "runtime-result-v2-template.json",
             }
             self.assertEqual({item.name for item in (root / "out").iterdir()}, expected)
             self.assertEqual(json.loads((root / "out/t4-update-plan.json").read_text())["operation"], "update")
             with zipfile.ZipFile(root / "out/t4-update-baseline.zip") as archive:
                 self.assertEqual(archive.read("sample-plugin/owner-notes.txt"), b"owner bytes\x00preserved")
+            runtime = json.loads((root / "out/runtime-result-v2-template.json").read_text())
+            self.assertEqual(runtime["schema"], "plugin-builder-runtime-result-v2")
+            self.assertEqual(runtime["runtime"]["envelope_profile"], "PORTABLE_SINGLE_DIRECTORY")
+            self.assertEqual(
+                set(runtime["evidence_states"]),
+                {"structural_validation", "installation", "tool_execution", "reference_consultation", "conversation"},
+            )
 
     def test_pending_installed_runtime_evidence_is_not_upgraded(self) -> None:
         compatibility = (ROOT / "docs/runtime-compatibility.md").read_text(encoding="utf-8")

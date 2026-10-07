@@ -198,7 +198,11 @@ def main(argv: list[str] | None = None) -> int:
 
     if arguments.command == "package":
         outcome = package_candidate(arguments.session)
-        _emit(operation_document("package", outcome.status, list(outcome.errors), package_sha256=outcome.package_sha256, path=outcome.path, stage="E1"))
+        _emit(operation_document(
+            "package", outcome.status, list(outcome.errors),
+            package_sha256=outcome.package_sha256, metadata_sha256=outcome.metadata_sha256,
+            path=outcome.path, stage="E1",
+        ))
         return 0 if outcome.status == "PASS" else 2 if outcome.status == "BLOCKED" else 3
 
     if arguments.command == "resolve-update":

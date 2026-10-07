@@ -60,6 +60,20 @@ class CandidateVerificationTests(unittest.TestCase):
         self.assertRegex(evidence["fixture_sha256"], r"^[0-9a-f]{64}$")
         self.assertRegex(evidence["stdout_sha256"], r"^[0-9a-f]{64}$")
 
+    def test_verification_binds_preflight_quality_profile_and_command_evidence(self) -> None:
+        workspace = self._workspace()
+        self.assertEqual(self._verify(workspace).returncode, 0)
+        report = self._report(workspace)
+        plan = json.loads((workspace / "implementation-plan.json").read_text(encoding="utf-8"))
+        self.assertEqual(report["schema"], "plugin-builder-verification-report-v2")
+        self.assertEqual(report["preflight_evidence"], plan["preflight_evidence"])
+        self.assertEqual(report["tools"][0]["declared_argv"], ["{python}", "tools/normalize.py", "--self-test"])
+        self.assertEqual(report["tools"][0]["adapter"], "CURRENT_PYTHON")
+        self.assertEqual(
+            set(report["evidence_states"]),
+            {"structural_validation", "installation", "tool_execution", "reference_consultation", "conversation"},
+        )
+
     def test_runtime_native_and_mcp_tool_evidence_is_runtime_specific(self) -> None:
         from plugin_builder_core.tool_verification import verify_application_tool
 

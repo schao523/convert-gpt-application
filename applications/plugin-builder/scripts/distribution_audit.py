@@ -25,6 +25,7 @@ PUBLIC_DOCS = {
     "docs/application-invariants.md",
     "docs/runtime-compatibility.md",
 }
+PUBLIC_CONTRACTS = {"contracts/openai-interface-vocabulary-v1.json"}
 PREFIXES = {"scripts", "skills"}
 MANIFEST_FILES = {"plugin.json", ".codex-plugin/plugin.json"}
 VENDOR_FILES = {
@@ -106,6 +107,7 @@ def _allowed(relative: Path) -> bool:
     return (
         raw in ROOT_FILES
         or raw in PUBLIC_DOCS
+        or raw in PUBLIC_CONTRACTS
         or raw in MANIFEST_FILES
         or bool(relative.parts and relative.parts[0] in PREFIXES)
     )
