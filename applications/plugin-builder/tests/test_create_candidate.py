@@ -18,6 +18,7 @@ if str(SCRIPTS) not in sys.path:
 
 from plugin_builder_core.inspection import inspect_design_package
 from plugin_builder_core.bootstrap import plugin_authoring
+from plugin_builder_core.proposed_tree import materialize_proposed_tree
 
 
 def run_cli(*arguments: str) -> subprocess.CompletedProcess[str]:
@@ -74,6 +75,30 @@ class CreateCandidateTests(unittest.TestCase):
         self.assertEqual(completed.returncode, 2)
         self.assertIn("build.w1_required", read_result(completed)["errors"])
         self.assertFalse((workspace / "candidate").exists())
+
+    def test_shared_materializer_matches_created_candidate_before_control_manifest(self) -> None:
+        workspace = prepared_workspace(self.root)
+        plan = json.loads(
+            (workspace / "implementation-plan.json").read_text(encoding="utf-8")
+        )
+        proposed = self.root / "proposed"
+
+        materialize_proposed_tree(plan, workspace, proposed)
+        completed = run_cli("build", "--session", str(workspace / "session.json"), "--json")
+
+        self.assertEqual(completed.returncode, 0, completed.stdout)
+        candidate = workspace / "candidate"
+        candidate_members = {
+            path.relative_to(candidate).as_posix(): path.read_bytes()
+            for path in candidate.rglob("*")
+            if path.is_file() and path.name != "PLUGIN-BUILDER-MANIFEST.json"
+        }
+        proposed_members = {
+            path.relative_to(proposed).as_posix(): path.read_bytes()
+            for path in proposed.rglob("*")
+            if path.is_file()
+        }
+        self.assertEqual(proposed_members, candidate_members)
 
     def test_create_builds_real_multi_skill_plugin_with_references_and_local_tool(self) -> None:
         workspace = prepared_workspace(self.root)
