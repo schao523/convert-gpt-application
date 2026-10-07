@@ -9,8 +9,9 @@ from pathlib import Path
 import tempfile
 
 from .bootstrap import plugin_authoring
-from .candidate import CandidateOutcome, _agent_yaml, _load, _replace_candidate
+from .candidate import CandidateOutcome, _load, _replace_candidate
 from .implementation_plan import canonical_bytes, write_bytes_transactionally
+from .proposed_tree import materialize_proposed_tree
 
 
 def _hashes(root: Path, *, controls: bool = False) -> dict[str, str]:
@@ -131,15 +132,7 @@ def build_update_candidate(session_path: Path) -> CandidateOutcome:
         with tempfile.TemporaryDirectory(dir=root, prefix=".candidate-update-") as name:
             temporary = Path(name)
             stage = temporary / "candidate"
-            plugin_authoring.overlay_files(baseline, recipes, root, stage, remove=removals)
-            (stage / "PLUGIN-BUILDER-MANIFEST.json").unlink(missing_ok=True)
-            (stage / "PLUGIN-BUILDER-CHANGES.json").unlink(missing_ok=True)
-            for skill in plan.get("skills", []):
-                if isinstance(skill, dict):
-                    target = stage / "skills" / str(skill["name"]) / "agents" / "openai.yaml"
-                    target.parent.mkdir(parents=True, exist_ok=True)
-                    target.write_bytes(_agent_yaml(skill))
-            plugin_authoring.materialize_manifest_pair(stage)
+            materialize_proposed_tree(plan, root, stage)
             pair_issues = plugin_authoring.validate_manifest_pair(stage)
             if pair_issues:
                 return CandidateOutcome(

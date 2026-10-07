@@ -35,20 +35,38 @@ def materialize_proposed_tree(
 ) -> None:
     """Materialize a create proposal without Builder control manifests."""
 
-    if proposal.get("operation") != "create":
+    operation = proposal.get("operation")
+    if operation not in {"create", "update"}:
         raise plugin_authoring.PluginAuthoringError("proposal_operation_unsupported")
     recipes = proposal.get("files")
     if not isinstance(recipes, list):
         raise plugin_authoring.PluginAuthoringError("materialize_recipe_invalid")
-    plugin_authoring.materialize_files(recipes, Path(workspace_root), Path(destination))
+    root = Path(workspace_root)
+    output = Path(destination)
+    if operation == "create":
+        plugin_authoring.materialize_files(recipes, root, output)
+    else:
+        baseline = root / "baseline"
+        if not baseline.is_dir():
+            raise plugin_authoring.PluginAuthoringError("proposal_baseline_missing")
+        expected = proposal.get("expected_members")
+        if not isinstance(expected, list):
+            raise plugin_authoring.PluginAuthoringError("proposal_expected_members_invalid")
+        expected_paths = set(expected)
+        controls = {"PLUGIN-BUILDER-MANIFEST.json", "PLUGIN-BUILDER-CHANGES.json"}
+        baseline_paths = {member.path for member in plugin_authoring.tree_manifest(baseline)}
+        removals = sorted(baseline_paths - expected_paths - controls)
+        plugin_authoring.overlay_files(baseline, recipes, root, output, remove=removals)
+        for control in controls:
+            (output / control).unlink(missing_ok=True)
     skills = proposal.get("skills")
     for skill in skills if isinstance(skills, list) else []:
         if not isinstance(skill, dict):
             continue
-        agent = Path(destination) / "skills" / str(skill["name"]) / "agents" / "openai.yaml"
+        agent = output / "skills" / str(skill["name"]) / "agents" / "openai.yaml"
         agent.parent.mkdir(parents=True, exist_ok=True)
         agent.write_bytes(agent_yaml(skill))
-    plugin_authoring.materialize_manifest_pair(Path(destination))
+    plugin_authoring.materialize_manifest_pair(output)
 
 
 def _issue_diagnostic(issue: Any) -> str:
