@@ -2,11 +2,12 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Plan status:** OWNER REVIEW — REVISION 1
+**Plan status:** APPROVED — REVISION 1
 
-**Revision note:** This plan supersedes the earlier six-task plan only after
-owner approval. No checkbox from this revised plan is authorized for execution
-by the specification approval alone.
+**Approval evidence:** The decision owner approved Revision 1 and selected
+Native/sequential execution in the originating Codex conversation on
+2026-10-07. That approval authorizes local implementation and verification;
+publication and other external release actions remain unauthorized.
 
 **Goal:** Bind Design Assistant chat handoff packaging to the deterministic final ZIP and make Plugin Builder reject predictable structural, knowledge-ownership, duplicate-content, path-binding, executable-portability, manifest-profile, and evidence-boundary defects before producing an approvable W1 plan.
 
