@@ -7,10 +7,10 @@ import json
 import os
 from pathlib import Path
 import subprocess
-import sys
 from typing import Any
 
 from .implementation_plan import canonical_bytes
+from .runtime_commands import resolve_direct_argv
 
 
 def _digest(payload: bytes) -> str:
@@ -19,9 +19,23 @@ def _digest(payload: bytes) -> str:
 
 def execute_direct(argv: list[str], candidate: Path, timeout: int, stdin_payload: bytes | None = None) -> dict[str, Any]:
     recorded = list(argv)
-    command = list(argv)
-    if command and command[0] in {"python", "python3"}:
-        command[0] = sys.executable
+    resolution = resolve_direct_argv(argv, candidate)
+    common = {
+        "argv": recorded,
+        "declared_argv": recorded,
+        "observed_argv": list(resolution.observed_argv) if resolution.observed_argv is not None else None,
+        "adapter": resolution.adapter,
+    }
+    if resolution.observed_argv is None:
+        return {
+            **common,
+            "diagnostics": [resolution.diagnostic or "executable_unavailable"],
+            "executed": False,
+            "state": "NOT VERIFIED",
+            "stdout_sha256": None,
+            "stderr_sha256": None,
+        }
+    command = list(resolution.observed_argv)
     environment = {
         key: value for key, value in os.environ.items()
         if key.upper() in {"SYSTEMROOT", "WINDIR", "TEMP", "TMP"}
@@ -36,19 +50,19 @@ def execute_direct(argv: list[str], candidate: Path, timeout: int, stdin_payload
         )
     except FileNotFoundError:
         return {
-            "argv": recorded, "diagnostics": ["executable_unavailable"], "executed": False,
+            **common, "diagnostics": ["executable_unavailable"], "executed": False,
             "state": "NOT VERIFIED", "stdout_sha256": None, "stderr_sha256": None,
         }
     except subprocess.TimeoutExpired as error:
         return {
-            "argv": recorded, "diagnostics": ["execution_timeout"], "executed": True,
+            **common, "diagnostics": ["execution_timeout"], "executed": True,
             "state": "FAIL", "stdout_sha256": _digest(error.stdout or b""),
             "stderr_sha256": _digest(error.stderr or b""),
         }
     state = "PASS" if completed.returncode == 0 else "FAIL"
     diagnostics = [] if state == "PASS" else [f"process_exit:{completed.returncode}"]
     return {
-        "argv": recorded, "diagnostics": diagnostics, "executed": True,
+        **common, "diagnostics": diagnostics, "executed": True,
         "state": state, "stdout_sha256": _digest(completed.stdout),
         "stderr_sha256": _digest(completed.stderr), "_stdout": completed.stdout,
     }
@@ -70,6 +84,9 @@ def verify_application_tool(
         "permissions": sorted(tool.get("permissions", [])),
         "fallback": tool.get("fallback"), "executed": False,
         "argv": list((tool.get("verification") or {}).get("argv", [])),
+        "declared_argv": list((tool.get("verification") or {}).get("argv", [])),
+        "observed_argv": None,
+        "adapter": None,
         "fixture_sha256": _digest(canonical_bytes(tool.get("fixtures"))),
         "contract_sha256": _digest(canonical_bytes(tool)),
         "stdout_sha256": None, "stderr_sha256": None,

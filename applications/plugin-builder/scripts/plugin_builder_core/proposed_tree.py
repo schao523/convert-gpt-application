@@ -10,6 +10,7 @@ from typing import Any
 
 from .bootstrap import plugin_authoring
 from .artifact_quality import audit_artifact_quality
+from .runtime_commands import resolve_direct_argv
 
 
 @dataclass(frozen=True)
@@ -90,6 +91,7 @@ def preflight_proposed_tree(
     diagnostics: list[str] = []
     tree_hash: str | None = None
     quality_evidence: dict[str, Any] | None = None
+    command_evidence: list[dict[str, Any]] = []
     try:
         with tempfile.TemporaryDirectory(dir=root, prefix=".plan-preflight-") as name:
             plugin = Path(name) / "plugin"
@@ -120,6 +122,29 @@ def preflight_proposed_tree(
                 )
                 diagnostics.extend(f"plan.preflight.{item}" for item in quality.diagnostics)
                 quality_evidence = quality.as_dict()
+                for tool in proposal.get("tools", []):
+                    if not isinstance(tool, dict) or tool.get("implementation_kind") not in {"BUNDLED_LOCAL", "FRAMEWORK_ADAPTER"}:
+                        continue
+                    for purpose in ("execution", "verification"):
+                        command = tool.get(purpose)
+                        argv = command.get("argv") if isinstance(command, dict) else None
+                        if not isinstance(argv, list):
+                            continue
+                        resolution = resolve_direct_argv(argv, plugin)
+                        command_evidence.append({
+                            "tool_id": tool.get("id"),
+                            "purpose": purpose,
+                            "declared_argv": list(resolution.declared_argv),
+                            "observed_argv": list(resolution.observed_argv) if resolution.observed_argv is not None else None,
+                            "adapter": resolution.adapter,
+                            "diagnostic": resolution.diagnostic,
+                            "resolution_scope": "BUILD_HOST",
+                            "evidence_state": "STATICALLY VERIFIED" if resolution.diagnostic is None else "NOT VERIFIED",
+                        })
+                        if resolution.diagnostic is not None:
+                            diagnostics.append(
+                                f"plan.preflight.command_unresolved:{tool.get('id', '')}:{purpose}:{resolution.diagnostic}"
+                            )
                 tree_hash = plugin_authoring.tree_sha256(plugin)
     except OSError:
         diagnostics.append("plan.preflight.local_io_failure")
@@ -129,6 +154,10 @@ def preflight_proposed_tree(
             "schema": "plugin-builder-preflight-v1",
             "materialized_tree_sha256": tree_hash,
             "artifact_quality": quality_evidence,
+            "command_resolution": sorted(
+                command_evidence,
+                key=lambda item: (str(item["tool_id"]), str(item["purpose"])),
+            ),
         },
     )
 

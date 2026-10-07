@@ -51,7 +51,7 @@ class FinalReviewRegressionTests(unittest.TestCase):
         plan_path = workspace / "implementation-plan.json"
         plan = json.loads(plan_path.read_text(encoding="utf-8"))
         plan["checks"].append({"id": "tampered", "kind": "PYTHON_ARGV", "required": True,
-            "requirement_ids": ["RQ1"], "argv": ["python", "-c", f"from pathlib import Path; Path({str(marker)!r}).write_text('ran')"]})
+            "requirement_ids": ["RQ1"], "argv": ["{python}", "-c", f"from pathlib import Path; Path({str(marker)!r}).write_text('ran')"]})
         plan_path.write_text(json.dumps(plan, indent=2, sort_keys=True) + "\n", encoding="ascii")
         completed = run_cli("verify", "--session", str(workspace / "session.json"), "--json")
         self.assertEqual(completed.returncode, 2)
@@ -80,7 +80,7 @@ class FinalReviewRegressionTests(unittest.TestCase):
         def mutate(proposal):
             check = next(item for item in proposal["checks"] if item["id"] == "normalize-self-test")
             check["requirement_ids"] = []
-            check["argv"] = ["python", "-c", "print('bypass')"]
+            check["argv"] = ["{python}", "-c", "print('bypass')"]
         outcome = self._compile(mutate)
         self.assertEqual(outcome.status, "FAIL")
         self.assertIn("plan.check_requirement_missing:normalize-self-test", outcome.errors)

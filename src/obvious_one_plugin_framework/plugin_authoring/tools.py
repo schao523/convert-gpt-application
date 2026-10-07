@@ -59,6 +59,21 @@ def _shell_forbidden(argv: object) -> bool:
     return any(any(token in item for token in ("&&", "||", ";", "|", "`", "$(", "\n", "\r")) for item in argv)
 
 
+def _argv_invalid(argv: object, *, allow_empty: bool = False) -> bool:
+    if not isinstance(argv, list) or (not argv and not allow_empty) or any(not isinstance(item, str) or not item for item in argv):
+        return True
+    for item in argv:
+        if item.startswith("{") and item.endswith("}") and item != "{python}":
+            return True
+        if "://" in item or item.startswith("-") or item == "{python}":
+            continue
+        if "\\" in item or item.startswith("/") or re.match(r"^[A-Za-z]:", item):
+            return True
+        if "/" in item and not _safe_path(item):
+            return True
+    return False
+
+
 def validate_application_tool_contract(payload: object) -> ApplicationToolContract:
     errors: list[str] = []
     blockers: list[str] = []
@@ -119,8 +134,14 @@ def validate_application_tool_contract(payload: object) -> ApplicationToolContra
     verification = payload.get("verification")
     if not isinstance(verification, dict) or set(verification) != {"kind", "argv", "network"}:
         errors.append(f"{prefix}.verification_invalid")
-    elif _shell_forbidden(verification.get("argv")):
-        errors.append(f"{prefix}.verification_shell_forbidden")
+    else:
+        if _argv_invalid(
+            verification.get("argv"),
+            allow_empty=kind not in {"BUNDLED_LOCAL", "FRAMEWORK_ADAPTER"},
+        ):
+            errors.append(f"{prefix}.verification_argv_invalid")
+        if _shell_forbidden(verification.get("argv")):
+            errors.append(f"{prefix}.verification_shell_forbidden")
 
     execution = payload.get("execution")
     if kind in {"BUNDLED_LOCAL", "FRAMEWORK_ADAPTER"}:
@@ -129,7 +150,7 @@ def validate_application_tool_contract(payload: object) -> ApplicationToolContra
         if not isinstance(execution, dict) or set(execution) != {"argv", "clean_environment", "timeout_seconds"}:
             errors.append(f"{prefix}.execution_invalid")
         else:
-            if not isinstance(execution.get("argv"), list) or not execution["argv"]:
+            if _argv_invalid(execution.get("argv")):
                 errors.append(f"{prefix}.execution_argv_invalid")
             elif _shell_forbidden(execution["argv"]):
                 errors.append(f"{prefix}.execution_shell_forbidden")

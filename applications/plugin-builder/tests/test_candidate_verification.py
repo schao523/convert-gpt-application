@@ -56,7 +56,7 @@ class CandidateVerificationTests(unittest.TestCase):
         evidence = self._report(workspace)["tools"][0]
         self.assertEqual(evidence["state"], "PASS")
         self.assertTrue(evidence["executed"])
-        self.assertEqual(evidence["argv"], ["python", "tools/normalize.py", "--self-test"])
+        self.assertEqual(evidence["argv"], ["{python}", "tools/normalize.py", "--self-test"])
         self.assertRegex(evidence["fixture_sha256"], r"^[0-9a-f]{64}$")
         self.assertRegex(evidence["stdout_sha256"], r"^[0-9a-f]{64}$")
 
@@ -103,16 +103,17 @@ class CandidateVerificationTests(unittest.TestCase):
         self.assertIn("w2.required_failure", read_result(approved)["errors"])
         self.assertEqual((workspace / "verification-report.json").read_bytes(), report_before)
 
-    def test_unexecuted_check_remains_not_verified(self) -> None:
+    def test_unavailable_literal_command_fails_preflight(self) -> None:
         def mutate(proposal):
             check = next(item for item in proposal["checks"] if item["id"] == "normalize-self-test")
             check["argv"] = ["definitely-missing-executable"]
             proposal["tools"][0]["verification"]["argv"] = ["definitely-missing-executable"]
-        workspace = self._workspace(mutate)
-        self._verify(workspace)
-        check = next(item for item in self._report(workspace)["checks"] if item["id"] == "normalize-self-test")
-        self.assertEqual(check["state"], "NOT VERIFIED")
-        self.assertIn("executable_unavailable", check["diagnostics"])
+        with self.assertRaises(AssertionError) as raised:
+            prepared_workspace(self.root, mutate=mutate)
+        self.assertIn(
+            "plan.preflight.command_unresolved:normalize-input:verification:executable_unavailable",
+            str(raised.exception),
+        )
 
     def test_verification_covers_every_required_requirement(self) -> None:
         workspace = self._workspace()

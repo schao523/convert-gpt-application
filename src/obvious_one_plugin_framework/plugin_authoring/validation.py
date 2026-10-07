@@ -60,6 +60,10 @@ _SEMVER = re.compile(
 _MARKDOWN_LINK = re.compile(r"!?\[[^\]]*\]\(\s*(?:<(?P<angle>[^>]+)>|(?P<plain>[^\s)]+))")
 _UNFINISHED = re.compile(r"(?i)(?:\bTODO\b|\bTBD\b|\bFIXME\b|<[^>]*(?:TODO|TBD|FIXME)[^>]*>)")
 _WINDOWS_DRIVE = re.compile(r"^[A-Za-z]:")
+_PATH_TOKEN = re.compile(
+    r"(?:[A-Za-z]:[\\/][^\s`\"'<>]+|(?:\.\.?[\\/])[^\s`\"'<>]+|"
+    r"(?:[A-Za-z0-9_.-]+[\\/])+[A-Za-z0-9_.-]+\.(?:md|json|ya?ml|py|txt))"
+)
 
 
 @dataclass(frozen=True, order=True)
@@ -387,6 +391,63 @@ def validate_reference_closure(root: Path) -> tuple[ValidationIssue, ...]:
     return _sorted_unique(issues)
 
 
+def _path_tokens(value: object) -> set[str]:
+    if isinstance(value, str):
+        return {match.group(0).rstrip(".,;:)") for match in _PATH_TOKEN.finditer(value)}
+    if isinstance(value, list):
+        return set().union(*(_path_tokens(item) for item in value), set())
+    if isinstance(value, dict):
+        return set().union(*(_path_tokens(item) for item in value.values()), set())
+    return set()
+
+
+def validate_path_bindings(root: Path) -> tuple[ValidationIssue, ...]:
+    """Validate path-like bindings without interpreting ordinary prose as paths."""
+
+    plugin_root = Path(root)
+    issues: list[ValidationIssue] = []
+    for path in sorted(
+        item for item in plugin_root.rglob("*")
+        if item.is_file() and item.suffix.casefold() in {".md", ".json", ".yaml", ".yml"}
+    ):
+        relative = path.relative_to(plugin_root).as_posix()
+        try:
+            text = path.read_text(encoding="utf-8")
+        except (OSError, UnicodeError):
+            continue
+        payload: object = text
+        if path.suffix.casefold() == ".json":
+            try:
+                payload = json.loads(text)
+            except json.JSONDecodeError:
+                payload = text
+        tokens = _path_tokens(payload)
+        if path.name == "SKILL.md":
+            tokens.update(_markdown_targets(text))
+        for token in sorted(tokens):
+            if "://" in token:
+                continue
+            safe = _safe_relative_path(token)
+            if safe is None or "\\" in token or _WINDOWS_DRIVE.match(token):
+                issues.append(_issue("path_binding_invalid", relative, token))
+                continue
+            if path.name == "SKILL.md":
+                target = path.parent.joinpath(*PurePosixPath(safe).parts)
+                try:
+                    target.resolve(strict=False).relative_to(path.parent.resolve(strict=True))
+                except (OSError, ValueError):
+                    issues.append(_issue("path_binding_invalid", relative, token))
+                else:
+                    if not target.is_file():
+                        issues.append(_issue("path_binding_missing", relative, safe))
+        if isinstance(payload, dict) and payload.get("schema") == "plugin-builder-application-tool-v1":
+            for token in payload.get("files", []):
+                safe = _safe_relative_path(token)
+                if safe is None or not plugin_root.joinpath(*PurePosixPath(safe).parts).is_file():
+                    issues.append(_issue("path_binding_invalid", relative, str(token)))
+    return _sorted_unique(issues)
+
+
 def validate_plugin_tree(root: Path) -> tuple[ValidationIssue, ...]:
     plugin_root = Path(root)
     if not plugin_root.is_dir():
@@ -394,4 +455,5 @@ def validate_plugin_tree(root: Path) -> tuple[ValidationIssue, ...]:
     issues = list(validate_manifest_pair(plugin_root))
     issues.extend(validate_skill_tree(plugin_root))
     issues.extend(validate_reference_closure(plugin_root))
+    issues.extend(validate_path_bindings(plugin_root))
     return _sorted_unique(issues)

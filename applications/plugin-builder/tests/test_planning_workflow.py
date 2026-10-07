@@ -229,7 +229,7 @@ class PlanningWorkflowTests(unittest.TestCase):
         self.assertEqual(tool["implementation_kind"], "BUNDLED_LOCAL")
         self.assertEqual(tool["skill_bindings"], ["answering-structured-requests"])
         self.assertEqual(tool["requirement_ids"], ["RQ1"])
-        self.assertEqual(tool["verification"]["argv"], ["python", "tools/normalize.py", "--self-test"])
+        self.assertEqual(tool["verification"]["argv"], ["{python}", "tools/normalize.py", "--self-test"])
 
     def test_unresolved_or_unbound_required_tool_blocks_w1(self) -> None:
         for mutation, expected in (

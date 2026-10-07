@@ -125,9 +125,9 @@
       "dependencies": [],
       "configuration": {"authentication": "NOT_REQUIRED", "setup": "BUNDLED"},
       "fallback": {"policy": "BLOCK", "description": "Normalization is required."},
-      "verification": {"kind": "PYTHON_ARGV", "argv": ["python", "tools/normalize.py", "--self-test"], "network": false},
+      "verification": {"kind": "PYTHON_ARGV", "argv": ["{python}", "tools/normalize.py", "--self-test"], "network": false},
       "redistribution": {"state": "APPROVED", "evidence": "generated for this plugin"}
-      ,"execution": {"argv": ["python", "tools/normalize.py"], "clean_environment": true, "timeout_seconds": 30}
+      ,"execution": {"argv": ["{python}", "tools/normalize.py"], "clean_environment": true, "timeout_seconds": 30}
       ,"fixtures": {"input": {"text": " A "}, "output": {"normalized": "A"}}
       ,"runtime_capability": null
       ,"adapter": null
@@ -148,7 +148,7 @@
     {"id": "plugin-structure", "kind": "PLUGIN_STRUCTURE", "required": true, "requirement_ids": ["RQ1"]},
     {"id": "skill-structure", "kind": "SKILL_STRUCTURE", "required": true, "requirement_ids": ["AC1", "RQ1"]},
     {"id": "requirement-coverage", "kind": "REQUIREMENT_COVERAGE", "required": true, "requirement_ids": ["AC1", "RQ1"]},
-    {"id": "normalize-self-test", "kind": "PYTHON_ARGV", "required": true, "requirement_ids": ["RQ1"], "argv": ["python", "tools/normalize.py", "--self-test"]}
+    {"id": "normalize-self-test", "kind": "PYTHON_ARGV", "required": true, "requirement_ids": ["RQ1"], "argv": ["{python}", "tools/normalize.py", "--self-test"]}
   ],
   "expected_members": [
     ".codex-plugin/plugin.json",

@@ -25,6 +25,7 @@ from .validation import (
     validate_plugin_tree,
     validate_portable_manifest,
     validate_reference_closure,
+    validate_path_bindings,
     validate_skill_tree,
 )
 from .tools import ApplicationToolContract, validate_application_tool_contract
@@ -54,6 +55,7 @@ __all__ = [
     "validate_plugin_tree",
     "validate_portable_manifest",
     "validate_reference_closure",
+    "validate_path_bindings",
     "validate_skill_tree",
     "ApplicationToolContract",
     "validate_application_tool_contract",
