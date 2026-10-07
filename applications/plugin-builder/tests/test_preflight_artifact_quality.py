@@ -225,6 +225,16 @@ class ArtifactQualityTests(unittest.TestCase):
         self.assertIn("build.preflight_evidence_mismatch", read_result(completed)["errors"])
         self.assertFalse((workspace / "candidate").exists())
 
+    def test_mcp_projection_is_declared_and_bound_into_preflight_tree(self) -> None:
+        workspace = prepared_workspace(self.root)
+        plan = json.loads((workspace / "implementation-plan.json").read_text(encoding="utf-8"))
+        self.assertIn("mcp.json", plan["expected_members"])
+        self.assertIn(".mcp.json", plan["expected_members"])
+        self.assertRegex(
+            plan["preflight_evidence"]["materialized_tree_sha256"],
+            r"^[0-9a-f]{64}$",
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

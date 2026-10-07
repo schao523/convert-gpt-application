@@ -104,6 +104,26 @@ def validate_manifest_profile(
     listing_status = {
         field: _status(*listing_values[field]) for field in _LISTING_FIELDS
     }
+    portable_mcp = Path(root) / "mcp.json"
+    compatibility_mcp = Path(root) / ".mcp.json"
+    mcp_status = "NOT_APPLICABLE"
+    if portable_mcp.exists() or compatibility_mcp.exists():
+        mcp_status = "SUPPLIED"
+        try:
+            portable_payload = json.loads(portable_mcp.read_text(encoding="ascii"))
+        except (OSError, UnicodeError, json.JSONDecodeError):
+            diagnostics.append("manifest.mcp_projection_invalid")
+        else:
+            if compatibility_mcp.exists():
+                try:
+                    compatibility_payload = json.loads(compatibility_mcp.read_text(encoding="ascii"))
+                except (OSError, UnicodeError, json.JSONDecodeError):
+                    diagnostics.append("manifest.mcp_projection_invalid")
+                else:
+                    if portable_payload != compatibility_payload:
+                        diagnostics.append("manifest.mcp_projection_mismatch")
+            elif decision.get("target") == "OPENAI_DESKTOP":
+                diagnostics.append("manifest.mcp_compatibility_missing")
     if decision.get("profile") == "RELEASE_READY":
         diagnostics.extend(
             f"manifest.release_metadata_unresolved:{field}"
@@ -116,6 +136,7 @@ def validate_manifest_profile(
         "profile": decision.get("profile"),
         "vocabulary_version": decision.get("vocabulary_version"),
         "listing_status": dict(sorted(listing_status.items())),
+        "mcp_configuration": mcp_status,
     }
     return ManifestProfileReport(tuple(sorted(set(diagnostics))), evidence)
 

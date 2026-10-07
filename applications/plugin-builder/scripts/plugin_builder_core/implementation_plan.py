@@ -13,6 +13,7 @@ from typing import Any
 from .bootstrap import plugin_authoring
 from .artifact_quality import CONTENT_ROLES
 from .proposed_tree import preflight_proposed_tree
+from .mcp_realization import expected_mcp_members
 from .runtime_adapters import (
     adapter_registry_sha256,
     validate_realization_against_registry,
@@ -302,7 +303,7 @@ def compile_plan(inspection: object, proposal: object, output: Path) -> PlanOutc
     expected = proposal_payload.get("expected_members")
     derived_paths = {
         f"skills/{name}/agents/openai.yaml" for name in skill_names
-    } | {".codex-plugin/plugin.json", "PLUGIN-BUILDER-MANIFEST.json"}
+    } | {".codex-plugin/plugin.json", "PLUGIN-BUILDER-MANIFEST.json"} | set(expected_mcp_members(proposal_payload))
     if proposal_payload.get("operation") == "update":
         derived_paths.add("PLUGIN-BUILDER-CHANGES.json")
     expected_paths: set[str] = set()

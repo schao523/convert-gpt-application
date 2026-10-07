@@ -247,6 +247,7 @@ class RuntimeFeasibilityTests(unittest.TestCase):
         fallback_tool["operation"]["id"] = "normalize-input-fallback"
         for item in fallback_tool["realizations"]:
             item["operation_id"] = "normalize-input-fallback"
+            item["exposed_capability"] = "normalize-input-fallback"
             item.update(
                 mechanism="MCP_REMOTE_HTTPS",
                 adapter_id="mcp-streamable-http",

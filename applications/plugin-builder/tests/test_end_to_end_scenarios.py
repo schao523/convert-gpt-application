@@ -62,6 +62,10 @@ def _runtime_native_optional(proposal: dict) -> None:
     tool["operation"]["protocol"] = "RUNTIME_API"
     proposal["files"] = [item for item in proposal["files"] if item["path"] != "tools/normalize.py"]
     proposal["expected_members"].remove("tools/normalize.py")
+    proposal["expected_members"] = [
+        item for item in proposal["expected_members"]
+        if item not in {"mcp.json", ".mcp.json"}
+    ]
     proposal["checks"] = [item for item in proposal["checks"] if item["id"] != "normalize-self-test"]
     requirement = next(item for item in proposal["requirements"] if item["id"] == "RQ1")
     requirement["implementation_paths"] = [item for item in requirement["implementation_paths"] if item != "tools/normalize.py"]
@@ -70,23 +74,15 @@ def _runtime_native_optional(proposal: dict) -> None:
 
 def _mcp_optional(proposal: dict) -> None:
     tool = proposal["tools"][0]
-    config = {"server": "example", "transport": "stdio"}
-    recipe = {
-        "path": "mcp/example.json", "classification": "generated_json", "content_role": "STATIC_ASSET",
-        "source_sha256": sha256((json.dumps(config, ensure_ascii=True, indent=2, sort_keys=True) + "\n").encode("ascii")).hexdigest(),
-        "redistribution": {"state": "APPROVED", "evidence": "generated non-secret configuration"},
-        "inline_json": config, "requirement_ids": ["RQ1"],
-    }
-    proposal["files"] = [item for item in proposal["files"] if item["path"] != "tools/normalize.py"] + [recipe]
+    proposal["files"] = [item for item in proposal["files"] if item["path"] != "tools/normalize.py"]
     proposal["expected_members"].remove("tools/normalize.py")
-    proposal["expected_members"].append("mcp/example.json")
     proposal["checks"] = [item for item in proposal["checks"] if item["id"] != "normalize-self-test"]
     requirement = next(item for item in proposal["requirements"] if item["id"] == "RQ1")
     requirement["implementation_paths"] = [item for item in requirement["implementation_paths"] if item != "tools/normalize.py"]
-    requirement["implementation_paths"].append("mcp/example.json")
+    requirement["implementation_paths"].append("mcp.json")
     requirement["evidence_targets"] = [item for item in requirement["evidence_targets"] if item != "normalize-self-test"]
     tool.update({
-        "required": False, "implementation_kind": "MCP_ADAPTER", "files": ["mcp/example.json"],
+        "required": False, "implementation_kind": "MCP_ADAPTER", "files": [],
         "execution": None, "fixtures": None, "runtime_capability": None,
         "configuration": {"authentication": "USER_CONFIGURED", "setup": "OWNER_CONFIGURED"},
         "fallback": {
@@ -97,7 +93,7 @@ def _mcp_optional(proposal: dict) -> None:
             "degraded_requirement_ids": ["RQ1"],
         },
     })
-    tool["mcp"].update({"server_id": "example", "config_file": "mcp/example.json", "service_boundary": "external example"})
+    tool["mcp"].update({"server_id": "example", "service_boundary": "external example"})
 
 
 class EndToEndScenarios(unittest.TestCase):

@@ -201,7 +201,9 @@
     {"id": "normalize-self-test", "kind": "PYTHON_ARGV", "required": true, "requirement_ids": ["RQ1"], "argv": ["{python}", "tools/normalize.py", "--self-test"]}
   ],
   "expected_members": [
+    ".mcp.json",
     ".codex-plugin/plugin.json",
+    "mcp.json",
     "plugin.json",
     "skills/answering-structured-requests/SKILL.md",
     "skills/answering-structured-requests/agents/openai.yaml",

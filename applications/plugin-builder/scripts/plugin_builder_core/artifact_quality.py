@@ -80,6 +80,9 @@ def audit_artifact_quality(
             )
     if (root / ".codex-plugin/plugin.json").is_file():
         roles.setdefault(".codex-plugin/plugin.json", "GENERATED_METADATA")
+    for generated in ("mcp.json", ".mcp.json"):
+        if (root / generated).is_file():
+            roles.setdefault(generated, "GENERATED_METADATA")
 
     baseline_roles = baseline_manifest.get("file_roles") if isinstance(baseline_manifest, dict) else None
     baseline_members = baseline_manifest.get("members", []) if isinstance(baseline_manifest, dict) else []

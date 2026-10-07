@@ -11,6 +11,7 @@ from typing import Any
 from .bootstrap import plugin_authoring
 from .artifact_quality import audit_artifact_quality
 from .manifest_profile import validate_manifest_profile
+from .mcp_realization import canonical_mcp_bytes, project_mcp_configuration, validate_mcp_projection
 from .runtime_commands import resolve_direct_argv
 
 
@@ -71,6 +72,16 @@ def materialize_proposed_tree(
         agent.parent.mkdir(parents=True, exist_ok=True)
         agent.write_bytes(agent_yaml(skill))
     plugin_authoring.materialize_manifest_pair(output)
+    try:
+        portable_mcp, compatibility_mcp = project_mcp_configuration(proposal)
+    except ValueError as error:
+        raise plugin_authoring.PluginAuthoringError("mcp_projection_invalid", str(error)) from error
+    for name, payload in (("mcp.json", portable_mcp), (".mcp.json", compatibility_mcp)):
+        if payload is not None:
+            (output / name).write_bytes(canonical_mcp_bytes(payload))
+    projection_errors = validate_mcp_projection(proposal, output)
+    if projection_errors:
+        raise plugin_authoring.PluginAuthoringError("mcp_projection_invalid", projection_errors[0])
 
 
 def _issue_diagnostic(issue: Any) -> str:
