@@ -11,6 +11,7 @@ def validate_tool_contract(
     requirement_ids: set[str],
     skill_names: set[str],
     recipe_paths: set[str],
+    capability_ids: set[str] | None = None,
 ) -> tuple[list[str], list[str]]:
     validated = plugin_authoring.validate_application_tool_contract(payload)
     errors = list(validated.errors)
@@ -30,4 +31,9 @@ def validate_tool_contract(
     files = payload.get("files")
     if isinstance(files, list) and any(item not in recipe_paths for item in files):
         errors.append(f"{prefix}.file_recipe_missing")
+    bindings_to_capabilities = payload.get("capability_ids")
+    if capability_ids is not None and isinstance(bindings_to_capabilities, list):
+        for item in bindings_to_capabilities:
+            if item not in capability_ids:
+                errors.append(f"{prefix}.capability_unknown:{item}")
     return sorted(set(errors)), sorted(set(blockers))

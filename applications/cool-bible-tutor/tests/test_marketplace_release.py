@@ -69,6 +69,26 @@ class MarketplaceReleaseTests(unittest.TestCase):
             "plugins/cool-bible-tutor/tests/test_verification_profile.py", report.paths
         )
 
+    def test_manifest_bound_scripture_json_keeps_exact_bytes_in_git(self):
+        attributes = (PLUGIN / ".gitattributes").read_text(encoding="utf-8")
+
+        self.assertIn(
+            "assets/scripture/cuv-approved-gaps.json -text whitespace=cr-at-eol",
+            attributes,
+        )
+        self.assertIn(
+            "assets/scripture/cuv-runtime-manifest.json -text whitespace=cr-at-eol",
+            attributes,
+        )
+        self.assertNotIn(
+            "assets/scripture/cuv-approved-gaps.json text eol=crlf",
+            attributes,
+        )
+        self.assertNotIn(
+            "assets/scripture/cuv-runtime-manifest.json text eol=crlf",
+            attributes,
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

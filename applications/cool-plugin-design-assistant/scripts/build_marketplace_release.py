@@ -11,12 +11,24 @@ import os
 from pathlib import Path
 import shutil
 import stat
+import sys
 from typing import NamedTuple
+
+
+_SCRIPTS_ROOT = Path(__file__).resolve().parent
+if str(_SCRIPTS_ROOT) not in sys.path:
+    sys.path.insert(0, str(_SCRIPTS_ROOT))
+
+from workbench_handoff_bootstrap import load_plugin_authoring
+
+
+plugin_authoring = load_plugin_authoring()
 
 
 PLUGIN_ID = "cool-plugin-design-assistant"
 MARKER = ".obvious-one-marketplace"
 ROOT_FILES = {
+    "plugin.json",
     "README.md",
     "DISTRIBUTION.md",
     "LICENSE",
@@ -94,11 +106,25 @@ def _public_files(source: Path) -> list[Path]:
 def build_release(source: Path, destination: Path, version: str) -> ReleaseReport:
     source = Path(source).resolve()
     destination = Path(destination).resolve()
+    portable = json.loads((source / "plugin.json").read_text(encoding="utf-8"))
     manifest = json.loads(
         (source / ".codex-plugin" / "plugin.json").read_text(encoding="utf-8")
     )
-    if manifest.get("name") != PLUGIN_ID or manifest.get("version") != version:
+    if (
+        portable.get("name") != PLUGIN_ID
+        or portable.get("version") != version
+        or manifest.get("name") != PLUGIN_ID
+        or manifest.get("version") != version
+        or portable.get("extensions", {}).get("com.openai", {}).get("interface")
+        != manifest.get("interface")
+    ):
         raise ValueError("plugin identity or version mismatch")
+    manifest_issues = plugin_authoring.validate_manifest_pair(source)
+    if manifest_issues:
+        details = ", ".join(
+            f"{item.code}:{item.path}:{item.detail}" for item in manifest_issues
+        )
+        raise ValueError(f"manifest pair validation failed: {details}")
 
     rights_evidence = source / "docs" / "source-decisions.md"
     try:

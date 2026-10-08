@@ -3,7 +3,7 @@
   "plugin_id": "plugin-builder",
   "package_name": "@obvious-one/plugin-builder",
   "family": "bundle-plugin",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "source_root": "..",
   "include_files": [
     "plugin.json",
@@ -16,7 +16,8 @@
     "THIRD_PARTY_CONTENT.md",
     "THIRD_PARTY_NOTICES.md",
     "docs/application-invariants.md",
-    "docs/runtime-compatibility.md"
+    "docs/runtime-compatibility.md",
+    "contracts/openai-interface-vocabulary-v1.json"
   ],
   "include_prefixes": ["scripts", "skills"],
   "exclude_paths": [],
@@ -40,7 +41,8 @@
         "THIRD_PARTY_CONTENT.md",
         "THIRD_PARTY_NOTICES.md",
         "docs/application-invariants.md",
-        "docs/runtime-compatibility.md"
+        "docs/runtime-compatibility.md",
+        "contracts/openai-interface-vocabulary-v1.json"
       ],
       "prefixes": ["scripts", "skills"],
       "classification": "text",

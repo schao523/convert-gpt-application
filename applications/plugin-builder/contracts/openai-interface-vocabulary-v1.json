@@ -1,0 +1,17 @@
+{
+  "schema": "obvious-one-openai-interface-v1",
+  "categories": [
+    "Business",
+    "Developer Tools",
+    "Education",
+    "Lifestyle",
+    "Other",
+    "Productivity",
+    "Research"
+  ],
+  "capabilities": [
+    "Interactive",
+    "Read",
+    "Write"
+  ]
+}

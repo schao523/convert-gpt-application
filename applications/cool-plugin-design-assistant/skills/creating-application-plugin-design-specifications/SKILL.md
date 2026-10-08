@@ -18,7 +18,12 @@ decision inside prose or silently convert it to an assumption.
 
 Only after approval, read
 [the Workbench handoff contract](references/workbench-handoff-contract.md) and
-package the approved artifacts. The handoff must not prescribe Skill count,
+package the approved artifacts. Run the deterministic `normalize-handoff-package`
+operation; a chat must not manually synthesize the canonical authority pair.
+Report success only after the returned `output_archive_sha256` equals the digest
+of the final ZIP and that ZIP passes full canonical validation. If the operation
+cannot execute or either check cannot be completed, report `HANDOFF BLOCKED`.
+The handoff must not prescribe Skill count,
 Skill names, Skill collaboration, runtime adapters, storage, RAG, or Reference
 Material-to-Skill bindings; the Application Workbench determines them.
 

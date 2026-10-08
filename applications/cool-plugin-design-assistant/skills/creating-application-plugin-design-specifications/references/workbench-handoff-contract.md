@@ -50,6 +50,16 @@ validate the canonical payload before committing the derived archive, and never
 overwrite the approved source or an existing output. Format-only normalization
 does not grant new rights or reopen approved product behavior.
 
+Create the returned archive only through the deterministic
+`normalize-handoff-package` operation. The assistant must not manually create
+`package-manifest.json` and `workbench-handoff.json` as a substitute for that
+operation. A successful result requires `output_profile` equal to
+`WORKBENCH_HANDOFF_V1_1`, `output_archive_sha256` equal to the digest of the
+final ZIP, and full canonical validation of both authorities and every declared
+member after the archive is reopened. If deterministic execution is unavailable
+or any digest or validation result differs, delete only the newly created output
+and report `HANDOFF BLOCKED`; never claim a usable handoff.
+
 Represent each unresolved owner decision as an object with a stable
 `decision_id`, concise `summary`, named `owner`, and boolean `blocking` value.
 The handoff validator rejects malformed or blocking entries but preserves valid

@@ -10,7 +10,9 @@ from pathlib import Path
 import tempfile
 
 from .bootstrap import plugin_authoring
+from .candidate_identity import expected_tool_bindings, runtime_approval_errors, runtime_identity_fields
 from .implementation_plan import canonical_bytes, write_bytes_transactionally
+from .proposed_tree import materialize_proposed_tree, preflight_proposed_tree
 
 
 @dataclass(frozen=True)
@@ -27,16 +29,6 @@ def _load(path: Path, code: str) -> tuple[dict | None, str | None]:
     except (OSError, UnicodeError, json.JSONDecodeError):
         return None, code
     return (value, None) if isinstance(value, dict) else (None, code)
-
-
-def _agent_yaml(skill: dict) -> bytes:
-    display = " ".join(part.capitalize() for part in skill["name"].split("-"))
-    description = str(skill["description"]).replace('"', "'")
-    return (
-        "interface:\n"
-        f"  display_name: \"{display}\"\n"
-        f"  short_description: \"{description}\"\n"
-    ).encode("utf-8")
 
 
 def _replace_candidate(stage: Path, destination: Path, temporary: Path) -> None:
@@ -81,6 +73,8 @@ def build_candidate(session_path: Path) -> CandidateOutcome:
         return CandidateOutcome("FAIL", ("build.plan_unreadable",))
     if not isinstance(plan, dict):
         return CandidateOutcome("FAIL", ("build.plan_invalid",))
+    if plan.get("schema") != "plugin-builder-implementation-plan-v2":
+        return CandidateOutcome("BLOCKED", ("build.plan_schema_upgrade_required",))
     plan_hash = sha256(plan_bytes).hexdigest()
     tools = plan.get("tools")
     tools_hash = sha256(canonical_bytes(tools)).hexdigest() if isinstance(tools, list) else ""
@@ -89,13 +83,20 @@ def build_candidate(session_path: Path) -> CandidateOutcome:
         binding_errors.append("build.plan_sha256_mismatch")
     if tools_hash != plan_identity.get("tools_sha256") or tools_hash != w1.get("tools_sha256"):
         binding_errors.append("build.tools_sha256_mismatch")
+    binding_errors.extend(runtime_approval_errors(plan, plan_identity, w1))
     if binding_errors:
         return CandidateOutcome("BLOCKED", tuple(sorted(binding_errors)))
+    preflight = preflight_proposed_tree(plan, root)
+    if preflight.diagnostics:
+        return CandidateOutcome("FAIL", tuple(f"build.{item}" for item in preflight.diagnostics))
+    approved_preflight = plan.get("preflight_evidence")
+    if canonical_bytes(preflight.evidence) != canonical_bytes(approved_preflight):
+        return CandidateOutcome("BLOCKED", ("build.preflight_evidence_mismatch",))
+    preflight_hash = sha256(canonical_bytes(approved_preflight)).hexdigest()
 
     diagnostics: list[str] = []
     blockers: list[str] = []
     tool_contracts = []
-    skills = plan.get("skills") if isinstance(plan.get("skills"), list) else []
     recipes = plan.get("files") if isinstance(plan.get("files"), list) else []
     recipes_by_path = {item.get("path"): item for item in recipes if isinstance(item, dict)}
     for payload in tools if isinstance(tools, list) else []:
@@ -127,14 +128,7 @@ def build_candidate(session_path: Path) -> CandidateOutcome:
         with tempfile.TemporaryDirectory(dir=root, prefix=".candidate-build-") as name:
             temporary = Path(name)
             stage = temporary / "candidate"
-            plugin_authoring.materialize_files(recipes, root, stage)
-            for skill in skills:
-                if not isinstance(skill, dict):
-                    continue
-                agent = stage / "skills" / str(skill["name"]) / "agents" / "openai.yaml"
-                agent.parent.mkdir(parents=True, exist_ok=True)
-                agent.write_bytes(_agent_yaml(skill))
-            plugin_authoring.materialize_manifest_pair(stage)
+            materialize_proposed_tree(plan, root, stage)
             pair_issues = plugin_authoring.validate_manifest_pair(stage)
             if pair_issues:
                 return CandidateOutcome(
@@ -146,28 +140,23 @@ def build_candidate(session_path: Path) -> CandidateOutcome:
             expected = set(plan.get("expected_members", []))
             if actual_without_manifest != expected - {"PLUGIN-BUILDER-MANIFEST.json"}:
                 return CandidateOutcome("FAIL", ("build.expected_members_mismatch",))
-            bindings = []
-            for tool in sorted(tool_contracts, key=lambda item: item["id"]):
-                bindings.append({
-                    "contract_sha256": sha256(canonical_bytes(tool)).hexdigest(),
-                    "dependencies": tool["dependencies"],
-                    "files": tool["files"],
-                    "implementation_kind": tool["implementation_kind"],
-                    "permissions": tool["permissions"],
-                    "requirements": tool["requirement_ids"],
-                    "runtime_targets": tool["runtime_targets"],
-                    "skills": tool["skill_bindings"],
-                    "tool_id": tool["id"],
-                })
+            bindings = expected_tool_bindings(tool_contracts)
+            runtime_fields = runtime_identity_fields(plan, stage)
             manifest = {
-                "schema": "plugin-builder-candidate-manifest-v1",
+                "schema": "plugin-builder-candidate-manifest-v3" if runtime_fields else "plugin-builder-candidate-manifest-v2",
+                "operation": "create",
                 "plan_sha256": plan_hash,
                 "tools_sha256": tools_hash,
+                "preflight_evidence_sha256": preflight_hash,
+                "file_roles": approved_preflight["artifact_quality"]["file_roles"],
+                "manifest_profile": approved_preflight["manifest_profile"],
+                "manifest_profile_sha256": sha256(canonical_bytes(approved_preflight["manifest_profile"])).hexdigest(),
                 "content_tree_sha256": plugin_authoring.tree_sha256(stage),
                 "expected_members": sorted(expected),
                 "members": [asdict(member) for member in members],
                 "tool_bindings": bindings,
                 "tool_contracts": sorted(tool_contracts, key=lambda item: item["id"]),
+                **runtime_fields,
             }
             manifest_bytes = canonical_bytes(manifest)
             (stage / "PLUGIN-BUILDER-MANIFEST.json").write_bytes(manifest_bytes)
@@ -181,6 +170,8 @@ def build_candidate(session_path: Path) -> CandidateOutcome:
             _replace_candidate(stage, destination, temporary)
     except plugin_authoring.PluginAuthoringError as authoring_error:
         return CandidateOutcome("FAIL", (f"build.{authoring_error.code}",))
+    except ValueError as identity_error:
+        return CandidateOutcome("BLOCKED", (f"build.{identity_error}",))
     except OSError:
         return CandidateOutcome("FAIL", ("build.local_io_failure",))
 

@@ -68,6 +68,7 @@ def _parser() -> argparse.ArgumentParser:
     build.add_argument("--json", action="store_true", required=True)
     verify = subparsers.add_parser("verify")
     verify.add_argument("--session", type=Path, required=True)
+    verify.add_argument("--allow-loopback", action="store_true", help="Opt in to the W1-declared local MCP contract check only.")
     verify.add_argument("--json", action="store_true", required=True)
     approve2 = subparsers.add_parser("approve-w2")
     approve2.add_argument("--session", type=Path, required=True)
@@ -87,6 +88,9 @@ def _parser() -> argparse.ArgumentParser:
     evidence.add_argument("--result", type=Path, required=True)
     evidence.add_argument("--evidence-root", type=Path, required=True)
     evidence.add_argument("--output", type=Path, required=True)
+    evidence.add_argument("--reviewed-plugin-zip", type=Path)
+    evidence.add_argument("--approved-plan", type=Path)
+    evidence.add_argument("--approved-session", type=Path)
     evidence.add_argument("--json", action="store_true", required=True)
     for command in ("pause", "resume", "cancel"):
         lifecycle = subparsers.add_parser(command)
@@ -102,7 +106,11 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     if arguments.command == "package-runtime-evidence":
-        outcome = build_runtime_evidence_bundle(arguments.result, arguments.evidence_root, arguments.output)
+        outcome = build_runtime_evidence_bundle(
+            arguments.result, arguments.evidence_root, arguments.output,
+            reviewed_plugin_zip=arguments.reviewed_plugin_zip, approved_plan=arguments.approved_plan,
+            approved_session=arguments.approved_session,
+        )
         _emit(operation_document(
             "package-runtime-evidence", outcome.status, list(outcome.errors),
             archive_sha256=outcome.archive_sha256,
@@ -152,11 +160,14 @@ def main(argv: list[str] | None = None) -> int:
         inspection_path = root / session["inspection"].get("path", "")
         output = root / "implementation-plan.json"
         outcome = compile_plan(inspection_path, arguments.proposal, output)
-        if outcome.status != "FAIL":
+        if outcome.status != "FAIL" and outcome.plan_sha256 is not None:
             session["plan"] = {
                 "path": "implementation-plan.json",
                 "sha256": outcome.plan_sha256,
                 "tools_sha256": outcome.tools_sha256,
+                "capabilities_sha256": outcome.capabilities_sha256,
+                "realizations_sha256": outcome.realizations_sha256,
+                "adapter_registry_sha256": outcome.adapter_registry_sha256,
             }
             for key in ("w1", "candidate", "verification", "w2", "package"):
                 session[key] = None
@@ -168,6 +179,9 @@ def main(argv: list[str] | None = None) -> int:
             stage="W1" if outcome.status != "FAIL" else "F1",
             plan_sha256=outcome.plan_sha256,
             tools_sha256=outcome.tools_sha256,
+            capabilities_sha256=outcome.capabilities_sha256,
+            realizations_sha256=outcome.realizations_sha256,
+            adapter_registry_sha256=outcome.adapter_registry_sha256,
         ))
         return 0 if outcome.status == "PASS" else 2 if outcome.status == "BLOCKED" else 3
 
@@ -187,7 +201,7 @@ def main(argv: list[str] | None = None) -> int:
         return 0 if outcome.status == "PASS" else 2 if outcome.status == "BLOCKED" else 3
 
     if arguments.command == "verify":
-        outcome = verify_candidate(arguments.session)
+        outcome = verify_candidate(arguments.session, allow_loopback=arguments.allow_loopback)
         _emit(operation_document("verify", outcome.status, list(outcome.errors), report_sha256=outcome.report_sha256, stage="W2"))
         return 0 if outcome.status == "PASS" else 2 if outcome.status == "BLOCKED" else 3
 
@@ -198,7 +212,11 @@ def main(argv: list[str] | None = None) -> int:
 
     if arguments.command == "package":
         outcome = package_candidate(arguments.session)
-        _emit(operation_document("package", outcome.status, list(outcome.errors), package_sha256=outcome.package_sha256, path=outcome.path, stage="E1"))
+        _emit(operation_document(
+            "package", outcome.status, list(outcome.errors),
+            package_sha256=outcome.package_sha256, metadata_sha256=outcome.metadata_sha256,
+            path=outcome.path, stage="E1",
+        ))
         return 0 if outcome.status == "PASS" else 2 if outcome.status == "BLOCKED" else 3
 
     if arguments.command == "resolve-update":

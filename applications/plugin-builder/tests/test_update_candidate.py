@@ -37,7 +37,16 @@ class UpdateCandidateTests(unittest.TestCase):
                     relative = path.relative_to(source).as_posix()
                     archive.write(path, relative if prefix is None else f"{prefix}/{relative}")
 
-    def _prepare(self, *, keep_unrelated: bool = True, remove_unrelated: bool = False, identity: str = "sample-plugin", wrapped: bool = False) -> Path:
+    def _prepare(
+        self,
+        *,
+        keep_unrelated: bool = True,
+        remove_unrelated: bool = False,
+        identity: str = "sample-plugin",
+        wrapped: bool = False,
+        proposal_mutate=None,
+        expected_plan_returncode: int = 0,
+    ) -> Path:
         index = len(list(self.root.glob("create-*")))
         create_root = self.root / f"create-{index}"
         create_root.mkdir()
@@ -65,16 +74,42 @@ class UpdateCandidateTests(unittest.TestCase):
         if remove_unrelated:
             expected.remove("owner-notes.txt")
         proposal["expected_members"] = sorted(expected)
+        if proposal_mutate is not None:
+            proposal_mutate(proposal)
         proposal_path = self.root / f"update-proposal-{index}.json"
         proposal_path.write_text(json.dumps(proposal, sort_keys=True), encoding="utf-8")
         planned = run_cli("plan", "--session", str(workspace / "session.json"), "--proposal", str(proposal_path), "--json")
-        self.assertEqual(planned.returncode, 0, planned.stdout)
+        self.assertEqual(planned.returncode, expected_plan_returncode, planned.stdout)
+        self.last_planning_result = planned
+        if expected_plan_returncode != 0:
+            return workspace
         approved = run_cli("approve-w1", "--session", str(workspace / "session.json"), "--confirmed-by", "owner", "--evidence", "approved update", "--json")
         self.assertEqual(approved.returncode, 0, approved.stdout)
         if keep_unrelated:
             resolved = run_cli("resolve-update", "--session", str(workspace / "session.json"), "--member", "owner-notes.txt", "--decision", "remove" if remove_unrelated else "keep", "--evidence", "owner decision", "--json")
             self.assertEqual(resolved.returncode, 0, resolved.stdout)
         return workspace
+
+    def test_update_plan_preflight_validates_overlaid_final_tree_without_mutation(self) -> None:
+        def add_escaping_reference(proposal: dict) -> None:
+            skill = proposal["files"][0]
+            skill["inline_text"] += "\n[escape](../../outside.md)\n"
+            skill["source_sha256"] = sha256(skill["inline_text"].encode("utf-8")).hexdigest()
+
+        workspace = self._prepare(
+            proposal_mutate=add_escaping_reference,
+            expected_plan_returncode=3,
+        )
+        baseline_hash = plugin_authoring.tree_sha256(workspace / "baseline")
+
+        self.assertIn(
+            "plan.preflight.reference_path_invalid:skills/checking-traceability/SKILL.md:../../outside.md",
+            read_result(self.last_planning_result)["errors"],
+        )
+        self.assertEqual(plugin_authoring.tree_sha256(workspace / "baseline"), baseline_hash)
+        self.assertFalse((workspace / "candidate").exists())
+        self.assertFalse((workspace / "update-decisions.json").exists())
+        self.assertEqual(list(workspace.glob(".plan-preflight-*")), [])
 
     def test_update_preserves_unaffected_managed_and_unrelated_bytes(self) -> None:
         workspace = self._prepare()
@@ -85,6 +120,11 @@ class UpdateCandidateTests(unittest.TestCase):
         for path, payload in expected.items():
             self.assertEqual((workspace / "candidate" / path).read_bytes(), payload)
         changes = json.loads((workspace / "candidate/PLUGIN-BUILDER-CHANGES.json").read_text(encoding="utf-8"))
+        manifest = json.loads((workspace / "candidate/PLUGIN-BUILDER-MANIFEST.json").read_text(encoding="utf-8"))
+        self.assertEqual(manifest["schema"], "plugin-builder-candidate-manifest-v3")
+        self.assertEqual(manifest["operation"], "update")
+        self.assertEqual(manifest["file_roles"]["owner-notes.txt"], "INHERITED_UNCLASSIFIED")
+        self.assertEqual(manifest["manifest_profile"]["target"], "OPENAI_DESKTOP")
         self.assertIn("owner-notes.txt", changes["preserved"])
         self.assertIn("skills/checking-traceability/SKILL.md", changes["changed"])
 

@@ -3,6 +3,7 @@ from __future__ import annotations
 from hashlib import sha256
 import json
 from pathlib import Path
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -24,14 +25,51 @@ def _failing_tool(proposal: dict) -> None:
 
 def _runtime_native_optional(proposal: dict) -> None:
     tool = proposal["tools"][0]
+    skill = next(item for item in proposal["files"] if item["path"] == "skills/answering-structured-requests/SKILL.md")
+    skill["inline_text"] += "\nThe optional runtime-exposed capability is `desktop-picker`; use it only when available.\n"
+    skill["source_sha256"] = sha256(skill["inline_text"].encode("utf-8")).hexdigest()
     tool.update({
         "required": False, "implementation_kind": "RUNTIME_NATIVE", "files": [],
         "execution": None, "fixtures": None, "mcp": None,
         "runtime_capability": {"name": "desktop-picker", "runtimes": tool["runtime_targets"]},
-        "fallback": {"policy": "OPTIONAL", "description": "manual selection is available"},
+        "dependencies": [{
+            "id": "desktop-picker-runtime", "type": "RUNTIME_CAPABILITY",
+            "provider": "RUNTIME_PROVIDED", "version": None, "sha256": None,
+            "runtime_targets": tool["runtime_targets"], "setup_owner": "RUNTIME",
+            "required": False, "absence_policy": "FALLBACK",
+        }],
+        "permissions": [{
+            "id": "runtime:native", "target_runtime": target,
+            "grant_source": "RUNTIME", "required": False,
+            "purpose": "Use the runtime-provided desktop picker.",
+            "verification": "Observe installed runtime capability discovery.",
+        } for target in tool["runtime_targets"]],
+        "fallback": {
+            "policy": "OMIT_OPTIONAL",
+            "trigger_conditions": ["The runtime-native picker is unavailable."],
+            "alternative_operation_id": None,
+            "preserved_requirement_ids": [],
+            "degraded_requirement_ids": ["RQ1"],
+        },
+        "verification": {"kind": "RUNTIME_CAPABILITY", "argv": [], "network": False},
+        "realizations": [{
+            "target_runtime": target, "mechanism": "RUNTIME_NATIVE",
+            "adapter_id": "runtime-native", "adapter_version": "1",
+            "exposed_capability": "desktop-picker", "operation_id": "normalize-input",
+            "transport": "RUNTIME_API", "execution_location": "RUNTIME_HOST",
+            "dependency_ids": ["desktop-picker-runtime"],
+            "permission_ids": ["runtime:native"], "setup_requirements": [],
+            "setup_owner": "RUNTIME", "feasibility_state": "NOT VERIFIED",
+            "evidence_policy": "DEFERRED_ALLOWED",
+        } for target in tool["runtime_targets"]],
     })
+    tool["operation"]["protocol"] = "RUNTIME_API"
     proposal["files"] = [item for item in proposal["files"] if item["path"] != "tools/normalize.py"]
     proposal["expected_members"].remove("tools/normalize.py")
+    proposal["expected_members"] = [
+        item for item in proposal["expected_members"]
+        if item not in {"mcp.json", ".mcp.json"}
+    ]
     proposal["checks"] = [item for item in proposal["checks"] if item["id"] != "normalize-self-test"]
     requirement = next(item for item in proposal["requirements"] if item["id"] == "RQ1")
     requirement["implementation_paths"] = [item for item in requirement["implementation_paths"] if item != "tools/normalize.py"]
@@ -40,29 +78,26 @@ def _runtime_native_optional(proposal: dict) -> None:
 
 def _mcp_optional(proposal: dict) -> None:
     tool = proposal["tools"][0]
-    config = {"server": "example", "transport": "stdio"}
-    recipe = {
-        "path": "mcp/example.json", "classification": "generated_json",
-        "source_sha256": sha256((json.dumps(config, ensure_ascii=True, indent=2, sort_keys=True) + "\n").encode("ascii")).hexdigest(),
-        "redistribution": {"state": "APPROVED", "evidence": "generated non-secret configuration"},
-        "inline_json": config, "requirement_ids": ["RQ1"],
-    }
-    proposal["files"] = [item for item in proposal["files"] if item["path"] != "tools/normalize.py"] + [recipe]
+    proposal["files"] = [item for item in proposal["files"] if item["path"] != "tools/normalize.py"]
     proposal["expected_members"].remove("tools/normalize.py")
-    proposal["expected_members"].append("mcp/example.json")
     proposal["checks"] = [item for item in proposal["checks"] if item["id"] != "normalize-self-test"]
     requirement = next(item for item in proposal["requirements"] if item["id"] == "RQ1")
     requirement["implementation_paths"] = [item for item in requirement["implementation_paths"] if item != "tools/normalize.py"]
-    requirement["implementation_paths"].append("mcp/example.json")
+    requirement["implementation_paths"].append("mcp.json")
     requirement["evidence_targets"] = [item for item in requirement["evidence_targets"] if item != "normalize-self-test"]
     tool.update({
-        "required": False, "implementation_kind": "MCP_ADAPTER", "files": ["mcp/example.json"],
+        "required": False, "implementation_kind": "MCP_ADAPTER", "files": [],
         "execution": None, "fixtures": None, "runtime_capability": None,
-        "permissions": ["workspace:read", "network"],
         "configuration": {"authentication": "USER_CONFIGURED", "setup": "OWNER_CONFIGURED"},
-        "fallback": {"policy": "OPTIONAL", "description": "continue without external enrichment"},
-        "mcp": {"server_id": "example", "config_file": "mcp/example.json", "transport": "stdio", "permission_scopes": ["read"], "authentication": "USER_CONFIGURED", "setup": "OWNER_CONFIGURED", "service_boundary": "external example"},
+        "fallback": {
+            "policy": "OMIT_OPTIONAL",
+            "trigger_conditions": ["The external enrichment service is unavailable."],
+            "alternative_operation_id": None,
+            "preserved_requirement_ids": [],
+            "degraded_requirement_ids": ["RQ1"],
+        },
     })
+    tool["mcp"].update({"server_id": "example", "service_boundary": "external example"})
 
 
 class EndToEndScenarios(unittest.TestCase):
@@ -72,6 +107,30 @@ class EndToEndScenarios(unittest.TestCase):
 
     def tearDown(self) -> None:
         self.temporary.cleanup()
+
+    def test_t8_local_mcp_operation_does_not_upgrade_installed_realizations(self) -> None:
+        from plugin_builder_core.tool_verification import verify_application_tool
+
+        script = TESTS / "runtime" / "prepare-runtime-scenarios.py"
+        output = self.root / "scenario-inputs"
+        completed = subprocess.run(
+            [sys.executable, "-B", str(script), "--base-plan", str(TESTS / "fixtures/plan-create.json"), "--output", str(output)],
+            capture_output=True, text=True, encoding="utf-8", check=False,
+        )
+        self.assertEqual(completed.returncode, 0, completed.stderr)
+        t8 = json.loads((output / "t8-local-mcp-plan.json").read_text(encoding="utf-8"))
+        workspace = prepared_workspace(self.root, mutate=lambda proposal: (proposal.clear(), proposal.update(t8)))
+        self.assertEqual(run_cli("build", "--session", str(workspace / "session.json"), "--json").returncode, 0)
+        result = verify_application_tool(t8["tools"][0], workspace / "candidate", allow_loopback=True)
+        self.assertEqual(result["state"], "PASS", result)
+        self.assertEqual(result["environment"], "BUILD_HOST_LOCAL_MCP")
+        self.assertTrue(all(item["state"] == "NOT VERIFIED" for item in result["realizations"]))
+        verified = run_cli("verify", "--session", str(workspace / "session.json"), "--allow-loopback", "--json")
+        self.assertEqual(verified.returncode, 0, verified.stdout)
+        report = json.loads((workspace / "verification-report.json").read_text(encoding="utf-8"))
+        self.assertEqual(report["tools"][0]["state"], "PASS")
+        self.assertEqual(report["tools"][0]["environment"], "BUILD_HOST_LOCAL_MCP")
+        self.assertTrue(all(item["state"] == "NOT VERIFIED" for item in report["tools"][0]["realizations"]))
 
     def test_t1_behavior_only_design_reaches_w1_without_candidate(self) -> None:
         workspace = prepared_workspace(self.root, approve=False)

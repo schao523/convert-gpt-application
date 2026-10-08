@@ -6,6 +6,7 @@ import importlib
 from pathlib import Path
 import sys
 from types import ModuleType
+from typing import Any
 
 
 def load_plugin_authoring() -> ModuleType:
@@ -40,3 +41,12 @@ def load_workbench_handoff() -> ModuleType:
 
 plugin_authoring = load_plugin_authoring()
 workbench_handoff = load_workbench_handoff()
+
+
+def require_plugin_authoring_interface(name: str) -> Any:
+    """Resolve an explicitly versioned authoring API or fail without fallback."""
+
+    interface = getattr(plugin_authoring, name, None)
+    if interface is None:
+        raise RuntimeError(f"plugin_authoring_interface_unavailable:{name}")
+    return interface

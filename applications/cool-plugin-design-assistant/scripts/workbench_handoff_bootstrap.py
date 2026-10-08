@@ -8,19 +8,27 @@ import sys
 from types import ModuleType
 
 
-def load_workbench_handoff() -> ModuleType:
+def _load_runtime(package_name: str) -> ModuleType:
     scripts = Path(__file__).resolve().parent
     vendor = scripts / "vendor"
-    if (vendor / "obvious_one_plugin_framework" / "workbench_handoff").is_dir():
+    if (vendor / "obvious_one_plugin_framework" / package_name).is_dir():
         sys.path.insert(0, str(vendor))
-        return importlib.import_module("obvious_one_plugin_framework.workbench_handoff")
+        return importlib.import_module(f"obvious_one_plugin_framework.{package_name}")
 
     for parent in Path(__file__).resolve().parents:
         source = parent / "src"
-        if (source / "obvious_one_plugin_framework" / "workbench_handoff").is_dir():
+        if (source / "obvious_one_plugin_framework" / package_name).is_dir():
             sys.path.insert(0, str(source))
-            return importlib.import_module("obvious_one_plugin_framework.workbench_handoff")
-    raise RuntimeError("workbench_handoff_runtime_unavailable")
+            return importlib.import_module(f"obvious_one_plugin_framework.{package_name}")
+    raise RuntimeError(f"{package_name}_runtime_unavailable")
 
 
-__all__ = ["load_workbench_handoff"]
+def load_workbench_handoff() -> ModuleType:
+    return _load_runtime("workbench_handoff")
+
+
+def load_plugin_authoring() -> ModuleType:
+    return _load_runtime("plugin_authoring")
+
+
+__all__ = ["load_plugin_authoring", "load_workbench_handoff"]

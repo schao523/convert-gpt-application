@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Any
 
 from .bootstrap import plugin_authoring
+from .candidate_identity import expected_tool_bindings, runtime_approval_errors, runtime_identity_fields
 from .implementation_plan import canonical_bytes, write_bytes_transactionally
 from .tool_verification import execute_direct, verify_application_tool
 
@@ -34,6 +35,40 @@ def _check(identifier: str, kind: str, required: bool, requirement_ids: list[str
         "requirement_ids": sorted(requirement_ids), "state": state,
         "diagnostics": sorted(set(diagnostics)), "evidence": evidence or {},
     }
+
+
+def _effective_tool_states(
+    contracts: list[dict[str, Any]], results: list[dict[str, Any]],
+) -> tuple[dict[str, str], list[dict[str, Any]]]:
+    """Apply only W1-declared, behavior-preserving alternative operations."""
+    by_operation = {
+        tool["operation"]["id"]: tool
+        for tool in contracts
+        if isinstance(tool.get("operation"), dict) and isinstance(tool["operation"].get("id"), str)
+    }
+    states = {result["tool_id"]: result["state"] for result in results}
+    activations: list[dict[str, Any]] = []
+    for tool in contracts:
+        if states.get(tool["id"]) == "PASS":
+            continue
+        fallback = tool.get("fallback")
+        if not isinstance(fallback, dict) or fallback.get("policy") != "ALTERNATIVE":
+            continue
+        alternative = by_operation.get(fallback.get("alternative_operation_id"))
+        requirements = set(tool.get("requirement_ids", []))
+        if (
+            alternative is None or states.get(alternative["id"]) != "PASS"
+            or not requirements.issubset(set(fallback.get("preserved_requirement_ids", [])))
+            or requirements & set(fallback.get("degraded_requirement_ids", []))
+        ):
+            continue
+        states[tool["id"]] = "PASS"
+        activations.append({
+            "tool_id": tool["id"], "alternative_tool_id": alternative["id"],
+            "operation_id": alternative["operation"]["id"],
+            "preserved_requirement_ids": sorted(requirements),
+        })
+    return states, sorted(activations, key=lambda item: item["tool_id"])
 
 
 def _structural_checks(candidate: Path, plan: dict[str, Any], manifest: dict[str, Any]) -> list[dict[str, Any]]:
@@ -97,10 +132,14 @@ def _candidate_safety_and_bindings(candidate: Path, plan: dict[str, Any], manife
             else:
                 if str(identifier) not in text:
                     bindings.append(f"tool_skill_unrouted:{identifier}:{skill}")
+                for realization in tool.get("realizations", []):
+                    exposed = realization.get("exposed_capability") if isinstance(realization, dict) else None
+                    if isinstance(exposed, str) and exposed not in text:
+                        bindings.append(f"tool_capability_unrouted:{identifier}:{skill}:{exposed}")
     return safety, bindings
 
 
-def verify_candidate(session_path: Path) -> VerificationOutcome:
+def verify_candidate(session_path: Path, *, allow_loopback: bool = False) -> VerificationOutcome:
     session_file = Path(session_path)
     session = _load(session_file)
     if session is None or session.get("schema_version") != 2 or not isinstance(session.get("candidate"), dict):
@@ -138,12 +177,79 @@ def verify_candidate(session_path: Path) -> VerificationOutcome:
     identity_errors = [code for expected, code in identities if expected != plan_hash]
     if (session.get("plan") or {}).get("tools_sha256") != tools_hash or (session.get("w1") or {}).get("tools_sha256") != tools_hash or manifest.get("tools_sha256") != tools_hash:
         identity_errors.append("verify.tools_sha256_mismatch")
+    if isinstance(plan.get("capabilities"), list):
+        if manifest.get("schema") != "plugin-builder-candidate-manifest-v3":
+            identity_errors.append("verify.candidate_manifest_v3_required")
+        identity_errors.extend(
+            item.replace("build.", "verify.", 1)
+            for item in runtime_approval_errors(plan, session.get("plan") or {}, session.get("w1") or {})
+        )
+        try:
+            expected_runtime = runtime_identity_fields(plan, candidate)
+        except (ValueError, OSError, KeyError, TypeError) as error:
+            identity_errors.append(f"verify.runtime_identity_invalid:{error}")
+        else:
+            for key, value in expected_runtime.items():
+                if manifest.get(key) != value:
+                    identity_errors.append(f"verify.{key}_mismatch")
+    if manifest.get("tool_contracts") != plan.get("tools"):
+        identity_errors.append("verify.tool_contracts_mismatch")
+    if manifest.get("tool_bindings") != expected_tool_bindings(plan.get("tools", [])):
+        identity_errors.append("verify.tool_bindings_mismatch")
+    preflight_evidence = plan.get("preflight_evidence")
+    if not isinstance(preflight_evidence, dict):
+        identity_errors.append("verify.preflight_evidence_missing")
+    else:
+        preflight_hash = sha256(canonical_bytes(preflight_evidence)).hexdigest()
+        if manifest.get("preflight_evidence_sha256") != preflight_hash:
+            identity_errors.append("verify.preflight_evidence_sha256_mismatch")
+        artifact_quality = preflight_evidence.get("artifact_quality")
+        if not isinstance(artifact_quality, dict) or manifest.get("file_roles") != artifact_quality.get("file_roles"):
+            identity_errors.append("verify.artifact_quality_mismatch")
+        manifest_profile = preflight_evidence.get("manifest_profile")
+        if manifest.get("manifest_profile") != manifest_profile:
+            identity_errors.append("verify.manifest_profile_mismatch")
+        if manifest.get("manifest_profile_sha256") != sha256(canonical_bytes(manifest_profile)).hexdigest():
+            identity_errors.append("verify.manifest_profile_sha256_mismatch")
     if identity_errors:
         session["verification"] = session["w2"] = session["package"] = None
         write_bytes_transactionally(session_file, canonical_bytes(session))
         return VerificationOutcome("BLOCKED", tuple(sorted(set(identity_errors))))
     checks = _structural_checks(candidate, plan, manifest)
-    tool_results = [verify_application_tool(tool, candidate) for tool in plan.get("tools", []) if isinstance(tool, dict)]
+    tool_results = [
+        verify_application_tool(tool, candidate, allow_loopback=allow_loopback)
+        for tool in plan.get("tools", []) if isinstance(tool, dict)
+    ]
+    effective_tool_states, fallback_activations = _effective_tool_states(
+        [tool for tool in plan.get("tools", []) if isinstance(tool, dict)], tool_results,
+    )
+    if isinstance(plan.get("capabilities"), list):
+        contracts = {tool["id"]: tool for tool in plan.get("tools", []) if isinstance(tool, dict)}
+        for result in tool_results:
+            contract = contracts[result["tool_id"]]
+            operation = result.get("operation_execution")
+            if not isinstance(operation, dict):
+                operation = {
+                    "state": result["state"],
+                    "evidence_sha256": result.get("stdout_sha256") if result["state"] == "PASS" else None,
+                }
+                result["operation_execution"] = operation
+            observed = {
+                item["target_runtime"]: item for item in result.get("realizations", [])
+                if isinstance(item, dict) and isinstance(item.get("target_runtime"), str)
+            }
+            result["realizations"] = [
+                {
+                    "target_runtime": realization["target_runtime"],
+                    "adapter_id": realization["adapter_id"],
+                    "operation_id": realization["operation_id"],
+                    "exposed_capability": realization["exposed_capability"],
+                    "evidence_policy": realization["evidence_policy"],
+                    "state": "NOT VERIFIED",
+                    **observed.get(realization["target_runtime"], {}),
+                }
+                for realization in contract.get("realizations", [])
+            ]
     safety_errors, binding_errors = _candidate_safety_and_bindings(candidate, plan, manifest)
     checks.extend([
         _check("builtin-distribution-safety", "DISTRIBUTION_SAFETY", True, [], "PASS" if not safety_errors else "FAIL", safety_errors),
@@ -170,7 +276,7 @@ def verify_candidate(session_path: Path) -> VerificationOutcome:
         identifier = requirement["id"]
         states = [item["state"] for item in checks if identifier in item["requirement_ids"]]
         states += [
-            item["state"]
+            effective_tool_states[item["tool_id"]]
             for item in tool_results
             if identifier in item["requirement_ids"]
             and (item["required"] or item["state"] == "FAIL")
@@ -178,19 +284,51 @@ def verify_candidate(session_path: Path) -> VerificationOutcome:
         state = "FAIL" if "FAIL" in states else "NOT VERIFIED" if "NOT VERIFIED" in states else "PASS" if states else "NOT VERIFIED"
         requirements.append({"id": identifier, "required": True, "state": state})
     blocked_tool = any(
-        item["required"] and item["state"] != "PASS" and (item.get("fallback") or {}).get("policy") == "BLOCK"
+        item["required"] and effective_tool_states[item["tool_id"]] != "PASS" and (item.get("fallback") or {}).get("policy") == "BLOCK"
         for item in tool_results
     )
-    blocked = blocked_tool or any(item["required"] and item["state"] != "PASS" for item in requirements) or any(item["required"] and item["state"] != "PASS" for item in checks)
+    blocked_runtime = any(
+        realization.get("evidence_policy") == "REQUIRED_BEFORE_W2" and realization.get("state") != "RUNTIME VERIFIED"
+        for result in tool_results if result["required"]
+        for realization in result.get("realizations", [])
+    )
+    blocked = blocked_tool or blocked_runtime or any(item["required"] and item["state"] != "PASS" for item in requirements) or any(item["required"] and item["state"] != "PASS" for item in checks)
+    structural_pass = all(item["state"] == "PASS" for item in checks if item["required"])
+    if not tool_results:
+        tool_state = "NOT APPLICABLE"
+    elif all(item["state"] == "PASS" and item["executed"] for item in tool_results):
+        tool_state = "STATICALLY VERIFIED"
+    else:
+        tool_state = "NOT VERIFIED"
+    evidence_states = {
+        "structural_validation": "STATICALLY VERIFIED" if structural_pass else "NOT VERIFIED",
+        "installation": "NOT VERIFIED",
+        "tool_execution": tool_state,
+        "reference_consultation": "NOT VERIFIED",
+        "conversation": "NOT VERIFIED",
+    }
+
+
     report = {
-        "schema": "plugin-builder-verification-report-v1",
+        "schema": "plugin-builder-verification-report-v3" if isinstance(plan.get("capabilities"), list) else "plugin-builder-verification-report-v2",
         "candidate_sha256": session["candidate"]["sha256"],
         "plan_sha256": session["candidate"]["plan_sha256"],
+        "preflight_evidence": preflight_evidence,
         "checks": sorted(checks, key=lambda item: item["id"]),
         "tools": sorted(tool_results, key=lambda item: item["tool_id"]),
+        "fallback_activations": fallback_activations,
         "requirements": sorted(requirements, key=lambda item: item["id"]),
+        "evidence_states": evidence_states,
         "status": "BLOCKED" if blocked else "PASS",
     }
+    if isinstance(plan.get("capabilities"), list):
+        report["capabilities_sha256"] = plan["capabilities_sha256"]
+        report["realizations_sha256"] = plan["realizations_sha256"]
+        report["adapter_registry_sha256"] = plan["adapter_registry_sha256"]
+        report["runtime_realizations"] = [
+            {"tool_id": result["tool_id"], **realization}
+            for result in tool_results for realization in result["realizations"]
+        ]
     report_bytes = canonical_bytes(report)
     report_hash = sha256(report_bytes).hexdigest()
     write_bytes_transactionally(root / "verification-report.json", report_bytes)

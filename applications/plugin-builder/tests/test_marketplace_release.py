@@ -28,19 +28,35 @@ EXPECTED_SOURCE_PATHS = {
     "THIRD_PARTY_NOTICES.md",
     "docs/application-invariants.md",
     "docs/runtime-compatibility.md",
+    "runtime/T1-T7-runtime-scenarios.md",
+    "runtime/T8-runtime-realization-scenario.md",
+    "runtime/runtime-result-v3-schema.json",
+    "runtime/runtime-result-v3-template.json",
+    "runtime/prepare-runtime-scenarios.py",
+    "runtime/create-plan.json",
+    "runtime/mcp_server_fixture.py",
+    "contracts/openai-interface-vocabulary-v1.json",
     "scripts/build_marketplace_release.py",
     "scripts/distribution_audit.py",
     "scripts/plugin_builder.py",
     "scripts/plugin_builder_core/__init__.py",
     "scripts/plugin_builder_core/approvals.py",
+    "scripts/plugin_builder_core/artifact_quality.py",
     "scripts/plugin_builder_core/bootstrap.py",
     "scripts/plugin_builder_core/candidate.py",
+    "scripts/plugin_builder_core/candidate_identity.py",
     "scripts/plugin_builder_core/evidence.py",
     "scripts/plugin_builder_core/handoff_normalization.py",
     "scripts/plugin_builder_core/implementation_plan.py",
     "scripts/plugin_builder_core/inspection.py",
+    "scripts/plugin_builder_core/manifest_profile.py",
+    "scripts/plugin_builder_core/mcp_realization.py",
+    "scripts/plugin_builder_core/mcp_local_verification.py",
     "scripts/plugin_builder_core/packaging.py",
+    "scripts/plugin_builder_core/proposed_tree.py",
     "scripts/plugin_builder_core/result.py",
+    "scripts/plugin_builder_core/runtime_commands.py",
+    "scripts/plugin_builder_core/runtime_adapters.py",
     "scripts/plugin_builder_core/session_contract.py",
     "scripts/plugin_builder_core/session_state.py",
     "scripts/plugin_builder_core/tool_contract.py",
@@ -51,9 +67,11 @@ EXPECTED_SOURCE_PATHS = {
     "scripts/vendor/obvious_one_plugin_framework/__init__.py",
     "scripts/vendor/obvious_one_plugin_framework/plugin_authoring/__init__.py",
     "scripts/vendor/obvious_one_plugin_framework/plugin_authoring/archive.py",
+    "scripts/vendor/obvious_one_plugin_framework/plugin_authoring/capabilities.py",
     "scripts/vendor/obvious_one_plugin_framework/plugin_authoring/identity.py",
     "scripts/vendor/obvious_one_plugin_framework/plugin_authoring/materialize.py",
     "scripts/vendor/obvious_one_plugin_framework/plugin_authoring/manifests.py",
+    "scripts/vendor/obvious_one_plugin_framework/plugin_authoring/runtime_realization.py",
     "scripts/vendor/obvious_one_plugin_framework/plugin_authoring/tools.py",
     "scripts/vendor/obvious_one_plugin_framework/plugin_authoring/validation.py",
     "scripts/vendor/obvious_one_plugin_framework/workbench_handoff/__init__.py",
@@ -108,9 +126,9 @@ class MarketplaceReleaseTests(unittest.TestCase):
         expected_paths = tuple(sorted(PLUGIN_PREFIX + path for path in EXPECTED_SOURCE_PATHS))
         with tempfile.TemporaryDirectory(dir=TEMP_ROOT) as temp:
             destination = Path(temp) / "marketplace"
-            first = release.build_release(ROOT, destination, "1.0.0")
+            first = release.build_release(ROOT, destination, "1.0.1")
             first_manifest = (destination / ".release-manifest.json").read_bytes()
-            second = release.build_release(ROOT, destination, "1.0.0")
+            second = release.build_release(ROOT, destination, "1.0.1")
             second_manifest = (destination / ".release-manifest.json").read_bytes()
 
             self.assertEqual(first.paths, expected_paths)
@@ -120,7 +138,7 @@ class MarketplaceReleaseTests(unittest.TestCase):
             self.assertEqual(first_manifest, second_manifest)
             recorded = json.loads(second_manifest)
             self.assertEqual(recorded["plugin_id"], "plugin-builder")
-            self.assertEqual(recorded["version"], "1.0.0")
+            self.assertEqual(recorded["version"], "1.0.1")
             self.assertEqual(
                 [item["path"] for item in recorded["files"]], list(expected_paths)
             )
@@ -140,7 +158,7 @@ class MarketplaceReleaseTests(unittest.TestCase):
 
         with tempfile.TemporaryDirectory(dir=TEMP_ROOT) as temp:
             destination = Path(temp) / "marketplace"
-            release.build_release(ROOT, destination, "1.0.0")
+            release.build_release(ROOT, destination, "1.0.1")
             artifact_root = destination / "plugins" / "plugin-builder"
 
             for command in commands:
@@ -172,7 +190,7 @@ class MarketplaceReleaseTests(unittest.TestCase):
         with tempfile.TemporaryDirectory(dir=TEMP_ROOT) as temp:
             root = Path(temp)
             destination = root / "marketplace"
-            release.build_release(ROOT, destination, "1.0.0")
+            release.build_release(ROOT, destination, "1.0.1")
             first = root / "first.zip"
             second = root / "second.zip"
 
@@ -213,7 +231,7 @@ class MarketplaceReleaseTests(unittest.TestCase):
             manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
 
             with self.assertRaisesRegex(ValueError, "manifest pair validation failed"):
-                release.build_release(copied, destination, "1.0.0")
+                release.build_release(copied, destination, "1.0.1")
             self.assertFalse(destination.exists())
 
             manifest_path = copied / ".codex-plugin" / "plugin.json"
@@ -221,7 +239,7 @@ class MarketplaceReleaseTests(unittest.TestCase):
             manifest["name"] = "wrong-plugin"
             manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
             with self.assertRaisesRegex(ValueError, "identity or version mismatch"):
-                release.build_release(copied, destination, "1.0.0")
+                release.build_release(copied, destination, "1.0.1")
             self.assertFalse(destination.exists())
 
     def test_release_refuses_nonempty_unmarked_destination(self) -> None:
@@ -233,7 +251,7 @@ class MarketplaceReleaseTests(unittest.TestCase):
             sentinel.write_text("preserve\n", encoding="utf-8")
 
             with self.assertRaisesRegex(ValueError, "nonempty destination"):
-                release.build_release(ROOT, destination, "1.0.0")
+                release.build_release(ROOT, destination, "1.0.1")
             self.assertEqual(sentinel.read_text(encoding="utf-8"), "preserve\n")
             self.assertEqual(list(destination.iterdir()), [sentinel])
 
@@ -242,7 +260,7 @@ class MarketplaceReleaseTests(unittest.TestCase):
         with tempfile.TemporaryDirectory(dir=TEMP_ROOT) as temp:
             temp_root = Path(temp)
             destination = temp_root / "marketplace"
-            release.build_release(ROOT, destination, "1.0.0")
+            release.build_release(ROOT, destination, "1.0.1")
             before = tree_identity(destination)
 
             copied = temp_root / "unsafe-source"
@@ -253,7 +271,7 @@ class MarketplaceReleaseTests(unittest.TestCase):
                 stream.write('\ntoken = "ghp_abcdefghijklmnopqrstuvwxyz123456"\n')
 
             with self.assertRaisesRegex(ValueError, "source audit failed"):
-                release.build_release(copied, destination, "1.0.0")
+                release.build_release(copied, destination, "1.0.1")
             self.assertEqual(tree_identity(destination), before)
 
     def test_each_transaction_move_failure_preserves_previous_release(self) -> None:
@@ -263,7 +281,7 @@ class MarketplaceReleaseTests(unittest.TestCase):
                 dir=TEMP_ROOT
             ) as temp:
                 destination = Path(temp) / "marketplace"
-                release.build_release(ROOT, destination, "1.0.0")
+                release.build_release(ROOT, destination, "1.0.1")
                 before = tree_identity(destination)
                 real_replace = release.os.replace
                 call_count = 0
@@ -279,7 +297,7 @@ class MarketplaceReleaseTests(unittest.TestCase):
                     with self.assertRaisesRegex(
                         PermissionError, f"injected move failure {failing_move}"
                     ):
-                        release.build_release(ROOT, destination, "1.0.0")
+                        release.build_release(ROOT, destination, "1.0.1")
 
                 self.assertEqual(tree_identity(destination), before)
 
@@ -293,7 +311,7 @@ class MarketplaceReleaseTests(unittest.TestCase):
             private.write_text("internal notes\n", encoding="utf-8")
             destination = temp_root / "marketplace"
 
-            report = release.build_release(copied, destination, "1.0.0")
+            report = release.build_release(copied, destination, "1.0.1")
 
             self.assertNotIn(
                 "plugins/plugin-builder/.codex-plugin/private-notes.md", report.paths
@@ -312,7 +330,7 @@ class MarketplaceReleaseTests(unittest.TestCase):
             destination = temp_root / "marketplace"
 
             with self.assertRaisesRegex(ValueError, "rights and provenance evidence missing"):
-                release.build_release(copied, destination, "1.0.0")
+                release.build_release(copied, destination, "1.0.1")
             self.assertFalse(destination.exists())
 
 

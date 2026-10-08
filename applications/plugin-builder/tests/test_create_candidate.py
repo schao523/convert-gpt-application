@@ -18,6 +18,7 @@ if str(SCRIPTS) not in sys.path:
 
 from plugin_builder_core.inspection import inspect_design_package
 from plugin_builder_core.bootstrap import plugin_authoring
+from plugin_builder_core.proposed_tree import materialize_proposed_tree
 
 
 def run_cli(*arguments: str) -> subprocess.CompletedProcess[str]:
@@ -75,6 +76,30 @@ class CreateCandidateTests(unittest.TestCase):
         self.assertIn("build.w1_required", read_result(completed)["errors"])
         self.assertFalse((workspace / "candidate").exists())
 
+    def test_shared_materializer_matches_created_candidate_before_control_manifest(self) -> None:
+        workspace = prepared_workspace(self.root)
+        plan = json.loads(
+            (workspace / "implementation-plan.json").read_text(encoding="utf-8")
+        )
+        proposed = self.root / "proposed"
+
+        materialize_proposed_tree(plan, workspace, proposed)
+        completed = run_cli("build", "--session", str(workspace / "session.json"), "--json")
+
+        self.assertEqual(completed.returncode, 0, completed.stdout)
+        candidate = workspace / "candidate"
+        candidate_members = {
+            path.relative_to(candidate).as_posix(): path.read_bytes()
+            for path in candidate.rglob("*")
+            if path.is_file() and path.name != "PLUGIN-BUILDER-MANIFEST.json"
+        }
+        proposed_members = {
+            path.relative_to(proposed).as_posix(): path.read_bytes()
+            for path in proposed.rglob("*")
+            if path.is_file()
+        }
+        self.assertEqual(proposed_members, candidate_members)
+
     def test_create_builds_real_multi_skill_plugin_with_references_and_local_tool(self) -> None:
         workspace = prepared_workspace(self.root)
         completed = run_cli("build", "--session", str(workspace / "session.json"), "--json")
@@ -107,6 +132,12 @@ class CreateCandidateTests(unittest.TestCase):
         session = json.loads((workspace / "session.json").read_text(encoding="utf-8"))
         manifest_path = workspace / "candidate/PLUGIN-BUILDER-MANIFEST.json"
         manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        self.assertEqual(manifest["schema"], "plugin-builder-candidate-manifest-v3")
+        self.assertEqual(manifest["operation"], "create")
+        self.assertEqual(manifest["file_roles"]["plugin.json"], "PLUGIN_MANIFEST")
+        self.assertRegex(manifest["preflight_evidence_sha256"], r"^[0-9a-f]{64}$")
+        self.assertEqual(manifest["manifest_profile"]["profile"], "PRIVATE_LOCAL")
+        self.assertRegex(manifest["manifest_profile_sha256"], r"^[0-9a-f]{64}$")
         self.assertEqual(session["candidate"]["sha256"], plugin_authoring.tree_sha256(workspace / "candidate"))
         self.assertEqual(document["candidate_sha256"], session["candidate"]["sha256"])
         self.assertEqual(session["candidate"]["manifest_sha256"], __import__("hashlib").sha256(manifest_path.read_bytes()).hexdigest())

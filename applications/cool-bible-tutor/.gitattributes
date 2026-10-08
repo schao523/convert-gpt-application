@@ -1,8 +1,8 @@
 .codex-plugin/*.json text eol=lf
 assets/rag/*.json text eol=lf
 assets/scripture/*.json text eol=lf
-assets/scripture/cuv-approved-gaps.json text eol=crlf
-assets/scripture/cuv-runtime-manifest.json text eol=crlf
+assets/scripture/cuv-approved-gaps.json -text whitespace=cr-at-eol
+assets/scripture/cuv-runtime-manifest.json -text whitespace=cr-at-eol
 vendor/rag-runtime/*.json text eol=lf
 vendor/rag-runtime/*.lock text eol=lf
 vendor/rag-runtime/*.in text eol=lf

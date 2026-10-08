@@ -1,10 +1,9 @@
 {
   "name": "cool-plugin-design-assistant",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Guide human-centered AI Application design and produce approval-gated specifications for an Application Workbench.",
   "author": {
-    "name": "schao523",
-    "url": "https://github.com/schao523"
+    "name": "schao523"
   },
   "homepage": "https://github.com/schao523/obvious-one-plugins/tree/main/plugins/cool-plugin-design-assistant",
   "repository": "https://github.com/schao523/obvious-one-plugins",
@@ -19,7 +18,7 @@
   "skills": "./skills/",
   "interface": {
     "displayName": "Cool Plugin Design Assistant",
-    "shortDescription": "Guide AI Application design before Workbench implementation.",
+    "shortDescription": "Design AI applications",
     "longDescription": "Guides discovery, Design Statements, behavioral workflows, logical Instruction Modules, Reference Material evaluation, approval-gated Application Plugin Design Specifications, implementation review, and traceable Application Testing without prescribing the designed application's Skill Architecture.",
     "developerName": "schao523",
     "category": "Productivity",

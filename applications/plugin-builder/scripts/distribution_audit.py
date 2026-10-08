@@ -25,15 +25,27 @@ PUBLIC_DOCS = {
     "docs/application-invariants.md",
     "docs/runtime-compatibility.md",
 }
+PUBLIC_CONTRACTS = {"contracts/openai-interface-vocabulary-v1.json"}
+RUNTIME_KIT = {
+    "runtime/T1-T7-runtime-scenarios.md",
+    "runtime/T8-runtime-realization-scenario.md",
+    "runtime/runtime-result-v3-schema.json",
+    "runtime/runtime-result-v3-template.json",
+    "runtime/prepare-runtime-scenarios.py",
+    "runtime/create-plan.json",
+    "runtime/mcp_server_fixture.py",
+}
 PREFIXES = {"scripts", "skills"}
 MANIFEST_FILES = {"plugin.json", ".codex-plugin/plugin.json"}
 VENDOR_FILES = {
     "scripts/vendor/obvious_one_plugin_framework/__init__.py",
     "scripts/vendor/obvious_one_plugin_framework/plugin_authoring/__init__.py",
     "scripts/vendor/obvious_one_plugin_framework/plugin_authoring/archive.py",
+    "scripts/vendor/obvious_one_plugin_framework/plugin_authoring/capabilities.py",
     "scripts/vendor/obvious_one_plugin_framework/plugin_authoring/identity.py",
     "scripts/vendor/obvious_one_plugin_framework/plugin_authoring/materialize.py",
     "scripts/vendor/obvious_one_plugin_framework/plugin_authoring/manifests.py",
+    "scripts/vendor/obvious_one_plugin_framework/plugin_authoring/runtime_realization.py",
     "scripts/vendor/obvious_one_plugin_framework/plugin_authoring/tools.py",
     "scripts/vendor/obvious_one_plugin_framework/plugin_authoring/validation.py",
     "scripts/vendor/obvious_one_plugin_framework/workbench_handoff/__init__.py",
@@ -106,6 +118,8 @@ def _allowed(relative: Path) -> bool:
     return (
         raw in ROOT_FILES
         or raw in PUBLIC_DOCS
+        or raw in PUBLIC_CONTRACTS
+        or raw in RUNTIME_KIT
         or raw in MANIFEST_FILES
         or bool(relative.parts and relative.parts[0] in PREFIXES)
     )

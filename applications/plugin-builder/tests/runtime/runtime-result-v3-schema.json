@@ -1,0 +1,133 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://obvious.one/plugin-builder/runtime-result-v3-schema.json",
+  "title": "Plugin Builder installed runtime result v3",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "runtime", "artifact", "scenarios", "tools", "evidence_states", "overall_state"],
+  "properties": {
+    "schema": {"const": "plugin-builder-runtime-result-v3"},
+    "runtime": {
+      "type": "object", "additionalProperties": false,
+      "required": ["name", "version", "os", "installation_channel", "clean_workspace", "upload_observed", "discovery_observed", "repository_absent", "envelope_profile"],
+      "properties": {
+        "name": {"enum": ["Codex", "ChatGPT Work Local/Desktop"]},
+        "version": {"type": "string", "minLength": 1},
+        "os": {"type": "string", "minLength": 1},
+        "installation_channel": {"type": "string", "minLength": 1},
+        "clean_workspace": {"type": "boolean"},
+        "upload_observed": {"type": "boolean"},
+        "discovery_observed": {"type": "boolean"},
+        "repository_absent": {"type": "boolean"},
+        "envelope_profile": {"const": "PORTABLE_SINGLE_DIRECTORY"}
+      }
+    },
+    "artifact": {
+      "type": "object", "additionalProperties": false,
+      "required": ["plugin_id", "version", "zip_sha256", "member_manifest_sha256"],
+      "properties": {
+        "plugin_id": {"type": "string", "minLength": 1},
+        "version": {"type": "string", "minLength": 1},
+        "zip_sha256": {"$ref": "#/$defs/sha256"},
+        "member_manifest_sha256": {"$ref": "#/$defs/sha256"}
+      }
+    },
+    "scenarios": {
+      "type": "array", "minItems": 8, "maxItems": 8,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["id", "state", "result", "evidence_sha256", "limitations"],
+        "properties": {
+          "id": {"enum": ["T1", "T2", "T3", "T4", "T5", "T6", "T7", "T8"]},
+          "state": {"$ref": "#/$defs/evidence_state"},
+          "result": {"$ref": "#/$defs/test_result"},
+          "evidence_sha256": {"$ref": "#/$defs/nullable_sha256"},
+          "limitations": {"type": "array", "items": {"type": "string"}, "uniqueItems": true}
+        }
+      }
+    },
+    "tools": {
+      "type": "array", "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["tool_id", "implementation_kind", "contract_sha256", "skill_bindings", "operation_execution", "realizations"],
+        "properties": {
+          "tool_id": {"type": "string", "minLength": 1},
+          "implementation_kind": {"enum": ["BUNDLED_LOCAL", "FRAMEWORK_ADAPTER", "RUNTIME_NATIVE", "MCP_ADAPTER"]},
+          "contract_sha256": {"$ref": "#/$defs/sha256"},
+          "skill_bindings": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+          "operation_execution": {
+            "type": "object", "additionalProperties": false,
+            "required": ["operation_id", "environment", "state", "evidence_sha256"],
+            "properties": {
+              "operation_id": {"type": "string", "minLength": 1},
+              "environment": {"enum": ["INSTALLED_RUNTIME", "BUILD_HOST_LOCAL_MCP", "BUILD_HOST_DIRECT_ARGV", "NOT EXECUTED"]},
+              "state": {"$ref": "#/$defs/evidence_state"},
+              "evidence_sha256": {"$ref": "#/$defs/nullable_sha256"}
+            }
+          },
+          "realizations": {"type": "array", "items": {"$ref": "#/$defs/realization"}}
+        }
+      }
+    },
+    "evidence_states": {
+      "type": "object", "additionalProperties": false,
+      "required": ["structural_validation", "installation", "tool_execution", "reference_consultation", "conversation"],
+      "properties": {
+        "structural_validation": {"$ref": "#/$defs/evidence_state"},
+        "installation": {"$ref": "#/$defs/evidence_state"},
+        "tool_execution": {"$ref": "#/$defs/evidence_state"},
+        "reference_consultation": {"$ref": "#/$defs/evidence_state"},
+        "conversation": {"$ref": "#/$defs/evidence_state"}
+      }
+    },
+    "overall_state": {"$ref": "#/$defs/evidence_state"}
+  },
+  "$defs": {
+    "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "nullable_sha256": {"anyOf": [{"$ref": "#/$defs/sha256"}, {"type": "null"}]},
+    "evidence_state": {"enum": ["EXPECTED", "STATICALLY VERIFIED", "RUNTIME VERIFIED", "NOT VERIFIED", "NOT APPLICABLE"]},
+    "test_result": {"enum": ["PASS", "FAIL", "NOT VERIFIED", "NOT APPLICABLE"]},
+    "layer": {
+      "type": "object", "additionalProperties": false,
+      "required": ["state", "evidence_sha256"],
+      "properties": {
+        "state": {"$ref": "#/$defs/evidence_state"},
+        "evidence_sha256": {"$ref": "#/$defs/nullable_sha256"}
+      }
+    },
+    "realization": {
+      "type": "object", "additionalProperties": false,
+      "required": ["target_runtime", "installation_channel", "skill_id", "capability_id", "operation_id", "adapter_id", "exposed_capability", "input_sha256", "output_sha256", "executed", "network_contacted", "permissions_observed", "layers", "state", "result", "limitations"],
+      "properties": {
+        "target_runtime": {"enum": ["Codex", "ChatGPT Work Local/Desktop"]},
+        "installation_channel": {"type": "string", "minLength": 1},
+        "skill_id": {"type": "string", "minLength": 1},
+        "capability_id": {"type": "string", "minLength": 1},
+        "operation_id": {"type": "string", "minLength": 1},
+        "adapter_id": {"type": "string", "minLength": 1},
+        "exposed_capability": {"type": "string", "minLength": 1},
+        "input_sha256": {"$ref": "#/$defs/nullable_sha256"},
+        "output_sha256": {"$ref": "#/$defs/nullable_sha256"},
+        "executed": {"type": "boolean"},
+        "network_contacted": {"type": "boolean"},
+        "permissions_observed": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true},
+        "layers": {
+          "type": "object", "additionalProperties": false,
+          "required": ["structural_validation", "installation", "skill_invocation", "capability_discovery", "operation_execution", "result_delivery", "skill_behavior"],
+          "properties": {
+            "structural_validation": {"$ref": "#/$defs/layer"},
+            "installation": {"$ref": "#/$defs/layer"},
+            "skill_invocation": {"$ref": "#/$defs/layer"},
+            "capability_discovery": {"$ref": "#/$defs/layer"},
+            "operation_execution": {"$ref": "#/$defs/layer"},
+            "result_delivery": {"$ref": "#/$defs/layer"},
+            "skill_behavior": {"$ref": "#/$defs/layer"}
+          }
+        },
+        "state": {"$ref": "#/$defs/evidence_state"},
+        "result": {"$ref": "#/$defs/test_result"},
+        "limitations": {"type": "array", "items": {"type": "string"}, "uniqueItems": true}
+      }
+    }
+  }
+}

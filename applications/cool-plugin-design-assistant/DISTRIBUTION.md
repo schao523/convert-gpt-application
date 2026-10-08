@@ -21,3 +21,13 @@ python -B -m obvious_one_plugin_framework.cli verify --contract applications/coo
 Build the Codex marketplace tree separately with
 `scripts/build_marketplace_release.py`. These commands only create local
 artifacts; none performs publication.
+
+## Handoff delivery contract
+
+| Key | Outcome |
+| --- | --- |
+| FINAL_ZIP_SHA256 | REPORT_EXACT_RETURNED_BYTES |
+| REOPEN_CANONICAL_VALIDATION | REQUIRED_BEFORE_DELIVERY |
+| ONE_SEMANTIC_AUTHORITY | WORKBENCH_HANDOFF_JSON |
+
+Version 1.0.2 applies this digest-bound final-ZIP contract to chat and CLI normalization. It does not reopen approved design behavior, infer approval from normalization, or authorize publication.

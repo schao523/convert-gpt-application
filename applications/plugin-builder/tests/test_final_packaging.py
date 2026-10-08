@@ -91,6 +91,10 @@ class FinalPackagingTests(unittest.TestCase):
         candidate = json.loads((workspace / "candidate/PLUGIN-BUILDER-MANIFEST.json").read_text(encoding="utf-8"))
         self.assertEqual(metadata["tool_bindings"], candidate["tool_bindings"])
         self.assertEqual(metadata["tool_contracts_sha256"], sha256(json.dumps(candidate["tool_contracts"], ensure_ascii=True, indent=2, sort_keys=True).encode("ascii") + b"\n").hexdigest())
+        self.assertEqual(metadata["schema"], "plugin-builder-package-v3")
+        self.assertEqual(metadata["runtime_realization_state"], "NOT VERIFIED")
+        self.assertEqual(metadata["generated_runtime_configuration_sha256"], candidate["generated_runtime_configuration_sha256"])
+        self.assertEqual(len(metadata["runtime_realizations"]), 2)
 
     def test_extracted_zip_passes_plugin_skill_tool_and_safety_validation(self) -> None:
         workspace = self._ready()
