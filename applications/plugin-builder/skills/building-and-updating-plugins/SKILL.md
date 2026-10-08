@@ -9,6 +9,8 @@ Require recorded W1 approval and an explicit `CREATE` or `UPDATE` mode before an
 
 When approved behavior needs executable application functionality, consult [the application tool contract](references/application-tool-contract.md). Bind each tool to its owning skills and requirements before building.
 
+Build only W1-bound target realizations and generated MCP declarations. Preserve the approved capability, operation, adapter-registry, dependency, permission, and preflight hashes in the candidate manifest; a changed runtime endpoint or Skill route requires renewed W1 approval.
+
 In create mode, implement only the approved plan. In update mode, inventory the baseline first, preserve unaffected content, and stop for an explicit decision on every unexplained member. Never delete, overwrite, or reinterpret existing behavior merely because the new specification is silent.
 
 Reject traversal, duplicate logical paths, case-fold collisions, escaping links, absolute persisted paths, and writes outside the isolated workspace. Keep provider, credential, account, and machine-specific details outside portable skill logic.

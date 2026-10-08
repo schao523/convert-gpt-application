@@ -1,5 +1,7 @@
 # Plugin Builder installed-runtime scenarios T1–T7
 
+This is the retained historical v2 replay contract. For the runtime-realization-v2 extension, use the separate `T8-runtime-realization-scenario.md` and v3 result/schema/template; do not merge the historical v2 result with a v3 installed claim.
+
 Use this contract only with the generated Plugin Builder artifact. It records application evidence; it does not authorize publication, marketplace mutation, credentials, external messages, or network access.
 
 ## Clean-environment preconditions

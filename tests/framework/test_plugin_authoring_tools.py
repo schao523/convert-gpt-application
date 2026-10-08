@@ -238,6 +238,16 @@ class ApplicationToolContractTests(unittest.TestCase):
             },
         )
 
+    def test_v2_mcp_verification_accepts_only_the_local_port_placeholder(self) -> None:
+        payload = bundled_tool_v2()
+        payload["implementation_kind"] = "MCP_ADAPTER"
+        payload["files"] = ["tools/server.py"]
+        payload["execution"] = {"timeout_seconds": 2}
+        payload["verification"] = {"kind": "MCP_CONTRACT", "argv": ["{python}", "tools/server.py", "--host", "127.0.0.1", "--port", "{port}"], "network": True}
+        self.assertNotIn("tool.normalize-input.verification_argv_invalid", self.codes(payload))
+        payload["verification"]["argv"][-1] = "{unapproved}"
+        self.assertIn("tool.normalize-input.verification_argv_invalid", self.codes(payload))
+
     def test_v2_requires_exactly_one_realization_per_runtime_target(self) -> None:
         invalid = bundled_tool_v2()
         invalid["realizations"] = [invalid["realizations"][0], copy.deepcopy(invalid["realizations"][0])]

@@ -57,6 +57,23 @@ def contract_rows(path: Path, heading: str) -> dict[str, str]:
 
 
 class SkillContractTests(unittest.TestCase):
+    def test_runtime_realization_v2_guidance_routes_capability_w1_and_installed_evidence(self) -> None:
+        root = Path(__file__).resolve().parents[1] / "skills"
+        session = (root / "guiding-plugin-builder-sessions/SKILL.md").read_text(encoding="utf-8")
+        planning = (root / "planning-plugin-implementations/SKILL.md").read_text(encoding="utf-8")
+        building = (root / "building-and-updating-plugins/SKILL.md").read_text(encoding="utf-8")
+        verifying = (root / "verifying-and-packaging-plugins/SKILL.md").read_text(encoding="utf-8")
+        plan_contract = (root / "planning-plugin-implementations/references/input-and-plan-contract.md").read_text(encoding="utf-8")
+        tool_contract = (root / "building-and-updating-plugins/references/application-tool-contract.md").read_text(encoding="utf-8")
+        evidence_contract = (root / "verifying-and-packaging-plugins/references/tool-evidence-contract.md").read_text(encoding="utf-8")
+        for required in ("capability", "W1", "Codex", "ChatGPT Work Local/Desktop"):
+            self.assertIn(required, session + planning)
+        for required in ("dependency", "permission", "fallback", "FEASIBLE_WITH_SETUP", "DEFERRED_ALLOWED", "REQUIRED_BEFORE_W2"):
+            self.assertIn(required, plan_contract + tool_contract)
+        self.assertIn("MCP", building)
+        self.assertIn("runtime-result-v3", verifying + evidence_contract)
+        self.assertIn("BUILD_HOST_LOCAL_MCP", evidence_contract)
+        self.assertIn("Skill invocation", evidence_contract)
     # Catches a deleted or renamed skill, invalid frontmatter, or a broken progressive-disclosure link.
     def test_skill_discovery_and_reference_closure(self) -> None:
         self.assertEqual(

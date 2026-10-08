@@ -28,6 +28,7 @@ Each approved requirement and representative test appears exactly once in the ID
 | T5 | verifying-and-packaging-plugins | Persistent required failure yields no artifact | RUNTIME VERIFIED |
 | T6 | verifying-and-packaging-plugins | Environmental limitation remains NOT VERIFIED and visible through W2 | RUNTIME VERIFIED |
 | T7 | guiding-plugin-builder-sessions + runtime adapters | Generated 1.0.1 candidate normalizes canonical and retained legacy intake, runs clean-process wrapped create/update with preservation, executes its bundled tool, and closes digest-addressed evidence without repository imports | RUNTIME VERIFIED |
+| T8 | planning-plugin-implementations + verifying-and-packaging-plugins | Approved MCP operation runs against direct-argv loopback with input/output digests; installed realization layers remain separate | RUNTIME VERIFIED for build-host operation; installed runtime NOT VERIFIED |
 | RUNTIME-CODEX | Codex | Task 0 filesystem/ZIP primitive probe | RUNTIME VERIFIED |
 | RUNTIME-WORK | ChatGPT Work Local/Desktop | Task 0 filesystem/ZIP primitive probe | RUNTIME VERIFIED |
 | RUNTIME-CODEX-APPLICATION | Codex installed Plugin Builder | Representative T1–T7 execution from the generated artifact | NOT VERIFIED |
@@ -38,7 +39,7 @@ Each approved requirement and representative test appears exactly once in the ID
 | BEHAVIOR-SCENARIOS | T1–T7 local fixtures | Repository-local and standalone generated-artifact forward execution | RUNTIME VERIFIED |
 | CONTRACT-SESSION | W1/W2, hashes, evidence, paths, and failure gates | Deterministic API and subprocess CLI tests | STATICALLY VERIFIED |
 | CONTRACT-DISTRIBUTION | Deny-by-default content contract | Schema-v3 validation, product audit, exact selection, and two-build package identity | STATICALLY VERIFIED |
-| ARTIFACT-CODEX | Generated local Codex artifact | Exact 60-member flat-root host-upload envelope, synchronized manifest pair, source/extracted plugin validation, exclusions, and byte-identical two-build ZIP/runtime-kit identity | STATICALLY VERIFIED |
+| ARTIFACT-CODEX | Generated local Codex artifact | Flat-root host-upload envelope, synchronized manifest pair, source/extracted plugin validation, exclusions, and deterministic runtime-kit construction | STATICALLY VERIFIED; final two-build v3 kit comparison pending Task 9 |
 | REPOSITORY-DISCOVERY | Application configuration | Repository discovery and configured command-path tests | STATICALLY VERIFIED |
 | HANDOFF-INTERFACE-V1.1 | Design Assistant producer + Plugin Builder consumer | Full/create and delta/update cross-product tests preserve arbitrary IDs, exact UTF-8 text/source bytes, baseline identity, unaffected members, and deterministic ZIP bytes | RUNTIME VERIFIED |
 | PREFLIGHT-QUALITY | planning-plugin-implementations | Proposed create/update tree is compiled before W1 with semantic roles, knowledge ownership, deterministic duplicate groups/bytes, and approved rationale | STATICALLY VERIFIED |
@@ -46,6 +47,7 @@ Each approved requirement and representative test appears exactly once in the ID
 | COMMAND-IDENTITY | runtime adapters + verifying-and-packaging-plugins | Literal commands fail closed; explicit adapters retain declared and observed argv | STATICALLY VERIFIED |
 | MANIFEST-PROFILE | planning-plugin-implementations | PRIVATE_LOCAL and RELEASE_READY profiles use the versioned target vocabulary without conflating listing readiness | STATICALLY VERIFIED |
 | PACKAGE-EVIDENCE-V2 | verifying-and-packaging-plugins | Wrapped ZIP equivalence, external digest-bound sidecar, exact preflight/profile/command evidence, and five independent evidence layers | STATICALLY VERIFIED |
+| RUNTIME-REALIZATION-V2 | planning-plugin-implementations + runtime adapters | Capability route, target-specific feasibility/dependencies/permissions/fallback, strict operation and adapter binding, local MCP test, and v3 evidence-layer validation | STATICALLY VERIFIED; installed Skill-to-result NOT VERIFIED |
 
 ## Phase-two design-to-implementation review
 

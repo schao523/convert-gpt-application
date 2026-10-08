@@ -46,6 +46,33 @@ def _release_module():
 
 
 class StandaloneArtifactTests(unittest.TestCase):
+    def test_extracted_runtime_kit_prepares_t8_without_repository_imports(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            release_root = root / "release"
+            _release_module().build_release(ROOT, release_root, "1.0.1")
+            plugin = release_root / "plugins/plugin-builder"
+            runtime = plugin / "runtime"
+            environment = {
+                key: value for key, value in os.environ.items()
+                if key.upper() not in {"PYTHONPATH", "PYTHONHOME"}
+                and str(ROOT.parents[1]).casefold() not in value.casefold()
+            }
+            result = subprocess.run(
+                [sys.executable, "-B", str(runtime / "prepare-runtime-scenarios.py"),
+                 "--output", str(root / "inputs")],
+                cwd=root, env=environment, capture_output=True, text=True,
+                encoding="utf-8", errors="strict", check=False,
+            )
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertEqual(json.loads(result.stdout)["status"], "PASS")
+            t8 = json.loads((root / "inputs/t8-local-mcp-plan.json").read_text(encoding="utf-8"))
+            self.assertEqual(t8["tools"][0]["verification"]["kind"], "MCP_CONTRACT")
+            self.assertIn("tools/server.py", t8["expected_members"])
+            v3 = json.loads((root / "inputs/runtime-result-v3-template.json").read_text(encoding="utf-8"))
+            self.assertEqual(v3["overall_state"], "NOT VERIFIED")
+            self.assertEqual([item["id"] for item in v3["scenarios"]], [f"T{number}" for number in range(1, 9)])
+
     def test_extracted_artifact_accepts_canonical_full_and_delta_without_repository_imports(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)

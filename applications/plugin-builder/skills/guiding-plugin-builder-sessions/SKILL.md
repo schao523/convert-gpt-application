@@ -13,6 +13,8 @@ Start or normalize work with the `inspect` command. It performs canonical pass-t
 
 Require an approved behavioral specification before planning. If an input is incomplete or conflicts with approved behavior, identify the affected requirement and wait for a newly approved design; Plugin Builder cannot approve it. Ask no more than one blocking question at a time.
 
+For executable capabilities, route the session through the target-aware W1 feasibility matrix for Codex and ChatGPT Work Local/Desktop. A local build-host operation test is not installed Skill invocation; keep those evidence states separate through W2 and the runtime-result-v3 kit.
+
 Never allow creation or update mutation before explicit W1 approval. After validation, present the candidate delta, executed results, unexecuted checks, and limitations; never allow packaging before explicit W2 approval.
 
 When pausing, resuming, cancelling, or recovering, follow [the state and recovery contract](references/state-and-recovery.md). Preserve honest state and summarize it before continuing.

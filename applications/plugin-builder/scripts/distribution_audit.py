@@ -26,6 +26,15 @@ PUBLIC_DOCS = {
     "docs/runtime-compatibility.md",
 }
 PUBLIC_CONTRACTS = {"contracts/openai-interface-vocabulary-v1.json"}
+RUNTIME_KIT = {
+    "runtime/T1-T7-runtime-scenarios.md",
+    "runtime/T8-runtime-realization-scenario.md",
+    "runtime/runtime-result-v3-schema.json",
+    "runtime/runtime-result-v3-template.json",
+    "runtime/prepare-runtime-scenarios.py",
+    "runtime/create-plan.json",
+    "runtime/mcp_server_fixture.py",
+}
 PREFIXES = {"scripts", "skills"}
 MANIFEST_FILES = {"plugin.json", ".codex-plugin/plugin.json"}
 VENDOR_FILES = {
@@ -110,6 +119,7 @@ def _allowed(relative: Path) -> bool:
         raw in ROOT_FILES
         or raw in PUBLIC_DOCS
         or raw in PUBLIC_CONTRACTS
+        or raw in RUNTIME_KIT
         or raw in MANIFEST_FILES
         or bool(relative.parts and relative.parts[0] in PREFIXES)
     )

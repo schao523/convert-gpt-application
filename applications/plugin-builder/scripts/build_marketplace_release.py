@@ -39,6 +39,13 @@ PUBLIC_DOCS = {
     "docs/runtime-compatibility.md",
 }
 PUBLIC_CONTRACTS = {"contracts/openai-interface-vocabulary-v1.json"}
+RUNTIME_KIT = {
+    "T1-T7-runtime-scenarios.md",
+    "T8-runtime-realization-scenario.md",
+    "runtime-result-v3-schema.json",
+    "runtime-result-v3-template.json",
+    "prepare-runtime-scenarios.py",
+}
 PREFIXES = {"scripts", "skills"}
 MANIFEST_FILES = {"plugin.json", ".codex-plugin/plugin.json"}
 VENDOR_PACKAGES = ("plugin_authoring", "workbench_handoff")
@@ -222,6 +229,16 @@ def build_release(source: Path, destination: Path, version: str) -> ReleaseRepor
             output = staged_plugin / relative
             output.parent.mkdir(parents=True, exist_ok=True)
             shutil.copyfile(candidate, output)
+
+        for name in sorted(RUNTIME_KIT):
+            output = staged_plugin / "runtime" / name
+            output.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copyfile(source / "tests" / "runtime" / name, output)
+        for input_path, output_name in (
+            (source / "tests" / "fixtures" / "plan-create.json", "create-plan.json"),
+            (source / "tests" / "fixtures" / "mcp_server_fixture.py", "mcp_server_fixture.py"),
+        ):
+            shutil.copyfile(input_path, staged_plugin / "runtime" / output_name)
 
         repository = source.parents[1]
         framework_root = repository / "src" / "obvious_one_plugin_framework"

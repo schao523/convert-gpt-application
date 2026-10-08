@@ -3,6 +3,7 @@ from __future__ import annotations
 from hashlib import sha256
 import json
 from pathlib import Path
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -106,6 +107,24 @@ class EndToEndScenarios(unittest.TestCase):
 
     def tearDown(self) -> None:
         self.temporary.cleanup()
+
+    def test_t8_local_mcp_operation_does_not_upgrade_installed_realizations(self) -> None:
+        from plugin_builder_core.tool_verification import verify_application_tool
+
+        script = TESTS / "runtime" / "prepare-runtime-scenarios.py"
+        output = self.root / "scenario-inputs"
+        completed = subprocess.run(
+            [sys.executable, "-B", str(script), "--base-plan", str(TESTS / "fixtures/plan-create.json"), "--output", str(output)],
+            capture_output=True, text=True, encoding="utf-8", check=False,
+        )
+        self.assertEqual(completed.returncode, 0, completed.stderr)
+        t8 = json.loads((output / "t8-local-mcp-plan.json").read_text(encoding="utf-8"))
+        workspace = prepared_workspace(self.root, mutate=lambda proposal: (proposal.clear(), proposal.update(t8)))
+        self.assertEqual(run_cli("build", "--session", str(workspace / "session.json"), "--json").returncode, 0)
+        result = verify_application_tool(t8["tools"][0], workspace / "candidate", allow_loopback=True)
+        self.assertEqual(result["state"], "PASS", result)
+        self.assertEqual(result["environment"], "BUILD_HOST_LOCAL_MCP")
+        self.assertTrue(all(item["state"] == "NOT VERIFIED" for item in result["realizations"]))
 
     def test_t1_behavior_only_design_reaches_w1_without_candidate(self) -> None:
         workspace = prepared_workspace(self.root, approve=False)

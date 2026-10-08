@@ -66,11 +66,11 @@ def _shell_forbidden(argv: object) -> bool:
     return any(any(token in item for token in ("&&", "||", ";", "|", "`", "$(", "\n", "\r")) for item in argv)
 
 
-def _argv_invalid(argv: object, *, allow_empty: bool = False) -> bool:
+def _argv_invalid(argv: object, *, allow_empty: bool = False, allow_port: bool = False) -> bool:
     if not isinstance(argv, list) or (not argv and not allow_empty) or any(not isinstance(item, str) or not item for item in argv):
         return True
     for item in argv:
-        if item.startswith("{") and item.endswith("}") and item != "{python}":
+        if item.startswith("{") and item.endswith("}") and item != "{python}" and not (allow_port and item == "{port}"):
             return True
         if "://" in item or item.startswith("-") or item == "{python}":
             continue
@@ -401,7 +401,7 @@ def _validate_v2_application_tool_contract(payload: dict[str, Any]) -> Applicati
     if not isinstance(verification, dict) or set(verification) != {"kind", "argv", "network"}:
         errors.append(f"{prefix}.verification_invalid")
     else:
-        if _argv_invalid(verification.get("argv"), allow_empty=kind not in {"BUNDLED_LOCAL", "FRAMEWORK_ADAPTER"}):
+        if _argv_invalid(verification.get("argv"), allow_empty=kind not in {"BUNDLED_LOCAL", "FRAMEWORK_ADAPTER"}, allow_port=kind == "MCP_ADAPTER" and verification.get("kind") == "MCP_CONTRACT"):
             errors.append(f"{prefix}.verification_argv_invalid")
         if _shell_forbidden(verification.get("argv")):
             errors.append(f"{prefix}.verification_shell_forbidden")

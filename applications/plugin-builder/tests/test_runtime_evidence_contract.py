@@ -74,7 +74,8 @@ class RuntimeEvidenceContractTests(unittest.TestCase):
             expected = {
                 "t3-unresolved-plan.json", "t4-update-baseline.zip", "t4-update-plan.json",
                 "t5-failing-tool-plan.json", "t6-runtime-native-plan.json",
-                "runtime-result-v2-template.json",
+                "runtime-result-v2-template.json", "runtime-result-v3-template.json",
+                "t8-local-mcp-plan.json",
             }
             self.assertEqual({item.name for item in (root / "out").iterdir()}, expected)
             self.assertEqual(json.loads((root / "out/t4-update-plan.json").read_text())["operation"], "update")
@@ -83,6 +84,11 @@ class RuntimeEvidenceContractTests(unittest.TestCase):
             runtime = json.loads((root / "out/runtime-result-v2-template.json").read_text())
             self.assertEqual(runtime["schema"], "plugin-builder-runtime-result-v2")
             self.assertEqual(runtime["runtime"]["envelope_profile"], "PORTABLE_SINGLE_DIRECTORY")
+            runtime_v3 = json.loads((root / "out/runtime-result-v3-template.json").read_text())
+            self.assertEqual(runtime_v3["schema"], "plugin-builder-runtime-result-v3")
+            self.assertEqual(runtime_v3["overall_state"], "NOT VERIFIED")
+            t8 = json.loads((root / "out/t8-local-mcp-plan.json").read_text())
+            self.assertEqual(t8["tools"][0]["verification"]["kind"], "MCP_CONTRACT")
             self.assertEqual(
                 set(runtime["evidence_states"]),
                 {"structural_validation", "installation", "tool_execution", "reference_consultation", "conversation"},
