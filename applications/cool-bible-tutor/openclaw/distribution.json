@@ -3,7 +3,7 @@
   "plugin_id": "cool-bible-tutor",
   "package_name": "@obvious-one/cool-bible-tutor",
   "family": "bundle-plugin",
-  "version": "2.4.6",
+  "version": "2.4.7",
   "source_root": "..",
   "include_files": [
     ".codex-plugin/plugin.json",

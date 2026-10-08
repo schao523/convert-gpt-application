@@ -1,6 +1,6 @@
 # Distribution
 
-`cool-bible-tutor` v2.4.6 is published as a fully bundled Codex artifact and a generated lightweight OpenClaw artifact. Install either whole artifact so its manifest, `assets/`, `skills/`, `scripts/`, and `vendor/` remain together.
+`cool-bible-tutor` v2.4.7 is packaged as a fully bundled Codex artifact and a generated lightweight OpenClaw artifact. Install either whole artifact so its manifest, `assets/`, `skills/`, `scripts/`, and `vendor/` remain together.
 
 The plugin uses native inline skill execution. Its orchestrator routes work among the eight bundled skills in the current task. It requires no shared Bible-text service and makes no machine-specific path assumption. RAG discovery is an optional local supporting layer, not a ninth user-facing skill.
 
@@ -66,5 +66,5 @@ python -B scripts/distribution_audit.py .
 The audit allows only the two hash-matching PDFs, exact public corpus, and exact compact index named above. It validates the vendored runtime manifests and rejects every other database, vector/model file, PDF, private runtime artifact, cache, absolute user path, scaffold marker, and broken local Markdown link. Build the clean public tree with:
 
 ```text
-python -B scripts/build_marketplace_release.py --source . --destination <marketplace-root> --version 2.4.6
+python -B scripts/build_marketplace_release.py --source . --destination <marketplace-root> --version 2.4.7
 ```

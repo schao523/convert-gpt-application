@@ -33,7 +33,7 @@ class DistributionAuditTests(unittest.TestCase):
     def test_approved_openclaw_distribution_identity(self) -> None:
         contract = load_contract(PLUGIN / "openclaw" / "distribution.json")
         self.assertEqual(contract.schema_version, 3)
-        self.assertEqual(contract.version, "2.4.6")
+        self.assertEqual(contract.version, "2.4.7")
         self.assertEqual(contract.package_name, "@obvious-one/cool-bible-tutor")
         self.assertEqual(
             {rule.classification for rule in contract.content_rules},
@@ -283,7 +283,7 @@ class DistributionAuditTests(unittest.TestCase):
         self.assertIn("build_cuv_index.py --data-dir", setup)
         self.assertIn("RAGenius", third_party)
         self.assertIn("MIT", third_party)
-        self.assertEqual(manifest["version"], "2.4.6")
+        self.assertEqual(manifest["version"], "2.4.7")
 
         combined = "\n".join((distribution, third_party, setup))
         self.assertIn("ObviousOne/shared-rag/runtimes", combined)

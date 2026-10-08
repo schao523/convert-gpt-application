@@ -8,6 +8,7 @@ import json
 import os
 from pathlib import Path, PurePosixPath, PureWindowsPath
 import shutil
+import stat
 import subprocess
 import sys
 from tempfile import TemporaryDirectory
@@ -589,7 +590,7 @@ def _materialize_committed_destinations(
             raise MarketplaceError("marketplace_destination_missing", destination)
         target = _stage_destination(stage, destination)
         if target.exists():
-            shutil.rmtree(target)
+            shutil.rmtree(target, onerror=_retry_readonly_removal)
         for record in listing.stdout.split(b"\0"):
             if not record:
                 continue
@@ -852,9 +853,16 @@ def _validate_separate_roots(repository: Path, baseline: Path, output: Path) -> 
 def _replace_destination(source: Path, destination: Path) -> None:
     _reject_links(source)
     if destination.exists():
-        shutil.rmtree(destination)
+        shutil.rmtree(destination, onerror=_retry_readonly_removal)
     destination.parent.mkdir(parents=True, exist_ok=True)
     shutil.copytree(source, destination, symlinks=True)
+
+
+def _retry_readonly_removal(function: object, path: str, error: tuple[object, BaseException, object]) -> None:
+    if not isinstance(error[1], PermissionError):
+        raise error[1]
+    os.chmod(path, stat.S_IWRITE)
+    function(path)
 
 
 def _replace_tree_transactionally(stage: Path, output: Path) -> None:

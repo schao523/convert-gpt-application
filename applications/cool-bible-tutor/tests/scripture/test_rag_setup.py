@@ -186,8 +186,8 @@ class RagSetupStateTests(unittest.TestCase):
         self.assertEqual(
             {group.install_subdir: group.name for group in groups},
             {
-                "indexes": "cool-bible-tutor-rag-index-2.4.6.zip",
-                "source-assets": "cool-bible-tutor-source-pdfs-2.4.6.zip",
+                "indexes": "cool-bible-tutor-rag-index-2.4.7.zip",
+                "source-assets": "cool-bible-tutor-source-pdfs-2.4.7.zip",
             },
         )
         self.assertEqual(

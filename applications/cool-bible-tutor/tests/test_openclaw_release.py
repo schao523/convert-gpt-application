@@ -56,7 +56,7 @@ class OpenClawReleaseTests(unittest.TestCase):
         )
         package = json.loads((output / "package.json").read_text(encoding="utf-8"))
         self.assertEqual(package["name"], "@obvious-one/cool-bible-tutor")
-        self.assertEqual(package["version"], "2.4.6")
+        self.assertEqual(package["version"], "2.4.7")
         self.assertIn("setup-rag --accept-downloads", (output / "README.md").read_text(encoding="utf-8"))
         self.assertEqual(verify_package(self.contract, output), result)
 

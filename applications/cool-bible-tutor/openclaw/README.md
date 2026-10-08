@@ -1,6 +1,6 @@
 # 酷聖經教師 / Cool Bible Tutor for OpenClaw
 
-This is the lightweight OpenClaw edition of Cool Bible Tutor v2.4.6. It includes all eight Bible Tutor skills and the immutable, fully verified public-domain Chinese Union Version verse database. Exact reference lookup works immediately after installation and does not require network access or RAG setup.
+This is the lightweight OpenClaw edition of Cool Bible Tutor v2.4.7. It includes all eight Bible Tutor skills and the immutable, fully verified public-domain Chinese Union Version verse database. Exact reference lookup works immediately after installation and does not require network access or RAG setup.
 
 OpenClaw loads this package as a native-free, Codex-format compatible bundle, not as a native OpenClaw code plugin. Supporting capabilities run through the package-local Python launcher; `rag_subsystem` is an imported Python dependency behind that boundary, not a separately registered agent tool. Readiness is layered across package detection, skills, exact retrieval, optional RAG, review/authoring, and publication. See `docs/runtime-compatibility-contract.md`.
 

@@ -14,11 +14,11 @@
           "size": 2000
         }
       ],
-      "name": "cool-bible-tutor-rag-index-2.4.6.zip",
+      "name": "cool-bible-tutor-rag-index-2.4.7.zip",
       "owner_plugin_id": "cool-bible-tutor",
       "sha256": "3babdb0ab413153d8b5ceada43c55116bdff8bdbf6e839b8a6fe84e8c4ec1731",
       "size": 55052558,
-      "url": "https://github.com/schao523/obvious-one-plugins/releases/download/cool-bible-tutor-v2.4.6/cool-bible-tutor-rag-index-2.4.6.zip"
+      "url": "https://github.com/schao523/obvious-one-plugins/releases/download/cool-bible-tutor-v2.4.7/cool-bible-tutor-rag-index-2.4.7.zip"
     },
     {
       "install_subdir": "source-assets",
@@ -34,16 +34,16 @@
           "size": 4427709
         }
       ],
-      "name": "cool-bible-tutor-source-pdfs-2.4.6.zip",
+      "name": "cool-bible-tutor-source-pdfs-2.4.7.zip",
       "owner_plugin_id": "cool-bible-tutor",
       "sha256": "3a283b647f1833da9bf5651f68d1b08192aae43f06a08e92362dcf89f1504eac",
       "size": 5985949,
-      "url": "https://github.com/schao523/obvious-one-plugins/releases/download/cool-bible-tutor-v2.4.6/cool-bible-tutor-source-pdfs-2.4.6.zip"
+      "url": "https://github.com/schao523/obvious-one-plugins/releases/download/cool-bible-tutor-v2.4.7/cool-bible-tutor-source-pdfs-2.4.7.zip"
     }
   ],
   "plugin_id": "cool-bible-tutor",
   "release_repository": "schao523/obvious-one-plugins",
-  "release_tag": "cool-bible-tutor-v2.4.6",
+  "release_tag": "cool-bible-tutor-v2.4.7",
   "schema_version": 1,
-  "version": "2.4.6"
+  "version": "2.4.7"
 }
