@@ -58,7 +58,7 @@ class CoolBibleTutorVerificationProfileTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp:
             diagnostics = Path(temp)
             exact = subprocess.run(
-                _expand(commands["exact-passage"]["argv"], diagnostics, "2.4.6"),
+                _expand(commands["exact-passage"]["argv"], diagnostics, "2.4.7"),
                 cwd=APPLICATION,
                 env=_clean_environment(
                     commands["exact-passage"].get("clean_environment_prefixes", [])
@@ -74,7 +74,7 @@ class CoolBibleTutorVerificationProfileTests(unittest.TestCase):
             self.assertIn("神愛世人", exact_report["verses"][0]["text"])
 
             status = subprocess.run(
-                _expand(commands["runtime-status"]["argv"], diagnostics, "2.4.6"),
+                _expand(commands["runtime-status"]["argv"], diagnostics, "2.4.7"),
                 cwd=APPLICATION,
                 env=_clean_environment(
                     commands["runtime-status"].get("clean_environment_prefixes", [])
@@ -93,7 +93,7 @@ class CoolBibleTutorVerificationProfileTests(unittest.TestCase):
             self.assertEqual(status_report["approved_source_gaps"], 71)
 
             audit = subprocess.run(
-                _expand(commands["distribution-audit"]["argv"], diagnostics, "2.4.6"),
+                _expand(commands["distribution-audit"]["argv"], diagnostics, "2.4.7"),
                 cwd=APPLICATION,
                 env=_clean_environment([]),
                 capture_output=True,

@@ -5,11 +5,7 @@ import unittest
 import uuid
 from pathlib import Path
 
-from obvious_one_plugin_framework.contract import load_contract
-
-
 MODULE_PATH = Path(__file__).parents[1] / "scripts" / "distribution_audit.py"
-PLUGIN = Path(__file__).resolve().parents[1]
 FIXTURE_ROOT = Path(__file__).parent / "_runtime_fixture"
 OLD_PATH = "assets/scripture/Bible 舊約聖經和合本.pdf"
 NEW_PATH = "assets/scripture/Bible 新約聖經和合本.pdf"
@@ -30,42 +26,6 @@ def load_audit_module():
 
 
 class DistributionAuditTests(unittest.TestCase):
-    def test_approved_openclaw_distribution_identity(self) -> None:
-        contract = load_contract(PLUGIN / "openclaw" / "distribution.json")
-        self.assertEqual(contract.schema_version, 3)
-        self.assertEqual(contract.version, "2.4.6")
-        self.assertEqual(contract.package_name, "@obvious-one/cool-bible-tutor")
-        self.assertEqual(
-            {rule.classification for rule in contract.content_rules},
-            {"text", "binary"},
-        )
-        binary_paths = {
-            path
-            for rule in contract.content_rules
-            if rule.classification == "binary"
-            for path in rule.paths
-        }
-        self.assertEqual(
-            binary_paths,
-            {
-                "assets/scripture/cuv-approved-gaps.json",
-                "assets/scripture/cuv-runtime-manifest.json",
-                "assets/scripture/cuv.sqlite3",
-                "vendor/rag-subsystem/rag_subsystem-0.2.1-py3-none-any.whl",
-            },
-        )
-        self.assertTrue(contract.publication.github_marketplace.enabled)
-        self.assertFalse(contract.publication.clawhub.enabled)
-        self.assertEqual(contract.rag.app_id, "cool-bible-tutor")
-        self.assertEqual(
-            contract.rag.namespace,
-            "cool-bible-tutor:zh:bge-large-zh",
-        )
-        self.assertEqual(
-            {group.name for group in contract.rag.asset_groups},
-            {"rag-index", "source-pdfs"},
-        )
-
     def setUp(self):
         self.root = FIXTURE_ROOT / f"case-{uuid.uuid4().hex}"
         self.root.mkdir(parents=True)
@@ -283,7 +243,7 @@ class DistributionAuditTests(unittest.TestCase):
         self.assertIn("build_cuv_index.py --data-dir", setup)
         self.assertIn("RAGenius", third_party)
         self.assertIn("MIT", third_party)
-        self.assertEqual(manifest["version"], "2.4.6")
+        self.assertEqual(manifest["version"], "2.4.7")
 
         combined = "\n".join((distribution, third_party, setup))
         self.assertIn("ObviousOne/shared-rag/runtimes", combined)

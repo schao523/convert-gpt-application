@@ -35,8 +35,10 @@ PUBLIC_PREFIXES = {
     ".codex-plugin", "assets", "docs", "scripts", "skills", "tests", "vendor",
 }
 REPOSITORY_ONLY_PATHS = {
+    "tests/test_conversion_contract.py",
     "tests/test_openclaw_release.py",
     "tests/test_vendored_runtime.py",
+    "tests/test_verification_profile.py",
 }
 
 
