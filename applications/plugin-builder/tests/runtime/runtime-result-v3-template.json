@@ -1,0 +1,39 @@
+{
+  "schema": "plugin-builder-runtime-result-v3",
+  "runtime": {
+    "name": "Codex",
+    "version": "REPLACE_WITH_OBSERVED_VERSION",
+    "os": "REPLACE_WITH_OBSERVED_OS",
+    "installation_channel": "REPLACE_WITH_OBSERVED_CHANNEL",
+    "clean_workspace": false,
+    "upload_observed": false,
+    "discovery_observed": false,
+    "repository_absent": false,
+    "envelope_profile": "PORTABLE_SINGLE_DIRECTORY"
+  },
+  "artifact": {
+    "plugin_id": "REPLACE_WITH_PLUGIN_ID",
+    "version": "REPLACE_WITH_PLUGIN_VERSION",
+    "zip_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+    "member_manifest_sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+  },
+  "scenarios": [
+    {"id": "T1", "state": "NOT VERIFIED", "result": "NOT VERIFIED", "evidence_sha256": null, "limitations": []},
+    {"id": "T2", "state": "NOT VERIFIED", "result": "NOT VERIFIED", "evidence_sha256": null, "limitations": []},
+    {"id": "T3", "state": "NOT VERIFIED", "result": "NOT VERIFIED", "evidence_sha256": null, "limitations": []},
+    {"id": "T4", "state": "NOT VERIFIED", "result": "NOT VERIFIED", "evidence_sha256": null, "limitations": []},
+    {"id": "T5", "state": "NOT VERIFIED", "result": "NOT VERIFIED", "evidence_sha256": null, "limitations": []},
+    {"id": "T6", "state": "NOT VERIFIED", "result": "NOT VERIFIED", "evidence_sha256": null, "limitations": []},
+    {"id": "T7", "state": "NOT VERIFIED", "result": "NOT VERIFIED", "evidence_sha256": null, "limitations": []},
+    {"id": "T8", "state": "NOT VERIFIED", "result": "NOT VERIFIED", "evidence_sha256": null, "limitations": []}
+  ],
+  "tools": [],
+  "evidence_states": {
+    "structural_validation": "NOT VERIFIED",
+    "installation": "NOT VERIFIED",
+    "tool_execution": "NOT VERIFIED",
+    "reference_consultation": "NOT VERIFIED",
+    "conversation": "NOT VERIFIED"
+  },
+  "overall_state": "NOT VERIFIED"
+}

@@ -15,6 +15,19 @@ RUNTIME = ROOT / "tests/runtime"
 
 
 class RuntimeEvidenceContractTests(unittest.TestCase):
+    def test_v3_schema_and_template_separate_pending_from_installed_claims(self) -> None:
+        schema = json.loads((RUNTIME / "runtime-result-v3-schema.json").read_text(encoding="utf-8"))
+        template = json.loads((RUNTIME / "runtime-result-v3-template.json").read_text(encoding="utf-8"))
+        self.assertEqual(schema["properties"]["schema"]["const"], "plugin-builder-runtime-result-v3")
+        self.assertEqual(schema["properties"]["scenarios"]["minItems"], 8)
+        self.assertEqual(set(schema["$defs"]["realization"]["properties"]["layers"]["required"]), {
+            "structural_validation", "installation", "skill_invocation", "capability_discovery",
+            "operation_execution", "result_delivery", "skill_behavior",
+        })
+        self.assertEqual(template["schema"], "plugin-builder-runtime-result-v3")
+        self.assertEqual(template["overall_state"], "NOT VERIFIED")
+        self.assertEqual([item["id"] for item in template["scenarios"]], [f"T{i}" for i in range(1, 9)])
+        self.assertEqual(template["tools"], [])
     def test_runtime_contract_covers_t1_t7_tools_gates_and_clean_environment(self) -> None:
         text = (RUNTIME / "T1-T7-runtime-scenarios.md").read_text(encoding="utf-8")
         for scenario in range(1, 8):
