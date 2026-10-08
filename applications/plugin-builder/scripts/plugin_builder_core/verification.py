@@ -139,7 +139,7 @@ def _candidate_safety_and_bindings(candidate: Path, plan: dict[str, Any], manife
     return safety, bindings
 
 
-def verify_candidate(session_path: Path) -> VerificationOutcome:
+def verify_candidate(session_path: Path, *, allow_loopback: bool = False) -> VerificationOutcome:
     session_file = Path(session_path)
     session = _load(session_file)
     if session is None or session.get("schema_version") != 2 or not isinstance(session.get("candidate"), dict):
@@ -216,7 +216,10 @@ def verify_candidate(session_path: Path) -> VerificationOutcome:
         write_bytes_transactionally(session_file, canonical_bytes(session))
         return VerificationOutcome("BLOCKED", tuple(sorted(set(identity_errors))))
     checks = _structural_checks(candidate, plan, manifest)
-    tool_results = [verify_application_tool(tool, candidate) for tool in plan.get("tools", []) if isinstance(tool, dict)]
+    tool_results = [
+        verify_application_tool(tool, candidate, allow_loopback=allow_loopback)
+        for tool in plan.get("tools", []) if isinstance(tool, dict)
+    ]
     effective_tool_states, fallback_activations = _effective_tool_states(
         [tool for tool in plan.get("tools", []) if isinstance(tool, dict)], tool_results,
     )

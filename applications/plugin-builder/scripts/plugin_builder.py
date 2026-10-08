@@ -68,6 +68,7 @@ def _parser() -> argparse.ArgumentParser:
     build.add_argument("--json", action="store_true", required=True)
     verify = subparsers.add_parser("verify")
     verify.add_argument("--session", type=Path, required=True)
+    verify.add_argument("--allow-loopback", action="store_true", help="Opt in to the W1-declared local MCP contract check only.")
     verify.add_argument("--json", action="store_true", required=True)
     approve2 = subparsers.add_parser("approve-w2")
     approve2.add_argument("--session", type=Path, required=True)
@@ -87,6 +88,9 @@ def _parser() -> argparse.ArgumentParser:
     evidence.add_argument("--result", type=Path, required=True)
     evidence.add_argument("--evidence-root", type=Path, required=True)
     evidence.add_argument("--output", type=Path, required=True)
+    evidence.add_argument("--reviewed-plugin-zip", type=Path)
+    evidence.add_argument("--approved-plan", type=Path)
+    evidence.add_argument("--approved-session", type=Path)
     evidence.add_argument("--json", action="store_true", required=True)
     for command in ("pause", "resume", "cancel"):
         lifecycle = subparsers.add_parser(command)
@@ -102,7 +106,11 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     if arguments.command == "package-runtime-evidence":
-        outcome = build_runtime_evidence_bundle(arguments.result, arguments.evidence_root, arguments.output)
+        outcome = build_runtime_evidence_bundle(
+            arguments.result, arguments.evidence_root, arguments.output,
+            reviewed_plugin_zip=arguments.reviewed_plugin_zip, approved_plan=arguments.approved_plan,
+            approved_session=arguments.approved_session,
+        )
         _emit(operation_document(
             "package-runtime-evidence", outcome.status, list(outcome.errors),
             archive_sha256=outcome.archive_sha256,
@@ -193,7 +201,7 @@ def main(argv: list[str] | None = None) -> int:
         return 0 if outcome.status == "PASS" else 2 if outcome.status == "BLOCKED" else 3
 
     if arguments.command == "verify":
-        outcome = verify_candidate(arguments.session)
+        outcome = verify_candidate(arguments.session, allow_loopback=arguments.allow_loopback)
         _emit(operation_document("verify", outcome.status, list(outcome.errors), report_sha256=outcome.report_sha256, stage="W2"))
         return 0 if outcome.status == "PASS" else 2 if outcome.status == "BLOCKED" else 3
 

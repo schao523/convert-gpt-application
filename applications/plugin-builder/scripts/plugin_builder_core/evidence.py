@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from hashlib import sha256
 import json
 from pathlib import Path
@@ -10,6 +10,7 @@ import re
 import shutil
 import tempfile
 from typing import Any
+import zipfile
 
 from .bootstrap import plugin_authoring
 from .implementation_plan import canonical_bytes
@@ -456,7 +457,74 @@ def validate_runtime_result(payload: object) -> tuple[str, ...]:
     return ("result.schema_invalid",)
 
 
-def build_runtime_evidence_bundle(result_path: Path, evidence_root: Path, destination: Path) -> EvidenceBundleOutcome:
+def _reviewed_v3_identity(payload: dict[str, Any], reviewed_zip: Path, approved_plan: Path, approved_session: Path) -> tuple[str, ...]:
+    errors: list[str] = []
+    try:
+        inventory = plugin_authoring.inventory_archive(reviewed_zip)
+        member_sha = sha256(canonical_bytes([asdict(item) for item in inventory.members])).hexdigest()
+        artifact = payload["artifact"]
+        if artifact["zip_sha256"] != inventory.archive_sha256 or artifact["member_manifest_sha256"] != member_sha:
+            errors.append("evidence.reviewed_artifact_mismatch")
+        plugin_members = [
+            item.path for item in inventory.members
+            if item.path == "plugin.json"
+            or (len(item.path.split("/")) == 2 and item.path.split("/")[0] != ".codex-plugin" and item.path.split("/")[1] == "plugin.json")
+        ]
+        if len(plugin_members) != 1:
+            errors.append("evidence.reviewed_plugin_manifest_missing")
+        else:
+            with zipfile.ZipFile(reviewed_zip) as archive:
+                plugin = json.loads(archive.read(plugin_members[0]).decode("utf-8"))
+            if plugin.get("name") != artifact["plugin_id"] or plugin.get("version") != artifact["version"]:
+                errors.append("evidence.reviewed_plugin_identity_mismatch")
+        plan_bytes = Path(approved_plan).read_bytes()
+        plan = json.loads(plan_bytes.decode("utf-8"))
+        session = json.loads(Path(approved_session).read_text(encoding="utf-8"))
+        plan_hash = sha256(plan_bytes).hexdigest()
+        tools_hash = sha256(canonical_bytes(plan["tools"])).hexdigest()
+        if (
+            session.get("plan", {}).get("sha256") != plan_hash
+            or session.get("plan", {}).get("tools_sha256") != tools_hash
+            or session.get("w1", {}).get("approved") is not True
+            or session.get("w1", {}).get("plan_sha256") != plan_hash
+            or session.get("w1", {}).get("tools_sha256") != tools_hash
+            or not session.get("w1", {}).get("confirmed_by")
+            or not session.get("w1", {}).get("evidence")
+        ):
+            errors.append("evidence.reviewed_w1_mismatch")
+        contracts = {item["id"]: item for item in plan["tools"]}
+        capabilities = {item["id"]: item for item in plan.get("capabilities", [])}
+        if set(contracts) != {item["tool_id"] for item in payload["tools"]}:
+            errors.append("evidence.reviewed_tool_set_mismatch")
+        for observed in payload["tools"]:
+            contract = contracts.get(observed["tool_id"])
+            if contract is None:
+                continue
+            if (
+                observed["contract_sha256"] != sha256(canonical_bytes(contract)).hexdigest()
+                or observed["implementation_kind"] != contract["implementation_kind"]
+                or set(observed["skill_bindings"]) != set(contract["skill_bindings"])
+                or observed["operation_execution"]["operation_id"] != contract["operation"]["id"]
+            ):
+                errors.append(f"evidence.reviewed_tool_binding_mismatch:{observed['tool_id']}")
+            expected = {(item["target_runtime"], item["adapter_id"], item["exposed_capability"], item["operation_id"]) for item in contract["realizations"]}
+            for realization in observed["realizations"]:
+                identity = (realization["target_runtime"], realization["adapter_id"], realization["exposed_capability"], realization["operation_id"])
+                capability = capabilities.get(realization["capability_id"])
+                if (identity not in expected or realization["skill_id"] not in contract["skill_bindings"]
+                    or capability is None or capability.get("tool_id") != contract["id"]
+                    or realization["skill_id"] not in capability.get("skill_bindings", [])):
+                    errors.append(f"evidence.reviewed_realization_binding_mismatch:{observed['tool_id']}")
+    except (OSError, UnicodeError, ValueError, KeyError, TypeError, json.JSONDecodeError, zipfile.BadZipFile, plugin_authoring.PluginAuthoringError):
+        errors.append("evidence.review_context_invalid")
+    return tuple(sorted(set(errors)))
+
+
+def build_runtime_evidence_bundle(
+    result_path: Path, evidence_root: Path, destination: Path,
+    *, reviewed_plugin_zip: Path | None = None, approved_plan: Path | None = None,
+    approved_session: Path | None = None,
+) -> EvidenceBundleOutcome:
     result_file = Path(result_path)
     try:
         result_bytes = result_file.read_bytes()
@@ -467,6 +535,12 @@ def build_runtime_evidence_bundle(result_path: Path, evidence_root: Path, destin
     if validation:
         return EvidenceBundleOutcome("FAIL", validation)
     assert isinstance(payload, dict)
+    if payload["schema"] == "plugin-builder-runtime-result-v3":
+        if reviewed_plugin_zip is None or approved_plan is None or approved_session is None:
+            return EvidenceBundleOutcome("FAIL", ("evidence.review_context_required",))
+        review_errors = _reviewed_v3_identity(payload, Path(reviewed_plugin_zip), Path(approved_plan), Path(approved_session))
+        if review_errors:
+            return EvidenceBundleOutcome("FAIL", review_errors)
     required = {
         item["evidence_sha256"] for item in payload["scenarios"]
         if isinstance(item, dict) and item.get("evidence_sha256") is not None

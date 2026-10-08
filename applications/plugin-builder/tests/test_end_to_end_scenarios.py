@@ -125,6 +125,12 @@ class EndToEndScenarios(unittest.TestCase):
         self.assertEqual(result["state"], "PASS", result)
         self.assertEqual(result["environment"], "BUILD_HOST_LOCAL_MCP")
         self.assertTrue(all(item["state"] == "NOT VERIFIED" for item in result["realizations"]))
+        verified = run_cli("verify", "--session", str(workspace / "session.json"), "--allow-loopback", "--json")
+        self.assertEqual(verified.returncode, 0, verified.stdout)
+        report = json.loads((workspace / "verification-report.json").read_text(encoding="utf-8"))
+        self.assertEqual(report["tools"][0]["state"], "PASS")
+        self.assertEqual(report["tools"][0]["environment"], "BUILD_HOST_LOCAL_MCP")
+        self.assertTrue(all(item["state"] == "NOT VERIFIED" for item in report["tools"][0]["realizations"]))
 
     def test_t1_behavior_only_design_reaches_w1_without_candidate(self) -> None:
         workspace = prepared_workspace(self.root, approve=False)

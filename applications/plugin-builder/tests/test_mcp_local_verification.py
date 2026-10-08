@@ -17,7 +17,7 @@ SCRIPTS = TESTS.parent / "scripts"
 if str(SCRIPTS) not in sys.path:
     sys.path.insert(0, str(SCRIPTS))
 
-from plugin_builder_core.mcp_local_verification import verify_local_mcp_realization
+from plugin_builder_core.mcp_local_verification import _invalid_input, verify_local_mcp_realization
 
 
 FIXTURE = TESTS / "fixtures" / "mcp_server_fixture.py"
@@ -39,6 +39,7 @@ def tool(mode: str = "normal") -> dict:
             "setup_owner": "RUNTIME", "required": True, "absence_policy": "BLOCK",
         }],
         "operation": {"id": "normalize-input"},
+        "input_schema": {"type": "object", "properties": {"text": {"type": "string"}}, "required": ["text"]},
         "verification": {"kind": "MCP_CONTRACT", "argv": argv, "network": True},
         "execution": {"timeout_seconds": 2},
         "fixtures": {"input": {"text": " A "}, "output": {"normalized": "A"}},
@@ -50,6 +51,17 @@ def tool(mode: str = "normal") -> dict:
 
 
 class McpLocalVerificationTests(unittest.TestCase):
+    def test_negative_call_is_derived_from_declared_schema_not_sample_field_name(self) -> None:
+        self.assertEqual(
+            _invalid_input({"input_schema": {"type": "object", "required": ["count"], "properties": {"count": {"type": "integer"}}}}, {"count": 3}),
+            {},
+        )
+        self.assertEqual(
+            _invalid_input({"input_schema": {"type": "object", "properties": {"label": {"type": "string"}}}}, {"label": "ok"}),
+            {"label": 7},
+        )
+        self.assertIsNone(_invalid_input({"input_schema": {"type": "object"}}, {"anything": 3}))
+
     def setUp(self) -> None:
         self.temporary = tempfile.TemporaryDirectory()
         self.root = Path(self.temporary.name)

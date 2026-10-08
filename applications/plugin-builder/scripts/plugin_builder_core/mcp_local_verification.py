@@ -21,6 +21,32 @@ def _digest(value: object) -> str:
     return sha256(canonical_bytes(value)).hexdigest()
 
 
+def _invalid_input(tool: dict[str, Any], valid: dict[str, Any]) -> dict[str, Any] | None:
+    """Derive a negative call only when the declared schema proves it invalid."""
+    schema = tool.get("input_schema")
+    if not isinstance(schema, dict):
+        return None
+    required = schema.get("required")
+    if isinstance(required, list):
+        for name in required:
+            if isinstance(name, str) and name in valid:
+                invalid = dict(valid)
+                invalid.pop(name)
+                return invalid
+    properties = schema.get("properties")
+    if isinstance(properties, dict):
+        for name, definition in properties.items():
+            if name not in valid or not isinstance(definition, dict):
+                continue
+            kind = definition.get("type")
+            replacement = 7 if kind == "string" else "not-a-number" if kind in {"integer", "number"} else None
+            if replacement is not None:
+                invalid = dict(valid)
+                invalid[name] = replacement
+                return invalid
+    return None
+
+
 def _request(port: int, method: str, params: dict[str, Any], identifier: int, timeout: float) -> dict[str, Any]:
     connection = http.client.HTTPConnection("127.0.0.1", port, timeout=timeout)
     try:
@@ -166,7 +192,11 @@ def verify_local_mcp_realization(tool: dict[str, Any], candidate: Path, *, allow
                 evidence["diagnostics"] = ["mcp_local.fixture_invalid"]
                 evidence["state"] = "FAIL"
                 return evidence
-            invalid = _request(port, "tools/call", {"name": operation_id, "arguments": {"text": 9}}, 3, 2.0)
+            negative_input = _invalid_input(tool, fixture_input)
+            if negative_input is None:
+                evidence["diagnostics"] = ["mcp_local.negative_fixture_unavailable"]
+                return evidence
+            invalid = _request(port, "tools/call", {"name": operation_id, "arguments": negative_input}, 3, 2.0)
             if (invalid.get("result") or {}).get("isError") is not True:
                 raise ValueError("invalid_input_not_rejected")
             called = _request(port, "tools/call", {"name": operation_id, "arguments": fixture_input}, 4, 2.0)

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from hashlib import sha256
+from dataclasses import asdict
 import copy
 import json
 from pathlib import Path
@@ -18,6 +19,7 @@ if str(SCRIPTS) not in sys.path:
     sys.path.insert(0, str(SCRIPTS))
 
 from plugin_builder_core.evidence import build_runtime_evidence_bundle, validate_runtime_result
+from obvious_one_plugin_framework.plugin_authoring import inventory_archive
 
 
 def canonical(value: object) -> bytes:
@@ -118,6 +120,32 @@ class RuntimeEvidencePackagingTests(unittest.TestCase):
     def tearDown(self) -> None:
         self.temporary.cleanup()
 
+    def reviewed_v3(self, payload: dict) -> tuple[Path, Path, Path]:
+        archive = self.root / "reviewed-plugin.zip"
+        with zipfile.ZipFile(archive, "w", compression=zipfile.ZIP_DEFLATED) as output:
+            output.writestr("plugin.json", canonical({"name": "sample-plugin", "version": "1.0.0"}))
+            output.writestr(".codex-plugin/plugin.json", canonical({"name": "sample-plugin", "version": "1.0.0"}))
+        inventory = inventory_archive(archive)
+        payload["artifact"]["zip_sha256"] = inventory.archive_sha256
+        payload["artifact"]["member_manifest_sha256"] = sha256(canonical([asdict(item) for item in inventory.members])).hexdigest()
+        contract = {
+            "id": "normalize", "implementation_kind": "MCP_ADAPTER",
+            "skill_bindings": ["answering"], "operation": {"id": "normalize"},
+            "realizations": [{"target_runtime": "Codex", "adapter_id": "mcp-streamable-http", "exposed_capability": "normalize", "operation_id": "normalize"}],
+        }
+        payload["tools"][0]["contract_sha256"] = sha256(canonical(contract)).hexdigest()
+        plan = self.root / "approved-plan.json"
+        plan.write_bytes(canonical({"tools": [contract], "capabilities": [{"id": "normalize-content", "tool_id": "normalize", "skill_bindings": ["answering"]}]}))
+        plan_hash = sha256(plan.read_bytes()).hexdigest()
+        tools_hash = sha256(canonical([contract])).hexdigest()
+        session = self.root / "approved-session.json"
+        session.write_bytes(canonical({
+            "plan": {"sha256": plan_hash, "tools_sha256": tools_hash},
+            "w1": {"approved": True, "plan_sha256": plan_hash, "tools_sha256": tools_hash,
+                   "confirmed_by": "owner", "evidence": "explicit test approval"},
+        }))
+        return archive, plan, session
+
     def test_every_non_null_scenario_digest_requires_exactly_one_member(self) -> None:
         duplicate = self.evidence / f"{self.digest}.txt"
         duplicate.write_bytes(self.body)
@@ -150,12 +178,32 @@ class RuntimeEvidencePackagingTests(unittest.TestCase):
 
     def test_v3_accepts_exact_installed_skill_to_result_chain_and_deterministic_bundle(self) -> None:
         payload = valid_result_v3(self.digest)
+        archive, plan, session = self.reviewed_v3(payload)
         self.assertEqual(validate_runtime_result(payload), ())
         self.result.write_bytes(canonical(payload))
         first, second = self.root / "v3-first.zip", self.root / "v3-second.zip"
-        self.assertEqual(build_runtime_evidence_bundle(self.result, self.evidence, first).status, "PASS")
-        self.assertEqual(build_runtime_evidence_bundle(self.result, self.evidence, second).status, "PASS")
+        self.assertEqual(build_runtime_evidence_bundle(self.result, self.evidence, first, reviewed_plugin_zip=archive, approved_plan=plan, approved_session=session).status, "PASS")
+        self.assertEqual(build_runtime_evidence_bundle(self.result, self.evidence, second, reviewed_plugin_zip=archive, approved_plan=plan, approved_session=session).status, "PASS")
         self.assertEqual(first.read_bytes(), second.read_bytes())
+
+    def test_v3_refuses_unbound_artifact_and_plan_even_with_well_formed_hashes(self) -> None:
+        payload = valid_result_v3(self.digest)
+        archive, plan, session = self.reviewed_v3(payload)
+        self.result.write_bytes(canonical(payload))
+        self.assertIn("evidence.review_context_required", build_runtime_evidence_bundle(self.result, self.evidence, self.root / "unbound.zip").errors)
+        payload["artifact"]["zip_sha256"] = "f" * 64
+        self.result.write_bytes(canonical(payload))
+        self.assertIn("evidence.reviewed_artifact_mismatch", build_runtime_evidence_bundle(self.result, self.evidence, self.root / "wrong-artifact.zip", reviewed_plugin_zip=archive, approved_plan=plan, approved_session=session).errors)
+        payload["artifact"]["zip_sha256"] = inventory_archive(archive).archive_sha256
+        payload["tools"][0]["realizations"][0]["exposed_capability"] = "different-tool"
+        self.result.write_bytes(canonical(payload))
+        self.assertIn("evidence.reviewed_realization_binding_mismatch:normalize", build_runtime_evidence_bundle(self.result, self.evidence, self.root / "wrong-binding.zip", reviewed_plugin_zip=archive, approved_plan=plan, approved_session=session).errors)
+        payload["tools"][0]["realizations"][0]["exposed_capability"] = "normalize"
+        self.result.write_bytes(canonical(payload))
+        approval = json.loads(session.read_text(encoding="utf-8"))
+        approval["w1"]["plan_sha256"] = "f" * 64
+        session.write_bytes(canonical(approval))
+        self.assertIn("evidence.reviewed_w1_mismatch", build_runtime_evidence_bundle(self.result, self.evidence, self.root / "wrong-w1.zip", reviewed_plugin_zip=archive, approved_plan=plan, approved_session=session).errors)
 
     def test_v3_rejects_incomplete_or_cross_runtime_realization_claims(self) -> None:
         payload = valid_result_v3(self.digest)
@@ -168,10 +216,11 @@ class RuntimeEvidencePackagingTests(unittest.TestCase):
 
     def test_v3_bundle_requires_every_layer_digest_member(self) -> None:
         payload = valid_result_v3(self.digest)
+        archive, plan, session = self.reviewed_v3(payload)
         other = sha256(b"missing skill invocation").hexdigest()
         payload["tools"][0]["realizations"][0]["layers"]["skill_invocation"]["evidence_sha256"] = other
         self.result.write_bytes(canonical(payload))
-        outcome = build_runtime_evidence_bundle(self.result, self.evidence, self.root / "v3-missing.zip")
+        outcome = build_runtime_evidence_bundle(self.result, self.evidence, self.root / "v3-missing.zip", reviewed_plugin_zip=archive, approved_plan=plan, approved_session=session)
         self.assertEqual(outcome.status, "FAIL")
         self.assertIn(f"evidence.missing:{other}", outcome.errors)
 
