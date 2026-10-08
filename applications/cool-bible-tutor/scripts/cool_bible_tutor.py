@@ -48,6 +48,8 @@ from rag_setup import (  # noqa: E402
     inspect_rag_setup,
     setup_rag,
     setup_remote_rag,
+    smoke_test_runtime,
+    RuntimeInstallError,
 )
 
 
@@ -283,6 +285,59 @@ def _platform_tag() -> str:
     return f"{system}-{arch}"
 
 
+def _setup_python_candidates() -> tuple[tuple[str, ...], ...]:
+    """Find local CPython installations without downloading or modifying one."""
+    candidates: list[tuple[str, ...]] = []
+    launcher = shutil.which("py") if sys.platform == "win32" else None
+    for minor in (13, 12, 11, 10):
+        if launcher:
+            candidates.append((launcher, f"-3.{minor}"))
+        command = shutil.which(f"python3.{minor}")
+        if command:
+            candidates.append((command,))
+        if sys.platform == "win32":
+            for base in (
+                Path.home() / "AppData" / "Local" / "Programs" / "Python",
+                Path(os.environ.get("ProgramFiles", "C:/Program Files")) / "Python",
+                Path("C:/"),
+            ):
+                executable = base / f"Python3{minor}" / "python.exe"
+                if executable.is_file():
+                    candidates.append((str(executable),))
+    return tuple(dict.fromkeys(candidates))
+
+
+def _setup_relaunch_command(
+    argv: Sequence[str], environ: Mapping[str, str], runner, *,
+    current_version: tuple[int, int] | None = None,
+) -> list[str] | None:
+    version = current_version or sys.version_info[:2]
+    if sys.implementation.name == "cpython" and (3, 10) <= version <= (3, 13):
+        return None
+    if environ.get("_COOL_BIBLE_TUTOR_SETUP_RAG_REEXEC") == "1":
+        return None
+    for candidate in _setup_python_candidates():
+        try:
+            probe = runner(
+                [*candidate, "-c", "import sys; print(sys.implementation.name, *sys.version_info[:2])"],
+                env=dict(environ), capture_output=True, text=True,
+            )
+        except OSError:
+            continue
+        if int(probe.returncode) != 0:
+            continue
+        parts = str(probe.stdout).strip().lower().split()
+        if len(parts) != 3 or parts[0] != "cpython":
+            continue
+        try:
+            found = (int(parts[1]), int(parts[2]))
+        except ValueError:
+            continue
+        if (3, 10) <= found <= (3, 13):
+            return [*candidate, "-B", str(Path(__file__).resolve()), *argv]
+    return None
+
+
 def _setup_rag_command(
     args: argparse.Namespace,
     environ: Mapping[str, str],
@@ -314,6 +369,20 @@ def _setup_rag_command(
             "next_command": "python scripts/cool_bible_tutor.py setup-rag --accept-downloads",
         }, args.json, stdout)
         return 2
+    relaunch_args = ["setup-rag", "--accept-downloads"]
+    if args.repair:
+        relaunch_args.append("--repair")
+    if args.json:
+        relaunch_args.append("--json")
+    relaunch = _setup_relaunch_command(relaunch_args, environ, runner)
+    if relaunch is not None:
+        child_env = dict(environ)
+        child_env["_COOL_BIBLE_TUTOR_SETUP_RAG_REEXEC"] = "1"
+        try:
+            return int(runner(relaunch, env=child_env).returncode)
+        except OSError as error:
+            _write_report({"status": "rag_incompatible", "reason": str(error)}, args.json, stdout)
+            return 4
     try:
         setup = setup_rag if assets.core_ready else setup_remote_rag
         report = setup(
@@ -415,11 +484,22 @@ def _rag_check(environ: Mapping[str, str], runner) -> tuple[int, dict]:
             "reasons": [str(error)],
         }
     if managed.status == "rag_ready":
-        return 0, {
-            "status": managed.status,
-            "optional": True,
-            "reasons": list(managed.reasons),
-        }
+        try:
+            assets = bundled_runtime_assets()
+            index_root = getattr(managed, "index_path", None) or assets.plugin_root / "assets" / "rag"
+            indexes = sorted(Path(index_root).rglob("cuv-rag-index.sqlite3"))
+            if not indexes:
+                raise RuntimeInstallError("configured RAG index is missing")
+            smoke_test_runtime(
+                managed.python_executable.parent.parent,
+                managed.model_path,
+                assets,
+                runner,
+                index_path=indexes[0],
+            )
+        except (RuntimeInstallError, OSError, ValueError) as error:
+            return 4, {"status": "rag_incomplete", "optional": True, "reasons": [str(error)]}
+        return 0, {"status": "rag_ready", "optional": True, "reasons": list(managed.reasons)}
     status = _rag_configuration(environ)
     if status == "not_configured":
         return 4, {
@@ -450,7 +530,11 @@ def _rag_check(environ: Mapping[str, str], runner) -> tuple[int, dict]:
                 str(python_executable),
                 "-B",
                 "-c",
-                "import rag_subsystem; print('rag_subsystem ready')",
+                "import rag_subsystem, rag_subsystem.utils.hashing, rag_subsystem.utils.logging, "
+                "rag_subsystem.utils.metrics, rag_subsystem.vector_store.factory, "
+                "rag_subsystem.vector_store.sqlite_readonly_store; "
+                "from rag_subsystem import retrieve_data, DEFAULT_RETRIEVAL_CONFIG; "
+                "print('rag_subsystem ready')",
             ],
             env=child_environment,
             capture_output=True,

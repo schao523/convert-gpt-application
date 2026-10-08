@@ -20,6 +20,7 @@ RUNTIME.mkdir(parents=True, exist_ok=True)
 from book_names import resolve_book  # noqa: E402
 from corpus_db import VerseRecord, initialize_database, insert_verses  # noqa: E402
 from discover_bible_references import discover_references, main  # noqa: E402
+import discover_bible_references as discovery_module  # noqa: E402
 import rag_runtime  # noqa: E402
 
 
@@ -259,6 +260,44 @@ class DiscoverBibleReferencesTests(unittest.TestCase):
 
         resolver.assert_called_once_with(app_data)
         self.assertIs(actual, report)
+
+    def test_managed_discovery_ignores_stale_external_rag_root_and_model_override(self):
+        report = SimpleNamespace(
+            status="rag_ready", python_executable=Path(sys.executable),
+            model_path=RUNTIME / "model", index_path=None, source_assets_path=None,
+        )
+        with (
+            patch("rag_setup.RuntimePaths.for_user", return_value=object()),
+            patch("rag_setup.bundled_runtime_assets", return_value=object()),
+            patch("rag_setup.inspect_rag_setup", return_value=report),
+        ):
+            environment, _ = rag_runtime.managed_runtime_environment({
+                "COOL_BIBLE_TUTOR_RAG_ROOT": "D:/unrelated-rag-source",
+                "RAG_EMBEDDING_MODEL_PATH_BGE_LARGE_ZH": "D:/other-model",
+            })
+        self.assertNotIn("COOL_BIBLE_TUTOR_RAG_ROOT", environment)
+        self.assertNotIn("RAG_EMBEDDING_MODEL_PATH_BGE_LARGE_ZH", environment)
+        self.assertEqual(environment["RAG_EMBEDDING_MODEL_PATH"], str(report.model_path))
+
+    def test_cli_applies_managed_environment_without_retaining_stale_root(self):
+        fake = self.api_for(candidate("太5:3", "hidden"))
+        module = SimpleNamespace(
+            process_files=lambda *_: None, retrieve_data=fake.retrieve_data,
+            ProcessConfig=object, DEFAULT_RETRIEVAL_CONFIG=object(),
+        )
+        output = io.StringIO()
+        with (
+            patch.dict(os.environ, {"COOL_BIBLE_TUTOR_RAG_ROOT": "D:/missing-source"}, clear=True),
+            patch.object(discovery_module, "managed_runtime_environment", return_value=(
+                {}, SimpleNamespace(status="rag_ready"),
+            )),
+            patch.object(discovery_module, "reexec_if_configured", return_value=None),
+            patch.object(rag_runtime.importlib, "import_module", return_value=module),
+            contextlib.redirect_stdout(output),
+        ):
+            code = main(["--query", "恩典", "--data-dir", str(self.data_dir)])
+        self.assertEqual(code, 0)
+        self.assertEqual(json.loads(output.getvalue())["candidates"][0]["reference"], "馬太福音 5:3")
 
 
 if __name__ == "__main__":

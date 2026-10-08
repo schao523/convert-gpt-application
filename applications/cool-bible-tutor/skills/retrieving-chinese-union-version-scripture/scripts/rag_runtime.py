@@ -153,6 +153,12 @@ def managed_runtime_environment(
     assets = bundled_runtime_assets()
     report = inspect_rag_setup(paths, assets)
     if report.status == "rag_ready":
+        # A verified managed runtime must not be shadowed by a development
+        # source checkout or a model-specific path from the caller's shell.
+        environment.pop("COOL_BIBLE_TUTOR_RAG_ROOT", None)
+        for key in tuple(environment):
+            if key.startswith(("RAG_EMBEDDING_MODEL_PATH_", "RAG_EMBEDDING_MODEL_DIR_")):
+                environment.pop(key, None)
         environment["COOL_BIBLE_TUTOR_RAG_PYTHON"] = str(report.python_executable)
         environment["RAG_EMBEDDING_BACKEND"] = "local"
         environment["RAG_EMBEDDING_MODEL"] = "bge-large-zh"

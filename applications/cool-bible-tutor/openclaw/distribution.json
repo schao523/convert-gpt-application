@@ -46,7 +46,7 @@
     "app_id": "cool-bible-tutor",
     "namespace": "cool-bible-tutor:zh:bge-large-zh",
     "runtime_lock": "vendor/rag-runtime/runtime-lock.json",
-    "runtime_lock_digest": "9415eeaf584942b95e6eced96a1d30288094984bbf66f72875fdb09b832ede13",
+    "runtime_lock_digest": "cf33083161351071ab95ca952ce3d68dd92e0b33d25179272ecbaff87baee06d",
     "model_manifest": "assets/rag/bge-large-zh-v1.5-model-manifest.json",
     "model_digest": "24c87f0eb20f6f8d296247b8c1d8102499fdf8a307a3780810bba34b23181276",
     "index_manifest": "assets/rag/cuv-rag-runtime-manifest.json",

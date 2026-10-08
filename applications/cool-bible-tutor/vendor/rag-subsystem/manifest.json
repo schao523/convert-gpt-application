@@ -3,5 +3,6 @@
   "python_requires": ">=3.10",
   "source_commit": "94cf5609517a0024b3fd2f039c10d9eb5e93bc69",
   "version": "0.2.1",
-  "wheel_sha256": "163778ca8b3e6cf1ffcf591395beab4ce4467024d3293a12c9a41bd6a9d746df"
+  "wheel_sha256": "f0b2cbfa9d5c6ccac3d726d56b0fc3b231a07dc3711714ca9f3674d7599dba71",
+  "packaging_patch": "explicit package markers for utils and vector_store"
 }

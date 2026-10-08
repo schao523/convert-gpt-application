@@ -24,7 +24,7 @@
   "required_free_bytes": 6000000000,
   "requirements": "vendor/rag-runtime/requirements-rag.lock",
   "requirements_sha256": "11b614da90628c263d9b8d004c8474dd770172a6daeacfea9a9eed7d83557a36",
-  "runtime_lock_id": "9415eeaf584942b95e6eced96a1d30288094984bbf66f72875fdb09b832ede13",
+  "runtime_lock_id": "cf33083161351071ab95ca952ce3d68dd92e0b33d25179272ecbaff87baee06d",
   "schema_version": 1,
   "supported_platforms": [
     "windows-x86_64",
@@ -33,6 +33,6 @@
     "macos-x86_64"
   ],
   "wheel": "vendor/rag-subsystem/rag_subsystem-0.2.1-py3-none-any.whl",
-  "wheel_sha256": "163778ca8b3e6cf1ffcf591395beab4ce4467024d3293a12c9a41bd6a9d746df",
+  "wheel_sha256": "f0b2cbfa9d5c6ccac3d726d56b0fc3b231a07dc3711714ca9f3674d7599dba71",
   "wheel_version": "0.2.1"
 }
