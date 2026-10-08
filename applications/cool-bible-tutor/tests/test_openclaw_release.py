@@ -23,6 +23,42 @@ class OpenClawReleaseTests(unittest.TestCase):
         self.root = Path(self.temporary.name)
         self.contract = load_contract(CONTRACT)
 
+    def test_approved_openclaw_distribution_identity(self) -> None:
+        contract = self.contract
+        self.assertEqual(contract.schema_version, 3)
+        self.assertEqual(contract.version, "2.4.7")
+        self.assertEqual(contract.package_name, "@obvious-one/cool-bible-tutor")
+        self.assertEqual(
+            {rule.classification for rule in contract.content_rules},
+            {"text", "binary"},
+        )
+        binary_paths = {
+            path
+            for rule in contract.content_rules
+            if rule.classification == "binary"
+            for path in rule.paths
+        }
+        self.assertEqual(
+            binary_paths,
+            {
+                "assets/scripture/cuv-approved-gaps.json",
+                "assets/scripture/cuv-runtime-manifest.json",
+                "assets/scripture/cuv.sqlite3",
+                "vendor/rag-subsystem/rag_subsystem-0.2.1-py3-none-any.whl",
+            },
+        )
+        self.assertTrue(contract.publication.github_marketplace.enabled)
+        self.assertFalse(contract.publication.clawhub.enabled)
+        self.assertEqual(contract.rag.app_id, "cool-bible-tutor")
+        self.assertEqual(
+            contract.rag.namespace,
+            "cool-bible-tutor:zh:bge-large-zh",
+        )
+        self.assertEqual(
+            {group.name for group in contract.rag.asset_groups},
+            {"rag-index", "source-pdfs"},
+        )
+
     def runtime_environment(self):
         environment = dict(os.environ)
         for name in (
@@ -56,7 +92,7 @@ class OpenClawReleaseTests(unittest.TestCase):
         )
         package = json.loads((output / "package.json").read_text(encoding="utf-8"))
         self.assertEqual(package["name"], "@obvious-one/cool-bible-tutor")
-        self.assertEqual(package["version"], "2.4.6")
+        self.assertEqual(package["version"], "2.4.7")
         self.assertIn("setup-rag --accept-downloads", (output / "README.md").read_text(encoding="utf-8"))
         self.assertEqual(verify_package(self.contract, output), result)
 

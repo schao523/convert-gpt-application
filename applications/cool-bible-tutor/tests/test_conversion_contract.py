@@ -19,7 +19,7 @@ class CoolBibleTutorConversionContractTests(unittest.TestCase):
 
         self.assertEqual(config.application_id, "cool-bible-tutor")
         self.assertEqual(config.plugin_id, "cool-bible-tutor")
-        self.assertEqual(config.version, "2.4.6")
+        self.assertEqual(config.version, "2.4.7")
         self.assertEqual(
             [command.command_id for command in config.verification.commands],
             ["distribution-audit", "exact-passage", "runtime-status"],
@@ -50,7 +50,7 @@ class CoolBibleTutorConversionContractTests(unittest.TestCase):
         self.assertEqual(tracked, "")
 
     def test_generic_templates_do_not_contain_reference_application_identity(self) -> None:
-        forbidden = ("cool-bible-tutor", "2.4.6", "John 3:16", "約 3:16")
+        forbidden = ("cool-bible-tutor", "2.4.7", "John 3:16", "約 3:16")
         templates = ROOT / "templates"
         for path in templates.rglob("*.template"):
             content = path.read_text(encoding="utf-8")

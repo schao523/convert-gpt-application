@@ -242,6 +242,12 @@ def main(argv: list[str] | None = None, rag_api_loader=load_rag_api) -> int:
                     "next_command": "python scripts/cool_bible_tutor.py setup-rag",
                 }, ensure_ascii=True, indent=2))
                 return 4
+            for key in tuple(os.environ):
+                if key == "COOL_BIBLE_TUTOR_RAG_ROOT" or key.startswith((
+                    "RAG_EMBEDDING_MODEL_PATH_", "RAG_EMBEDDING_MODEL_DIR_"
+                )):
+                    if key not in managed_environment:
+                        os.environ.pop(key, None)
             os.environ.update(managed_environment)
         reexec_code = reexec_if_configured(Path(__file__), forwarded)
         if reexec_code is not None:

@@ -1,6 +1,6 @@
 # Distribution
 
-`cool-bible-tutor` v2.4.6 is published as a fully bundled Codex artifact and a generated lightweight OpenClaw artifact. Install either whole artifact so its manifest, `assets/`, `skills/`, `scripts/`, and `vendor/` remain together.
+`cool-bible-tutor` v2.4.7 is packaged as a fully bundled Codex artifact and a generated lightweight OpenClaw artifact. Install either whole artifact so its manifest, `assets/`, `skills/`, `scripts/`, and `vendor/` remain together.
 
 The plugin uses native inline skill execution. Its orchestrator routes work among the eight bundled skills in the current task. It requires no shared Bible-text service and makes no machine-specific path assumption. RAG discovery is an optional local supporting layer, not a ninth user-facing skill.
 
@@ -51,7 +51,7 @@ After explicit consent, `python scripts/cool_bible_tutor.py setup-rag --accept-d
 
 Execution dependencies are content-addressed and reusable at `ObviousOne/shared-rag/runtimes/<digest>` and `ObviousOne/shared-rag/models/<digest>`. Content is isolated at `ObviousOne/plugins/cool-bible-tutor/indexes` and `ObviousOne/plugins/cool-bible-tutor/source-assets`. There is no shared Bible content pack: a future plugin carries or downloads its own copy, even when build-time compatibility checks permit reuse of existing vector values to derive an independently identified index.
 
-Advanced users may still override the managed runtime with `COOL_BIBLE_TUTOR_RAG_ROOT` and `COOL_BIBLE_TUTOR_RAG_PYTHON`. Discovery returns references and trust/provenance metadata only; the selected reference still passes through `get_passage.py`, so semantic retrieval never authorizes exact quotation.
+When managed setup is ready, discovery uses its verified Python, model, and vendored package even if a shell has stale `COOL_BIBLE_TUTOR_RAG_ROOT` or model-specific path overrides from development. `COOL_BIBLE_TUTOR_RAG_ROOT` and `COOL_BIBLE_TUTOR_RAG_PYTHON` remain available for explicitly configured external RAG checks. Discovery returns references and trust/provenance metadata only; the selected reference still passes through `get_passage.py`, so semantic retrieval never authorizes exact quotation.
 
 Except for the exact manifest-bound corpus and compact RAG index, the redistributable plugin 不得包含 embedding model weights, writable/private vector stores, generated databases, review-history databases, backups, rendered pages, OCR output, user corrections, credentials, caches, or machine-specific configuration.
 
@@ -66,5 +66,5 @@ python -B scripts/distribution_audit.py .
 The audit allows only the two hash-matching PDFs, exact public corpus, and exact compact index named above. It validates the vendored runtime manifests and rejects every other database, vector/model file, PDF, private runtime artifact, cache, absolute user path, scaffold marker, and broken local Markdown link. Build the clean public tree with:
 
 ```text
-python -B scripts/build_marketplace_release.py --source . --destination <marketplace-root> --version 2.4.6
+python -B scripts/build_marketplace_release.py --source . --destination <marketplace-root> --version 2.4.7
 ```

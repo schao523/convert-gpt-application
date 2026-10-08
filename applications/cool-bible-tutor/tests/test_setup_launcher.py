@@ -6,6 +6,7 @@ import os
 from pathlib import Path
 import sqlite3
 import sys
+import tempfile
 import unittest
 
 
@@ -253,8 +254,10 @@ class SetupLauncherTests(unittest.TestCase):
         from unittest.mock import patch
 
         output = io.StringIO()
-        managed = SimpleNamespace(status="rag_ready", reasons=())
-        with patch.object(self.launcher, "_managed_rag_report", return_value=managed):
+        managed = SimpleNamespace(status="rag_ready", reasons=(), python_executable=Path(sys.executable), model_path=Path("model"))
+        with patch.object(self.launcher, "_managed_rag_report", return_value=managed), patch.object(
+            self.launcher, "smoke_test_runtime"
+        ):
             result = self.launcher.main(
                 ["rag-check", "--json"],
                 environ={},
@@ -267,6 +270,52 @@ class SetupLauncherTests(unittest.TestCase):
         self.assertEqual(report["status"], "rag_ready")
         self.assertEqual(report["reasons"], [])
         self.assertTrue(report["optional"])
+
+    def test_rag_check_rejects_managed_runtime_when_retrieval_probe_fails(self):
+        from types import SimpleNamespace
+        from unittest.mock import patch
+
+        output = io.StringIO()
+        managed = SimpleNamespace(status="rag_ready", reasons=(), python_executable=Path(sys.executable), model_path=Path("model"))
+        with patch.object(self.launcher, "_managed_rag_report", return_value=managed), patch(
+            "rag_setup._runtime_python", return_value=Path(sys.executable)
+        ):
+            code = self.launcher.main(
+                ["rag-check", "--json"], environ={}, runner=RecordingRunner(returncode=1), stdout=output,
+            )
+        self.assertEqual(code, 4)
+        self.assertNotEqual(json.loads(output.getvalue())["status"], "rag_ready")
+
+    def test_rag_check_uses_private_index_for_lightweight_distribution(self):
+        from types import SimpleNamespace
+        from unittest.mock import patch
+
+        with tempfile.TemporaryDirectory() as folder:
+            index_dir = Path(folder)
+            index = index_dir / "cuv-rag-index.sqlite3"
+            index.touch()
+            managed = SimpleNamespace(
+                status="rag_ready", reasons=(), python_executable=Path(sys.executable),
+                model_path=Path(folder), index_path=index_dir,
+            )
+            runner = RecordingRunner()
+            with patch.object(self.launcher, "_managed_rag_report", return_value=managed), patch(
+                "rag_setup._runtime_python", return_value=Path(sys.executable)
+            ):
+                code, _ = self.launcher._rag_check({}, runner)
+            self.assertEqual(code, 0)
+            self.assertEqual(runner.calls[0][1]["env"]["RAG_VECTOR_STORE_PATH"], str(index.resolve()))
+
+    def test_setup_rag_selects_supported_python_when_current_is_unsupported(self):
+        from unittest.mock import patch
+
+        candidate = Path(sys.executable)
+        probe = RecordingRunner(returncode=0, stdout="cpython 3 11")
+        with patch.object(self.launcher, "_setup_python_candidates", return_value=((str(candidate),),)):
+            command = self.launcher._setup_relaunch_command(
+                ["setup-rag", "--accept-downloads", "--json"], {}, probe, current_version=(3, 14)
+            )
+        self.assertEqual(command, [str(candidate), "-B", str(MODULE_PATH), "setup-rag", "--accept-downloads", "--json"])
 
     def test_setup_rag_noninteractive_requires_explicit_consent(self):
         output = io.StringIO()

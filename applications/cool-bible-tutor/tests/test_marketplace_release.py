@@ -23,7 +23,7 @@ class MarketplaceReleaseTests(unittest.TestCase):
             shutil.rmtree(self.destination)
 
     def test_release_contains_public_runtime_assets_but_no_private_state(self):
-        report = module.build_release(PLUGIN, self.destination, "2.4.6")
+        report = module.build_release(PLUGIN, self.destination, "2.4.7")
         self.assertIn(
             "plugins/cool-bible-tutor/assets/scripture/cuv.sqlite3", report.paths
         )
@@ -53,10 +53,20 @@ class MarketplaceReleaseTests(unittest.TestCase):
         self.destination.mkdir(parents=True)
         (self.destination / "unrelated.txt").write_text("owner data", encoding="utf-8")
         with self.assertRaisesRegex(ValueError, "nonempty destination"):
-            module.build_release(PLUGIN, self.destination, "2.4.6")
+            module.build_release(PLUGIN, self.destination, "2.4.7")
         self.assertEqual(
             (self.destination / "unrelated.txt").read_text(encoding="utf-8"),
             "owner data",
+        )
+
+    def test_release_excludes_conversion_repository_tests(self):
+        report = module.build_release(PLUGIN, self.destination, "2.4.7")
+
+        self.assertNotIn(
+            "plugins/cool-bible-tutor/tests/test_conversion_contract.py", report.paths
+        )
+        self.assertNotIn(
+            "plugins/cool-bible-tutor/tests/test_verification_profile.py", report.paths
         )
 
 
