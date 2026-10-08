@@ -73,11 +73,11 @@ class MarketplaceReleaseTests(unittest.TestCase):
         attributes = (PLUGIN / ".gitattributes").read_text(encoding="utf-8")
 
         self.assertIn(
-            "assets/scripture/cuv-approved-gaps.json -text",
+            "assets/scripture/cuv-approved-gaps.json -text whitespace=cr-at-eol",
             attributes,
         )
         self.assertIn(
-            "assets/scripture/cuv-runtime-manifest.json -text",
+            "assets/scripture/cuv-runtime-manifest.json -text whitespace=cr-at-eol",
             attributes,
         )
         self.assertNotIn(
