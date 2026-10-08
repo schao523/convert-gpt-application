@@ -59,6 +59,16 @@ class MarketplaceReleaseTests(unittest.TestCase):
             "owner data",
         )
 
+    def test_release_excludes_conversion_repository_tests(self):
+        report = module.build_release(PLUGIN, self.destination, "2.4.7")
+
+        self.assertNotIn(
+            "plugins/cool-bible-tutor/tests/test_conversion_contract.py", report.paths
+        )
+        self.assertNotIn(
+            "plugins/cool-bible-tutor/tests/test_verification_profile.py", report.paths
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
