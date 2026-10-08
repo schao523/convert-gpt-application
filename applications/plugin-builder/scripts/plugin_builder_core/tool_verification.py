@@ -11,6 +11,7 @@ from typing import Any
 
 from .implementation_plan import canonical_bytes
 from .runtime_commands import resolve_direct_argv
+from .mcp_local_verification import verify_local_mcp_realization
 
 
 def _digest(payload: bytes) -> str:
@@ -94,6 +95,7 @@ def verify_application_tool(
     *,
     runtime_capabilities: frozenset[str] = frozenset(),
     allow_network: bool = False,
+    allow_loopback: bool = False,
 ) -> dict[str, Any]:
     kind = str(tool.get("implementation_kind", ""))
     permissions, permission_ids = _permission_records(tool)
@@ -118,6 +120,9 @@ def verify_application_tool(
             return {**base, "state": "NOT VERIFIED", "diagnostics": ["runtime_capability_unavailable"]}
         return {**base, "state": "NOT VERIFIED", "diagnostics": ["runtime_execution_evidence_required"]}
     if kind == "MCP_ADAPTER":
+        if allow_loopback and tool.get("schema") == "plugin-builder-application-tool-v2":
+            local = verify_local_mcp_realization(tool, Path(candidate), allow_loopback=True)
+            return {**base, **local}
         return {**base, "state": "NOT VERIFIED", "diagnostics": ["mcp_runtime_evidence_required"]}
     if kind not in {"BUNDLED_LOCAL", "FRAMEWORK_ADAPTER"}:
         return {**base, "state": "NOT VERIFIED", "diagnostics": ["tool_implementation_unavailable"]}

@@ -87,6 +87,19 @@ class CandidateVerificationTests(unittest.TestCase):
         self.assertEqual(mcp["state"], "NOT VERIFIED")
         self.assertIn("mcp_runtime_evidence_required", mcp["diagnostics"])
 
+    def test_authorized_local_mcp_pass_does_not_upgrade_installed_realizations(self) -> None:
+        from plugin_builder_core.tool_verification import verify_application_tool
+        from test_mcp_local_verification import tool as local_mcp_tool
+
+        candidate = self.root / "candidate"
+        (candidate / "tools").mkdir(parents=True)
+        source = TESTS / "fixtures" / "mcp_server_fixture.py"
+        (candidate / "tools/server.py").write_bytes(source.read_bytes())
+        evidence = verify_application_tool(local_mcp_tool(), candidate, allow_loopback=True)
+        self.assertEqual(evidence["state"], "PASS")
+        self.assertEqual(evidence["environment"], "BUILD_HOST_LOCAL_MCP")
+        self.assertTrue(all(item["state"] == "NOT VERIFIED" for item in evidence["realizations"]))
+
     def test_tool_failure_maps_to_owning_requirements_and_blocks_when_required(self) -> None:
         workspace = self._workspace(lambda p: _tool_script(p, "raise SystemExit(7)\n"))
         completed = self._verify(workspace)

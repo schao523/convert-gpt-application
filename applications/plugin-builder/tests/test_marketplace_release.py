@@ -43,6 +43,7 @@ EXPECTED_SOURCE_PATHS = {
     "scripts/plugin_builder_core/inspection.py",
     "scripts/plugin_builder_core/manifest_profile.py",
     "scripts/plugin_builder_core/mcp_realization.py",
+    "scripts/plugin_builder_core/mcp_local_verification.py",
     "scripts/plugin_builder_core/packaging.py",
     "scripts/plugin_builder_core/proposed_tree.py",
     "scripts/plugin_builder_core/result.py",
