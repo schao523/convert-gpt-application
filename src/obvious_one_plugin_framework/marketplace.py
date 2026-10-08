@@ -868,7 +868,7 @@ def _retry_readonly_removal(function: object, path: str, error: tuple[object, Ba
 def _replace_tree_transactionally(stage: Path, output: Path) -> None:
     backup = output.with_name(f".{output.name}.previous")
     if backup.exists():
-        shutil.rmtree(backup)
+        shutil.rmtree(backup, onerror=_retry_readonly_removal)
     if output.exists():
         os.replace(output, backup)
     try:
@@ -878,7 +878,7 @@ def _replace_tree_transactionally(stage: Path, output: Path) -> None:
             os.replace(backup, output)
         raise
     if backup.exists():
-        shutil.rmtree(backup)
+        shutil.rmtree(backup, onerror=_retry_readonly_removal)
 
 
 def _copy_marketplace_tree(source: Path, destination: Path) -> None:

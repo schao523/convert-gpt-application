@@ -404,6 +404,11 @@ class MarketplaceTests(unittest.TestCase):
         (published / "old.json").write_text("old", encoding="utf-8")
         published.chmod(stat.S_IREAD)
         self.addCleanup(published.chmod, stat.S_IREAD | stat.S_IWRITE)
+        untouched = self.baseline / ".agents" / "plugins"
+        untouched.mkdir(parents=True)
+        (untouched / "keep.txt").write_text("keep", encoding="utf-8")
+        untouched.chmod(stat.S_IREAD)
+        self.addCleanup(untouched.chmod, stat.S_IREAD | stat.S_IWRITE)
         catalog = load_preparation_catalog(self.catalog_path, self.repository)
 
         result = prepare_marketplace(catalog, self.baseline, self.output)
@@ -411,6 +416,10 @@ class MarketplaceTests(unittest.TestCase):
         self.assertEqual(result.status, "PASS")
         self.assertFalse((self.output / "plugins" / "modern" / "assets" / "openclaw" / "old.json").exists())
         self.assertEqual((published / "old.json").read_text(encoding="utf-8"), "old")
+
+        repeated = prepare_marketplace(catalog, self.baseline, self.output)
+
+        self.assertEqual(repeated.status, "PASS")
 
     @unittest.skipUnless(os.name == "nt", "Windows read-only directory semantics")
     def test_prepare_materializes_committed_existing_target_with_readonly_directory(self) -> None:
@@ -429,6 +438,10 @@ class MarketplaceTests(unittest.TestCase):
 
         self.assertEqual(result.status, "PASS")
         self.assertEqual(self._tree(self.output / "plugins" / "legacy"), self._tree(published))
+
+        repeated = prepare_marketplace(catalog, self.baseline, self.output)
+
+        self.assertEqual(repeated.status, "PASS")
 
     def test_codex_only_build_emits_no_openclaw_artifact(self) -> None:
         self._write_v2_catalog()
