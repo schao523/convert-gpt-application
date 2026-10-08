@@ -10,6 +10,8 @@ from pathlib import Path
 import tempfile
 
 from .bootstrap import plugin_authoring
+from .candidate_identity import expected_tool_bindings, runtime_approval_errors, runtime_identity_fields
+from .mcp_realization import validate_mcp_projection
 from .implementation_plan import canonical_bytes, write_bytes_transactionally
 from .session_contract import validate_session
 
@@ -113,8 +115,10 @@ def package_candidate(session_path: Path) -> PackageOutcome:
     plugin = _load(candidate / "plugin.json")
     if report is None or manifest is None or plugin is None:
         return PackageOutcome("FAIL", ("package.input_manifest_invalid",))
-    if report.get("schema") != "plugin-builder-verification-report-v2":
+    if report.get("schema") not in {"plugin-builder-verification-report-v2", "plugin-builder-verification-report-v3"}:
         return PackageOutcome("BLOCKED", ("package.verification_schema_unsupported",))
+    if report.get("status") != "PASS":
+        return PackageOutcome("BLOCKED", ("package.verification_incomplete",))
     if any(item.get("required") is True and item.get("state") != "PASS" for item in report.get("checks", [])):
         return PackageOutcome("BLOCKED", ("package.required_check_incomplete",))
     plan_identity = session.get("plan") or {}
@@ -131,6 +135,25 @@ def package_candidate(session_path: Path) -> PackageOutcome:
         plan = None
     if plan_hash != plan_identity.get("sha256") or plan_hash != (session.get("w1") or {}).get("plan_sha256") or plan_hash != candidate_id.get("plan_sha256") or plan_hash != manifest.get("plan_sha256"):
         return PackageOutcome("BLOCKED", ("package.plan_sha256_mismatch",))
+    if manifest.get("tool_contracts") != plan.get("tools") or manifest.get("tool_bindings") != expected_tool_bindings(plan.get("tools", [])):
+        return PackageOutcome("BLOCKED", ("package.tool_bindings_mismatch",))
+    if isinstance(plan.get("capabilities"), list):
+        runtime_errors = list(runtime_approval_errors(plan, plan_identity, session.get("w1") or {}))
+        if manifest.get("schema") != "plugin-builder-candidate-manifest-v3" or report.get("schema") != "plugin-builder-verification-report-v3":
+            runtime_errors.append("package.runtime_schema_mismatch")
+        try:
+            expected_runtime = runtime_identity_fields(plan, candidate)
+        except (ValueError, OSError, KeyError, TypeError) as error:
+            runtime_errors.append(f"package.runtime_identity_invalid:{error}")
+        else:
+            for key, value in expected_runtime.items():
+                if manifest.get(key) != value:
+                    runtime_errors.append(f"package.{key}_mismatch")
+        if any(report.get(key) != plan.get(key) for key in ("capabilities_sha256", "realizations_sha256", "adapter_registry_sha256")):
+            runtime_errors.append("package.report_runtime_identity_mismatch")
+        runtime_errors.extend(validate_mcp_projection(plan, candidate))
+        if runtime_errors:
+            return PackageOutcome("BLOCKED", tuple(sorted(set(runtime_errors))))
     name = plugin.get("name")
     if not isinstance(name, str) or not name or any(character not in "abcdefghijklmnopqrstuvwxyz0123456789-" for character in name):
         return PackageOutcome("FAIL", ("package.plugin_name_invalid",))
@@ -182,7 +205,7 @@ def package_candidate(session_path: Path) -> PackageOutcome:
             members_payload = [asdict(item) for item in inventory.members]
             member_manifest_sha = sha256(canonical_bytes(members_payload)).hexdigest()
             metadata = {
-                "schema": "plugin-builder-package-v2",
+                "schema": "plugin-builder-package-v3" if isinstance(plan.get("capabilities"), list) else "plugin-builder-package-v2",
                 "plugin_id": name,
                 "archive_sha256": archive_sha,
                 "candidate_sha256": candidate_id["sha256"],
@@ -194,9 +217,18 @@ def package_candidate(session_path: Path) -> PackageOutcome:
                 "preflight_evidence": preflight_evidence,
                 "manifest_profile": preflight_evidence["manifest_profile"],
                 "command_evidence": report.get("tools", []),
+                "fallback_activations": report.get("fallback_activations", []),
                 "evidence_states": report.get("evidence_states", {}),
                 "tool_bindings": manifest.get("tool_bindings", []),
                 "tool_contracts_sha256": sha256(canonical_bytes(manifest.get("tool_contracts", []))).hexdigest(),
+                **({
+                    "capabilities_sha256": plan["capabilities_sha256"],
+                    "realizations_sha256": plan["realizations_sha256"],
+                    "adapter_registry_sha256": plan["adapter_registry_sha256"],
+                    "generated_runtime_configuration_sha256": manifest["generated_runtime_configuration_sha256"],
+                    "runtime_realizations": report.get("runtime_realizations", []),
+                    "runtime_realization_state": "NOT VERIFIED",
+                } if isinstance(plan.get("capabilities"), list) else {}),
                 "extracted_validation": {"state": "PASS", "diagnostics": []},
                 "safety_validation": {"state": "PASS", "diagnostics": []},
             }

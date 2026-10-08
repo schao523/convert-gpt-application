@@ -43,7 +43,7 @@ class PackageQualityEvidenceTests(unittest.TestCase):
         workspace = self._ready()
         report = json.loads((workspace / "verification-report.json").read_text(encoding="utf-8"))
         plan = json.loads((workspace / "implementation-plan.json").read_text(encoding="utf-8"))
-        self.assertEqual(report["schema"], "plugin-builder-verification-report-v2")
+        self.assertEqual(report["schema"], "plugin-builder-verification-report-v3")
         self.assertEqual(report["preflight_evidence"], plan["preflight_evidence"])
         self.assertEqual(report["tools"][0]["declared_argv"], ["{python}", "tools/normalize.py", "--self-test"])
         self.assertEqual(report["tools"][0]["adapter"], "CURRENT_PYTHON")
@@ -59,7 +59,7 @@ class PackageQualityEvidenceTests(unittest.TestCase):
         metadata_path = workspace / "dist/package-metadata.json"
         metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
         session = json.loads((workspace / "session.json").read_text(encoding="utf-8"))
-        self.assertEqual(metadata["schema"], "plugin-builder-package-v2")
+        self.assertEqual(metadata["schema"], "plugin-builder-package-v3")
         self.assertEqual(metadata["preflight_evidence"], plan["preflight_evidence"])
         self.assertEqual(metadata["manifest_profile"], plan["preflight_evidence"]["manifest_profile"])
         self.assertEqual(metadata["command_evidence"], report["tools"])

@@ -14,6 +14,8 @@ if str(TESTS) not in sys.path:
 
 from test_create_candidate import PLAN_FIXTURE, prepared_workspace, read_result, run_cli
 import test_update_candidate as update_tests
+from plugin_builder_core.bootstrap import plugin_authoring
+from plugin_builder_core.verification import _effective_tool_states
 
 
 def _tool_script(proposal: dict, text: str) -> None:
@@ -65,14 +67,77 @@ class CandidateVerificationTests(unittest.TestCase):
         self.assertEqual(self._verify(workspace).returncode, 0)
         report = self._report(workspace)
         plan = json.loads((workspace / "implementation-plan.json").read_text(encoding="utf-8"))
-        self.assertEqual(report["schema"], "plugin-builder-verification-report-v2")
+        self.assertEqual(report["schema"], "plugin-builder-verification-report-v3")
         self.assertEqual(report["preflight_evidence"], plan["preflight_evidence"])
         self.assertEqual(report["tools"][0]["declared_argv"], ["{python}", "tools/normalize.py", "--self-test"])
         self.assertEqual(report["tools"][0]["adapter"], "CURRENT_PYTHON")
+        self.assertEqual(report["tools"][0]["operation_execution"]["state"], "PASS")
+        self.assertEqual(len(report["runtime_realizations"]), 2)
+        self.assertTrue(all(item["state"] == "NOT VERIFIED" for item in report["runtime_realizations"]))
         self.assertEqual(
             set(report["evidence_states"]),
             {"structural_validation", "installation", "tool_execution", "reference_consultation", "conversation"},
         )
+
+    def test_required_installed_realization_blocks_w2_but_deferred_remains_visible(self) -> None:
+        def require_installed(proposal: dict) -> None:
+            proposal["tools"][0]["realizations"][0]["evidence_policy"] = "REQUIRED_BEFORE_W2"
+
+        workspace = self._workspace(mutate=require_installed)
+        verified = self._verify(workspace)
+        self.assertEqual(verified.returncode, 2, verified.stdout)
+        report = self._report(workspace)
+        self.assertEqual(report["tools"][0]["operation_execution"]["state"], "PASS")
+        self.assertEqual(report["status"], "BLOCKED")
+        self.assertEqual(
+            [item["evidence_policy"] for item in report["runtime_realizations"]],
+            ["REQUIRED_BEFORE_W2", "DEFERRED_ALLOWED"],
+        )
+        approved = run_cli("approve-w2", "--session", str(workspace / "session.json"), "--confirmed-by", "owner", "--evidence", "reviewed", "--json")
+        self.assertEqual(approved.returncode, 2, approved.stdout)
+        self.assertFalse((workspace / "dist/sample-plugin.zip").exists())
+
+    def test_changed_generated_endpoint_is_rejected_even_if_candidate_hash_is_rebound(self) -> None:
+        workspace = self._workspace()
+        candidate = workspace / "candidate"
+        mcp_path = candidate / "mcp.json"
+        mcp_path.write_bytes(mcp_path.read_bytes().replace(b"example.com", b"unapproved.example"))
+        session_path = workspace / "session.json"
+        session = json.loads(session_path.read_text(encoding="utf-8"))
+        session["candidate"]["sha256"] = plugin_authoring.tree_sha256(candidate)
+        session_path.write_text(json.dumps(session, sort_keys=True), encoding="utf-8")
+        verified = self._verify(workspace)
+        self.assertEqual(verified.returncode, 2, verified.stdout)
+        self.assertIn("verify.runtime_identity_invalid:runtime_configuration_mismatch:mcp.portable_projection_mismatch", verified.stdout)
+
+    def test_changed_tool_binding_is_rejected_even_if_candidate_hash_is_rebound(self) -> None:
+        workspace = self._workspace()
+        candidate = workspace / "candidate"
+        manifest_path = candidate / "PLUGIN-BUILDER-MANIFEST.json"
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        manifest["tool_bindings"][0]["permissions"] = []
+        manifest_path.write_text(json.dumps(manifest, sort_keys=True), encoding="utf-8")
+        session_path = workspace / "session.json"
+        session = json.loads(session_path.read_text(encoding="utf-8"))
+        session["candidate"]["sha256"] = plugin_authoring.tree_sha256(candidate)
+        session_path.write_text(json.dumps(session, sort_keys=True), encoding="utf-8")
+        verified = self._verify(workspace)
+        self.assertEqual(verified.returncode, 2, verified.stdout)
+        self.assertIn("verify.tool_bindings_mismatch", verified.stdout)
+
+    def test_approved_behavior_preserving_alternative_satisfies_primary_requirement(self) -> None:
+        contracts = [
+            {"id": "primary", "operation": {"id": "primary-op"}, "requirement_ids": ["RQ1"],
+             "fallback": {"policy": "ALTERNATIVE", "alternative_operation_id": "alternative-op", "preserved_requirement_ids": ["RQ1"], "degraded_requirement_ids": []}},
+            {"id": "alternative", "operation": {"id": "alternative-op"}, "requirement_ids": ["RQ1"], "fallback": {"policy": "BLOCK"}},
+        ]
+        results = [
+            {"tool_id": "primary", "state": "NOT VERIFIED"},
+            {"tool_id": "alternative", "state": "PASS"},
+        ]
+        effective, activations = _effective_tool_states(contracts, results)
+        self.assertEqual(effective["primary"], "PASS")
+        self.assertEqual(activations, [{"tool_id": "primary", "alternative_tool_id": "alternative", "operation_id": "alternative-op", "preserved_requirement_ids": ["RQ1"]}])
 
     def test_runtime_native_and_mcp_tool_evidence_is_runtime_specific(self) -> None:
         from plugin_builder_core.tool_verification import verify_application_tool

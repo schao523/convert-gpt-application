@@ -10,6 +10,7 @@ import tempfile
 
 from .bootstrap import plugin_authoring
 from .candidate import CandidateOutcome, _load, _replace_candidate
+from .candidate_identity import expected_tool_bindings, runtime_approval_errors, runtime_identity_fields
 from .implementation_plan import canonical_bytes, write_bytes_transactionally
 from .proposed_tree import materialize_proposed_tree, preflight_proposed_tree
 
@@ -67,6 +68,7 @@ def build_update_candidate(session_path: Path) -> CandidateOutcome:
         binding_errors.append("build.plan_sha256_mismatch")
     if tools_hash != plan_identity.get("tools_sha256") or tools_hash != w1.get("tools_sha256"):
         binding_errors.append("build.tools_sha256_mismatch")
+    binding_errors.extend(runtime_approval_errors(plan, plan_identity, w1))
     if binding_errors:
         return CandidateOutcome("BLOCKED", tuple(sorted(binding_errors)))
 
@@ -148,17 +150,10 @@ def build_update_candidate(session_path: Path) -> CandidateOutcome:
                     "FAIL",
                     tuple(f"candidate.{item.code}:{item.path}" for item in pair_issues),
                 )
-            bindings = []
+            bindings = expected_tool_bindings(tool_contracts)
             tool_files: set[str] = set()
             for tool in sorted(tool_contracts, key=lambda item: item["id"]):
                 tool_files.update(tool["files"])
-                bindings.append({
-                    "contract_sha256": sha256(canonical_bytes(tool)).hexdigest(),
-                    "dependencies": tool["dependencies"], "files": tool["files"],
-                    "implementation_kind": tool["implementation_kind"], "permissions": tool["permissions"],
-                    "requirements": tool["requirement_ids"], "runtime_targets": tool["runtime_targets"],
-                    "skills": tool["skill_bindings"], "tool_id": tool["id"],
-                })
             before = _hashes(baseline)
             after = _hashes(stage)
             added = sorted(set(after) - set(before))
@@ -180,8 +175,9 @@ def build_update_candidate(session_path: Path) -> CandidateOutcome:
             members = plugin_authoring.tree_manifest(stage)
             if {item.path for item in members} != expected - {"PLUGIN-BUILDER-MANIFEST.json"}:
                 return CandidateOutcome("FAIL", ("build.expected_members_mismatch",))
+            runtime_fields = runtime_identity_fields(plan, stage)
             manifest = {
-                "schema": "plugin-builder-candidate-manifest-v2", "operation": "update",
+                "schema": "plugin-builder-candidate-manifest-v3" if runtime_fields else "plugin-builder-candidate-manifest-v2", "operation": "update",
                 "plan_sha256": plan_hash, "tools_sha256": tools_hash,
                 "preflight_evidence_sha256": preflight_hash,
                 "file_roles": approved_preflight["artifact_quality"]["file_roles"],
@@ -190,6 +186,7 @@ def build_update_candidate(session_path: Path) -> CandidateOutcome:
                 "content_tree_sha256": plugin_authoring.tree_sha256(stage),
                 "expected_members": sorted(expected), "members": [asdict(item) for item in members],
                 "tool_bindings": bindings, "tool_contracts": sorted(tool_contracts, key=lambda item: item["id"]),
+                **runtime_fields,
             }
             manifest_bytes = canonical_bytes(manifest)
             (stage / "PLUGIN-BUILDER-MANIFEST.json").write_bytes(manifest_bytes)
@@ -203,6 +200,8 @@ def build_update_candidate(session_path: Path) -> CandidateOutcome:
             _replace_candidate(stage, destination, temporary)
     except plugin_authoring.PluginAuthoringError as authoring_error:
         return CandidateOutcome("FAIL", (f"build.{authoring_error.code}",))
+    except ValueError as identity_error:
+        return CandidateOutcome("BLOCKED", (f"build.{identity_error}",))
     except OSError:
         return CandidateOutcome("FAIL", ("build.local_io_failure",))
 

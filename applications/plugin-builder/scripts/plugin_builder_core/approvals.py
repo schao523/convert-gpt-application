@@ -275,6 +275,8 @@ def approve_w2(session_path: Path, confirmed_by: str, evidence: str) -> tuple[st
     if sha256(report_bytes).hexdigest() != verification.get("sha256"):
         errors.append("w2.report_sha256_mismatch")
     if isinstance(report, dict):
+        if report.get("status") != "PASS":
+            errors.append("w2.verification_incomplete")
         if report.get("candidate_sha256") != candidate.get("sha256"):
             errors.append("w2.report_candidate_mismatch")
         if any(item.get("required") is True and item.get("state") == "FAIL" for item in report.get("requirements", [])):
@@ -283,6 +285,11 @@ def approve_w2(session_path: Path, confirmed_by: str, evidence: str) -> tuple[st
             errors.append("w2.required_check_incomplete")
         if any(item.get("required") is True and item.get("state") != "PASS" and (item.get("fallback") or {}).get("policy") == "BLOCK" for item in report.get("tools", [])):
             errors.append("w2.required_tool_evidence_missing")
+        if any(
+            item.get("evidence_policy") == "REQUIRED_BEFORE_W2" and item.get("state") != "RUNTIME VERIFIED"
+            for item in report.get("runtime_realizations", []) if isinstance(item, dict)
+        ):
+            errors.append("w2.required_runtime_realization_missing")
     plan_identity = session.get("plan") or {}
     plan_path = path.parent / str(plan_identity.get("path", ""))
     try:

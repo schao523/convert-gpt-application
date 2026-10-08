@@ -37,6 +37,7 @@ EXPECTED_SOURCE_PATHS = {
     "scripts/plugin_builder_core/artifact_quality.py",
     "scripts/plugin_builder_core/bootstrap.py",
     "scripts/plugin_builder_core/candidate.py",
+    "scripts/plugin_builder_core/candidate_identity.py",
     "scripts/plugin_builder_core/evidence.py",
     "scripts/plugin_builder_core/handoff_normalization.py",
     "scripts/plugin_builder_core/implementation_plan.py",

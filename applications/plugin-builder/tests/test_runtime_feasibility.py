@@ -4,6 +4,7 @@ import copy
 from hashlib import sha256
 import json
 from pathlib import Path
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -140,6 +141,31 @@ class RuntimeFeasibilityTests(unittest.TestCase):
 
     def compile(self, payload: dict):
         return compile_plan(self.inspection, payload, self.output)
+
+    def test_v2_candidate_manifest_binds_runtime_identities(self) -> None:
+        proposal_path = self.root / "proposal-v2.json"
+        proposal_path.write_bytes(canonical_bytes(proposal_v2()))
+        session_path = self.workspace / "session.json"
+        for command in (
+            ("plan", "--session", str(session_path), "--proposal", str(proposal_path)),
+            ("approve-w1", "--session", str(session_path), "--confirmed-by", "fixture owner", "--evidence", "approved runtime plan"),
+            ("build", "--session", str(session_path)),
+        ):
+            completed = subprocess.run(
+                [sys.executable, "-B", str(SCRIPTS / "plugin_builder.py"), *command, "--json"],
+                cwd=ROOT, capture_output=True, text=True, encoding="utf-8", check=False,
+            )
+            self.assertEqual(completed.returncode, 0, completed.stdout + completed.stderr)
+        plan = json.loads(self.output.read_text(encoding="utf-8"))
+        manifest = json.loads((self.workspace / "candidate/PLUGIN-BUILDER-MANIFEST.json").read_text(encoding="utf-8"))
+        self.assertEqual(manifest["schema"], "plugin-builder-candidate-manifest-v3")
+        for key in ("capabilities_sha256", "realizations_sha256", "adapter_registry_sha256"):
+            self.assertEqual(manifest[key], plan[key])
+        self.assertEqual(manifest["capabilities"], plan["capabilities"])
+        self.assertEqual(manifest["tool_contracts"], plan["tools"])
+        self.assertRegex(manifest["generated_runtime_configuration_sha256"], r"^[0-9a-f]{64}$")
+        self.assertRegex(manifest["dependencies_sha256"], r"^[0-9a-f]{64}$")
+        self.assertRegex(manifest["permissions_sha256"], r"^[0-9a-f]{64}$")
 
     def test_v2_closure_is_deterministic_and_hashes_every_runtime_boundary(self) -> None:
         first = self.compile(proposal_v2())

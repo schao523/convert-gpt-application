@@ -24,6 +24,9 @@ def _failing_tool(proposal: dict) -> None:
 
 def _runtime_native_optional(proposal: dict) -> None:
     tool = proposal["tools"][0]
+    skill = next(item for item in proposal["files"] if item["path"] == "skills/answering-structured-requests/SKILL.md")
+    skill["inline_text"] += "\nThe optional runtime-exposed capability is `desktop-picker`; use it only when available.\n"
+    skill["source_sha256"] = sha256(skill["inline_text"].encode("utf-8")).hexdigest()
     tool.update({
         "required": False, "implementation_kind": "RUNTIME_NATIVE", "files": [],
         "execution": None, "fixtures": None, "mcp": None,
