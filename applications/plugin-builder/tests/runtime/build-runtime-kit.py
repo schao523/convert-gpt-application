@@ -55,12 +55,31 @@ def build_kit(source: Path, release: Path, plugin_zip: Path, output: Path) -> st
         shutil.copyfile(release_manifest, stage / "release-manifest.json")
         shutil.copytree(plugin / "runtime", stage / "runtime")
         shutil.copyfile(source / "tests/runtime/runtime-result-schema.json", stage / "runtime/runtime-result-schema.json")
+        shutil.copyfile(source / "tests/runtime/verify-installed-identity.py", stage / "runtime/verify-installed-identity.py")
         raw = stage / "sample-legacy-handoff-v1.1.zip"
         write_deterministic_zip(sample, raw)
         canonical = stage / "sample-normalized-handoff-v1.1.zip"
         normalized = normalize_handoff_archive(raw, Path(temporary) / "normalized-tree", canonical)
         if normalized.status != "PASS":
             raise ValueError(f"sample normalization failed: {normalized.diagnostics}")
+        # The release's generic create fixture targets design-package-create;
+        # bind its source-backed reference to this kit's normalized legacy input.
+        proposal_path = stage / "runtime/create-plan.json"
+        proposal = json.loads(proposal_path.read_text(encoding="utf-8"))
+        reference = next(
+            item for item in proposal["files"]
+            if item["path"] == "skills/answering-structured-requests/references/Reference.md"
+        )
+        if reference["source_path"] != "input/Reference.md":
+            raise ValueError("unexpected source reference in release create fixture")
+        reference_member = "professional_knowledge/reference.md"
+        with zipfile.ZipFile(canonical) as handoff:
+            reference["source_sha256"] = sha256(handoff.read(reference_member)).hexdigest()
+        reference["source_path"] = f"input/{reference_member}"
+        proposal_path.write_text(
+            json.dumps(proposal, ensure_ascii=True, indent=2, sort_keys=True) + "\n",
+            encoding="ascii", newline="\n",
+        )
         scenario = stage / "scenario-inputs"
         prepared = subprocess.run(
             [sys.executable, "-B", str(stage / "runtime/prepare-runtime-scenarios.py"),
