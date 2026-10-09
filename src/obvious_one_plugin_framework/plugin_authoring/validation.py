@@ -452,8 +452,11 @@ def validate_plugin_tree(root: Path) -> tuple[ValidationIssue, ...]:
     plugin_root = Path(root)
     if not plugin_root.is_dir():
         return (_issue("plugin_root_missing"),)
+    from .delegated_references import validate_delegated_references
+
     issues = list(validate_manifest_pair(plugin_root))
     issues.extend(validate_skill_tree(plugin_root))
     issues.extend(validate_reference_closure(plugin_root))
     issues.extend(validate_path_bindings(plugin_root))
+    issues.extend(validate_delegated_references(plugin_root))
     return _sorted_unique(issues)
