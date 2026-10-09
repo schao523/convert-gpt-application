@@ -105,6 +105,39 @@ class DelegatedReferenceRepairTests(unittest.TestCase):
         self.assertEqual(first.metadata.read_bytes(), second.metadata.read_bytes())
         self.assertEqual(first.archive_sha256, second.archive_sha256)
 
+    def test_legacy_filename_qualified_index_ids_are_removed_and_resolved(self) -> None:
+        for skill in (self.contract.owner_skill, *self.contract.non_owner_skills):
+            index_path = self.fixture.candidate / "skills" / skill / "assets/knowledge-index.json"
+            payload = json.loads(index_path.read_text(encoding="utf-8"))
+            for item in payload["assets"]:
+                if item["id"] in {"RM-04A", "RM-04B"}:
+                    item["id"] = f"{item['id']}_Bible_legacy"
+            index_path.write_bytes(canonical_bytes(payload))
+        archive = self.root / "legacy-qualified.zip"
+        source_digest = plugin_authoring.write_deterministic_zip(self.fixture.candidate, archive)
+        contract_payload = dict(self.fixture.contract_payload)
+        contract_payload["source_archive_sha256"] = source_digest
+        contract_path = self.root / "legacy-qualified-contract.json"
+        contract_path.write_bytes(canonical_bytes(contract_payload))
+        output = self.root / "legacy-qualified"
+
+        result = repair_delegated_reference_archive(
+            archive,
+            load_repair_contract(contract_path),
+            output / "candidate.zip",
+            output / "metadata.json",
+        )
+        repaired = self.extract(result.archive, "legacy-qualified-repaired")
+
+        for skill in self.contract.non_owner_skills:
+            index = json.loads(
+                (repaired / "skills" / skill / "assets/knowledge-index.json").read_text(
+                    encoding="utf-8"
+                )
+            )
+            self.assertEqual(index["assets"], [])
+        self.assertEqual(plugin_authoring.validate_plugin_tree(repaired), ())
+
     def test_wrong_source_digest_fails_without_partial_output(self) -> None:
         payload = dict(self.fixture.contract_payload)
         payload["source_archive_sha256"] = "f" * 64

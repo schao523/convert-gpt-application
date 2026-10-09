@@ -79,6 +79,12 @@ def _remove_reference_links(text: str, blocked: set[str]) -> str:
     return "\n".join(kept).rstrip() + "\n"
 
 
+def _matches_reference_id(index_id: object, reference_id: str) -> bool:
+    return isinstance(index_id, str) and (
+        index_id == reference_id or index_id.startswith(reference_id + "_")
+    )
+
+
 def _handoff_section(contract: DelegatedReferenceRepair) -> str:
     ids = " and ".join(reference.reference_id for reference in contract.references)
     return (
@@ -129,10 +135,18 @@ def _repair_non_owner(root: Path, skill_name: str, contract: DelegatedReferenceR
     if not isinstance(assets, list):
         raise _fail("knowledge_index_invalid", skill_name)
     blocked_ids = {reference.reference_id for reference in contract.references}
+    blocked_index_paths = {
+        reference.owner_relative_path.removeprefix("assets/")
+        for reference in contract.references
+    }
     index["assets"] = [
         item
         for item in assets
-        if not isinstance(item, dict) or item.get("id") not in blocked_ids
+        if not isinstance(item, dict)
+        or (
+            not any(_matches_reference_id(item.get("id"), reference_id) for reference_id in blocked_ids)
+            and item.get("file") not in blocked_index_paths
+        )
     ]
     _write_json(index_path, index)
 

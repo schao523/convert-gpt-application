@@ -105,6 +105,21 @@ class DelegatedReferenceValidationTests(unittest.TestCase):
     def test_valid_handoff_resolves_owner_assets_and_response_path(self) -> None:
         self.assertEqual(validate_delegated_references(self.root), ())
 
+    def test_unique_legacy_filename_qualified_owner_ids_resolve(self) -> None:
+        owner_index = self.root / "skills" / OWNER / "assets/knowledge-index.json"
+        payload = json.loads(owner_index.read_text(encoding="utf-8"))
+        for item in payload["assets"]:
+            item["id"] = f"{item['id']}_Bible_legacy"
+        _write_json(owner_index, payload)
+
+        self.assertEqual(validate_delegated_references(self.root), ())
+
+        payload["assets"].append(
+            {"id": "RM-04A_Second_legacy", "file": REFERENCES["RM-04A"]}
+        )
+        _write_json(owner_index, payload)
+        self.assertIn("delegated_reference_owner_index_ambiguous", self.codes())
+
     def test_profile_shape_and_reference_identity_fail_closed(self) -> None:
         profile_path = self.root / "skills" / NON_OWNER / "assets/reference-profile.json"
         cases = (

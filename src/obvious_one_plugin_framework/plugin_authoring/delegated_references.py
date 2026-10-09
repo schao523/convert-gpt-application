@@ -77,6 +77,20 @@ def _index_bindings(skill: Path) -> dict[str, str]:
     return bindings
 
 
+def _matches_reference_id(index_id: str, reference_id: str) -> bool:
+    """Match an exact ID or one legacy filename-qualified ID."""
+
+    return index_id == reference_id or index_id.startswith(reference_id + "_")
+
+
+def _matching_index_bindings(bindings: dict[str, str], reference_id: str) -> tuple[str, ...]:
+    return tuple(
+        bindings[index_id]
+        for index_id in sorted(bindings)
+        if _matches_reference_id(index_id, reference_id)
+    )
+
+
 def _local_links(skill: Path) -> set[str]:
     try:
         text = (skill / "SKILL.md").read_text(encoding="utf-8")
@@ -180,14 +194,18 @@ def validate_delegated_references(root: Path) -> tuple[ValidationIssue, ...]:
                 issues.append(_issue("delegated_reference_access_mode_invalid", relative_profile, reference_id))
             if record.get("local_copy") is not False:
                 issues.append(_issue("delegated_reference_local_copy_forbidden", relative_profile, reference_id))
-            if reference_id in non_owner_index:
+            if _matching_index_bindings(non_owner_index, reference_id):
                 issues.append(_issue("delegated_reference_non_owner_indexed", relative_profile, reference_id))
 
             owner_index = _index_bindings(owner)
-            owner_relative = owner_index.get(reference_id)
-            if owner_relative is None:
+            owner_matches = _matching_index_bindings(owner_index, reference_id)
+            if not owner_matches:
                 issues.append(_issue("delegated_reference_owner_index_missing", relative_profile, reference_id))
                 continue
+            if len(owner_matches) != 1:
+                issues.append(_issue("delegated_reference_owner_index_ambiguous", relative_profile, reference_id))
+                continue
+            owner_relative = owner_matches[0]
             owner_asset = owner / "assets" / Path(*PurePosixPath(owner_relative).parts)
             if not owner_asset.is_file():
                 issues.append(_issue("delegated_reference_owner_asset_missing", relative_profile, reference_id))
