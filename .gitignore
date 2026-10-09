@@ -1,4 +1,5 @@
 /.venv/
+/.codex-remote-attachments/
 /.worktrees/
 /.tmp/
 /dist/
