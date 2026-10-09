@@ -109,7 +109,14 @@ def write_plugin_builder_fixture(
             "operation": "create",
             "plan_sha256": "7" * 64,
             "tools_sha256": sha256(canonical_bytes([])).hexdigest(),
-            "preflight_evidence_sha256": "8" * 64,
+            "preflight_evidence_sha256": sha256(
+                canonical_bytes(
+                    {
+                        "manifest_profile": "PORTABLE_WITH_OPENAI_COMPATIBILITY",
+                        "state": "PASS",
+                    }
+                )
+            ).hexdigest(),
             "file_roles": {},
             "manifest_profile": "PORTABLE_WITH_OPENAI_COMPATIBILITY",
             "manifest_profile_sha256": "9" * 64,

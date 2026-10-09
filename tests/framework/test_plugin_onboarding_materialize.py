@@ -14,6 +14,7 @@ from obvious_one_plugin_framework.plugin_onboarding.materialize import (
     prepare_plugin_zip_marketplace,
 )
 from obvious_one_plugin_framework.plugin_onboarding import materialize as onboarding_materialize
+from obvious_one_plugin_framework.provenance import inventory_source
 from obvious_one_plugin_framework.verification import load_application_config_path
 from tests.framework.plugin_onboarding_fixtures import (
     write_plugin_builder_fixture,
@@ -128,11 +129,14 @@ class PluginOnboardingMaterializeTests(unittest.TestCase):
         adopted = self.root / "adopted" / "applications" / "sample-plugin"
         adopted.parent.mkdir(parents=True)
         shutil.copytree(output / "application", adopted)
-        self.assertEqual(
-            load_application_config_path(
-                adopted / "conversion.json", self.root / "adopted"
-            ).plugin_id,
-            "sample-plugin",
+        config = load_application_config_path(
+            adopted / "conversion.json", self.root / "adopted"
+        )
+        self.assertEqual(config.plugin_id, "sample-plugin")
+        inventory = inventory_source(adopted, config.provenance.inventory_rules)
+        self.assertIn(
+            "imported-plugin/skills/sample/SKILL.md",
+            {item["path"] for item in inventory},
         )
 
     def test_mixed_text_and_binary_files_have_complete_v3_content_rules(self) -> None:
@@ -227,6 +231,41 @@ class PluginOnboardingMaterializeTests(unittest.TestCase):
         second = self.prepare(output)
         self.assertEqual(first_tree, plugin_authoring.tree_sha256(output))
         self.assertEqual(first.evidence, second.evidence)
+
+    def test_output_containing_an_input_is_rejected_without_deleting_it(self) -> None:
+        output = self.root / "owned-input"
+        self.prepare(output)
+        nested_metadata = output / "input-package-metadata.json"
+        nested_metadata.write_bytes(self.fixture.metadata.read_bytes())
+
+        with self.assertRaises(OnboardingError) as caught:
+            prepare_plugin_zip_marketplace(
+                self.fixture.archive,
+                nested_metadata,
+                self.decisions,
+                REPOSITORY,
+                output,
+            )
+
+        self.assertEqual(caught.exception.code, "onboarding.output_input_overlap")
+        self.assertTrue(nested_metadata.is_file())
+
+    def test_output_below_a_protected_repository_path_is_rejected(self) -> None:
+        repository = self.root / "repository"
+        repository.mkdir()
+        output = repository / "applications" / "sample-plugin"
+
+        with self.assertRaises(OnboardingError) as caught:
+            prepare_plugin_zip_marketplace(
+                self.fixture.archive,
+                self.fixture.metadata,
+                self.decisions,
+                repository,
+                output,
+            )
+
+        self.assertEqual(caught.exception.code, "onboarding.output_protected")
+        self.assertFalse(output.exists())
 
 
 if __name__ == "__main__":

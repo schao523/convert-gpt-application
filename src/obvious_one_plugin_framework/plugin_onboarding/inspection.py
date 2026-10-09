@@ -12,11 +12,21 @@ from types import MappingProxyType
 from typing import Mapping
 
 from .. import plugin_authoring
+from ..package_builder import FORBIDDEN_NAMES, SECRET_FRAGMENTS
 from .contract import OnboardingError, PackageMember, PackageMetadata
 
 
 _CREDENTIAL = re.compile(
     r"(?i)(?:api[_-]?key|credential|password|secret|token)\s*[:=]"
+)
+_FORBIDDEN_CREDENTIAL_NAMES = frozenset(FORBIDDEN_NAMES) | frozenset(
+    {"credentials.json", "id_rsa", "id_dsa"}
+)
+_SECRET_PATTERNS = (
+    re.compile(r"-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----"),
+    re.compile(r"\bgh[pousr]_[A-Za-z0-9_]{20,}\b"),
+    re.compile(r"\bAKIA[0-9A-Z]{16}\b"),
+    re.compile(r"\bsk-[A-Za-z0-9_-]{16,}\b"),
 )
 _DEVELOPMENT_IMPORTS = ("obvious_one_plugin_framework", "plugin_builder_core")
 _DEPENDENCY_FILES = frozenset(
@@ -70,13 +80,24 @@ class OnboardingInspection:
     candidate_members: tuple[object, ...]
     manifest_profile: str
     manifest_identity: Mapping[str, object]
+    preflight_evidence: Mapping[str, object]
+    preflight_evidence_sha256: str
+    command_evidence: tuple[Mapping[str, object], ...]
+    fallback_activations: tuple[Mapping[str, object], ...]
+    producer_evidence_states: Mapping[str, object]
     tool_bindings: tuple[Mapping[str, object], ...]
+    tool_contracts_sha256: str
     tool_contracts: tuple[Mapping[str, object], ...]
     mcp_files: tuple[str, ...]
     dependency_files: tuple[str, ...]
     executable_files: tuple[str, ...]
     executed_files: tuple[str, ...]
     runtime_realization_state: str
+    capabilities_sha256: str | None
+    realizations_sha256: str | None
+    adapter_registry_sha256: str | None
+    generated_runtime_configuration_sha256: str | None
+    runtime_realizations: tuple[Mapping[str, object], ...]
     evidence_states: Mapping[str, str]
     evidence_bundle_state: str
     diagnostics: tuple[str, ...] = ()
@@ -179,6 +200,9 @@ def _manifest_identity(root: Path, metadata: PackageMetadata) -> tuple[dict[str,
     )
     if candidate_manifest.get("schema") != expected_schema:
         raise _fail("candidate_manifest_invalid")
+    preflight_sha256 = sha256(_canonical_bytes(metadata.preflight_evidence)).hexdigest()
+    if candidate_manifest.get("preflight_evidence_sha256") != preflight_sha256:
+        raise _fail("preflight_evidence_sha256_mismatch")
     tool_bindings = candidate_manifest.get("tool_bindings")
     tool_contracts = candidate_manifest.get("tool_contracts")
     if not isinstance(tool_bindings, list) or not isinstance(tool_contracts, list):
@@ -206,6 +230,8 @@ def _scan_public_content(root: Path) -> tuple[tuple[str, ...], tuple[str, ...], 
     executables: list[str] = []
     for path in sorted(item for item in root.rglob("*") if item.is_file()):
         relative = path.relative_to(root).as_posix()
+        if any(part.casefold() in _FORBIDDEN_CREDENTIAL_NAMES for part in path.relative_to(root).parts):
+            raise _fail("credential_material_forbidden", relative)
         if path.name in _DEPENDENCY_FILES:
             dependencies.append(relative)
         if path.suffix.casefold() in _EXECUTABLE_SUFFIXES:
@@ -221,6 +247,10 @@ def _scan_public_content(root: Path) -> tuple[tuple[str, ...], tuple[str, ...], 
         ):
             raise _fail("development_import_forbidden", relative)
         if _CREDENTIAL.search(text):
+            raise _fail("credential_material_forbidden", relative)
+        if any(fragment in text for fragment in SECRET_FRAGMENTS) or any(
+            pattern.search(text) for pattern in _SECRET_PATTERNS
+        ):
             raise _fail("credential_material_forbidden", relative)
     return mcp_files, tuple(dependencies), tuple(executables)
 
@@ -367,13 +397,26 @@ def inspect_plugin_builder_package(
             candidate_members=metadata.candidate_members,
             manifest_profile=metadata.manifest_profile,
             manifest_identity=MappingProxyType(identity),
+            preflight_evidence=metadata.preflight_evidence,
+            preflight_evidence_sha256=sha256(
+                _canonical_bytes(metadata.preflight_evidence)
+            ).hexdigest(),
+            command_evidence=metadata.command_evidence,
+            fallback_activations=metadata.fallback_activations,
+            producer_evidence_states=metadata.evidence_states,
             tool_bindings=metadata.tool_bindings,
+            tool_contracts_sha256=metadata.tool_contracts_sha256,
             tool_contracts=tool_contracts,
             mcp_files=mcp_files,
             dependency_files=dependency_files,
             executable_files=executable_files,
             executed_files=(),
             runtime_realization_state=metadata.runtime_realization_state or "NOT VERIFIED",
+            capabilities_sha256=metadata.capabilities_sha256,
+            realizations_sha256=metadata.realizations_sha256,
+            adapter_registry_sha256=metadata.adapter_registry_sha256,
+            generated_runtime_configuration_sha256=metadata.generated_runtime_configuration_sha256,
+            runtime_realizations=metadata.runtime_realizations,
             evidence_states=evidence_states,
             evidence_bundle_state=evidence_state,
         )

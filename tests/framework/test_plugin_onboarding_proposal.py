@@ -109,16 +109,52 @@ class PluginOnboardingProposalTests(unittest.TestCase):
         )
         self.assertEqual(proposal.builder_evidence["candidate_sha256"], self.inspection.candidate_sha256)
         self.assertEqual(proposal.builder_evidence["verification_sha256"], self.inspection.verification_sha256)
+        self.assertEqual(
+            proposal.builder_evidence["preflight_evidence"],
+            {"manifest_profile": "PORTABLE_WITH_OPENAI_COMPATIBILITY", "state": "PASS"},
+        )
+        self.assertEqual(proposal.builder_evidence["command_evidence"], ())
+        self.assertEqual(proposal.builder_evidence["fallback_activations"], ())
+        self.assertEqual(
+            proposal.builder_evidence["producer_evidence_states"],
+            {
+                "installed_skill_invocation": "NOT VERIFIED",
+                "package_structure": "PASS",
+            },
+        )
+        self.assertEqual(proposal.builder_evidence["tool_bindings"], ())
+        self.assertRegex(proposal.builder_evidence["tool_contracts_sha256"], r"^[0-9a-f]{64}$")
+        self.assertEqual(proposal.builder_evidence["capabilities_sha256"], "3" * 64)
+        self.assertEqual(proposal.builder_evidence["realizations_sha256"], "4" * 64)
+        self.assertEqual(proposal.builder_evidence["adapter_registry_sha256"], "5" * 64)
+        self.assertEqual(
+            proposal.builder_evidence["generated_runtime_configuration_sha256"],
+            "6" * 64,
+        )
+        self.assertEqual(proposal.builder_evidence["runtime_realizations"], ())
         self.assertEqual(proposal.runtime_evidence_states, self.inspection.evidence_states)
         self.assertEqual(set(proposal.runtime_evidence_states.values()), {"NOT VERIFIED"})
 
     def test_repository_paths_and_private_input_locations_never_enter_payload(self) -> None:
         repository = self.repository_fixture("private-owner-repository")
-        proposal = build_onboarding_proposal(self.inspection, self.decisions, repository)
+        inspection = replace(
+            self.inspection,
+            command_evidence=(
+                MappingProxyType(
+                    {
+                        "tool_id": "sample",
+                        "observed_argv": (r"C:\private\python.exe", "tool.py"),
+                    }
+                ),
+            ),
+        )
+        proposal = build_onboarding_proposal(inspection, self.decisions, repository)
         payload = proposal.proposal_json()
         self.assertNotIn(str(self.root), payload)
         self.assertNotIn("private-owner-repository", payload)
         self.assertNotIn(str(self.fixture.archive), payload)
+        self.assertNotIn(r"C:\\private\\python.exe", payload)
+        self.assertIn("<absolute-path>", payload)
 
     def test_byte_identical_inputs_produce_identical_proposal_json_and_sha256(self) -> None:
         repository = self.repository_fixture("repeatable")

@@ -59,6 +59,20 @@ def _thaw(value: object) -> object:
     return value
 
 
+def _publication_safe_evidence(value: object) -> object:
+    """Redact machine-local absolute paths while preserving evidence structure."""
+
+    if isinstance(value, Mapping):
+        return {key: _publication_safe_evidence(item) for key, item in value.items()}
+    if isinstance(value, (list, tuple)):
+        return [_publication_safe_evidence(item) for item in value]
+    if isinstance(value, str) and (
+        PurePosixPath(value).is_absolute() or PureWindowsPath(value).is_absolute()
+    ):
+        return "<absolute-path>"
+    return value
+
+
 @dataclass(frozen=True)
 class OnboardingProposal:
     schema: str
@@ -281,6 +295,27 @@ def build_onboarding_proposal(
         "candidate_sha256": inspection.candidate_sha256,
         "verification_sha256": inspection.verification_sha256,
         "manifest_profile": inspection.manifest_profile,
+        "preflight_evidence": _publication_safe_evidence(inspection.preflight_evidence),
+        "preflight_evidence_sha256": inspection.preflight_evidence_sha256,
+        "command_evidence": _publication_safe_evidence(inspection.command_evidence),
+        "command_evidence_sha256": sha256(
+            _canonical_bytes(_thaw(inspection.command_evidence))
+        ).hexdigest(),
+        "fallback_activations": _publication_safe_evidence(
+            inspection.fallback_activations
+        ),
+        "producer_evidence_states": _thaw(inspection.producer_evidence_states),
+        "tool_bindings": _thaw(inspection.tool_bindings),
+        "tool_contracts_sha256": inspection.tool_contracts_sha256,
+        "capabilities_sha256": inspection.capabilities_sha256,
+        "realizations_sha256": inspection.realizations_sha256,
+        "adapter_registry_sha256": inspection.adapter_registry_sha256,
+        "generated_runtime_configuration_sha256": (
+            inspection.generated_runtime_configuration_sha256
+        ),
+        "runtime_realizations": _publication_safe_evidence(
+            inspection.runtime_realizations
+        ),
         "runtime_realization_state": inspection.runtime_realization_state,
         "evidence_bundle_state": inspection.evidence_bundle_state,
     }

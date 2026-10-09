@@ -196,12 +196,28 @@ class PluginOnboardingInspectionTests(unittest.TestCase):
             "compatibility": {".codex-plugin/plugin.json": b"{}\n"},
             "development": {"tools/run.py": b"import obvious_one_plugin_framework\n"},
             "credential": {"notes.txt": b"api_key = 'should-not-ship'\n"},
+            "environment": {".env": b"SERVICE_TOKEN=should-not-ship\n"},
+            "credential-file": {"credentials.json": b"{}\n"},
+            "private-key-file": {"id_rsa": b"not-a-real-key\n"},
+            "private-key-block": {
+                "notes.md": b"-----BEGIN PRIVATE KEY-----\nnot-a-real-key\n"
+            },
+            "github-token": {
+                "notes.md": b"ghp_abcdefghijklmnopqrstuvwxyz123456\n"
+            },
+            "aws-access-key": {"notes.md": b"AKIAABCDEFGHIJKLMNOP\n"},
         }
         expected = {
             "portable": "plugin_tree_invalid",
             "compatibility": "plugin_tree_invalid",
             "development": "development_import_forbidden",
             "credential": "credential_material_forbidden",
+            "environment": "credential_material_forbidden",
+            "credential-file": "credential_material_forbidden",
+            "private-key-file": "credential_material_forbidden",
+            "private-key-block": "credential_material_forbidden",
+            "github-token": "credential_material_forbidden",
+            "aws-access-key": "credential_material_forbidden",
         }
         baseline = write_plugin_builder_fixture(self.root / "baseline")
         base_files = baseline.candidate_files

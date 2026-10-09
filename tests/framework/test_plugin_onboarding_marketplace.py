@@ -177,6 +177,42 @@ class PluginOnboardingMarketplaceTests(unittest.TestCase):
         built = built_root / "plugins" / "sample-plugin"
         self.assertEqual(plugin_authoring.tree_manifest(built), plugin_authoring.tree_manifest(fixture.candidate))
 
+    def test_codex_build_rejects_any_imported_tree_drift_before_replacement(self) -> None:
+        application = self.proposal / "application"
+        imported_skill = (
+            application
+            / "imported-plugin"
+            / "skills"
+            / "sample"
+            / "SKILL.md"
+        )
+        imported_skill.write_bytes(imported_skill.read_bytes() + b"\nchanged\n")
+        built_root = self.root / "drifted-build"
+
+        completed = subprocess.run(
+            [
+                sys.executable,
+                "-B",
+                str(application / "scripts" / "build_marketplace_release.py"),
+                "--source",
+                str(application),
+                "--destination",
+                str(built_root),
+                "--version",
+                "1.2.3",
+            ],
+            check=False,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+        )
+
+        self.assertNotEqual(completed.returncode, 0, completed.stdout)
+        self.assertIn("imported_plugin_tree_mismatch", completed.stdout)
+        self.assertFalse((built_root / "plugins" / "sample-plugin").exists())
+
     def test_not_applicable_openclaw_collision_fails_without_mutation(self) -> None:
         stale = self.baseline / "openclaw" / "sample-plugin"
         stale.mkdir(parents=True)

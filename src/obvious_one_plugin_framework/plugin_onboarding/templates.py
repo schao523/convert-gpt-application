@@ -68,19 +68,63 @@ SOFTWARE.
     )
 
 
-def _builder_script(plugin_id: str, version: str) -> bytes:
+def _builder_script(
+    plugin_id: str,
+    version: str,
+    expected_members: tuple[object, ...],
+    expected_tree_sha256: str,
+) -> bytes:
+    member_payload = [asdict(member) for member in expected_members]
     return lf_bytes(
         f'''"""Build the reviewed Codex plugin from immutable imported bytes."""
 from __future__ import annotations
 
 import argparse
+from hashlib import sha256
 import json
+import os
 from pathlib import Path
 import shutil
+import stat
+import tempfile
 
 
 PLUGIN_ID = {plugin_id!r}
 VERSION = {version!r}
+EXPECTED_MEMBERS = {member_payload!r}
+EXPECTED_TREE_SHA256 = {expected_tree_sha256!r}
+
+
+def _tree_manifest(root: Path) -> list[dict[str, object]]:
+    members = []
+    for directory, names, files in os.walk(root, topdown=True, followlinks=False):
+        directory_path = Path(directory)
+        for name in sorted(names):
+            child = directory_path / name
+            attributes = getattr(child.lstat(), "st_file_attributes", 0)
+            if child.is_symlink() or attributes & getattr(stat, "FILE_ATTRIBUTE_REPARSE_POINT", 0):
+                raise ValueError("imported_plugin_tree_mismatch")
+        for name in sorted(files):
+            child = directory_path / name
+            attributes = getattr(child.lstat(), "st_file_attributes", 0)
+            if child.is_symlink() or attributes & getattr(stat, "FILE_ATTRIBUTE_REPARSE_POINT", 0):
+                raise ValueError("imported_plugin_tree_mismatch")
+            content = child.read_bytes()
+            members.append({{
+                "path": child.relative_to(root).as_posix(),
+                "size": len(content),
+                "sha256": sha256(content).hexdigest(),
+            }})
+    return sorted(members, key=lambda item: item["path"])
+
+
+def _tree_identity(root: Path) -> None:
+    members = _tree_manifest(root)
+    encoded = json.dumps(
+        members, ensure_ascii=True, sort_keys=True, separators=(",", ":")
+    ).encode("ascii")
+    if members != EXPECTED_MEMBERS or sha256(encoded).hexdigest() != EXPECTED_TREE_SHA256:
+        raise ValueError("imported_plugin_tree_mismatch")
 
 
 def _identity(root: Path) -> tuple[str, str]:
@@ -99,12 +143,21 @@ def _identity(root: Path) -> tuple[str, str]:
 def build(source: Path, destination: Path) -> Path:
     imported = source.resolve() / "imported-plugin"
     _identity(imported)
+    _tree_identity(imported)
     target = destination.resolve() / "plugins" / PLUGIN_ID
-    if target.exists():
-        shutil.rmtree(target)
     target.parent.mkdir(parents=True, exist_ok=True)
-    shutil.copytree(imported, target, copy_function=shutil.copy2)
-    _identity(target)
+    temporary_root = Path(tempfile.mkdtemp(prefix=f".{{PLUGIN_ID}}-", dir=target.parent))
+    staged = temporary_root / PLUGIN_ID
+    try:
+        shutil.copytree(imported, staged, copy_function=shutil.copy2)
+        _identity(staged)
+        _tree_identity(staged)
+        if target.exists():
+            shutil.rmtree(target)
+        os.replace(staged, target)
+    finally:
+        if temporary_root.exists():
+            shutil.rmtree(temporary_root)
     return target
 
 
@@ -283,7 +336,7 @@ def render_application_files(
             "source_repository": "plugin-builder-reviewed-package",
             "incorporated_branches": [],
             "inventory_rules": [
-                {"root": "imported-plugin", "classification": "approved-plugin", "include": ["*"]}
+                {"root": "imported-plugin", "classification": "approved-plugin", "include": ["**/*"]}
             ],
         },
         "verification": {
@@ -342,7 +395,12 @@ def render_application_files(
         "docs/runtime-compatibility.md": lf_bytes("# Runtime Compatibility\n\nCodex publication is in scope. OpenClaw and ClawHub are not applicable under the approved target decision. Runtime evidence states remain those recorded in the onboarding proposal.\n"),
         "docs/source-decisions.md": lf_bytes(f"# Source Decisions\n\nRedistribution was explicitly approved by {decisions.confirmed_by}. License: MIT. Third-party content state: {decisions.third_party_content}.\n"),
         "openclaw/distribution.json": canonical_json_bytes(distribution),
-        "scripts/build_marketplace_release.py": _builder_script(plugin_id, version),
+        "scripts/build_marketplace_release.py": _builder_script(
+            plugin_id,
+            version,
+            inspection.candidate_members,
+            inspection.candidate_sha256,
+        ),
         "scripts/distribution_audit.py": _audit_script(),
         "tests/test_imported_package.py": _generated_test_imported(plugin_id, version),
         "tests/test_marketplace_release.py": _generated_test_release(plugin_id),

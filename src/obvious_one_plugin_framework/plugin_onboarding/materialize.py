@@ -25,6 +25,7 @@ from .templates import canonical_json_bytes, render_application_files
 
 
 _MARKER = ".obvious-one-plugin-onboarding"
+_ALLOWED_REPOSITORY_OUTPUT_ROOTS = frozenset({".tmp", "dist"})
 
 
 def _write_files(root: Path, files: Mapping[str, bytes]) -> None:
@@ -50,6 +51,25 @@ def _preflight_output(output: Path) -> None:
         raise OnboardingError("onboarding.output_collision", "FAIL") from exc
     if set(payload) != {"schema", "proposal_sha256"} or payload.get("schema") != "plugin-onboarding-output-v1":
         raise OnboardingError("onboarding.output_collision", "FAIL")
+
+
+def _validate_output_boundary(
+    output: Path,
+    repository: Path,
+    inputs: tuple[Path, ...],
+) -> None:
+    destination = output.resolve()
+    repository_root = repository.resolve()
+    for supplied in inputs:
+        candidate = supplied.resolve()
+        if candidate == destination or candidate.is_relative_to(destination) or destination.is_relative_to(candidate):
+            raise OnboardingError("onboarding.output_input_overlap", "FAIL")
+    if repository_root == destination or repository_root.is_relative_to(destination):
+        raise OnboardingError("onboarding.output_protected", "FAIL")
+    if destination.is_relative_to(repository_root):
+        relative = destination.relative_to(repository_root)
+        if not relative.parts or relative.parts[0] not in _ALLOWED_REPOSITORY_OUTPUT_ROOTS:
+            raise OnboardingError("onboarding.output_protected", "FAIL")
 
 
 def _publish_output(stage: Path, output: Path, temporary_root: Path) -> None:
@@ -105,12 +125,28 @@ def prepare_plugin_zip_marketplace(
 ) -> OperationResult:
     """Create one deterministic, unapproved marketplace-registration proposal."""
 
+    archive_path = Path(archive).resolve()
+    metadata_path = Path(package_metadata).resolve()
+    decisions_path = Path(publication_decisions).resolve()
+    repository_path = Path(repository).resolve()
+    evidence_path = Path(evidence).resolve() if evidence is not None else None
     destination = Path(output).resolve()
+    _validate_output_boundary(
+        destination,
+        repository_path,
+        tuple(
+            path
+            for path in (archive_path, metadata_path, decisions_path, evidence_path)
+            if path is not None
+        ),
+    )
     _preflight_output(destination)
-    metadata = load_package_metadata(Path(package_metadata))
-    decisions = load_publication_decisions(Path(publication_decisions))
-    inspection = inspect_plugin_builder_package(Path(archive), metadata, evidence=evidence)
-    proposal = build_onboarding_proposal(inspection, decisions, Path(repository))
+    metadata = load_package_metadata(metadata_path)
+    decisions = load_publication_decisions(decisions_path)
+    inspection = inspect_plugin_builder_package(
+        archive_path, metadata, evidence=evidence_path
+    )
+    proposal = build_onboarding_proposal(inspection, decisions, repository_path)
 
     destination.parent.mkdir(parents=True, exist_ok=True)
     temporary_root = Path(
@@ -120,7 +156,7 @@ def prepare_plugin_zip_marketplace(
     extracted = temporary_root / "extracted"
     stage.mkdir()
     try:
-        plugin_authoring.extract_archive(Path(archive), extracted)
+        plugin_authoring.extract_archive(archive_path, extracted)
         located = plugin_authoring.locate_plugin_archive_root(extracted)
         if located.profile != "PORTABLE_SINGLE_DIRECTORY":
             raise OnboardingError("onboarding.materialize.envelope_profile_mismatch", "FAIL")
