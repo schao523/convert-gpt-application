@@ -1,0 +1,371 @@
+"""Safe inspection of evidence-bound Plugin Builder archives."""
+
+from __future__ import annotations
+
+from dataclasses import asdict, dataclass
+from hashlib import sha256
+import json
+from pathlib import Path
+import re
+import tempfile
+from types import MappingProxyType
+from typing import Mapping
+
+from .. import plugin_authoring
+from .contract import OnboardingError, PackageMember, PackageMetadata
+
+
+_CREDENTIAL = re.compile(
+    r"(?i)(?:api[_-]?key|credential|password|secret|token)\s*[:=]"
+)
+_DEVELOPMENT_IMPORTS = ("obvious_one_plugin_framework", "plugin_builder_core")
+_DEPENDENCY_FILES = frozenset(
+    {
+        "requirements.txt",
+        "pyproject.toml",
+        "poetry.lock",
+        "package.json",
+        "package-lock.json",
+        "pnpm-lock.yaml",
+        "yarn.lock",
+    }
+)
+_EXECUTABLE_SUFFIXES = frozenset({".py", ".js", ".mjs", ".cjs", ".ps1", ".sh", ".exe"})
+_EVIDENCE_LAYERS = (
+    "installation",
+    "skill_invocation",
+    "capability_discovery",
+    "operation_execution",
+    "result_delivery",
+    "conversation",
+)
+_DIGEST = re.compile(r"^[0-9a-f]{64}$")
+
+
+def _canonical_bytes(value: object) -> bytes:
+    return (
+        json.dumps(value, ensure_ascii=True, indent=2, sort_keys=True) + "\n"
+    ).encode("ascii")
+
+
+@dataclass(frozen=True)
+class OnboardingInspection:
+    schema: str
+    plugin_id: str
+    version: str
+    package_state: str
+    archive_sha256: str
+    candidate_sha256: str
+    verification_sha256: str
+    member_manifest_sha256: str
+    members: tuple[PackageMember, ...]
+    candidate_members: tuple[object, ...]
+    manifest_profile: str
+    manifest_identity: Mapping[str, object]
+    tool_bindings: tuple[Mapping[str, object], ...]
+    tool_contracts: tuple[Mapping[str, object], ...]
+    mcp_files: tuple[str, ...]
+    dependency_files: tuple[str, ...]
+    executable_files: tuple[str, ...]
+    executed_files: tuple[str, ...]
+    runtime_realization_state: str
+    evidence_states: Mapping[str, str]
+    evidence_bundle_state: str
+    diagnostics: tuple[str, ...] = ()
+
+
+def _fail(code: str, detail: str = "") -> OnboardingError:
+    return OnboardingError(f"onboarding.inspection.{code}", "FAIL", detail)
+
+
+def _load_json(path: Path, code: str) -> dict[str, object]:
+    try:
+        value = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeError, json.JSONDecodeError) as exc:
+        raise _fail(code) from exc
+    if not isinstance(value, dict):
+        raise _fail(code)
+    return value
+
+
+def _member_tuple(member: object) -> tuple[object, ...]:
+    return (getattr(member, "path"), getattr(member, "size"), getattr(member, "sha256"))
+
+
+def _validate_metadata_closure(
+    inventory: plugin_authoring.ArchiveInventory,
+    metadata: PackageMetadata,
+) -> None:
+    if inventory.archive_sha256 != metadata.archive_sha256:
+        raise _fail("archive_sha256_mismatch")
+    expected_member_digest = sha256(
+        _canonical_bytes([asdict(member) for member in metadata.members])
+    ).hexdigest()
+    if expected_member_digest != metadata.member_manifest_sha256:
+        raise _fail("member_manifest_sha256_mismatch")
+    if tuple(map(_member_tuple, inventory.members)) != tuple(
+        map(_member_tuple, metadata.members)
+    ):
+        raise _fail("archive_members_mismatch")
+    for field, validation in (
+        ("extracted_validation", metadata.extracted_validation),
+        ("safety_validation", metadata.safety_validation),
+    ):
+        if (
+            set(validation) != {"state", "diagnostics"}
+            or validation.get("state") != "PASS"
+            or validation.get("diagnostics") not in ((), [])
+        ):
+            raise _fail(f"{field}_invalid")
+    if metadata.preflight_evidence.get("manifest_profile") != metadata.manifest_profile:
+        raise _fail("manifest_profile_mismatch")
+
+
+def _manifest_identity(root: Path, metadata: PackageMetadata) -> tuple[dict[str, object], str, tuple[Mapping[str, object], ...]]:
+    portable = _load_json(root / "plugin.json", "portable_manifest_invalid")
+    compatibility = _load_json(
+        root / ".codex-plugin" / "plugin.json", "compatibility_manifest_invalid"
+    )
+    issues = plugin_authoring.validate_plugin_tree(root)
+    if issues:
+        issue = issues[0]
+        raise _fail("plugin_tree_invalid", f"{issue.code}:{issue.path}")
+    if portable.get("name") != metadata.plugin_id:
+        raise _fail("plugin_identity_mismatch")
+    extensions = portable.get("extensions")
+    if not isinstance(extensions, dict):
+        raise _fail("portable_manifest_invalid")
+    openai = extensions.get("com.openai")
+    if not isinstance(openai, dict) or not isinstance(openai.get("interface"), dict):
+        raise _fail("portable_manifest_invalid")
+    interface = openai["interface"]
+    author = portable.get("author")
+    if not isinstance(author, dict):
+        raise _fail("portable_manifest_invalid")
+    identity = {
+        "plugin_id": portable["name"],
+        "version": portable["version"],
+        "author": author["name"],
+        "description": portable["description"],
+        "display_name": interface["displayName"],
+        "short_description": interface["shortDescription"],
+        "long_description": interface["longDescription"],
+        "developer_name": interface["developerName"],
+        "category": interface["category"],
+        "capabilities": tuple(interface["capabilities"]),
+        "default_prompt": (
+            tuple(interface["defaultPrompt"])
+            if isinstance(interface["defaultPrompt"], list)
+            else interface["defaultPrompt"]
+        ),
+    }
+    if compatibility.get("name") != portable.get("name"):
+        raise _fail("manifest_pair_mismatch")
+    candidate_manifest = _load_json(
+        root / "PLUGIN-BUILDER-MANIFEST.json", "candidate_manifest_invalid"
+    )
+    expected_schema = (
+        "plugin-builder-candidate-manifest-v3"
+        if metadata.schema.endswith("v3")
+        else "plugin-builder-candidate-manifest-v2"
+    )
+    if candidate_manifest.get("schema") != expected_schema:
+        raise _fail("candidate_manifest_invalid")
+    tool_bindings = candidate_manifest.get("tool_bindings")
+    tool_contracts = candidate_manifest.get("tool_contracts")
+    if not isinstance(tool_bindings, list) or not isinstance(tool_contracts, list):
+        raise _fail("candidate_manifest_invalid")
+    if tool_bindings != [dict(item) for item in metadata.tool_bindings]:
+        raise _fail("tool_bindings_mismatch")
+    if sha256(_canonical_bytes(tool_contracts)).hexdigest() != metadata.tool_contracts_sha256:
+        raise _fail("tool_contracts_sha256_mismatch")
+    validated_contracts: list[Mapping[str, object]] = []
+    for contract in tool_contracts:
+        validated = plugin_authoring.validate_application_tool_contract(contract)
+        if validated.errors or validated.blockers:
+            raise _fail("tool_contract_invalid", validated.id)
+        validated_contracts.append(MappingProxyType(dict(contract)))
+    return identity, str(candidate_manifest.get("plan_sha256", "")), tuple(validated_contracts)
+
+
+def _scan_public_content(root: Path) -> tuple[tuple[str, ...], tuple[str, ...], tuple[str, ...]]:
+    mcp_files = tuple(
+        name for name in (".mcp.json", "mcp.json") if (root / name).is_file()
+    )
+    for relative in mcp_files:
+        _load_json(root / relative, "mcp_manifest_invalid")
+    dependencies: list[str] = []
+    executables: list[str] = []
+    for path in sorted(item for item in root.rglob("*") if item.is_file()):
+        relative = path.relative_to(root).as_posix()
+        if path.name in _DEPENDENCY_FILES:
+            dependencies.append(relative)
+        if path.suffix.casefold() in _EXECUTABLE_SUFFIXES:
+            executables.append(relative)
+        if path.suffix.casefold() not in {".md", ".json", ".txt", ".py", ".js", ".mjs", ".cjs", ".ps1", ".sh", ".toml", ".yaml", ".yml"}:
+            continue
+        try:
+            text = path.read_text(encoding="utf-8")
+        except UnicodeError:
+            continue
+        if path.suffix.casefold() == ".py" and any(
+            marker in text for marker in _DEVELOPMENT_IMPORTS
+        ):
+            raise _fail("development_import_forbidden", relative)
+        if _CREDENTIAL.search(text):
+            raise _fail("credential_material_forbidden", relative)
+    return mcp_files, tuple(dependencies), tuple(executables)
+
+
+def _inspect_evidence(
+    evidence: Path,
+    metadata: PackageMetadata,
+    *,
+    version: str,
+    plan_sha256: str,
+) -> tuple[str, Mapping[str, str]]:
+    try:
+        inventory = plugin_authoring.inventory_archive(evidence)
+    except plugin_authoring.PluginAuthoringError as exc:
+        raise _fail(f"evidence_{exc.code}") from exc
+    with tempfile.TemporaryDirectory(prefix="plugin-onboarding-evidence-") as name:
+        extracted = Path(name) / "bundle"
+        try:
+            plugin_authoring.extract_archive(evidence, extracted)
+        except plugin_authoring.PluginAuthoringError as exc:
+            raise _fail(f"evidence_{exc.code}") from exc
+        index = _load_json(extracted / "evidence-index.json", "evidence_index_invalid")
+        if set(index) != {"schema", "result", "evidence"} or index.get("schema") != "plugin-builder-runtime-evidence-index-v1":
+            raise _fail("evidence_index_invalid")
+        result_record = index.get("result")
+        if not isinstance(result_record, dict) or set(result_record) != {"path", "sha256", "size"}:
+            raise _fail("evidence_index_invalid")
+        result_path = result_record.get("path")
+        if not isinstance(result_path, str) or "\\" in result_path or ".." in result_path.split("/"):
+            raise _fail("evidence_result_path_invalid")
+        candidate = extracted.joinpath(*result_path.split("/"))
+        try:
+            result_bytes = candidate.read_bytes()
+        except OSError as exc:
+            raise _fail("evidence_result_missing") from exc
+        if (
+            len(result_bytes) != result_record.get("size")
+            or sha256(result_bytes).hexdigest() != result_record.get("sha256")
+        ):
+            raise _fail("evidence_result_identity_mismatch")
+        result = _load_json(candidate, "evidence_result_invalid")
+        required = {
+            "schema", "plugin_id", "version", "zip_sha256",
+            "member_manifest_sha256", "candidate_sha256", "verification_sha256",
+            "plan_sha256", "session_sha256", "operation_identities", "evidence_states",
+        }
+        if set(result) != required or result.get("schema") != "plugin-onboarding-runtime-observations-v1":
+            raise _fail("evidence_result_invalid")
+        expected = {
+            "plugin_id": metadata.plugin_id,
+            "version": version,
+            "zip_sha256": metadata.archive_sha256,
+            "member_manifest_sha256": metadata.member_manifest_sha256,
+            "candidate_sha256": metadata.candidate_sha256,
+            "verification_sha256": metadata.verification_sha256,
+            "plan_sha256": plan_sha256,
+        }
+        for field, value in expected.items():
+            if result.get(field) != value:
+                raise _fail(f"evidence_{field}_mismatch")
+        session_sha = result.get("session_sha256")
+        if not isinstance(session_sha, str) or not _DIGEST.fullmatch(session_sha):
+            raise _fail("evidence_session_sha256_invalid")
+        operations = result.get("operation_identities")
+        if not isinstance(operations, list):
+            raise _fail("evidence_operation_identities_invalid")
+        expected_operations = {
+            (str(item.get("tool_id", "")), str(item.get("contract_sha256", "")))
+            for item in metadata.tool_bindings
+        }
+        observed_operations = {
+            (str(item.get("operation_id", "")), str(item.get("sha256", "")))
+            for item in operations if isinstance(item, dict)
+        }
+        if observed_operations != expected_operations:
+            raise _fail("evidence_operation_identities_mismatch")
+        states = result.get("evidence_states")
+        if not isinstance(states, dict) or set(states) != set(_EVIDENCE_LAYERS):
+            raise _fail("evidence_states_invalid")
+        if any(value not in {"RUNTIME VERIFIED", "NOT VERIFIED", "NOT APPLICABLE"} for value in states.values()):
+            raise _fail("evidence_states_invalid")
+        if "RUNTIME VERIFIED" in states.values():
+            raise _fail("evidence_session_identity_unverifiable")
+        expected_members = {
+            "evidence-index.json",
+            result_path,
+            *(str(item.get("path")) for item in index["evidence"] if isinstance(item, dict)),
+        }
+        if {member.path for member in inventory.members} != expected_members:
+            raise _fail("evidence_members_unindexed")
+        return "STATICALLY VERIFIED", MappingProxyType(dict(states))
+
+
+def inspect_plugin_builder_package(
+    archive: Path,
+    metadata: PackageMetadata,
+    *,
+    evidence: Path | None = None,
+) -> OnboardingInspection:
+    """Inspect a Plugin Builder package without executing imported content."""
+
+    try:
+        inventory = plugin_authoring.inventory_archive(Path(archive))
+    except plugin_authoring.PluginAuthoringError as exc:
+        raise _fail(exc.code, exc.detail) from exc
+    _validate_metadata_closure(inventory, metadata)
+    with tempfile.TemporaryDirectory(prefix="plugin-onboarding-") as name:
+        extracted = Path(name) / "archive"
+        try:
+            plugin_authoring.extract_archive(Path(archive), extracted)
+            located = plugin_authoring.locate_plugin_archive_root(extracted)
+        except plugin_authoring.PluginAuthoringError as exc:
+            raise _fail(exc.code, exc.detail) from exc
+        if located.profile != "PORTABLE_SINGLE_DIRECTORY":
+            raise _fail("envelope_profile_mismatch")
+        actual_candidate = plugin_authoring.tree_manifest(located.path)
+        if tuple(map(_member_tuple, actual_candidate)) != tuple(
+            map(_member_tuple, metadata.candidate_members)
+        ):
+            raise _fail("candidate_members_mismatch")
+        if plugin_authoring.tree_sha256(located.path) != metadata.candidate_sha256:
+            raise _fail("candidate_sha256_mismatch")
+        identity, plan_sha, tool_contracts = _manifest_identity(located.path, metadata)
+        mcp_files, dependency_files, executable_files = _scan_public_content(located.path)
+        if evidence is None:
+            evidence_state = "NOT VERIFIED"
+            evidence_states: Mapping[str, str] = MappingProxyType(
+                {layer: "NOT VERIFIED" for layer in _EVIDENCE_LAYERS}
+            )
+        else:
+            evidence_state, evidence_states = _inspect_evidence(
+                Path(evidence), metadata, version=str(identity["version"]), plan_sha256=plan_sha
+            )
+        return OnboardingInspection(
+            schema="plugin-onboarding-inspection-v1",
+            plugin_id=metadata.plugin_id,
+            version=str(identity["version"]),
+            package_state="STATICALLY VERIFIED",
+            archive_sha256=metadata.archive_sha256,
+            candidate_sha256=metadata.candidate_sha256,
+            verification_sha256=metadata.verification_sha256,
+            member_manifest_sha256=metadata.member_manifest_sha256,
+            members=metadata.members,
+            candidate_members=metadata.candidate_members,
+            manifest_profile=metadata.manifest_profile,
+            manifest_identity=MappingProxyType(identity),
+            tool_bindings=metadata.tool_bindings,
+            tool_contracts=tool_contracts,
+            mcp_files=mcp_files,
+            dependency_files=dependency_files,
+            executable_files=executable_files,
+            executed_files=(),
+            runtime_realization_state=metadata.runtime_realization_state or "NOT VERIFIED",
+            evidence_states=evidence_states,
+            evidence_bundle_state=evidence_state,
+        )

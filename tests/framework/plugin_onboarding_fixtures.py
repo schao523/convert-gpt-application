@@ -5,6 +5,7 @@ from hashlib import sha256
 import json
 from pathlib import Path
 from typing import Mapping
+import zipfile
 
 from obvious_one_plugin_framework import plugin_authoring
 
@@ -14,7 +15,7 @@ PORTABLE_SCHEMA = "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json"
 
 def canonical_bytes(value: object) -> bytes:
     return (
-        json.dumps(value, ensure_ascii=True, sort_keys=True, separators=(",", ":"))
+        json.dumps(value, ensure_ascii=True, indent=2, sort_keys=True)
         + "\n"
     ).encode("ascii")
 
@@ -26,6 +27,14 @@ class PluginBuilderFixture:
     archive: Path
     metadata: Path
     metadata_payload: Mapping[str, object]
+
+    @property
+    def candidate_files(self) -> dict[str, bytes]:
+        return {
+            path.relative_to(self.candidate).as_posix(): path.read_bytes()
+            for path in sorted(self.candidate.rglob("*"))
+            if path.is_file() and path.name != "PLUGIN-BUILDER-MANIFEST.json"
+        }
 
 
 def _default_files() -> dict[str, bytes]:
@@ -82,6 +91,44 @@ def write_plugin_builder_fixture(
         destination.parent.mkdir(parents=True, exist_ok=True)
         destination.write_bytes(content)
 
+    manifest_path = candidate / "PLUGIN-BUILDER-MANIFEST.json"
+    if not manifest_path.exists():
+        content_members = [
+            asdict(member) for member in plugin_authoring.tree_manifest(candidate)
+        ]
+        candidate_manifest: dict[str, object] = {
+            "schema": (
+                "plugin-builder-candidate-manifest-v3"
+                if schema == "plugin-builder-package-v3"
+                else "plugin-builder-candidate-manifest-v2"
+            ),
+            "operation": "create",
+            "plan_sha256": "7" * 64,
+            "tools_sha256": sha256(canonical_bytes([])).hexdigest(),
+            "preflight_evidence_sha256": "8" * 64,
+            "file_roles": {},
+            "manifest_profile": "PORTABLE_WITH_OPENAI_COMPATIBILITY",
+            "manifest_profile_sha256": "9" * 64,
+            "content_tree_sha256": plugin_authoring.tree_sha256(candidate),
+            "expected_members": sorted(
+                [item["path"] for item in content_members]
+                + ["PLUGIN-BUILDER-MANIFEST.json"]
+            ),
+            "members": content_members,
+            "tool_bindings": [],
+            "tool_contracts": [],
+        }
+        if schema == "plugin-builder-package-v3":
+            candidate_manifest.update(
+                {
+                    "capabilities_sha256": "3" * 64,
+                    "realizations_sha256": "4" * 64,
+                    "adapter_registry_sha256": "5" * 64,
+                    "generated_runtime_configuration_sha256": "6" * 64,
+                }
+            )
+        manifest_path.write_bytes(canonical_bytes(candidate_manifest))
+
     archive = fixture_root / "sample-plugin.zip"
     archive_sha256 = plugin_authoring.write_deterministic_zip(
         candidate, archive, prefix="sample-plugin"
@@ -130,6 +177,54 @@ def write_plugin_builder_fixture(
     metadata = fixture_root / "package-metadata.json"
     metadata.write_bytes(canonical_bytes(payload))
     return PluginBuilderFixture(fixture_root, candidate, archive, metadata, payload)
+
+
+def write_runtime_evidence_bundle(
+    path: Path,
+    fixture: PluginBuilderFixture,
+    *,
+    overrides: Mapping[str, object] | None = None,
+) -> Path:
+    metadata = fixture.metadata_payload
+    result: dict[str, object] = {
+        "schema": "plugin-onboarding-runtime-observations-v1",
+        "plugin_id": "sample-plugin",
+        "version": "1.2.3",
+        "zip_sha256": metadata["archive_sha256"],
+        "member_manifest_sha256": metadata["member_manifest_sha256"],
+        "candidate_sha256": metadata["candidate_sha256"],
+        "verification_sha256": metadata["verification_sha256"],
+        "plan_sha256": "7" * 64,
+        "session_sha256": "a" * 64,
+        "operation_identities": [],
+        "evidence_states": {
+            "installation": "NOT VERIFIED",
+            "skill_invocation": "NOT VERIFIED",
+            "capability_discovery": "NOT VERIFIED",
+            "operation_execution": "NOT VERIFIED",
+            "result_delivery": "NOT VERIFIED",
+            "conversation": "NOT VERIFIED",
+        },
+    }
+    if overrides:
+        result.update(overrides)
+    result_bytes = canonical_bytes(result)
+    result_digest = sha256(result_bytes).hexdigest()
+    index = {
+        "schema": "plugin-builder-runtime-evidence-index-v1",
+        "result": {
+            "path": f"results/{result_digest}.json",
+            "sha256": result_digest,
+            "size": len(result_bytes),
+        },
+        "evidence": [],
+    }
+    destination = Path(path)
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    with zipfile.ZipFile(destination, "w", compression=zipfile.ZIP_DEFLATED) as archive:
+        archive.writestr("evidence-index.json", canonical_bytes(index))
+        archive.writestr(f"results/{result_digest}.json", result_bytes)
+    return destination
 
 
 def write_publication_decisions(
