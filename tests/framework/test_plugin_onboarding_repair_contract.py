@@ -48,6 +48,50 @@ class RepairContractTests(unittest.TestCase):
         with self.assertRaises(AttributeError):
             loaded.plugin_id = "changed"  # type: ignore[misc]
 
+    def test_v2_public_domain_notice_is_strict_and_frozen(self) -> None:
+        payload = copy.deepcopy(self.fixture.contract_payload)
+        payload["schema"] = "plugin-delegated-reference-repair-v2"
+        payload["third_party_notice"] = {
+            "classification": "PUBLIC_DOMAIN",
+            "redistribution_approved": True,
+            "confirmed_by": "Plugin Owner",
+            "recorded_at": "2026-10-10",
+        }
+
+        loaded = self.load(payload)
+
+        self.assertEqual(loaded.schema, "plugin-delegated-reference-repair-v2")
+        self.assertEqual(loaded.third_party_notice.classification, "PUBLIC_DOMAIN")
+        self.assertTrue(loaded.third_party_notice.redistribution_approved)
+        with self.assertRaises(AttributeError):
+            loaded.third_party_notice.confirmed_by = "changed"  # type: ignore[misc]
+
+    def test_v2_notice_rejects_missing_unknown_or_unapproved_values(self) -> None:
+        base = copy.deepcopy(self.fixture.contract_payload)
+        base["schema"] = "plugin-delegated-reference-repair-v2"
+        base["third_party_notice"] = {
+            "classification": "PUBLIC_DOMAIN",
+            "redistribution_approved": True,
+            "confirmed_by": "Plugin Owner",
+            "recorded_at": "2026-10-10",
+        }
+        cases = []
+        missing = copy.deepcopy(base)
+        missing.pop("third_party_notice")
+        cases.append((missing, "missing_key"))
+        unknown = copy.deepcopy(base)
+        unknown["third_party_notice"]["extra"] = True  # type: ignore[index]
+        cases.append((unknown, "invalid_third_party_notice"))
+        wrong_classification = copy.deepcopy(base)
+        wrong_classification["third_party_notice"]["classification"] = "UNKNOWN"  # type: ignore[index]
+        cases.append((wrong_classification, "invalid_third_party_notice"))
+        unapproved = copy.deepcopy(base)
+        unapproved["third_party_notice"]["redistribution_approved"] = False  # type: ignore[index]
+        cases.append((unapproved, "redistribution_approval_required"))
+        for payload, suffix in cases:
+            with self.subTest(suffix=suffix):
+                self.assert_code(payload, f"onboarding.repair_contract.{suffix}")
+
     def test_unknown_missing_and_absent_approval_fail_closed(self) -> None:
         base = dict(self.fixture.contract_payload)
         unknown = copy.deepcopy(base)

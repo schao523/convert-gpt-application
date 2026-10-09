@@ -13,6 +13,12 @@ ownership after the owner skill returns its result. If the owner or references
 are unavailable, the caller must disclose the limitation and must not fabricate
 exact Scripture.
 
+The decision owner confirmed publication under the MIT License with copyright
+© 2026 SC and approved redistribution of the exact repaired package. RM-04A and
+RM-04B are classified as public-domain third-party content. The repair therefore
+generates a root `THIRD_PARTY_NOTICES.md` bound to their filenames and SHA-256
+digests; it does not infer rights for any other material.
+
 The approved publication target for this action is the Obvious One Codex
 marketplace. OpenClaw, ClawHub, and the OpenAI universal directory are outside
 this action and remain `NOT VERIFIED` or `NOT APPLICABLE` as recorded by the

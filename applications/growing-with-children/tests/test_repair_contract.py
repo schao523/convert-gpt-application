@@ -60,6 +60,10 @@ class GrowingWithChildrenRepairContractTests(unittest.TestCase):
         )
         self.assertEqual(contract.approval_record["decision"], "APPROVED")
         self.assertEqual(contract.approval_record["confirmed_by"], "decision-owner")
+        self.assertEqual(contract.schema, "plugin-delegated-reference-repair-v2")
+        self.assertEqual(contract.third_party_notice.classification, "PUBLIC_DOMAIN")
+        self.assertTrue(contract.third_party_notice.redistribution_approved)
+        self.assertEqual(contract.third_party_notice.confirmed_by, "SC")
 
     def test_source_decision_preserves_behavior_and_codex_only_scope(self) -> None:
         decisions = (APPLICATION / "docs" / "source-decisions.md").read_text(encoding="utf-8")

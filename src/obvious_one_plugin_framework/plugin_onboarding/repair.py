@@ -97,6 +97,38 @@ def _handoff_section(contract: DelegatedReferenceRepair) -> str:
     )
 
 
+def _third_party_notice(contract: DelegatedReferenceRepair) -> bytes:
+    notice = contract.third_party_notice
+    if notice is None:
+        raise _fail("third_party_notice_missing")
+    lines = [
+        "# Third-Party Notices",
+        "",
+        "## Chinese Union Version reference files",
+        "",
+        "Classification: **PUBLIC DOMAIN**.",
+        "",
+        f"Redistribution was approved by {notice.confirmed_by} on {notice.recorded_at}.",
+        "",
+        "The following exact files are included only under the owning skill:",
+        "",
+    ]
+    for reference in contract.references:
+        path = f"skills/{contract.owner_skill}/{reference.owner_relative_path}"
+        lines.append(
+            f"- `{reference.reference_id}`: `{path}`; SHA-256 `{reference.sha256}`."
+        )
+    lines.extend(
+        [
+            "",
+            "This notice records the decision owner's approved classification and",
+            "redistribution decision; it does not alter the plugin's application behavior.",
+            "",
+        ]
+    )
+    return "\n".join(lines).encode("utf-8")
+
+
 def _repair_non_owner(root: Path, skill_name: str, contract: DelegatedReferenceRepair) -> None:
     skill = root / "skills" / skill_name
     if not skill.is_dir():
@@ -210,6 +242,11 @@ def _repair_tree(root: Path, contract: DelegatedReferenceRepair) -> None:
     overlay["version"] = contract.target_version
     _write_json(root / "plugin.json", portable)
     _write_json(root / ".codex-plugin" / "plugin.json", overlay)
+    if contract.third_party_notice is not None:
+        notice_path = root / "THIRD_PARTY_NOTICES.md"
+        if notice_path.exists():
+            raise _fail("third_party_notice_collision")
+        notice_path.write_bytes(_third_party_notice(contract))
     before_manifest = plugin_authoring.tree_manifest(root)
     repair_manifest = {
         "schema": "workbench-repair-manifest-v1",
@@ -222,6 +259,11 @@ def _repair_tree(root: Path, contract: DelegatedReferenceRepair) -> None:
         "non_owner_skills": list(contract.non_owner_skills),
         "references": [asdict(reference) for reference in contract.references],
         "approval_record": dict(contract.approval_record),
+        "third_party_notice": (
+            asdict(contract.third_party_notice)
+            if contract.third_party_notice is not None
+            else None
+        ),
         "content_members": [asdict(member) for member in before_manifest],
         "content_tree_sha256": plugin_authoring.tree_sha256(root),
     }

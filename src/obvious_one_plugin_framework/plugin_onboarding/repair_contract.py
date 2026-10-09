@@ -12,7 +12,7 @@ from typing import Mapping
 from .contract import OnboardingError
 
 
-_KEYS = {
+_KEYS_V1 = {
     "schema",
     "plugin_id",
     "source_version",
@@ -24,8 +24,15 @@ _KEYS = {
     "source_manifest_path",
     "approval_record",
 }
+_KEYS_V2 = _KEYS_V1 | {"third_party_notice"}
 _REFERENCE_KEYS = {"reference_id", "owner_relative_path", "sha256"}
 _APPROVAL_KEYS = {"decision", "confirmed_by", "recorded_at"}
+_NOTICE_KEYS = {
+    "classification",
+    "redistribution_approved",
+    "confirmed_by",
+    "recorded_at",
+}
 _NAME = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
 _REFERENCE_ID = re.compile(r"^[A-Za-z0-9]+(?:-[A-Za-z0-9]+)*$")
 _SEMVER = re.compile(
@@ -44,6 +51,14 @@ class RepairReference:
 
 
 @dataclass(frozen=True)
+class ThirdPartyNotice:
+    classification: str
+    redistribution_approved: bool
+    confirmed_by: str
+    recorded_at: str
+
+
+@dataclass(frozen=True)
 class DelegatedReferenceRepair:
     schema: str
     plugin_id: str
@@ -55,6 +70,7 @@ class DelegatedReferenceRepair:
     references: tuple[RepairReference, ...]
     source_manifest_path: str
     approval_record: Mapping[str, str]
+    third_party_notice: ThirdPartyNotice | None
 
 
 def _fail(code: str, detail: str = "") -> OnboardingError:
@@ -86,14 +102,21 @@ def load_repair_contract(path: Path) -> DelegatedReferenceRepair:
         raise _fail("invalid_json") from exc
     if not isinstance(payload, dict):
         raise _fail("invalid_type")
-    unknown = sorted(set(payload) - _KEYS)
+    schema = payload.get("schema")
+    if schema not in {
+        "plugin-delegated-reference-repair-v1",
+        "plugin-delegated-reference-repair-v2",
+    }:
+        if "schema" not in payload:
+            raise _fail("missing_key", "schema")
+        raise _fail("unsupported_schema")
+    keys = _KEYS_V2 if schema == "plugin-delegated-reference-repair-v2" else _KEYS_V1
+    unknown = sorted(set(payload) - keys)
     if unknown:
         raise _fail("unknown_key", unknown[0])
-    missing = sorted(_KEYS - set(payload))
+    missing = sorted(keys - set(payload))
     if missing:
         raise _fail("missing_key", missing[0])
-    if payload["schema"] != "plugin-delegated-reference-repair-v1":
-        raise _fail("unsupported_schema")
     plugin_id = _text(payload["plugin_id"], "invalid_plugin_id")
     owner = _text(payload["owner_skill"], "invalid_owner_skill")
     if _NAME.fullmatch(plugin_id) is None:
@@ -153,8 +176,29 @@ def load_repair_contract(path: Path) -> DelegatedReferenceRepair:
         or not approval["recorded_at"].strip()
     ):
         raise _fail("approval_required")
+    third_party_notice: ThirdPartyNotice | None = None
+    if schema == "plugin-delegated-reference-repair-v2":
+        notice = payload["third_party_notice"]
+        if (
+            not isinstance(notice, dict)
+            or set(notice) != _NOTICE_KEYS
+            or notice.get("classification") != "PUBLIC_DOMAIN"
+            or not isinstance(notice.get("confirmed_by"), str)
+            or not notice["confirmed_by"].strip()
+            or not isinstance(notice.get("recorded_at"), str)
+            or re.fullmatch(r"\d{4}-\d{2}-\d{2}", notice["recorded_at"]) is None
+        ):
+            raise _fail("invalid_third_party_notice")
+        if notice.get("redistribution_approved") is not True:
+            raise _fail("redistribution_approval_required")
+        third_party_notice = ThirdPartyNotice(
+            classification="PUBLIC_DOMAIN",
+            redistribution_approved=True,
+            confirmed_by=notice["confirmed_by"],
+            recorded_at=notice["recorded_at"],
+        )
     return DelegatedReferenceRepair(
-        schema="plugin-delegated-reference-repair-v1",
+        schema=schema,
         plugin_id=plugin_id,
         source_version=source_version,
         target_version=target_version,
@@ -166,4 +210,5 @@ def load_repair_contract(path: Path) -> DelegatedReferenceRepair:
         approval_record=MappingProxyType(
             {key: str(approval[key]) for key in sorted(_APPROVAL_KEYS)}
         ),
+        third_party_notice=third_party_notice,
     )

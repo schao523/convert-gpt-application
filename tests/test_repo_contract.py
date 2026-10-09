@@ -70,6 +70,15 @@ class DelegatedReferenceRepairRepositoryContractTests(unittest.TestCase):
         self.assertNotIn("D:\\", repair)
         self.assertNotIn("C:\\", repair)
 
+    def test_public_domain_notice_repair_contract_is_documented(self) -> None:
+        command_reference = (ROOT / "docs" / "PLUGIN_AND_FRAMEWORK_COMMAND_REFERENCE.md").read_text(
+            encoding="utf-8"
+        )
+
+        self.assertIn("plugin-delegated-reference-repair-v2", command_reference)
+        self.assertIn("THIRD_PARTY_NOTICES.md", command_reference)
+        self.assertIn("PUBLIC_DOMAIN", command_reference)
+
 
 if __name__ == "__main__":
     unittest.main()

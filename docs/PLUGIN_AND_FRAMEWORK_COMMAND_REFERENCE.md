@@ -318,6 +318,14 @@ closed before extraction.
 A repair requires a tracked, decision-owner-approved
 `plugin-delegated-reference-repair-v1` contract bound to the exact source ZIP,
 plugin identity, versions, reference bytes, owner skill, and non-owner skills.
+Schema v1 never invents a rights notice. When approved public-domain reference
+files must be redistributed, use the backward-compatible
+`plugin-delegated-reference-repair-v2` contract. Its exact
+`third_party_notice` record requires classification `PUBLIC_DOMAIN`, explicit
+redistribution approval, the confirmer, and the decision date. The repair then
+generates a root `THIRD_PARTY_NOTICES.md` that records every affected reference
+ID, owner path, filename, and SHA-256 digest. Existing notices are not
+overwritten, and other classifications require a later contract revision.
 The product launcher takes explicit paths and writes only below its output
 root. For the approved Growing with Children repair:
 

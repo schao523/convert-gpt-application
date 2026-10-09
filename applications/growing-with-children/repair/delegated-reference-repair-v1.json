@@ -1,5 +1,5 @@
 {
-  "schema": "plugin-delegated-reference-repair-v1",
+  "schema": "plugin-delegated-reference-repair-v2",
   "plugin_id": "growing-with-children",
   "source_version": "1.0.1",
   "target_version": "1.0.2",
@@ -28,5 +28,11 @@
     "decision": "APPROVED",
     "confirmed_by": "decision-owner",
     "recorded_at": "2026-10-09"
+  },
+  "third_party_notice": {
+    "classification": "PUBLIC_DOMAIN",
+    "redistribution_approved": true,
+    "confirmed_by": "SC",
+    "recorded_at": "2026-10-10"
   }
 }

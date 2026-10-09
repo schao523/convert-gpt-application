@@ -105,6 +105,46 @@ class DelegatedReferenceRepairTests(unittest.TestCase):
         self.assertEqual(first.metadata.read_bytes(), second.metadata.read_bytes())
         self.assertEqual(first.archive_sha256, second.archive_sha256)
 
+    def test_v2_generates_hash_bound_root_third_party_notice(self) -> None:
+        payload = dict(self.fixture.contract_payload)
+        payload["schema"] = "plugin-delegated-reference-repair-v2"
+        payload["third_party_notice"] = {
+            "classification": "PUBLIC_DOMAIN",
+            "redistribution_approved": True,
+            "confirmed_by": "Plugin Owner",
+            "recorded_at": "2026-10-10",
+        }
+        contract_path = self.root / "v2-contract.json"
+        contract_path.write_bytes(canonical_bytes(payload))
+        output = self.root / "v2"
+
+        result = repair_delegated_reference_archive(
+            self.fixture.archive,
+            load_repair_contract(contract_path),
+            output / "candidate.zip",
+            output / "metadata.json",
+        )
+        repaired = self.extract(result.archive, "v2-repaired")
+        notice = (repaired / "THIRD_PARTY_NOTICES.md").read_text(encoding="utf-8")
+
+        self.assertIn("PUBLIC DOMAIN", notice)
+        self.assertIn("Plugin Owner", notice)
+        for reference in self.contract.references:
+            self.assertIn(reference.reference_id, notice)
+            self.assertIn(Path(reference.owner_relative_path).name, notice)
+            self.assertIn(reference.sha256, notice)
+        repair_manifest = json.loads(
+            (repaired / "WORKBENCH-REPAIR-MANIFEST.json").read_text(encoding="utf-8")
+        )
+        self.assertEqual(
+            repair_manifest["third_party_notice"]["classification"], "PUBLIC_DOMAIN"
+        )
+
+    def test_v1_does_not_invent_a_notice(self) -> None:
+        result = self.build("v1-no-notice")
+        repaired = self.extract(result.archive, "v1-no-notice-repaired")
+        self.assertFalse((repaired / "THIRD_PARTY_NOTICES.md").exists())
+
     def test_legacy_filename_qualified_index_ids_are_removed_and_resolved(self) -> None:
         for skill in (self.contract.owner_skill, *self.contract.non_owner_skills):
             index_path = self.fixture.candidate / "skills" / skill / "assets/knowledge-index.json"
