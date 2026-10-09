@@ -175,18 +175,27 @@ def _generated_test_release(plugin_id: str) -> bytes:
     return lf_bytes(
         f'''from __future__ import annotations
 
+import importlib.util
 from pathlib import Path
 import tempfile
 import unittest
 
-from scripts.build_marketplace_release import build
+
+APPLICATION = Path(__file__).resolve().parents[1]
+SPEC = importlib.util.spec_from_file_location(
+    "onboarded_marketplace_builder", APPLICATION / "scripts" / "build_marketplace_release.py"
+)
+if SPEC is None or SPEC.loader is None:
+    raise RuntimeError("marketplace_builder_unavailable")
+BUILDER = importlib.util.module_from_spec(SPEC)
+SPEC.loader.exec_module(BUILDER)
 
 
 class MarketplaceReleaseTests(unittest.TestCase):
     def test_build_copies_imported_tree(self) -> None:
-        source = Path(__file__).resolve().parents[1]
+        source = APPLICATION
         with tempfile.TemporaryDirectory() as name:
-            target = build(source, Path(name))
+            target = BUILDER.build(source, Path(name))
             self.assertEqual(target.name, {plugin_id!r})
             expected = sorted(p.relative_to(source / "imported-plugin") for p in (source / "imported-plugin").rglob("*") if p.is_file())
             actual = sorted(p.relative_to(target) for p in target.rglob("*") if p.is_file())
@@ -283,12 +292,10 @@ def render_application_files(
                 {
                     "id": "imported-package",
                     "argv": ["{python}", "-B", "{application_root}/tests/test_imported_package.py"],
-                    "marketplace_targets": ["codex"],
                 },
                 {
                     "id": "marketplace-release",
                     "argv": ["{python}", "-B", "{application_root}/tests/test_marketplace_release.py"],
-                    "marketplace_targets": ["codex"],
                 },
             ],
             "codex_build": {
