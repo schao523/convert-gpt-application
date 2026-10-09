@@ -81,6 +81,8 @@ def write_plugin_builder_fixture(
     *,
     schema: str = "plugin-builder-package-v3",
     files: Mapping[str, bytes] | None = None,
+    tool_bindings: list[dict[str, object]] | None = None,
+    tool_contracts: list[dict[str, object]] | None = None,
 ) -> PluginBuilderFixture:
     fixture_root = Path(root)
     fixture_root.mkdir(parents=True, exist_ok=True)
@@ -91,6 +93,8 @@ def write_plugin_builder_fixture(
         destination.parent.mkdir(parents=True, exist_ok=True)
         destination.write_bytes(content)
 
+    bindings = list(tool_bindings or [])
+    contracts = list(tool_contracts or [])
     manifest_path = candidate / "PLUGIN-BUILDER-MANIFEST.json"
     if not manifest_path.exists():
         content_members = [
@@ -115,8 +119,8 @@ def write_plugin_builder_fixture(
                 + ["PLUGIN-BUILDER-MANIFEST.json"]
             ),
             "members": content_members,
-            "tool_bindings": [],
-            "tool_contracts": [],
+            "tool_bindings": bindings,
+            "tool_contracts": contracts,
         }
         if schema == "plugin-builder-package-v3":
             candidate_manifest.update(
@@ -158,8 +162,8 @@ def write_plugin_builder_fixture(
             "package_structure": "PASS",
             "installed_skill_invocation": "NOT VERIFIED",
         },
-        "tool_bindings": [],
-        "tool_contracts_sha256": sha256(canonical_bytes([])).hexdigest(),
+        "tool_bindings": bindings,
+        "tool_contracts_sha256": sha256(canonical_bytes(contracts)).hexdigest(),
         "extracted_validation": {"state": "PASS", "diagnostics": []},
         "safety_validation": {"state": "PASS", "diagnostics": []},
     }

@@ -23,6 +23,7 @@ from tests.framework.plugin_onboarding_fixtures import (
     write_plugin_builder_fixture,
     write_runtime_evidence_bundle,
 )
+from tests.framework.test_plugin_authoring_tools import bundled_tool
 
 
 class PluginOnboardingInspectionTests(unittest.TestCase):
@@ -73,6 +74,34 @@ class PluginOnboardingInspectionTests(unittest.TestCase):
                 self.assertEqual(inspected.candidate_sha256, fixture.metadata_payload["candidate_sha256"])
                 self.assertEqual(inspected.verification_sha256, "2" * 64)
                 self.assertEqual(inspected.members, load_package_metadata(fixture.metadata).members)
+
+    def test_nested_nonempty_tool_bindings_preserve_exact_json_identity(self) -> None:
+        binding = {
+            "tool_id": "normalize-input",
+            "contract_sha256": "a" * 64,
+            "files": ["tools/normalize.py"],
+            "skills": ["answering-requests"],
+            "dependencies": [
+                {"id": "python", "runtime_targets": ["Codex", "ChatGPT Work Local/Desktop"]}
+            ],
+        }
+        files = write_plugin_builder_fixture(self.root / "base").candidate_files
+        files["tools/normalize.py"] = b"print('ok')\n"
+        fixture = write_plugin_builder_fixture(
+            self.root / "nested-bindings",
+            files=files,
+            tool_bindings=[binding],
+            tool_contracts=[bundled_tool()],
+        )
+
+        inspected = self.inspect(fixture)
+
+        self.assertEqual(inspected.tool_bindings[0]["tool_id"], "normalize-input")
+        dependency = inspected.tool_bindings[0]["dependencies"][0]
+        self.assertEqual(
+            dependency["runtime_targets"],
+            ("Codex", "ChatGPT Work Local/Desktop"),
+        )
 
     def test_member_manifest_digest_is_recomputed_canonically(self) -> None:
         fixture = write_plugin_builder_fixture(self.root / "stale")

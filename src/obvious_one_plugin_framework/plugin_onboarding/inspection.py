@@ -44,8 +44,16 @@ _DIGEST = re.compile(r"^[0-9a-f]{64}$")
 
 def _canonical_bytes(value: object) -> bytes:
     return (
-        json.dumps(value, ensure_ascii=True, indent=2, sort_keys=True) + "\n"
+        json.dumps(_json_value(value), ensure_ascii=True, indent=2, sort_keys=True) + "\n"
     ).encode("ascii")
+
+
+def _json_value(value: object) -> object:
+    if isinstance(value, Mapping):
+        return {key: _json_value(item) for key, item in value.items()}
+    if isinstance(value, (list, tuple)):
+        return [_json_value(item) for item in value]
+    return value
 
 
 @dataclass(frozen=True)
@@ -175,7 +183,7 @@ def _manifest_identity(root: Path, metadata: PackageMetadata) -> tuple[dict[str,
     tool_contracts = candidate_manifest.get("tool_contracts")
     if not isinstance(tool_bindings, list) or not isinstance(tool_contracts, list):
         raise _fail("candidate_manifest_invalid")
-    if tool_bindings != [dict(item) for item in metadata.tool_bindings]:
+    if _canonical_bytes(tool_bindings) != _canonical_bytes(metadata.tool_bindings):
         raise _fail("tool_bindings_mismatch")
     if sha256(_canonical_bytes(tool_contracts)).hexdigest() != metadata.tool_contracts_sha256:
         raise _fail("tool_contracts_sha256_mismatch")
