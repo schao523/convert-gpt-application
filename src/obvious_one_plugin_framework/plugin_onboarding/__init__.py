@@ -10,6 +10,12 @@ from .contract import (
     load_publication_decisions,
 )
 from .materialize import prepare_plugin_zip_marketplace
+from .repair_contract import (
+    DelegatedReferenceRepair,
+    RepairReference,
+    load_repair_contract,
+)
+from .repair import RepairResult, repair_delegated_reference_archive
 
 __all__ = [
     "CandidateMember",
@@ -20,4 +26,9 @@ __all__ = [
     "load_package_metadata",
     "load_publication_decisions",
     "prepare_plugin_zip_marketplace",
+    "DelegatedReferenceRepair",
+    "RepairReference",
+    "RepairResult",
+    "load_repair_contract",
+    "repair_delegated_reference_archive",
 ]

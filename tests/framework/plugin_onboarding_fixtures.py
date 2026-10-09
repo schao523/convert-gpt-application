@@ -37,6 +37,171 @@ class PluginBuilderFixture:
         }
 
 
+@dataclass(frozen=True)
+class LegacyRepairFixture:
+    root: Path
+    candidate: Path
+    archive: Path
+    source_manifest: bytes
+    contract_payload: Mapping[str, object]
+
+
+def write_legacy_repair_fixture(root: Path) -> LegacyRepairFixture:
+    fixture_root = Path(root)
+    fixture_root.mkdir(parents=True, exist_ok=True)
+    candidate = fixture_root / "legacy-candidate"
+    candidate.mkdir()
+    interface = {
+        "displayName": "Sample Plugin",
+        "shortDescription": "Portable sample",
+        "longDescription": "A portable sample plugin for repair tests.",
+        "developerName": "Example Developer",
+        "category": "Education",
+        "capabilities": ["Interactive", "Read"],
+        "defaultPrompt": "Help me use this plugin.",
+    }
+    files: dict[str, bytes] = {
+        "plugin.json": canonical_bytes(
+            {
+                "$schema": PORTABLE_SCHEMA,
+                "name": "sample-plugin",
+                "version": "1.0.1",
+                "description": "A portable sample plugin.",
+                "author": {"name": "Example Developer"},
+                "extensions": {"com.openai": {"interface": interface}},
+            }
+        ),
+        ".codex-plugin/plugin.json": canonical_bytes(
+            {
+                "name": "sample-plugin",
+                "version": "1.0.1",
+                "description": "A portable sample plugin.",
+                "author": {"name": "Example Developer"},
+                "skills": "./skills/",
+                "interface": interface,
+            }
+        ),
+        "README.md": b"untouched bytes\r\n",
+    }
+    owner = "guiding-biblical-study"
+    non_owners = ("guiding-parenting-sessions", "supporting-parent-reflection")
+    references = {
+        "RM-04A": ("reference-material/RM-04A_Bible_OT.pdf", b"OT-PDF\n"),
+        "RM-04B": ("reference-material/RM-04B_Bible_NT.pdf", b"NT-PDF\n"),
+    }
+    owner_links = "\n".join(
+        f"- [{reference_id}](assets/{relative})"
+        for reference_id, (relative, _) in references.items()
+    )
+    files[f"skills/{owner}/SKILL.md"] = (
+        "---\n"
+        f"name: {owner}\n"
+        "description: Own exact Scripture verification and formal Bible study.\n"
+        "---\n\n"
+        f"{owner_links}\n"
+    ).encode("utf-8")
+    owner_assets = []
+    for reference_id, (relative, content) in references.items():
+        files[f"skills/{owner}/assets/{relative}"] = content
+        owner_assets.append({"id": reference_id, "file": relative})
+    files[f"skills/{owner}/assets/knowledge-index.json"] = canonical_bytes(
+        {"assets": owner_assets}
+    )
+    files[f"skills/{owner}/assets/reference-profile.json"] = canonical_bytes(
+        {
+            "schema": "skill-reference-profile-v1",
+            "skill": owner,
+            "major_intents": ["Bible study"],
+            "required": [],
+            "conditional": [],
+            "optional": [],
+            "prohibited_substitutions": ["Do not fabricate exact Scripture."],
+            "fallback": "Disclose unavailable authority.",
+        }
+    )
+    for skill in non_owners:
+        stale_links = "\n".join(
+            f"- [{reference_id}](assets/{relative})"
+            for reference_id, (relative, _) in references.items()
+        )
+        files[f"skills/{skill}/SKILL.md"] = (
+            "---\n"
+            f"name: {skill}\n"
+            "description: Route a sample parent workflow.\n"
+            "---\n\n"
+            "Keep this ordinary behavior byte-stable where possible.\n\n"
+            f"{stale_links}\n"
+        ).encode("utf-8")
+        files[f"skills/{skill}/assets/knowledge-index.json"] = canonical_bytes(
+            {
+                "assets": [
+                    {"id": reference_id, "file": relative}
+                    for reference_id, (relative, _) in references.items()
+                ]
+            }
+        )
+        files[f"skills/{skill}/assets/reference-profile.json"] = canonical_bytes(
+            {
+                "schema": "skill-reference-profile-v1",
+                "skill": skill,
+                "major_intents": ["Parenting"],
+                "required": [],
+                "conditional": [
+                    f"assets/{relative}" for relative, _ in references.values()
+                ],
+                "optional": [],
+                "prohibited_substitutions": ["Do not fabricate exact Scripture."],
+                "fallback": "Disclose unavailable authority.",
+            }
+        )
+    for relative, content in files.items():
+        destination = candidate.joinpath(*relative.split("/"))
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        destination.write_bytes(content)
+    source_manifest = canonical_bytes(
+        {
+            "schema": "plugin-builder-candidate-manifest-v1",
+            "candidate_version": "1.0.1",
+            "w1_state": "APPROVED",
+            "w2_state": "APPROVED",
+            "expected_members": sorted([*files, "PLUGIN-BUILDER-MANIFEST.json"]),
+        }
+    )
+    (candidate / "PLUGIN-BUILDER-MANIFEST.json").write_bytes(source_manifest)
+    archive = fixture_root / "legacy-plugin.zip"
+    archive_sha256 = plugin_authoring.write_deterministic_zip(candidate, archive)
+    contract_payload: dict[str, object] = {
+        "schema": "plugin-delegated-reference-repair-v1",
+        "plugin_id": "sample-plugin",
+        "source_version": "1.0.1",
+        "target_version": "1.0.2",
+        "source_archive_sha256": archive_sha256,
+        "owner_skill": owner,
+        "non_owner_skills": list(non_owners),
+        "references": [
+            {
+                "reference_id": reference_id,
+                "owner_relative_path": f"assets/{relative}",
+                "sha256": sha256(content).hexdigest(),
+            }
+            for reference_id, (relative, content) in references.items()
+        ],
+        "source_manifest_path": "PLUGIN-BUILDER-MANIFEST.json",
+        "approval_record": {
+            "decision": "APPROVED",
+            "confirmed_by": "Plugin Owner",
+            "recorded_at": "2026-10-09T12:00:00+08:00",
+        },
+    }
+    return LegacyRepairFixture(
+        fixture_root,
+        candidate,
+        archive,
+        source_manifest,
+        contract_payload,
+    )
+
+
 def _default_files() -> dict[str, bytes]:
     interface = {
         "displayName": "Sample Plugin",
