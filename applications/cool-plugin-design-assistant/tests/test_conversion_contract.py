@@ -56,6 +56,10 @@ class ConversionContractTests(unittest.TestCase):
             (ROOT / "openclaw/distribution.json").read_text(encoding="utf-8")
         )
         self.assertEqual(distribution["version"], "1.0.2")
+        self.assertEqual(
+            inventory["marketplace_commit"],
+            "5deedc580acb9afa276f81abeca15e91ce20a56c",
+        )
         self.assertEqual(len(inventory["source_inventory"]), 16)
         self.assertFalse(
             any(":\\Users\\" in item["path"] for item in inventory["source_inventory"])

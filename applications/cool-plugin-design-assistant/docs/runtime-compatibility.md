@@ -107,3 +107,9 @@ regression-tested correction was published through marketplace PR #2 as
 seven-Skill discovery, and all packaged validation commands subsequently passed
 in both Codex and OpenClaw. No GitHub Release or external registry submission
 was performed.
+
+Version 1.0.2 was subsequently published for Codex and OpenClaw through
+marketplace PR #5 at commit
+`5deedc580acb9afa276f81abeca15e91ce20a56c`. The source repository records
+that immutable marketplace binding after publication; no GitHub Release,
+ClawHub publication, or OpenAI universal-directory submission was performed.
