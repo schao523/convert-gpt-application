@@ -20,6 +20,7 @@ from .index_reuse import IndexReuseError, check_index_reuse, derive_index
 from .knowledge_policy import KnowledgePolicyError, validate_knowledge_policy
 from .marketplace import MarketplaceError, load_preparation_catalog, prepare_marketplace, verify_marketplace
 from .package_builder import PackageAuditError, build_package, preflight_package, verify_package
+from .plugin_onboarding import OnboardingError, prepare_plugin_zip_marketplace
 from .readiness_report import combine_results, write_result_transactionally
 from .release_assets import AssetBuildError, build_asset_groups, write_remote_manifest
 from .results import ArtifactRecord, Diagnostic, MutationRecord, OperationResult, result_json
@@ -129,6 +130,14 @@ def _parser() -> argparse.ArgumentParser:
     knowledge.add_argument("--coverage-matrix", type=Path)
     knowledge.add_argument("--require-coverage", action="store_true")
     knowledge.add_argument("--json", action="store_true")
+    onboarding = commands.add_parser("prepare-plugin-zip-marketplace")
+    onboarding.add_argument("--archive", required=True, type=Path)
+    onboarding.add_argument("--package-metadata", required=True, type=Path)
+    onboarding.add_argument("--publication-decisions", required=True, type=Path)
+    onboarding.add_argument("--repository", required=True, type=Path)
+    onboarding.add_argument("--output", required=True, type=Path)
+    onboarding.add_argument("--evidence", type=Path)
+    onboarding.add_argument("--json", action="store_true")
     return parser
 
 
@@ -171,6 +180,9 @@ def main(argv: list[str] | None = None) -> int:
     except KnowledgePolicyError as exc:
         result = _typed_failure(operation, exc)
         exit_code = 3
+    except OnboardingError as exc:
+        result = _failure(operation, exc.status, exc.code)
+        exit_code = 2 if exc.status == "BLOCKED" else 3
     except ValueError as exc:
         result = _failure(operation, "FAIL", str(exc).split(":", 1)[0] or "invalid_value")
         exit_code = 2
@@ -190,6 +202,15 @@ def main(argv: list[str] | None = None) -> int:
 
 def _dispatch(arguments: argparse.Namespace) -> OperationResult:
     operation = arguments.command
+    if operation == "prepare-plugin-zip-marketplace":
+        return prepare_plugin_zip_marketplace(
+            arguments.archive,
+            arguments.package_metadata,
+            arguments.publication_decisions,
+            arguments.repository,
+            arguments.output,
+            evidence=arguments.evidence,
+        )
     if operation == "validate-knowledge":
         evidence = validate_knowledge_policy(
             arguments.plugin_root,
