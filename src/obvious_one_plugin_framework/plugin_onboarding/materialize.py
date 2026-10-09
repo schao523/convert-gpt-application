@@ -13,6 +13,7 @@ from typing import Mapping
 from .. import plugin_authoring
 from ..contract import load_contract
 from ..results import ArtifactRecord, MutationRecord, OperationResult, result_json
+from ..verification import load_application_config_path
 from .contract import (
     OnboardingError,
     load_package_metadata,
@@ -59,6 +60,8 @@ def _publish_output(stage: Path, output: Path, temporary_root: Path) -> None:
     if had_output:
         os.replace(output, backup)
     try:
+        if had_output:
+            _preflight_output(backup)
         os.replace(stage, output)
     except BaseException:
         if had_output and backup.exists() and not output.exists():
@@ -77,6 +80,18 @@ def _validate_stage(application: Path, imported: Path) -> None:
     contract = load_contract(application / "openclaw" / "distribution.json")
     if contract.schema_version != 3:
         raise OnboardingError("onboarding.materialize.contract_invalid", "FAIL")
+    adopted = application.parent / contract.plugin_id
+    if adopted.exists():
+        raise OnboardingError("onboarding.materialize.validation_collision", "FAIL")
+    application.rename(adopted)
+    try:
+        config = load_application_config_path(
+            adopted / "conversion.json", adopted.parent
+        )
+        if config.plugin_id != contract.plugin_id or config.version != contract.version:
+            raise OnboardingError("onboarding.materialize.config_invalid", "FAIL")
+    finally:
+        adopted.rename(application)
 
 
 def prepare_plugin_zip_marketplace(
@@ -165,4 +180,3 @@ def prepare_plugin_zip_marketplace(
     finally:
         if temporary_root.exists():
             shutil.rmtree(temporary_root)
-

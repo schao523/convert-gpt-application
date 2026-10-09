@@ -13,6 +13,7 @@ from obvious_one_plugin_framework.plugin_onboarding.contract import OnboardingEr
 from obvious_one_plugin_framework.plugin_onboarding.materialize import (
     prepare_plugin_zip_marketplace,
 )
+from obvious_one_plugin_framework.plugin_onboarding import materialize as onboarding_materialize
 from obvious_one_plugin_framework.verification import load_application_config_path
 from tests.framework.plugin_onboarding_fixtures import (
     write_plugin_builder_fixture,
@@ -194,6 +195,29 @@ class PluginOnboardingMaterializeTests(unittest.TestCase):
             with self.assertRaises(OSError):
                 self.prepare(output)
         self.assertEqual(plugin_authoring.tree_sha256(output), before)
+
+    def test_output_swapped_after_preflight_is_not_overwritten(self) -> None:
+        output = self.root / "swapped"
+        original_validate = onboarding_materialize._validate_stage
+
+        def swap_after_validation(application: Path, imported: Path) -> None:
+            original_validate(application, imported)
+            output.mkdir()
+            (output / "intruder.txt").write_bytes(b"preserve\r\n")
+
+        with patch(
+            "obvious_one_plugin_framework.plugin_onboarding.materialize._validate_stage",
+            side_effect=swap_after_validation,
+        ):
+            with self.assertRaises(OnboardingError) as caught:
+                self.prepare(output)
+
+        self.assertEqual(caught.exception.code, "onboarding.output_collision")
+        self.assertEqual((output / "intruder.txt").read_bytes(), b"preserve\r\n")
+        self.assertEqual(
+            {path.name for path in output.iterdir()},
+            {"intruder.txt"},
+        )
 
     def test_owned_output_can_be_replaced_and_missing_output_is_created(self) -> None:
         output = self.root / "replaceable"
