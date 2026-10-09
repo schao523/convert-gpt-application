@@ -5,7 +5,7 @@
   "source_repository": "plugin-builder-approved-handoff-v1.0",
   "source_tree_sha256": "d0d8700951992c12becf5543087716ecd8bd7fbdb42b53ab70a269af0f4f972d",
   "marketplace_repository": "schao523/obvious-one-plugins",
-  "marketplace_commit": "0000000000000000000000000000000000000000",
+  "marketplace_commit": "5deedc580acb9afa276f81abeca15e91ce20a56c",
   "incorporated_branches": [],
   "source_inventory": [
     {"classification": "approved-design-internal", "path": "Acceptance_and_Test_Scenarios_v1.0.md", "sha256": "45ef0d13d178a0a7076312199469fbe17e11be15ed07a7d588205f31f6ad96b9"},

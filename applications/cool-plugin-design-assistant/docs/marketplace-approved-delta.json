@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "marketplace_commit": "5daa24e7f38e05c16aa4254fa296c5381eab4e97",
+  "marketplace_commit": "5deedc580acb9afa276f81abeca15e91ce20a56c",
   "rationale": {
     "digest_mismatch": "Only the post-publication commit binding and publication-status note may differ from the immutable published artifact.",
     "missing": "No missing files are approved for the published plugin artifacts.",

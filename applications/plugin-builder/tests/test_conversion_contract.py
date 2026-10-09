@@ -68,8 +68,15 @@ class ConversionContractTests(unittest.TestCase):
             {"ChatGPT Work Local/Desktop", "Codex"},
         )
         self.assertGreaterEqual(set(scope["excluded_runtimes"]), {"OpenClaw", "Claude"})
-        self.assertEqual(scope["publication_state"], "NOT_PERFORMED")
-        self.assertEqual(scope["release_state"], "NOT_PERFORMED")
+        self.assertEqual(
+            scope["publication_state"],
+            "PUBLISHED_OBVIOUS_ONE_GITHUB_MARKETPLACE",
+        )
+        self.assertEqual(scope["release_state"], "RELEASED_1.0.1_OBVIOUS_ONE")
+        self.assertEqual(
+            inventory["marketplace_commit"],
+            "5deedc580acb9afa276f81abeca15e91ce20a56c",
+        )
         self.assertEqual(scope["version"], "1.0.1")
         self.assertEqual(
             scope["approved_release_targets"],
