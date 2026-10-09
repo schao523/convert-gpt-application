@@ -298,6 +298,43 @@ authorize creating a duplicate, publishing to a marketplace, or submitting to
 the public directory. `hosted_deployment_verified` proves the local artifact,
 not hosted execution and not repository-wide `READY` status.
 
+### Inspect and repair an approved legacy Plugin Builder ZIP
+
+Inspection is read-only and does not make a legacy package publishable:
+
+```powershell
+python -B -m obvious_one_plugin_framework.cli inspect-plugin-zip `
+  --archive .\path\legacy-plugin.zip `
+  --output .\.tmp\plugin-inspection.json `
+  --json
+```
+
+The inspection records legacy producer statements under `producer_claims`,
+but does not relabel them as Plugin Builder v2/v3 evidence. Workbench-derived
+archive and member hashes remain separate, and all unobserved installed-
+runtime layers remain `NOT VERIFIED`. Unknown, mixed, or unsafe envelopes fail
+closed before extraction.
+
+A repair requires a tracked, decision-owner-approved
+`plugin-delegated-reference-repair-v1` contract bound to the exact source ZIP,
+plugin identity, versions, reference bytes, owner skill, and non-owner skills.
+The product launcher takes explicit paths and writes only below its output
+root. For the approved Growing with Children repair:
+
+```powershell
+python -B .\applications\growing-with-children\scripts\build_repaired_release.py `
+  --source <exact-1.0.1-zip> `
+  --output .\dist\growing-with-children-1.0.2 `
+  --json
+```
+
+Run archive, Git, hard-link, filesystem, and packaging operations in genuine
+system temporary storage with `PYTHONUTF8=1`. The original ZIP is immutable;
+the derivative ZIP and `package-metadata.json` are Workbench-owned evidence,
+not fabricated Plugin Builder v2/v3 evidence. A repair `PASS` is
+`STATICALLY VERIFIED` only and does not establish installation, skill
+invocation, reference use, conversation behavior, or publication authority.
+
 ### Prepare a Plugin Builder ZIP onboarding proposal
 
 Use this command only for a new plugin produced by Plugin Builder and only
@@ -314,8 +351,10 @@ python -B -m obvious_one_plugin_framework.cli prepare-plugin-zip-marketplace `
 ```
 
 `--evidence <runtime-evidence.zip>` is optional. The archive must use the
-Plugin Builder portable single-directory envelope and the metadata must use
-`plugin-builder-package-v2` or `plugin-builder-package-v3`. The decision file
+Plugin Builder portable single-directory envelope. Metadata may use
+`plugin-builder-package-v2`, `plugin-builder-package-v3`, or the bounded
+`workbench-repaired-plugin-v1` emitted by an approved repair. A legacy
+inspection report by itself is never sufficient. The decision file
 must use `plugin-publication-decisions-v1` and explicitly approve MIT
 licensing, redistribution, third-party-content disposition, Codex as the
 target runtime, the `obvious-one` marketplace, and

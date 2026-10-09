@@ -355,6 +355,27 @@ its `STATICALLY VERIFIED` result separate from application-owned behavioral
 scenarios and installed Codex/OpenClaw execution. Existing products adopt this
 gate only after classification approval and coverage-matrix migration.
 
+### 6.6 Delegate a professional reference without duplicating it
+
+When several skills need one professional reference, keep the file in the
+owning skill and model cross-skill use explicitly. A non-owner profile using
+`skill-reference-profile-v2` records one `delegated_references` entry per
+reference with its exact `reference_id`, sibling `owner_skill`,
+`access_mode: HANDOFF`, and `local_copy: false`.
+
+The owner must package and index the reference and link it directly from its
+`SKILL.md`. The non-owner must not retain a local index record, direct local
+path, or duplicate file. Its `SKILL.md` states the handoff trigger, inputs,
+destination, return behavior, and fail-closed fallback. The original skill or
+session router remains the response owner; the reference-owning skill returns
+its result instead of issuing a competing user-facing response.
+
+Static validation proves only that ownership, links, indexes, and declared
+handoffs close. Product scenarios must separately observe skill invocation,
+owner routing, reference use, return to the response owner, and unavailable-
+owner behavior in each target runtime before those layers become
+`RUNTIME VERIFIED`.
+
 ## 7. Phase 4: scaffold the plugin
 
 ### 7.1 Recommended plugin tree
