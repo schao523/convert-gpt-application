@@ -9,6 +9,7 @@ from .contract import (
     load_package_metadata,
     load_publication_decisions,
 )
+from .materialize import prepare_plugin_zip_marketplace
 
 __all__ = [
     "CandidateMember",
@@ -18,4 +19,5 @@ __all__ = [
     "PublicationDecisions",
     "load_package_metadata",
     "load_publication_decisions",
+    "prepare_plugin_zip_marketplace",
 ]

@@ -1,0 +1,168 @@
+"""Transactional materialization of reviewed Plugin Builder ZIP proposals."""
+
+from __future__ import annotations
+
+from hashlib import sha256
+import json
+import os
+from pathlib import Path
+import shutil
+import tempfile
+from typing import Mapping
+
+from .. import plugin_authoring
+from ..contract import load_contract
+from ..results import ArtifactRecord, MutationRecord, OperationResult, result_json
+from .contract import (
+    OnboardingError,
+    load_package_metadata,
+    load_publication_decisions,
+)
+from .inspection import inspect_plugin_builder_package
+from .proposal import build_onboarding_proposal
+from .templates import canonical_json_bytes, render_application_files
+
+
+_MARKER = ".obvious-one-plugin-onboarding"
+
+
+def _write_files(root: Path, files: Mapping[str, bytes]) -> None:
+    for relative, content in sorted(files.items()):
+        target = root.joinpath(*relative.split("/"))
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes(content)
+
+
+def _preflight_output(output: Path) -> None:
+    if not output.exists():
+        return
+    if not output.is_dir():
+        raise OnboardingError("onboarding.output_collision", "FAIL")
+    if not any(output.iterdir()):
+        return
+    marker = output / _MARKER
+    if not marker.is_file():
+        raise OnboardingError("onboarding.output_collision", "FAIL")
+    try:
+        payload = json.loads(marker.read_text(encoding="ascii"))
+    except (OSError, UnicodeError, json.JSONDecodeError) as exc:
+        raise OnboardingError("onboarding.output_collision", "FAIL") from exc
+    if set(payload) != {"schema", "proposal_sha256"} or payload.get("schema") != "plugin-onboarding-output-v1":
+        raise OnboardingError("onboarding.output_collision", "FAIL")
+
+
+def _publish_output(stage: Path, output: Path, temporary_root: Path) -> None:
+    """Replace a missing or owned output while restoring it on publish failure."""
+
+    backup = temporary_root / "previous"
+    had_output = output.exists()
+    if had_output:
+        os.replace(output, backup)
+    try:
+        os.replace(stage, output)
+    except BaseException:
+        if had_output and backup.exists() and not output.exists():
+            os.replace(backup, output)
+        raise
+    if backup.exists():
+        shutil.rmtree(backup)
+
+
+def _validate_stage(application: Path, imported: Path) -> None:
+    issues = plugin_authoring.validate_plugin_tree(imported)
+    if issues:
+        raise OnboardingError(
+            "onboarding.materialize.imported_plugin_invalid", "FAIL", issues[0].code
+        )
+    contract = load_contract(application / "openclaw" / "distribution.json")
+    if contract.schema_version != 3:
+        raise OnboardingError("onboarding.materialize.contract_invalid", "FAIL")
+
+
+def prepare_plugin_zip_marketplace(
+    archive: Path,
+    package_metadata: Path,
+    publication_decisions: Path,
+    repository: Path,
+    output: Path,
+    *,
+    evidence: Path | None = None,
+) -> OperationResult:
+    """Create one deterministic, unapproved marketplace-registration proposal."""
+
+    destination = Path(output).resolve()
+    _preflight_output(destination)
+    metadata = load_package_metadata(Path(package_metadata))
+    decisions = load_publication_decisions(Path(publication_decisions))
+    inspection = inspect_plugin_builder_package(Path(archive), metadata, evidence=evidence)
+    proposal = build_onboarding_proposal(inspection, decisions, Path(repository))
+
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    temporary_root = Path(
+        tempfile.mkdtemp(prefix=f".{destination.name}-onboarding-", dir=destination.parent)
+    )
+    stage = temporary_root / "stage"
+    extracted = temporary_root / "extracted"
+    stage.mkdir()
+    try:
+        plugin_authoring.extract_archive(Path(archive), extracted)
+        located = plugin_authoring.locate_plugin_archive_root(extracted)
+        if located.profile != "PORTABLE_SINGLE_DIRECTORY":
+            raise OnboardingError("onboarding.materialize.envelope_profile_mismatch", "FAIL")
+        if plugin_authoring.tree_sha256(located.path) != inspection.candidate_sha256:
+            raise OnboardingError("onboarding.materialize.candidate_identity_mismatch", "FAIL")
+
+        imported_files = {
+            path.relative_to(located.path).as_posix(): path.read_bytes()
+            for path in sorted(located.path.rglob("*"))
+            if path.is_file()
+        }
+        application = stage / "application"
+        imported = application / "imported-plugin"
+        _write_files(imported, imported_files)
+        _write_files(application, render_application_files(inspection, decisions, imported_files))
+        (stage / "onboarding-proposal.json").write_text(
+            proposal.proposal_json(), encoding="ascii", newline="\n"
+        )
+        (stage / "catalog-entry.json").write_bytes(canonical_json_bytes(proposal.catalog_entry))
+        (stage / _MARKER).write_bytes(
+            canonical_json_bytes(
+                {
+                    "schema": "plugin-onboarding-output-v1",
+                    "proposal_sha256": proposal.proposal_sha256,
+                }
+            )
+        )
+        _validate_stage(application, imported)
+
+        proposal_bytes = (stage / "onboarding-proposal.json").read_bytes()
+        result = OperationResult(
+            operation="prepare-plugin-zip-marketplace",
+            status="PASS",
+            code="onboarding.proposal_materialized",
+            artifacts=(
+                ArtifactRecord(
+                    path="onboarding-proposal.json",
+                    kind="plugin-onboarding-proposal",
+                    sha256=sha256(proposal_bytes).hexdigest(),
+                    size=len(proposal_bytes),
+                ),
+            ),
+            mutations=(MutationRecord(path=".", action="write-proposal"),),
+            evidence={
+                "proposal_sha256": proposal.proposal_sha256,
+                "archive_sha256": inspection.archive_sha256,
+                "candidate_sha256": inspection.candidate_sha256,
+                "verification_sha256": inspection.verification_sha256,
+                "runtime_evidence_states": dict(inspection.evidence_states),
+            },
+        )
+        (stage / "onboarding-result.json").write_text(
+            result_json(result), encoding="ascii", newline="\n"
+        )
+        _publish_output(stage, destination, temporary_root)
+        return result
+    finally:
+        if temporary_root.exists():
+            shutil.rmtree(temporary_root)
+
