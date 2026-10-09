@@ -3,10 +3,14 @@
 from __future__ import annotations
 
 import argparse
+from hashlib import sha256
+import json
+import os
 from pathlib import Path
 from pathlib import PurePosixPath, PureWindowsPath
 import subprocess
 import sys
+import tempfile
 
 from .content_policy import ContentPolicyError
 from .contract import ContractError, load_contract
@@ -21,6 +25,10 @@ from .knowledge_policy import KnowledgePolicyError, validate_knowledge_policy
 from .marketplace import MarketplaceError, load_preparation_catalog, prepare_marketplace, verify_marketplace
 from .package_builder import PackageAuditError, build_package, preflight_package, verify_package
 from .plugin_onboarding import OnboardingError, prepare_plugin_zip_marketplace
+from .plugin_onboarding.inspection import (
+    inspect_legacy_plugin_archive,
+    inspection_payload,
+)
 from .readiness_report import combine_results, write_result_transactionally
 from .release_assets import AssetBuildError, build_asset_groups, write_remote_manifest
 from .results import ArtifactRecord, Diagnostic, MutationRecord, OperationResult, result_json
@@ -138,6 +146,10 @@ def _parser() -> argparse.ArgumentParser:
     onboarding.add_argument("--output", required=True, type=Path)
     onboarding.add_argument("--evidence", type=Path)
     onboarding.add_argument("--json", action="store_true")
+    inspect_plugin = commands.add_parser("inspect-plugin-zip")
+    inspect_plugin.add_argument("--archive", required=True, type=Path)
+    inspect_plugin.add_argument("--output", required=True, type=Path)
+    inspect_plugin.add_argument("--json", action="store_true")
     return parser
 
 
@@ -202,6 +214,42 @@ def main(argv: list[str] | None = None) -> int:
 
 def _dispatch(arguments: argparse.Namespace) -> OperationResult:
     operation = arguments.command
+    if operation == "inspect-plugin-zip":
+        inspection = inspect_legacy_plugin_archive(arguments.archive)
+        output = Path(arguments.output)
+        if output.exists():
+            raise OnboardingError("onboarding.inspection.output_exists", "FAIL")
+        content = (
+            json.dumps(inspection_payload(inspection), ensure_ascii=True, indent=2, sort_keys=True)
+            + "\n"
+        ).encode("ascii")
+        output.parent.mkdir(parents=True, exist_ok=True)
+        temporary_name: str | None = None
+        try:
+            with tempfile.NamedTemporaryFile(
+                dir=output.parent, prefix=f".{output.name}.", suffix=".tmp", delete=False
+            ) as temporary:
+                temporary.write(content)
+                temporary_name = temporary.name
+            os.replace(temporary_name, output)
+            temporary_name = None
+        finally:
+            if temporary_name is not None:
+                Path(temporary_name).unlink(missing_ok=True)
+        return OperationResult(
+            operation=operation,
+            status="PASS",
+            code="onboarding.inspection_complete",
+            artifacts=(
+                ArtifactRecord(output.name, "plugin-onboarding-inspection", sha256(content).hexdigest(), len(content)),
+            ),
+            mutations=(MutationRecord(output.name, "create"),),
+            evidence={
+                "input_profile": inspection.input_profile,
+                "archive_sha256": inspection.archive_sha256,
+                "package_state": inspection.package_state,
+            },
+        )
     if operation == "prepare-plugin-zip-marketplace":
         return prepare_plugin_zip_marketplace(
             arguments.archive,

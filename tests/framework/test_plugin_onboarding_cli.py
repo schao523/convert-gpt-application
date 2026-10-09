@@ -10,6 +10,7 @@ from unittest.mock import patch
 
 from obvious_one_plugin_framework.cli import main
 from tests.framework.plugin_onboarding_fixtures import (
+    write_legacy_repair_fixture,
     write_plugin_builder_fixture,
     write_publication_decisions,
 )
@@ -49,6 +50,26 @@ class PluginOnboardingCliTests(unittest.TestCase):
         self.assertTrue(text.isascii())
         self.assertEqual(text.count('"result_schema_version"'), 1)
         self.assertTrue((self.output / "onboarding-result.json").is_file())
+
+    def test_inspect_legacy_zip_writes_observation_without_mutation(self) -> None:
+        legacy = write_legacy_repair_fixture(self.root / "legacy")
+        report = self.root / "inspection.json"
+        stream = io.StringIO()
+        with contextlib.redirect_stdout(stream):
+            code = main(
+                [
+                    "inspect-plugin-zip",
+                    "--archive", str(legacy.archive),
+                    "--output", str(report),
+                    "--json",
+                ]
+            )
+        payload = json.loads(stream.getvalue())
+        self.assertEqual((code, payload["status"]), (0, "PASS"))
+        observation = json.loads(report.read_text(encoding="ascii"))
+        self.assertEqual(observation["input_profile"], "PLUGIN_BUILDER_CANDIDATE_V1")
+        self.assertEqual(set(observation["evidence_states"].values()), {"NOT VERIFIED"})
+        self.assertFalse(self.output.exists())
 
     def test_cli_missing_authority_is_blocked_exit_two(self) -> None:
         payload = json.loads(self.decisions.read_text(encoding="utf-8"))

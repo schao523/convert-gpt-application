@@ -365,9 +365,11 @@ def render_application_files(
         "schema": "plugin-onboarding-imported-inventory-v1",
         "plugin_id": plugin_id,
         "archive_sha256": inspection.archive_sha256,
-        "candidate_sha256": inspection.candidate_sha256,
+        "content_tree_sha256": inspection.content_tree_sha256,
         "members": [asdict(member) for member in inspection.candidate_members],
     }
+    if inspection.candidate_sha256 is not None:
+        inventory["candidate_sha256"] = inspection.candidate_sha256
     decision_payload = {
         **decisions.identity_payload(),
         "decision_recorded_at": decisions.decision_recorded_at,
@@ -399,7 +401,7 @@ def render_application_files(
             plugin_id,
             version,
             inspection.candidate_members,
-            inspection.candidate_sha256,
+            inspection.content_tree_sha256,
         ),
         "scripts/distribution_audit.py": _audit_script(),
         "tests/test_imported_package.py": _generated_test_imported(plugin_id, version),

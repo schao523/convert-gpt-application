@@ -13,14 +13,22 @@ import zipfile
 from obvious_one_plugin_framework import plugin_authoring
 from obvious_one_plugin_framework.plugin_onboarding.contract import (
     OnboardingError,
+    load_onboarding_metadata,
     load_package_metadata,
 )
 from obvious_one_plugin_framework.plugin_onboarding.inspection import (
+    inspect_legacy_plugin_archive,
+    inspect_workbench_repaired_package,
     inspect_plugin_builder_package,
+)
+from obvious_one_plugin_framework.plugin_onboarding import (
+    load_repair_contract,
+    repair_delegated_reference_archive,
 )
 from tests.framework.plugin_onboarding_fixtures import (
     canonical_bytes,
     write_plugin_builder_fixture,
+    write_legacy_repair_fixture,
     write_runtime_evidence_bundle,
 )
 from tests.framework.test_plugin_authoring_tools import bundled_tool
@@ -74,6 +82,51 @@ class PluginOnboardingInspectionTests(unittest.TestCase):
                 self.assertEqual(inspected.candidate_sha256, fixture.metadata_payload["candidate_sha256"])
                 self.assertEqual(inspected.verification_sha256, "2" * 64)
                 self.assertEqual(inspected.members, load_package_metadata(fixture.metadata).members)
+
+    def test_legacy_inspection_separates_producer_claims_from_observation(self) -> None:
+        fixture = write_legacy_repair_fixture(self.root / "legacy")
+        inspected = inspect_legacy_plugin_archive(fixture.archive)
+        self.assertEqual(inspected.input_profile, "PLUGIN_BUILDER_CANDIDATE_V1")
+        self.assertEqual(inspected.archive_sha256, plugin_authoring.inventory_archive(fixture.archive).archive_sha256)
+        self.assertEqual(inspected.producer_claims["w1_state"], "APPROVED")
+        self.assertEqual(inspected.producer_claims["w2_state"], "APPROVED")
+        self.assertEqual(inspected.producer_evidence_states["verification"], "NOT VERIFIED")
+        self.assertEqual(set(inspected.evidence_states.values()), {"NOT VERIFIED"})
+        self.assertIsNone(inspected.candidate_sha256)
+        self.assertIsNone(inspected.verification_sha256)
+
+    def test_repaired_inspection_closes_workbench_metadata_without_builder_claims(self) -> None:
+        fixture = write_legacy_repair_fixture(self.root / "repair")
+        contract_path = self.root / "repair.json"
+        contract_path.write_bytes(canonical_bytes(fixture.contract_payload))
+        repaired = repair_delegated_reference_archive(
+            fixture.archive,
+            load_repair_contract(contract_path),
+            self.root / "candidate.zip",
+            self.root / "metadata.json",
+        )
+        inspected = inspect_workbench_repaired_package(
+            repaired.archive, load_onboarding_metadata(repaired.metadata)
+        )
+        self.assertEqual(inspected.input_profile, "WORKBENCH_REPAIRED_PLUGIN_V1")
+        self.assertEqual(inspected.producer_claims["verification_state"], "NOT VERIFIED")
+        self.assertIsNone(inspected.candidate_sha256)
+        self.assertIsNone(inspected.verification_sha256)
+        self.assertEqual(set(inspected.evidence_states.values()), {"NOT VERIFIED"})
+
+    def test_mixed_legacy_and_workbench_authorities_are_rejected(self) -> None:
+        fixture = write_legacy_repair_fixture(self.root / "mixed")
+        mixed = self.root / "mixed-tree"
+        plugin_authoring.extract_archive(fixture.archive, mixed)
+        (mixed / "WORKBENCH-REPAIR-MANIFEST.json").write_bytes(
+            canonical_bytes({"schema": "workbench-repair-manifest-v1"})
+        )
+        archive = self.root / "mixed.zip"
+        plugin_authoring.write_deterministic_zip(mixed, archive)
+        self.assert_failure(
+            lambda: inspect_legacy_plugin_archive(archive),
+            "onboarding.inspection.authority_ambiguous",
+        )
 
     def test_nested_nonempty_tool_bindings_preserve_exact_json_identity(self) -> None:
         binding = {

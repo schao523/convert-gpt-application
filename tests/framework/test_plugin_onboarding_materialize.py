@@ -17,6 +17,8 @@ from obvious_one_plugin_framework.plugin_onboarding import materialize as onboar
 from obvious_one_plugin_framework.provenance import inventory_source
 from obvious_one_plugin_framework.verification import load_application_config_path
 from tests.framework.plugin_onboarding_fixtures import (
+    canonical_bytes,
+    write_legacy_repair_fixture,
     write_plugin_builder_fixture,
     write_publication_decisions,
 )
@@ -87,6 +89,40 @@ class PluginOnboardingMaterializeTests(unittest.TestCase):
         self.assertEqual(result.status, "PASS")
         self.assertTrue(all(not Path(item.path).is_absolute() for item in result.artifacts))
         self.assertTrue(all(not Path(item.path).is_absolute() for item in result.mutations))
+
+    def test_workbench_repaired_flat_archive_materializes_without_builder_evidence(self) -> None:
+        from obvious_one_plugin_framework.plugin_onboarding import (
+            load_repair_contract,
+            repair_delegated_reference_archive,
+        )
+
+        legacy = write_legacy_repair_fixture(self.root / "legacy")
+        contract_path = self.root / "repair.json"
+        contract_path.write_bytes(canonical_bytes(legacy.contract_payload))
+        repaired = repair_delegated_reference_archive(
+            legacy.archive,
+            load_repair_contract(contract_path),
+            self.root / "repaired.zip",
+            self.root / "repaired-metadata.json",
+        )
+        decisions = write_publication_decisions(
+            self.root / "repair-decisions.json",
+            overrides={"version": "1.0.2"},
+        )
+        output = self.root / "repaired-proposal"
+        result = prepare_plugin_zip_marketplace(
+            repaired.archive,
+            repaired.metadata,
+            decisions,
+            REPOSITORY,
+            output,
+        )
+        self.assertEqual(result.status, "PASS")
+        proposal = json.loads((output / "onboarding-proposal.json").read_text(encoding="ascii"))
+        evidence = proposal["builder_evidence"]
+        self.assertEqual(evidence["input_profile"], "WORKBENCH_REPAIRED_PLUGIN_V1")
+        self.assertNotIn("candidate_sha256", evidence)
+        self.assertNotIn("verification_sha256", evidence)
 
     def test_imported_plugin_bytes_equal_archive_candidate_members(self) -> None:
         output = self.root / "exact"

@@ -7,12 +7,15 @@ import unittest
 
 from obvious_one_plugin_framework.plugin_onboarding.contract import (
     OnboardingError,
+    WorkbenchRepairMetadata,
+    load_onboarding_metadata,
     load_package_metadata,
     load_publication_decisions,
 )
 from tests.framework.plugin_onboarding_fixtures import (
     canonical_bytes,
     write_plugin_builder_fixture,
+    write_legacy_repair_fixture,
     write_publication_decisions,
 )
 
@@ -65,6 +68,29 @@ class PluginOnboardingContractTests(unittest.TestCase):
                     metadata.capabilities_sha256,
                     "3" * 64 if schema.endswith("v3") else None,
                 )
+
+    def test_workbench_repair_metadata_is_separate_from_builder_evidence(self) -> None:
+        fixture = write_legacy_repair_fixture(self.root / "legacy")
+        contract_path = self.root / "repair.json"
+        contract_path.write_bytes(canonical_bytes(fixture.contract_payload))
+        from obvious_one_plugin_framework.plugin_onboarding import (
+            load_repair_contract,
+            repair_delegated_reference_archive,
+        )
+
+        result = repair_delegated_reference_archive(
+            fixture.archive,
+            load_repair_contract(contract_path),
+            self.root / "repaired.zip",
+            self.root / "repaired-metadata.json",
+        )
+        metadata = load_onboarding_metadata(result.metadata)
+        self.assertIsInstance(metadata, WorkbenchRepairMetadata)
+        self.assertEqual(metadata.input_profile, "PLUGIN_BUILDER_CANDIDATE_V1")
+        self.assertEqual(metadata.archive_sha256, result.archive_sha256)
+        self.assertEqual(set(metadata.evidence_states.values()), {"NOT VERIFIED"})
+        self.assertFalse(hasattr(metadata, "candidate_sha256"))
+        self.assertFalse(hasattr(metadata, "verification_sha256"))
 
     def test_unknown_missing_and_wrong_typed_metadata_fields_fail_closed(self) -> None:
         cases = (

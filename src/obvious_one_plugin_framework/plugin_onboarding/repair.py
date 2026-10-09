@@ -255,6 +255,7 @@ def repair_delegated_reference_archive(
             located.path, staged_archive
         )
         repaired_inventory = plugin_authoring.inventory_archive(staged_archive)
+        content_tree_sha256 = plugin_authoring.tree_sha256(located.path)
         members = [asdict(member) for member in repaired_inventory.members]
         member_manifest_sha256 = sha256(_canonical_bytes(members)).hexdigest()
         repair_manifest_sha256 = next(
@@ -269,6 +270,7 @@ def repair_delegated_reference_archive(
             "archive_sha256": archive_sha256,
             "source_archive_sha256": contract.source_archive_sha256,
             "member_manifest_sha256": member_manifest_sha256,
+            "content_tree_sha256": content_tree_sha256,
             "members": members,
             "input_profile": "PLUGIN_BUILDER_CANDIDATE_V1",
             "envelope_profile": "LEGACY_FLAT",

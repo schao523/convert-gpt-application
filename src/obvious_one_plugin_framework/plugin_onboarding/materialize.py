@@ -16,10 +16,15 @@ from ..results import ArtifactRecord, MutationRecord, OperationResult, result_js
 from ..verification import load_application_config_path
 from .contract import (
     OnboardingError,
-    load_package_metadata,
+    PackageMetadata,
+    WorkbenchRepairMetadata,
+    load_onboarding_metadata,
     load_publication_decisions,
 )
-from .inspection import inspect_plugin_builder_package
+from .inspection import (
+    inspect_plugin_builder_package,
+    inspect_workbench_repaired_package,
+)
 from .proposal import build_onboarding_proposal
 from .templates import canonical_json_bytes, render_application_files
 
@@ -141,11 +146,16 @@ def prepare_plugin_zip_marketplace(
         ),
     )
     _preflight_output(destination)
-    metadata = load_package_metadata(metadata_path)
+    metadata = load_onboarding_metadata(metadata_path)
     decisions = load_publication_decisions(decisions_path)
-    inspection = inspect_plugin_builder_package(
-        archive_path, metadata, evidence=evidence_path
-    )
+    if isinstance(metadata, PackageMetadata):
+        inspection = inspect_plugin_builder_package(
+            archive_path, metadata, evidence=evidence_path
+        )
+    else:
+        if evidence_path is not None:
+            raise OnboardingError("onboarding.repair_runtime_evidence_unsupported", "FAIL")
+        inspection = inspect_workbench_repaired_package(archive_path, metadata)
     proposal = build_onboarding_proposal(inspection, decisions, repository_path)
 
     destination.parent.mkdir(parents=True, exist_ok=True)
@@ -158,9 +168,14 @@ def prepare_plugin_zip_marketplace(
     try:
         plugin_authoring.extract_archive(archive_path, extracted)
         located = plugin_authoring.locate_plugin_archive_root(extracted)
-        if located.profile != "PORTABLE_SINGLE_DIRECTORY":
+        expected_profile = (
+            "PORTABLE_SINGLE_DIRECTORY"
+            if isinstance(metadata, PackageMetadata)
+            else "LEGACY_FLAT"
+        )
+        if located.profile != expected_profile:
             raise OnboardingError("onboarding.materialize.envelope_profile_mismatch", "FAIL")
-        if plugin_authoring.tree_sha256(located.path) != inspection.candidate_sha256:
+        if plugin_authoring.tree_sha256(located.path) != inspection.content_tree_sha256:
             raise OnboardingError("onboarding.materialize.candidate_identity_mismatch", "FAIL")
 
         imported_files = {
@@ -187,6 +202,16 @@ def prepare_plugin_zip_marketplace(
         _validate_stage(application, imported)
 
         proposal_bytes = (stage / "onboarding-proposal.json").read_bytes()
+        result_evidence: dict[str, object] = {
+            "proposal_sha256": proposal.proposal_sha256,
+            "archive_sha256": inspection.archive_sha256,
+            "content_tree_sha256": inspection.content_tree_sha256,
+            "runtime_evidence_states": dict(inspection.evidence_states),
+        }
+        if inspection.candidate_sha256 is not None:
+            result_evidence["candidate_sha256"] = inspection.candidate_sha256
+        if inspection.verification_sha256 is not None:
+            result_evidence["verification_sha256"] = inspection.verification_sha256
         result = OperationResult(
             operation="prepare-plugin-zip-marketplace",
             status="PASS",
@@ -200,13 +225,7 @@ def prepare_plugin_zip_marketplace(
                 ),
             ),
             mutations=(MutationRecord(path=".", action="write-proposal"),),
-            evidence={
-                "proposal_sha256": proposal.proposal_sha256,
-                "archive_sha256": inspection.archive_sha256,
-                "candidate_sha256": inspection.candidate_sha256,
-                "verification_sha256": inspection.verification_sha256,
-                "runtime_evidence_states": dict(inspection.evidence_states),
-            },
+            evidence=result_evidence,
         )
         (stage / "onboarding-result.json").write_text(
             result_json(result), encoding="ascii", newline="\n"

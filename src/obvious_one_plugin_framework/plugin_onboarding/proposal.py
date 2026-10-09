@@ -158,7 +158,10 @@ def _audit_decisions(
             (
                 member
                 for member in inspection.members
-                if member.path == f"{inspection.plugin_id}/THIRD_PARTY_NOTICES.md"
+                if member.path in {
+                    f"{inspection.plugin_id}/THIRD_PARTY_NOTICES.md",
+                    "THIRD_PARTY_NOTICES.md",
+                }
             ),
             None,
         )
@@ -289,11 +292,12 @@ def build_onboarding_proposal(
     )
     generated_files = tuple(sorted((*_GENERATED_APPLICATION_FILES, *imported_files)))
     builder_evidence = {
+        "input_profile": inspection.input_profile,
         "package_state": inspection.package_state,
         "archive_sha256": inspection.archive_sha256,
         "member_manifest_sha256": inspection.member_manifest_sha256,
-        "candidate_sha256": inspection.candidate_sha256,
-        "verification_sha256": inspection.verification_sha256,
+        "content_tree_sha256": inspection.content_tree_sha256,
+        "producer_claims": _publication_safe_evidence(inspection.producer_claims),
         "manifest_profile": inspection.manifest_profile,
         "preflight_evidence": _publication_safe_evidence(inspection.preflight_evidence),
         "preflight_evidence_sha256": inspection.preflight_evidence_sha256,
@@ -319,6 +323,10 @@ def build_onboarding_proposal(
         "runtime_realization_state": inspection.runtime_realization_state,
         "evidence_bundle_state": inspection.evidence_bundle_state,
     }
+    if inspection.candidate_sha256 is not None:
+        builder_evidence["candidate_sha256"] = inspection.candidate_sha256
+    if inspection.verification_sha256 is not None:
+        builder_evidence["verification_sha256"] = inspection.verification_sha256
     identity_payload = _identity_payload(
         inspection,
         decisions,

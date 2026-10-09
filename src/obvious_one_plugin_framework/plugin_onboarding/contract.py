@@ -133,6 +133,26 @@ class PackageMetadata:
 
 
 @dataclass(frozen=True)
+class WorkbenchRepairMetadata:
+    schema: Literal["workbench-repaired-plugin-v1"]
+    plugin_id: str
+    version: str
+    archive_sha256: str
+    source_archive_sha256: str
+    member_manifest_sha256: str
+    content_tree_sha256: str
+    members: tuple[PackageMember, ...]
+    input_profile: Literal["PLUGIN_BUILDER_CANDIDATE_V1"]
+    envelope_profile: Literal["LEGACY_FLAT"]
+    manifest_profile: Literal["PORTABLE_WITH_OPENAI_COMPATIBILITY"]
+    repair_manifest_sha256: str
+    producer_claims: Mapping[str, object]
+    evidence_states: Mapping[str, object]
+    extracted_validation: Mapping[str, object]
+    safety_validation: Mapping[str, object]
+
+
+@dataclass(frozen=True)
 class PublicationDecisions:
     schema: Literal["plugin-publication-decisions-v1"]
     plugin_id: str
@@ -300,6 +320,58 @@ def load_package_metadata(path: Path) -> PackageMetadata:
         generated_runtime_configuration_sha256=_digest(payload["generated_runtime_configuration_sha256"], prefix, "generated_runtime_configuration_sha256") if v3 else None,
         runtime_realizations=_mapping_sequence(payload["runtime_realizations"], prefix, "runtime_realizations") if v3 else (),
         runtime_realization_state=cast(str, runtime_state) if v3 else None,
+    )
+
+
+def load_onboarding_metadata(path: Path) -> PackageMetadata | WorkbenchRepairMetadata:
+    """Load Plugin Builder metadata or Workbench-owned repair metadata."""
+
+    payload = _load_json(path, "onboarding.metadata")
+    if payload.get("schema") in {"plugin-builder-package-v2", "plugin-builder-package-v3"}:
+        return load_package_metadata(path)
+    prefix = "onboarding.metadata"
+    keys = {
+        "schema", "plugin_id", "version", "archive_sha256",
+        "source_archive_sha256", "member_manifest_sha256", "content_tree_sha256",
+        "members", "input_profile", "envelope_profile", "manifest_profile",
+        "repair_manifest_sha256", "producer_claims", "evidence_states",
+        "extracted_validation", "safety_validation",
+    }
+    _exact_keys(payload, keys, prefix)
+    if payload.get("schema") != "workbench-repaired-plugin-v1":
+        raise OnboardingError(f"{prefix}.unsupported_schema")
+    plugin_id = _text(payload["plugin_id"], prefix, "plugin_id")
+    if _PLUGIN_ID.fullmatch(plugin_id) is None:
+        raise OnboardingError(f"{prefix}.invalid_plugin_id")
+    version = _text(payload["version"], prefix, "version")
+    if _SEMVER.fullmatch(version) is None:
+        raise OnboardingError(f"{prefix}.invalid_version")
+    if payload["input_profile"] != "PLUGIN_BUILDER_CANDIDATE_V1":
+        raise OnboardingError(f"{prefix}.invalid_input_profile")
+    if payload["envelope_profile"] != "LEGACY_FLAT":
+        raise OnboardingError(f"{prefix}.invalid_envelope_profile")
+    if payload["manifest_profile"] != "PORTABLE_WITH_OPENAI_COMPATIBILITY":
+        raise OnboardingError(f"{prefix}.invalid_manifest_profile")
+    states = _mapping(payload["evidence_states"], prefix, "evidence_states")
+    if not states or set(states.values()) != {"NOT VERIFIED"}:
+        raise OnboardingError(f"{prefix}.invalid_evidence_states")
+    return WorkbenchRepairMetadata(
+        schema="workbench-repaired-plugin-v1",
+        plugin_id=plugin_id,
+        version=version,
+        archive_sha256=_digest(payload["archive_sha256"], prefix, "archive_sha256"),
+        source_archive_sha256=_digest(payload["source_archive_sha256"], prefix, "source_archive_sha256"),
+        member_manifest_sha256=_digest(payload["member_manifest_sha256"], prefix, "member_manifest_sha256"),
+        content_tree_sha256=_digest(payload["content_tree_sha256"], prefix, "content_tree_sha256"),
+        members=cast(tuple[PackageMember, ...], _members(payload["members"], prefix, "members", PackageMember)),
+        input_profile="PLUGIN_BUILDER_CANDIDATE_V1",
+        envelope_profile="LEGACY_FLAT",
+        manifest_profile="PORTABLE_WITH_OPENAI_COMPATIBILITY",
+        repair_manifest_sha256=_digest(payload["repair_manifest_sha256"], prefix, "repair_manifest_sha256"),
+        producer_claims=_mapping(payload["producer_claims"], prefix, "producer_claims"),
+        evidence_states=states,
+        extracted_validation=_mapping(payload["extracted_validation"], prefix, "extracted_validation"),
+        safety_validation=_mapping(payload["safety_validation"], prefix, "safety_validation"),
     )
 
 

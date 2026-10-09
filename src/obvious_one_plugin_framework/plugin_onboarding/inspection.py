@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, replace
 from hashlib import sha256
 import json
 from pathlib import Path
@@ -13,7 +13,12 @@ from typing import Mapping
 
 from .. import plugin_authoring
 from ..package_builder import FORBIDDEN_NAMES, SECRET_FRAGMENTS
-from .contract import OnboardingError, PackageMember, PackageMetadata
+from .contract import (
+    OnboardingError,
+    PackageMember,
+    PackageMetadata,
+    WorkbenchRepairMetadata,
+)
 
 
 _CREDENTIAL = re.compile(
@@ -73,8 +78,9 @@ class OnboardingInspection:
     version: str
     package_state: str
     archive_sha256: str
-    candidate_sha256: str
-    verification_sha256: str
+    candidate_sha256: str | None
+    verification_sha256: str | None
+    content_tree_sha256: str
     member_manifest_sha256: str
     members: tuple[PackageMember, ...]
     candidate_members: tuple[object, ...]
@@ -100,6 +106,8 @@ class OnboardingInspection:
     runtime_realizations: tuple[Mapping[str, object], ...]
     evidence_states: Mapping[str, str]
     evidence_bundle_state: str
+    input_profile: str
+    producer_claims: Mapping[str, object]
     diagnostics: tuple[str, ...] = ()
 
 
@@ -392,6 +400,7 @@ def inspect_plugin_builder_package(
             archive_sha256=metadata.archive_sha256,
             candidate_sha256=metadata.candidate_sha256,
             verification_sha256=metadata.verification_sha256,
+            content_tree_sha256=metadata.candidate_sha256,
             member_manifest_sha256=metadata.member_manifest_sha256,
             members=metadata.members,
             candidate_members=metadata.candidate_members,
@@ -419,4 +428,201 @@ def inspect_plugin_builder_package(
             runtime_realizations=metadata.runtime_realizations,
             evidence_states=evidence_states,
             evidence_bundle_state=evidence_state,
+            input_profile=metadata.schema.upper().replace("-", "_"),
+            producer_claims=MappingProxyType({"schema": metadata.schema}),
         )
+
+
+def _flat_manifest_identity(root: Path) -> dict[str, object]:
+    portable = _load_json(root / "plugin.json", "portable_manifest_invalid")
+    compatibility = _load_json(
+        root / ".codex-plugin" / "plugin.json", "compatibility_manifest_invalid"
+    )
+    if plugin_authoring.manifest_pair_mismatches(portable, compatibility):
+        raise _fail("manifest_pair_mismatch")
+    extensions = portable.get("extensions")
+    openai = extensions.get("com.openai") if isinstance(extensions, dict) else None
+    interface = openai.get("interface") if isinstance(openai, dict) else None
+    author = portable.get("author")
+    if not isinstance(interface, dict) or not isinstance(author, dict):
+        raise _fail("portable_manifest_invalid")
+    return {
+        "plugin_id": portable.get("name"),
+        "version": portable.get("version"),
+        "author": author.get("name"),
+        "description": portable.get("description"),
+        "display_name": interface.get("displayName"),
+        "short_description": interface.get("shortDescription"),
+        "long_description": interface.get("longDescription"),
+        "developer_name": interface.get("developerName"),
+        "category": interface.get("category"),
+        "capabilities": tuple(interface.get("capabilities", ())),
+        "default_prompt": (
+            tuple(interface.get("defaultPrompt", ()))
+            if isinstance(interface.get("defaultPrompt"), list)
+            else interface.get("defaultPrompt")
+        ),
+    }
+
+
+def inspect_legacy_plugin_archive(archive: Path) -> OnboardingInspection:
+    """Inspect a legacy or Workbench-repaired flat archive without mutation."""
+
+    try:
+        inventory = plugin_authoring.inventory_archive(Path(archive))
+    except plugin_authoring.PluginAuthoringError as exc:
+        raise _fail(exc.code, exc.detail) from exc
+    with tempfile.TemporaryDirectory(prefix="plugin-onboarding-legacy-") as name:
+        extracted = Path(name) / "archive"
+        try:
+            plugin_authoring.extract_archive(Path(archive), extracted)
+            located = plugin_authoring.locate_plugin_archive_root(extracted)
+        except plugin_authoring.PluginAuthoringError as exc:
+            raise _fail(exc.code, exc.detail) from exc
+        if located.profile != "LEGACY_FLAT":
+            raise _fail("envelope_profile_mismatch")
+        legacy_path = located.path / "PLUGIN-BUILDER-MANIFEST.json"
+        repair_path = located.path / "WORKBENCH-REPAIR-MANIFEST.json"
+        if legacy_path.is_file() and repair_path.is_file():
+            raise _fail("authority_ambiguous")
+        if legacy_path.is_file():
+            authority = _load_json(legacy_path, "legacy_manifest_invalid")
+            if authority.get("schema") != "plugin-builder-candidate-manifest-v1":
+                raise _fail("legacy_manifest_invalid")
+            input_profile = "PLUGIN_BUILDER_CANDIDATE_V1"
+            producer_claims = {
+                key: authority[key]
+                for key in ("schema", "candidate_version", "w1_state", "w2_state")
+                if key in authority
+            }
+        elif repair_path.is_file():
+            authority = _load_json(repair_path, "repair_manifest_invalid")
+            if authority.get("schema") != "workbench-repair-manifest-v1":
+                raise _fail("repair_manifest_invalid")
+            input_profile = "WORKBENCH_REPAIRED_PLUGIN_V1"
+            producer_claims = {
+                "schema": "plugin-builder-candidate-manifest-v1",
+                "verification_state": "NOT VERIFIED",
+                "source_archive_sha256": authority.get("source_archive_sha256"),
+            }
+        else:
+            raise _fail("authority_unknown")
+        identity = _flat_manifest_identity(located.path)
+        plugin_id = identity.get("plugin_id")
+        version = identity.get("version")
+        if not isinstance(plugin_id, str) or not isinstance(version, str):
+            raise _fail("portable_manifest_invalid")
+        tree_members = plugin_authoring.tree_manifest(located.path)
+        content_tree_sha256 = plugin_authoring.tree_sha256(located.path)
+        issues = plugin_authoring.validate_plugin_tree(located.path)
+        mcp_files, dependency_files, executable_files = _scan_public_content(located.path)
+        evidence_states = MappingProxyType(
+            {layer: "NOT VERIFIED" for layer in _EVIDENCE_LAYERS}
+        )
+        return OnboardingInspection(
+            schema="plugin-onboarding-inspection-v1",
+            plugin_id=plugin_id,
+            version=version,
+            package_state="STATICALLY VERIFIED" if not issues else "NOT VERIFIED",
+            archive_sha256=inventory.archive_sha256,
+            candidate_sha256=None,
+            verification_sha256=None,
+            content_tree_sha256=content_tree_sha256,
+            member_manifest_sha256=sha256(
+                _canonical_bytes([asdict(member) for member in inventory.members])
+            ).hexdigest(),
+            members=tuple(
+                PackageMember(member.path, member.size, member.sha256)
+                for member in inventory.members
+            ),
+            candidate_members=tree_members,
+            manifest_profile="PORTABLE_WITH_OPENAI_COMPATIBILITY",
+            manifest_identity=MappingProxyType(identity),
+            preflight_evidence=MappingProxyType({}),
+            preflight_evidence_sha256=sha256(_canonical_bytes({})).hexdigest(),
+            command_evidence=(),
+            fallback_activations=(),
+            producer_evidence_states=MappingProxyType({"verification": "NOT VERIFIED"}),
+            tool_bindings=(),
+            tool_contracts_sha256=sha256(_canonical_bytes([])).hexdigest(),
+            tool_contracts=(),
+            mcp_files=mcp_files,
+            dependency_files=dependency_files,
+            executable_files=executable_files,
+            executed_files=(),
+            runtime_realization_state="NOT VERIFIED",
+            capabilities_sha256=None,
+            realizations_sha256=None,
+            adapter_registry_sha256=None,
+            generated_runtime_configuration_sha256=None,
+            runtime_realizations=(),
+            evidence_states=evidence_states,
+            evidence_bundle_state="NOT VERIFIED",
+            input_profile=input_profile,
+            producer_claims=MappingProxyType(producer_claims),
+            diagnostics=tuple(
+                f"{issue.code}:{issue.path}" for issue in issues
+            ),
+        )
+
+
+def inspect_workbench_repaired_package(
+    archive: Path,
+    metadata: WorkbenchRepairMetadata,
+) -> OnboardingInspection:
+    """Close Workbench repair metadata against current archive bytes."""
+
+    inspected = inspect_legacy_plugin_archive(archive)
+    if inspected.input_profile != "WORKBENCH_REPAIRED_PLUGIN_V1":
+        raise _fail("input_profile_mismatch")
+    if inspected.archive_sha256 != metadata.archive_sha256:
+        raise _fail("archive_sha256_mismatch")
+    if inspected.member_manifest_sha256 != metadata.member_manifest_sha256:
+        raise _fail("member_manifest_sha256_mismatch")
+    if inspected.content_tree_sha256 != metadata.content_tree_sha256:
+        raise _fail("content_tree_sha256_mismatch")
+    if tuple(map(_member_tuple, inspected.members)) != tuple(
+        map(_member_tuple, metadata.members)
+    ):
+        raise _fail("archive_members_mismatch")
+    if inspected.plugin_id != metadata.plugin_id or inspected.version != metadata.version:
+        raise _fail("plugin_identity_mismatch")
+    repair_member = next(
+        (member for member in inspected.members if member.path == "WORKBENCH-REPAIR-MANIFEST.json"),
+        None,
+    )
+    if repair_member is None or repair_member.sha256 != metadata.repair_manifest_sha256:
+        raise _fail("repair_manifest_sha256_mismatch")
+    for field, validation in (
+        ("extracted_validation", metadata.extracted_validation),
+        ("safety_validation", metadata.safety_validation),
+    ):
+        if set(validation) != {"state", "diagnostics"} or validation.get("state") != "PASS" or validation.get("diagnostics") not in ((), []):
+            raise _fail(f"{field}_invalid")
+    if inspected.diagnostics:
+        raise _fail("plugin_tree_invalid", inspected.diagnostics[0])
+    return replace(
+        inspected,
+        producer_claims=metadata.producer_claims,
+        producer_evidence_states=metadata.evidence_states,
+    )
+
+
+def inspection_payload(inspection: OnboardingInspection) -> dict[str, object]:
+    """Return a path-independent JSON payload for an inspection observation."""
+
+    return {
+        "schema": inspection.schema,
+        "plugin_id": inspection.plugin_id,
+        "version": inspection.version,
+        "input_profile": inspection.input_profile,
+        "package_state": inspection.package_state,
+        "archive_sha256": inspection.archive_sha256,
+        "content_tree_sha256": inspection.content_tree_sha256,
+        "member_manifest_sha256": inspection.member_manifest_sha256,
+        "members": [asdict(member) for member in inspection.members],
+        "producer_claims": _json_value(inspection.producer_claims),
+        "producer_evidence_states": _json_value(inspection.producer_evidence_states),
+        "evidence_states": dict(inspection.evidence_states),
+        "diagnostics": list(inspection.diagnostics),
+    }
