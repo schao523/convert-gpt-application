@@ -45,7 +45,33 @@ a test-command defect rather than an implementation failure.
 ## Evidence state
 
 The repaired artifact and onboarding proposal are `STATICALLY VERIFIED`.
-Installation, skill invocation, reference use, result delivery, conversation
-behavior, and cross-runtime equivalence remain `NOT VERIFIED`. OpenClaw,
-ClawHub, and the OpenAI universal directory are outside this Codex-only
-publication action.
+Local Codex installation and discovery of version 1.0.2 are also
+`STATICALLY VERIFIED`.
+
+Installed Codex runtime verification used fresh non-interactive processes
+against the installed marketplace package. The package was discovered and its
+tracked skills were invoked in five controlled scenarios:
+
+- `coaching-parenting-and-sensitive-conversations` handed exact-CUV work to
+  `guiding-biblical-study`, verified Ephesians 4:32 against RM-04B PDF page
+  228, and returned the result to the coaching response: `PASS`.
+- `guiding-parenting-sessions` performed the same owner handoff and return:
+  `PASS`.
+- `designing-family-devotions` performed the same owner handoff and returned
+  the verified text to a five-minute devotion: `PASS`.
+- `supporting-parent-reflection` performed the same owner handoff and returned
+  the verified text to the reflection response: `PASS`.
+- With the owner skill and RM-04B explicitly unavailable, the originating
+  skill disclosed the limitation, did not claim exact text, and used the
+  documented fallback: `PASS`.
+
+These observations make Codex Skill invocation, owner routing, RM-04B visual
+consultation, result return, and representative conversation behavior
+`RUNTIME VERIFIED` for the tested scenarios. The first read-only probe could
+not render the scanned PDF and was classified as an environment-only failure;
+the unchanged scenario passed after the exact packaged page was rendered in a
+disposable root and supplied to the fresh process.
+
+OpenClaw runtime behavior and cross-runtime equivalence remain `NOT VERIFIED`.
+ClawHub and the OpenAI universal directory are `NOT APPLICABLE` to this
+Codex-only Obvious One publication action.
