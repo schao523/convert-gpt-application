@@ -8,6 +8,19 @@ from obvious_one_plugin_framework.verification import discover_applications
 
 ROOT = Path(__file__).resolve().parents[1]
 class ApplicationConfigTests(unittest.TestCase):
+    def test_every_marketplace_bound_application_is_cataloged(self) -> None:
+        catalog = load_preparation_catalog(
+            ROOT / "marketplaces" / "obvious-one.json", ROOT
+        )
+        cataloged = {entry.application.plugin_id for entry in catalog.applications}
+        configured = {
+            config.plugin_id
+            for config in discover_applications(ROOT)
+            if config.marketplace_repository is not None
+        }
+
+        self.assertEqual(cataloged, configured)
+
     def test_design_assistant_remains_dual_runtime(self) -> None:
         catalog = load_preparation_catalog(
             ROOT / "marketplaces" / "obvious-one.json", ROOT
@@ -18,13 +31,26 @@ class ApplicationConfigTests(unittest.TestCase):
             if entry.application.plugin_id == "cool-plugin-design-assistant"
         )
 
-        self.assertEqual(assistant.target("codex").mode, "build")
+        self.assertEqual(assistant.target("codex").mode, "verify_existing")
         self.assertEqual(assistant.target("codex").destination, "plugins/cool-plugin-design-assistant")
-        self.assertEqual(assistant.target("openclaw").mode, "build")
+        self.assertEqual(assistant.target("openclaw").mode, "verify_existing")
         self.assertEqual(
             assistant.target("openclaw").destination,
             "openclaw/cool-plugin-design-assistant",
         )
+
+    def test_only_active_release_targets_are_built(self) -> None:
+        catalog = load_preparation_catalog(
+            ROOT / "marketplaces" / "obvious-one.json", ROOT
+        )
+        build_targets = {
+            (entry.application.plugin_id, target_name)
+            for entry in catalog.applications
+            for target_name, target in entry.applicable_targets()
+            if target.mode == "build"
+        }
+
+        self.assertEqual(build_targets, {("sermon-coach", "codex")})
 
     def test_all_cataloged_target_destinations_match_application_identity(self) -> None:
         catalog = load_preparation_catalog(
