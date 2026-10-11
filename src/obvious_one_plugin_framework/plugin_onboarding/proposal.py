@@ -182,6 +182,7 @@ def _audit_declared_content(inspection: OnboardingInspection) -> None:
         dependencies = contract.get("dependencies")
         dependencies_declared = dependencies_declared or bool(dependencies)
         mcp_declared = mcp_declared or contract.get("implementation_kind") == "MCP_ADAPTER"
+    declared_files.update(inspection.offline_validator_files)
     undeclared_executable = sorted(set(inspection.executable_files) - declared_files)
     if undeclared_executable:
         raise _error("undeclared_executable", detail=undeclared_executable[0])
@@ -311,6 +312,7 @@ def build_onboarding_proposal(
         "producer_evidence_states": _thaw(inspection.producer_evidence_states),
         "tool_bindings": _thaw(inspection.tool_bindings),
         "tool_contracts_sha256": inspection.tool_contracts_sha256,
+        "offline_validator_files": inspection.offline_validator_files,
         "capabilities_sha256": inspection.capabilities_sha256,
         "realizations_sha256": inspection.realizations_sha256,
         "adapter_registry_sha256": inspection.adapter_registry_sha256,

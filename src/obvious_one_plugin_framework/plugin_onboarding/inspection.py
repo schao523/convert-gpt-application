@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import asdict, dataclass, replace
 from hashlib import sha256
 import json
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 import re
 import tempfile
 from types import MappingProxyType
@@ -95,6 +95,7 @@ class OnboardingInspection:
     tool_bindings: tuple[Mapping[str, object], ...]
     tool_contracts_sha256: str
     tool_contracts: tuple[Mapping[str, object], ...]
+    offline_validator_files: tuple[str, ...]
     mcp_files: tuple[str, ...]
     dependency_files: tuple[str, ...]
     executable_files: tuple[str, ...]
@@ -417,6 +418,7 @@ def inspect_plugin_builder_package(
             tool_bindings=metadata.tool_bindings,
             tool_contracts_sha256=metadata.tool_contracts_sha256,
             tool_contracts=tool_contracts,
+            offline_validator_files=(),
             mcp_files=mcp_files,
             dependency_files=dependency_files,
             executable_files=executable_files,
@@ -547,6 +549,7 @@ def inspect_legacy_plugin_archive(archive: Path) -> OnboardingInspection:
             tool_bindings=(),
             tool_contracts_sha256=sha256(_canonical_bytes([])).hexdigest(),
             tool_contracts=(),
+            offline_validator_files=(),
             mcp_files=mcp_files,
             dependency_files=dependency_files,
             executable_files=executable_files,
@@ -610,6 +613,100 @@ def inspect_workbench_repaired_package(
         or repair_payload.get("target_version") != metadata.version
     ):
         raise _fail("repair_manifest_identity_mismatch")
+    validated_contracts: tuple[Mapping[str, object], ...] = ()
+    tool_bindings: tuple[Mapping[str, object], ...] = ()
+    tool_contracts_sha256 = sha256(_canonical_bytes([])).hexdigest()
+    offline_validator_files: tuple[str, ...] = ()
+    if metadata.schema == "workbench-repaired-plugin-v2":
+        raw_contracts = repair_payload.get("tool_contracts")
+        raw_bindings = repair_payload.get("tool_bindings")
+        raw_offline_validators = repair_payload.get("offline_validators")
+        if (
+            not isinstance(raw_contracts, list)
+            or not isinstance(raw_bindings, list)
+            or not isinstance(raw_offline_validators, list)
+        ):
+            raise _fail("repair_tool_declarations_invalid")
+        if _canonical_bytes(raw_bindings) != _canonical_bytes(metadata.tool_bindings):
+            raise _fail("tool_bindings_mismatch")
+        computed_contracts_sha256 = sha256(_canonical_bytes(raw_contracts)).hexdigest()
+        if computed_contracts_sha256 != metadata.tool_contracts_sha256:
+            raise _fail("tool_contracts_sha256_mismatch")
+        contracts_by_id: dict[str, Mapping[str, object]] = {}
+        validated: list[Mapping[str, object]] = []
+        for contract in raw_contracts:
+            result = plugin_authoring.validate_application_tool_contract(contract)
+            if result.errors or result.blockers or not isinstance(contract, dict):
+                raise _fail("tool_contract_invalid", result.id)
+            contracts_by_id[result.id] = contract
+            validated.append(MappingProxyType(dict(contract)))
+        binding_ids: set[str] = set()
+        for binding in raw_bindings:
+            if not isinstance(binding, dict):
+                raise _fail("tool_binding_invalid")
+            tool_id = binding.get("tool_id")
+            contract = contracts_by_id.get(tool_id) if isinstance(tool_id, str) else None
+            if (
+                contract is None
+                or binding.get("contract_sha256")
+                != sha256(_canonical_bytes(contract)).hexdigest()
+                or tool_id in binding_ids
+            ):
+                raise _fail("tool_binding_invalid", str(tool_id or ""))
+            binding_ids.add(tool_id)
+        if binding_ids != set(contracts_by_id):
+            raise _fail("tool_binding_invalid")
+        validated_contracts = tuple(validated)
+        tool_bindings = metadata.tool_bindings
+        tool_contracts_sha256 = computed_contracts_sha256
+        if _canonical_bytes(raw_offline_validators) != _canonical_bytes(
+            metadata.offline_validators
+        ):
+            raise _fail("offline_validators_mismatch")
+        if (
+            sha256(_canonical_bytes(raw_offline_validators)).hexdigest()
+            != metadata.offline_validators_sha256
+        ):
+            raise _fail("offline_validators_sha256_mismatch")
+        offline_ids: set[str] = set()
+        offline_files: set[str] = set()
+        for validator in raw_offline_validators:
+            if not isinstance(validator, dict) or set(validator) != {
+                "id",
+                "files",
+                "runtime_role",
+                "required",
+                "installed_runtime_callable",
+                "source_contract_sha256",
+            }:
+                raise _fail("offline_validator_invalid")
+            validator_id = validator.get("id")
+            files = validator.get("files")
+            source_digest = validator.get("source_contract_sha256")
+            if (
+                not isinstance(validator_id, str)
+                or re.fullmatch(r"[a-z0-9]+(?:-[a-z0-9]+)*", validator_id) is None
+                or validator_id in offline_ids
+                or not isinstance(files, list)
+                or not files
+                or validator.get("runtime_role") != "OFFLINE_PACKAGE_VALIDATION_ONLY"
+                or validator.get("required") is not False
+                or validator.get("installed_runtime_callable") is not False
+                or not isinstance(source_digest, str)
+                or _DIGEST.fullmatch(source_digest) is None
+            ):
+                raise _fail("offline_validator_invalid", str(validator_id or ""))
+            offline_ids.add(validator_id)
+            for relative in files:
+                if (
+                    not isinstance(relative, str)
+                    or PurePosixPath(relative).is_absolute()
+                    or any(part in {"", ".", ".."} for part in PurePosixPath(relative).parts)
+                    or relative not in {member.path for member in metadata.members}
+                ):
+                    raise _fail("offline_validator_file_invalid", str(relative))
+                offline_files.add(relative)
+        offline_validator_files = tuple(sorted(offline_files))
     for field, validation in (
         ("extracted_validation", metadata.extracted_validation),
         ("safety_validation", metadata.safety_validation),
@@ -622,6 +719,11 @@ def inspect_workbench_repaired_package(
         inspected,
         producer_claims=metadata.producer_claims,
         producer_evidence_states=metadata.evidence_states,
+        tool_bindings=tool_bindings,
+        tool_contracts_sha256=tool_contracts_sha256,
+        tool_contracts=validated_contracts,
+        offline_validator_files=offline_validator_files,
+        input_profile=metadata.schema.upper().replace("-", "_"),
     )
 
 

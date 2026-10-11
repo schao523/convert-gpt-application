@@ -1,0 +1,1112 @@
+{
+  "schema": "plugin-builder-manifest-v1.0.3-runtime-native-reference-access",
+  "content_tree_sha256": "20353622f3b2f318b8455c5d2faab45b39515db58a86086cc1d9096c7bc1f7ba",
+  "expected_members": [
+    ".codex-plugin/plugin.json",
+    "data/cuv-verse-index.json",
+    "data/reference-registry.json",
+    "data/source-page-extractions.json",
+    "docs/acceptance-scenarios.md",
+    "docs/application-invariants.md",
+    "docs/Behavioral_Workflow_Blueprint_v1.0_APPROVED.md",
+    "docs/delta-v1.0-delta-01-verification.md",
+    "docs/Instruction_Module_Contracts_v1.0_APPROVED.md",
+    "docs/runtime-python3-resolution.md",
+    "docs/User_Interaction_Protocols_v1.0_APPROVED.md",
+    "docs/W1-runtime-compatibility-v1.0.2.md",
+    "docs/W1-runtime-native-reference-access-v1.0.3.md",
+    "docs/W1-update-plan-v1.0-delta-01.json",
+    "plugin.json",
+    "README.md",
+    "references/professional-knowledge/Reference_Material_Evaluation_v1.1.md",
+    "references/professional-knowledge/Reference_Usage_Map_v1.1.md",
+    "references/professional-knowledge/RM-04A_Inductive_Exegesis_Method_Overview.md",
+    "references/professional-knowledge/RM-04B_Observation_Steps_1-3.md",
+    "references/professional-knowledge/RM-04C_Interpretation_Steps_4-7.md",
+    "references/professional-knowledge/RM-04D_Application_Steps_8-10.md",
+    "references/professional-knowledge/RM-04E_Inductive_Study_Questioning_Guide.md",
+    "references/source-materials/Bible 新約聖經和合本(1).pdf",
+    "references/source-materials/Bible 舊約聖經和合本(1).pdf",
+    "references/source-materials/Integrative Preaching Resource Abstract.md",
+    "references/source-materials/The Unforgettable Sermon Resource Abstract.md",
+    "references/source-materials/歸納釋經法(1).pdf",
+    "references/source-materials/講章優化教練(1).md",
+    "scripts/read_packaged_reference.py",
+    "scripts/sermon_control.py",
+    "skills/coaching-sermon-revisions/agents/openai.yaml",
+    "skills/coaching-sermon-revisions/assets/reference-mirrors.json",
+    "skills/coaching-sermon-revisions/assets/references/professional-knowledge/Reference_Material_Evaluation_v1.1.md",
+    "skills/coaching-sermon-revisions/assets/references/professional-knowledge/Reference_Usage_Map_v1.1.md",
+    "skills/coaching-sermon-revisions/assets/references/professional-knowledge/RM-04A_Inductive_Exegesis_Method_Overview.md",
+    "skills/coaching-sermon-revisions/assets/references/professional-knowledge/RM-04B_Observation_Steps_1-3.md",
+    "skills/coaching-sermon-revisions/assets/references/professional-knowledge/RM-04C_Interpretation_Steps_4-7.md",
+    "skills/coaching-sermon-revisions/assets/references/professional-knowledge/RM-04D_Application_Steps_8-10.md",
+    "skills/coaching-sermon-revisions/assets/references/professional-knowledge/RM-04E_Inductive_Study_Questioning_Guide.md",
+    "skills/coaching-sermon-revisions/assets/references/source-materials/Bible 新約聖經和合本(1).pdf",
+    "skills/coaching-sermon-revisions/assets/references/source-materials/Bible 舊約聖經和合本(1).pdf",
+    "skills/coaching-sermon-revisions/assets/references/source-materials/Integrative Preaching Resource Abstract.md",
+    "skills/coaching-sermon-revisions/assets/references/source-materials/The Unforgettable Sermon Resource Abstract.md",
+    "skills/coaching-sermon-revisions/assets/references/source-materials/歸納釋經法(1).pdf",
+    "skills/coaching-sermon-revisions/assets/references/source-materials/講章優化教練(1).md",
+    "skills/coaching-sermon-revisions/SKILL.md",
+    "skills/guiding-inductive-study/agents/openai.yaml",
+    "skills/guiding-inductive-study/assets/reference-mirrors.json",
+    "skills/guiding-inductive-study/assets/references/professional-knowledge/Reference_Material_Evaluation_v1.1.md",
+    "skills/guiding-inductive-study/assets/references/professional-knowledge/Reference_Usage_Map_v1.1.md",
+    "skills/guiding-inductive-study/assets/references/professional-knowledge/RM-04A_Inductive_Exegesis_Method_Overview.md",
+    "skills/guiding-inductive-study/assets/references/professional-knowledge/RM-04B_Observation_Steps_1-3.md",
+    "skills/guiding-inductive-study/assets/references/professional-knowledge/RM-04C_Interpretation_Steps_4-7.md",
+    "skills/guiding-inductive-study/assets/references/professional-knowledge/RM-04D_Application_Steps_8-10.md",
+    "skills/guiding-inductive-study/assets/references/professional-knowledge/RM-04E_Inductive_Study_Questioning_Guide.md",
+    "skills/guiding-inductive-study/assets/references/source-materials/Bible 新約聖經和合本(1).pdf",
+    "skills/guiding-inductive-study/assets/references/source-materials/Bible 舊約聖經和合本(1).pdf",
+    "skills/guiding-inductive-study/assets/references/source-materials/Integrative Preaching Resource Abstract.md",
+    "skills/guiding-inductive-study/assets/references/source-materials/The Unforgettable Sermon Resource Abstract.md",
+    "skills/guiding-inductive-study/assets/references/source-materials/歸納釋經法(1).pdf",
+    "skills/guiding-inductive-study/assets/references/source-materials/講章優化教練(1).md",
+    "skills/guiding-inductive-study/SKILL.md",
+    "skills/guiding-sermon-review/agents/openai.yaml",
+    "skills/guiding-sermon-review/assets/reference-mirrors.json",
+    "skills/guiding-sermon-review/assets/references/professional-knowledge/Reference_Material_Evaluation_v1.1.md",
+    "skills/guiding-sermon-review/assets/references/professional-knowledge/Reference_Usage_Map_v1.1.md",
+    "skills/guiding-sermon-review/assets/references/professional-knowledge/RM-04A_Inductive_Exegesis_Method_Overview.md",
+    "skills/guiding-sermon-review/assets/references/professional-knowledge/RM-04B_Observation_Steps_1-3.md",
+    "skills/guiding-sermon-review/assets/references/professional-knowledge/RM-04C_Interpretation_Steps_4-7.md",
+    "skills/guiding-sermon-review/assets/references/professional-knowledge/RM-04D_Application_Steps_8-10.md",
+    "skills/guiding-sermon-review/assets/references/professional-knowledge/RM-04E_Inductive_Study_Questioning_Guide.md",
+    "skills/guiding-sermon-review/assets/references/source-materials/Bible 新約聖經和合本(1).pdf",
+    "skills/guiding-sermon-review/assets/references/source-materials/Bible 舊約聖經和合本(1).pdf",
+    "skills/guiding-sermon-review/assets/references/source-materials/Integrative Preaching Resource Abstract.md",
+    "skills/guiding-sermon-review/assets/references/source-materials/The Unforgettable Sermon Resource Abstract.md",
+    "skills/guiding-sermon-review/assets/references/source-materials/歸納釋經法(1).pdf",
+    "skills/guiding-sermon-review/assets/references/source-materials/講章優化教練(1).md",
+    "skills/guiding-sermon-review/SKILL.md",
+    "skills/reviewing-sermon-evidence/agents/openai.yaml",
+    "skills/reviewing-sermon-evidence/assets/reference-mirrors.json",
+    "skills/reviewing-sermon-evidence/assets/references/professional-knowledge/Reference_Material_Evaluation_v1.1.md",
+    "skills/reviewing-sermon-evidence/assets/references/professional-knowledge/Reference_Usage_Map_v1.1.md",
+    "skills/reviewing-sermon-evidence/assets/references/professional-knowledge/RM-04A_Inductive_Exegesis_Method_Overview.md",
+    "skills/reviewing-sermon-evidence/assets/references/professional-knowledge/RM-04B_Observation_Steps_1-3.md",
+    "skills/reviewing-sermon-evidence/assets/references/professional-knowledge/RM-04C_Interpretation_Steps_4-7.md",
+    "skills/reviewing-sermon-evidence/assets/references/professional-knowledge/RM-04D_Application_Steps_8-10.md",
+    "skills/reviewing-sermon-evidence/assets/references/professional-knowledge/RM-04E_Inductive_Study_Questioning_Guide.md",
+    "skills/reviewing-sermon-evidence/assets/references/source-materials/Bible 新約聖經和合本(1).pdf",
+    "skills/reviewing-sermon-evidence/assets/references/source-materials/Bible 舊約聖經和合本(1).pdf",
+    "skills/reviewing-sermon-evidence/assets/references/source-materials/Integrative Preaching Resource Abstract.md",
+    "skills/reviewing-sermon-evidence/assets/references/source-materials/The Unforgettable Sermon Resource Abstract.md",
+    "skills/reviewing-sermon-evidence/assets/references/source-materials/歸納釋經法(1).pdf",
+    "skills/reviewing-sermon-evidence/assets/references/source-materials/講章優化教練(1).md",
+    "skills/reviewing-sermon-evidence/SKILL.md",
+    "tools/application-contracts.json",
+    "PLUGIN-BUILDER-MANIFEST.json"
+  ],
+  "members": [
+    {
+      "path": ".codex-plugin/plugin.json",
+      "sha256": "155cfc2e88e640d3c7f9d5de429d1c518d0f4700df2592c15b5b919e7b22a5be",
+      "size": 789
+    },
+    {
+      "path": "data/cuv-verse-index.json",
+      "sha256": "cdb4861a50b73fa52f37e7933130e54771028e065d4d49704e0c54f0bbd541d9",
+      "size": 6841168
+    },
+    {
+      "path": "data/reference-registry.json",
+      "sha256": "ce096a57d234fa20434ad7046a2195ed5594dd7721a838f682a433b49db25d5e",
+      "size": 3223
+    },
+    {
+      "path": "data/source-page-extractions.json",
+      "sha256": "b5a0ab2c4848a103c48ab45c6618d89f6d5da3604de0f0d40e748025b22b8ea6",
+      "size": 7316364
+    },
+    {
+      "path": "docs/acceptance-scenarios.md",
+      "sha256": "d4defe288d58185adbe92a952dc8d6009ba70a02364fc02c1d8b1cbaaba39f4d",
+      "size": 1834
+    },
+    {
+      "path": "docs/application-invariants.md",
+      "sha256": "9d50db472181d3347843a1e2f22fde2b539f44e576a83214611bcb09076359d3",
+      "size": 1177
+    },
+    {
+      "path": "docs/Behavioral_Workflow_Blueprint_v1.0_APPROVED.md",
+      "sha256": "105692b9993bee96e44a319b0970c0c8bacb94e7ac3efe002004bb4892f93d9c",
+      "size": 16508
+    },
+    {
+      "path": "docs/delta-v1.0-delta-01-verification.md",
+      "sha256": "c28d81873306e3d7d6183032cd95749fe8a06f071c344ca3bb45c3765d97d04e",
+      "size": 505
+    },
+    {
+      "path": "docs/Instruction_Module_Contracts_v1.0_APPROVED.md",
+      "sha256": "eaf60bf813f8244d2216352a342bab6ad00aa64dfb3475d0508b92ee607923b9",
+      "size": 16201
+    },
+    {
+      "path": "docs/runtime-python3-resolution.md",
+      "sha256": "4cdc41a06bb489f03c2d1012394c949f43801603f0b8085e7885641b121bc7f3",
+      "size": 1360
+    },
+    {
+      "path": "docs/User_Interaction_Protocols_v1.0_APPROVED.md",
+      "sha256": "56a92e1cd13866c1e520098a14ee45fcb1631def115f8fdfd2e638c2b8545220",
+      "size": 7620
+    },
+    {
+      "path": "docs/W1-runtime-compatibility-v1.0.2.md",
+      "sha256": "1f5812a1360ea50983bb08a23aa3d3726a564b832aa40da862fe3a542623db74",
+      "size": 687
+    },
+    {
+      "path": "docs/W1-runtime-native-reference-access-v1.0.3.md",
+      "sha256": "7e4569cb0d59bffd51f0eb17ab0c8b8f0403b3555ad2eaa973844b706db79c01",
+      "size": 901
+    },
+    {
+      "path": "docs/W1-update-plan-v1.0-delta-01.json",
+      "sha256": "63132375adc322053ec4446b6794ba24c9f16152a7205868d0da7bb33f415e96",
+      "size": 831
+    },
+    {
+      "path": "plugin.json",
+      "sha256": "4fb394d61d089cab411d1410c4dcdea2cab86c82bfa1267cac70aa99f29f74f4",
+      "size": 935
+    },
+    {
+      "path": "README.md",
+      "sha256": "864676d312be6b457ba4a963383473b8596b9ec3e923d55430d4e37c618175c6",
+      "size": 313
+    },
+    {
+      "path": "references/professional-knowledge/Reference_Material_Evaluation_v1.1.md",
+      "sha256": "3130a521d2604b6193d3b464429545dd4a5732b0218e0261943d49cd930af7d5",
+      "size": 8822
+    },
+    {
+      "path": "references/professional-knowledge/Reference_Usage_Map_v1.1.md",
+      "sha256": "054e91dba8808ed39f109f6f2e779a44163d3d1594547b945aeabd331c83abe2",
+      "size": 5889
+    },
+    {
+      "path": "references/professional-knowledge/RM-04A_Inductive_Exegesis_Method_Overview.md",
+      "sha256": "12c15fdf5ef1d876d0935b538f92015e7d0ecd7df49f5bb7ffc08b601882f240",
+      "size": 3874
+    },
+    {
+      "path": "references/professional-knowledge/RM-04B_Observation_Steps_1-3.md",
+      "sha256": "74b904c3eb84fe8a7a06e62c1f1021bdb64ad1e7f9a6c7297218a520948d62db",
+      "size": 4283
+    },
+    {
+      "path": "references/professional-knowledge/RM-04C_Interpretation_Steps_4-7.md",
+      "sha256": "5718ba0a20f12fc2a14c7b821df2b1819979654c39aa789b5cdf104f8de1e6f5",
+      "size": 4261
+    },
+    {
+      "path": "references/professional-knowledge/RM-04D_Application_Steps_8-10.md",
+      "sha256": "7e43392f8d421bcd2801c305562713519a296f9517cc6ae802cccded61bb2126",
+      "size": 2974
+    },
+    {
+      "path": "references/professional-knowledge/RM-04E_Inductive_Study_Questioning_Guide.md",
+      "sha256": "482005257fc9e0baa7902e99cc425b5849a83a57cb3037e6470ba79237dbc7e4",
+      "size": 4514
+    },
+    {
+      "path": "references/source-materials/Bible 新約聖經和合本(1).pdf",
+      "sha256": "4f0f9ef4c4a78b83f918c74e8f368a7e0eae515c17866c7767c310ca75786490",
+      "size": 1557874
+    },
+    {
+      "path": "references/source-materials/Bible 舊約聖經和合本(1).pdf",
+      "sha256": "2740a6f824f96374cb127d78c3d646b489963898dacc252b842d9a8894a91125",
+      "size": 4427709
+    },
+    {
+      "path": "references/source-materials/Integrative Preaching Resource Abstract.md",
+      "sha256": "0f351cd2ee3d0fc04885c02595344f5333b84f0d263f27007a88f2dd3fe1215d",
+      "size": 3539
+    },
+    {
+      "path": "references/source-materials/The Unforgettable Sermon Resource Abstract.md",
+      "sha256": "e548934f3fbb08ee0e057fb984f3ac258e98f635b56340652f07ee3f2cd1a649",
+      "size": 3706
+    },
+    {
+      "path": "references/source-materials/歸納釋經法(1).pdf",
+      "sha256": "bd2eda9d9ef862e33645469c034d9d474cca56c03e9467a01d3cf119c1aba520",
+      "size": 1242897
+    },
+    {
+      "path": "references/source-materials/講章優化教練(1).md",
+      "sha256": "c3c77eda279e3ce8fda28bbfc3122245e944b3ecbac14f75507ef2470490dcde",
+      "size": 15966
+    },
+    {
+      "path": "scripts/read_packaged_reference.py",
+      "sha256": "f8c1ebe5262c054ac7a17f033264ee319f1943c8d079d4d89321753fe9086a7b",
+      "size": 7132
+    },
+    {
+      "path": "scripts/sermon_control.py",
+      "sha256": "2dbd4bbd17845cfdc469ad73ec66aaaf48b0fa7434a6abb2d49b2ba6ae2cd0f0",
+      "size": 2462
+    },
+    {
+      "path": "skills/coaching-sermon-revisions/agents/openai.yaml",
+      "sha256": "76ea6d260e0204714376521e9957a7aaa1f650017e1edb84d2ba823d72c38535",
+      "size": 156
+    },
+    {
+      "path": "skills/coaching-sermon-revisions/assets/reference-mirrors.json",
+      "sha256": "9caa7681bc0ffcdb93840d3b6d8f79b69afb95bb90914e146fa6d7dc72391a30",
+      "size": 5367
+    },
+    {
+      "path": "skills/coaching-sermon-revisions/assets/references/professional-knowledge/Reference_Material_Evaluation_v1.1.md",
+      "sha256": "3130a521d2604b6193d3b464429545dd4a5732b0218e0261943d49cd930af7d5",
+      "size": 8822
+    },
+    {
+      "path": "skills/coaching-sermon-revisions/assets/references/professional-knowledge/Reference_Usage_Map_v1.1.md",
+      "sha256": "054e91dba8808ed39f109f6f2e779a44163d3d1594547b945aeabd331c83abe2",
+      "size": 5889
+    },
+    {
+      "path": "skills/coaching-sermon-revisions/assets/references/professional-knowledge/RM-04A_Inductive_Exegesis_Method_Overview.md",
+      "sha256": "12c15fdf5ef1d876d0935b538f92015e7d0ecd7df49f5bb7ffc08b601882f240",
+      "size": 3874
+    },
+    {
+      "path": "skills/coaching-sermon-revisions/assets/references/professional-knowledge/RM-04B_Observation_Steps_1-3.md",
+      "sha256": "74b904c3eb84fe8a7a06e62c1f1021bdb64ad1e7f9a6c7297218a520948d62db",
+      "size": 4283
+    },
+    {
+      "path": "skills/coaching-sermon-revisions/assets/references/professional-knowledge/RM-04C_Interpretation_Steps_4-7.md",
+      "sha256": "5718ba0a20f12fc2a14c7b821df2b1819979654c39aa789b5cdf104f8de1e6f5",
+      "size": 4261
+    },
+    {
+      "path": "skills/coaching-sermon-revisions/assets/references/professional-knowledge/RM-04D_Application_Steps_8-10.md",
+      "sha256": "7e43392f8d421bcd2801c305562713519a296f9517cc6ae802cccded61bb2126",
+      "size": 2974
+    },
+    {
+      "path": "skills/coaching-sermon-revisions/assets/references/professional-knowledge/RM-04E_Inductive_Study_Questioning_Guide.md",
+      "sha256": "482005257fc9e0baa7902e99cc425b5849a83a57cb3037e6470ba79237dbc7e4",
+      "size": 4514
+    },
+    {
+      "path": "skills/coaching-sermon-revisions/assets/references/source-materials/Bible 新約聖經和合本(1).pdf",
+      "sha256": "4f0f9ef4c4a78b83f918c74e8f368a7e0eae515c17866c7767c310ca75786490",
+      "size": 1557874
+    },
+    {
+      "path": "skills/coaching-sermon-revisions/assets/references/source-materials/Bible 舊約聖經和合本(1).pdf",
+      "sha256": "2740a6f824f96374cb127d78c3d646b489963898dacc252b842d9a8894a91125",
+      "size": 4427709
+    },
+    {
+      "path": "skills/coaching-sermon-revisions/assets/references/source-materials/Integrative Preaching Resource Abstract.md",
+      "sha256": "0f351cd2ee3d0fc04885c02595344f5333b84f0d263f27007a88f2dd3fe1215d",
+      "size": 3539
+    },
+    {
+      "path": "skills/coaching-sermon-revisions/assets/references/source-materials/The Unforgettable Sermon Resource Abstract.md",
+      "sha256": "e548934f3fbb08ee0e057fb984f3ac258e98f635b56340652f07ee3f2cd1a649",
+      "size": 3706
+    },
+    {
+      "path": "skills/coaching-sermon-revisions/assets/references/source-materials/歸納釋經法(1).pdf",
+      "sha256": "bd2eda9d9ef862e33645469c034d9d474cca56c03e9467a01d3cf119c1aba520",
+      "size": 1242897
+    },
+    {
+      "path": "skills/coaching-sermon-revisions/assets/references/source-materials/講章優化教練(1).md",
+      "sha256": "c3c77eda279e3ce8fda28bbfc3122245e944b3ecbac14f75507ef2470490dcde",
+      "size": 15966
+    },
+    {
+      "path": "skills/coaching-sermon-revisions/SKILL.md",
+      "sha256": "0b451e86b240d038064771d319b5b161cc1f9af0509f818cc56ef72512e5496c",
+      "size": 4737
+    },
+    {
+      "path": "skills/guiding-inductive-study/agents/openai.yaml",
+      "sha256": "71b1ff37cde60fd66582c5d8e80f9956fedde3245954ae7fba811ae5c4a9eb98",
+      "size": 145
+    },
+    {
+      "path": "skills/guiding-inductive-study/assets/reference-mirrors.json",
+      "sha256": "228c9893cfe5da2e88f3281e179094d640c7cc356e99bc6e8c913a2edee87276",
+      "size": 5365
+    },
+    {
+      "path": "skills/guiding-inductive-study/assets/references/professional-knowledge/Reference_Material_Evaluation_v1.1.md",
+      "sha256": "3130a521d2604b6193d3b464429545dd4a5732b0218e0261943d49cd930af7d5",
+      "size": 8822
+    },
+    {
+      "path": "skills/guiding-inductive-study/assets/references/professional-knowledge/Reference_Usage_Map_v1.1.md",
+      "sha256": "054e91dba8808ed39f109f6f2e779a44163d3d1594547b945aeabd331c83abe2",
+      "size": 5889
+    },
+    {
+      "path": "skills/guiding-inductive-study/assets/references/professional-knowledge/RM-04A_Inductive_Exegesis_Method_Overview.md",
+      "sha256": "12c15fdf5ef1d876d0935b538f92015e7d0ecd7df49f5bb7ffc08b601882f240",
+      "size": 3874
+    },
+    {
+      "path": "skills/guiding-inductive-study/assets/references/professional-knowledge/RM-04B_Observation_Steps_1-3.md",
+      "sha256": "74b904c3eb84fe8a7a06e62c1f1021bdb64ad1e7f9a6c7297218a520948d62db",
+      "size": 4283
+    },
+    {
+      "path": "skills/guiding-inductive-study/assets/references/professional-knowledge/RM-04C_Interpretation_Steps_4-7.md",
+      "sha256": "5718ba0a20f12fc2a14c7b821df2b1819979654c39aa789b5cdf104f8de1e6f5",
+      "size": 4261
+    },
+    {
+      "path": "skills/guiding-inductive-study/assets/references/professional-knowledge/RM-04D_Application_Steps_8-10.md",
+      "sha256": "7e43392f8d421bcd2801c305562713519a296f9517cc6ae802cccded61bb2126",
+      "size": 2974
+    },
+    {
+      "path": "skills/guiding-inductive-study/assets/references/professional-knowledge/RM-04E_Inductive_Study_Questioning_Guide.md",
+      "sha256": "482005257fc9e0baa7902e99cc425b5849a83a57cb3037e6470ba79237dbc7e4",
+      "size": 4514
+    },
+    {
+      "path": "skills/guiding-inductive-study/assets/references/source-materials/Bible 新約聖經和合本(1).pdf",
+      "sha256": "4f0f9ef4c4a78b83f918c74e8f368a7e0eae515c17866c7767c310ca75786490",
+      "size": 1557874
+    },
+    {
+      "path": "skills/guiding-inductive-study/assets/references/source-materials/Bible 舊約聖經和合本(1).pdf",
+      "sha256": "2740a6f824f96374cb127d78c3d646b489963898dacc252b842d9a8894a91125",
+      "size": 4427709
+    },
+    {
+      "path": "skills/guiding-inductive-study/assets/references/source-materials/Integrative Preaching Resource Abstract.md",
+      "sha256": "0f351cd2ee3d0fc04885c02595344f5333b84f0d263f27007a88f2dd3fe1215d",
+      "size": 3539
+    },
+    {
+      "path": "skills/guiding-inductive-study/assets/references/source-materials/The Unforgettable Sermon Resource Abstract.md",
+      "sha256": "e548934f3fbb08ee0e057fb984f3ac258e98f635b56340652f07ee3f2cd1a649",
+      "size": 3706
+    },
+    {
+      "path": "skills/guiding-inductive-study/assets/references/source-materials/歸納釋經法(1).pdf",
+      "sha256": "bd2eda9d9ef862e33645469c034d9d474cca56c03e9467a01d3cf119c1aba520",
+      "size": 1242897
+    },
+    {
+      "path": "skills/guiding-inductive-study/assets/references/source-materials/講章優化教練(1).md",
+      "sha256": "c3c77eda279e3ce8fda28bbfc3122245e944b3ecbac14f75507ef2470490dcde",
+      "size": 15966
+    },
+    {
+      "path": "skills/guiding-inductive-study/SKILL.md",
+      "sha256": "4d0ead5b4bf10d28fe161f86dc9f5e4285ddea3f83ee4c7da1d21d03e7cba3b6",
+      "size": 5014
+    },
+    {
+      "path": "skills/guiding-sermon-review/agents/openai.yaml",
+      "sha256": "560fe8b7678ee65b342b72b9c7b8238bd0819edc7006f19da2ea621bb499a823",
+      "size": 164
+    },
+    {
+      "path": "skills/guiding-sermon-review/assets/reference-mirrors.json",
+      "sha256": "a7fe9c074a59ac9ee0c99f8a01ea1ddfe0d4326b2fd2f27adf5832dc64232c27",
+      "size": 5363
+    },
+    {
+      "path": "skills/guiding-sermon-review/assets/references/professional-knowledge/Reference_Material_Evaluation_v1.1.md",
+      "sha256": "3130a521d2604b6193d3b464429545dd4a5732b0218e0261943d49cd930af7d5",
+      "size": 8822
+    },
+    {
+      "path": "skills/guiding-sermon-review/assets/references/professional-knowledge/Reference_Usage_Map_v1.1.md",
+      "sha256": "054e91dba8808ed39f109f6f2e779a44163d3d1594547b945aeabd331c83abe2",
+      "size": 5889
+    },
+    {
+      "path": "skills/guiding-sermon-review/assets/references/professional-knowledge/RM-04A_Inductive_Exegesis_Method_Overview.md",
+      "sha256": "12c15fdf5ef1d876d0935b538f92015e7d0ecd7df49f5bb7ffc08b601882f240",
+      "size": 3874
+    },
+    {
+      "path": "skills/guiding-sermon-review/assets/references/professional-knowledge/RM-04B_Observation_Steps_1-3.md",
+      "sha256": "74b904c3eb84fe8a7a06e62c1f1021bdb64ad1e7f9a6c7297218a520948d62db",
+      "size": 4283
+    },
+    {
+      "path": "skills/guiding-sermon-review/assets/references/professional-knowledge/RM-04C_Interpretation_Steps_4-7.md",
+      "sha256": "5718ba0a20f12fc2a14c7b821df2b1819979654c39aa789b5cdf104f8de1e6f5",
+      "size": 4261
+    },
+    {
+      "path": "skills/guiding-sermon-review/assets/references/professional-knowledge/RM-04D_Application_Steps_8-10.md",
+      "sha256": "7e43392f8d421bcd2801c305562713519a296f9517cc6ae802cccded61bb2126",
+      "size": 2974
+    },
+    {
+      "path": "skills/guiding-sermon-review/assets/references/professional-knowledge/RM-04E_Inductive_Study_Questioning_Guide.md",
+      "sha256": "482005257fc9e0baa7902e99cc425b5849a83a57cb3037e6470ba79237dbc7e4",
+      "size": 4514
+    },
+    {
+      "path": "skills/guiding-sermon-review/assets/references/source-materials/Bible 新約聖經和合本(1).pdf",
+      "sha256": "4f0f9ef4c4a78b83f918c74e8f368a7e0eae515c17866c7767c310ca75786490",
+      "size": 1557874
+    },
+    {
+      "path": "skills/guiding-sermon-review/assets/references/source-materials/Bible 舊約聖經和合本(1).pdf",
+      "sha256": "2740a6f824f96374cb127d78c3d646b489963898dacc252b842d9a8894a91125",
+      "size": 4427709
+    },
+    {
+      "path": "skills/guiding-sermon-review/assets/references/source-materials/Integrative Preaching Resource Abstract.md",
+      "sha256": "0f351cd2ee3d0fc04885c02595344f5333b84f0d263f27007a88f2dd3fe1215d",
+      "size": 3539
+    },
+    {
+      "path": "skills/guiding-sermon-review/assets/references/source-materials/The Unforgettable Sermon Resource Abstract.md",
+      "sha256": "e548934f3fbb08ee0e057fb984f3ac258e98f635b56340652f07ee3f2cd1a649",
+      "size": 3706
+    },
+    {
+      "path": "skills/guiding-sermon-review/assets/references/source-materials/歸納釋經法(1).pdf",
+      "sha256": "bd2eda9d9ef862e33645469c034d9d474cca56c03e9467a01d3cf119c1aba520",
+      "size": 1242897
+    },
+    {
+      "path": "skills/guiding-sermon-review/assets/references/source-materials/講章優化教練(1).md",
+      "sha256": "c3c77eda279e3ce8fda28bbfc3122245e944b3ecbac14f75507ef2470490dcde",
+      "size": 15966
+    },
+    {
+      "path": "skills/guiding-sermon-review/SKILL.md",
+      "sha256": "17e6486257462ee9ddc987e5d35ccdd188d6b1ca389481cd0c3ee974eee91004",
+      "size": 4827
+    },
+    {
+      "path": "skills/reviewing-sermon-evidence/agents/openai.yaml",
+      "sha256": "21ddbe47d2eb09b7a04b35c4d24e3c916890138e0b14ab41c0c5e9f77ed77174",
+      "size": 164
+    },
+    {
+      "path": "skills/reviewing-sermon-evidence/assets/reference-mirrors.json",
+      "sha256": "3fb6ad0ee870c3258d4c9023c05b12252ccbccec4a3adc517b8f50920ddabe75",
+      "size": 5367
+    },
+    {
+      "path": "skills/reviewing-sermon-evidence/assets/references/professional-knowledge/Reference_Material_Evaluation_v1.1.md",
+      "sha256": "3130a521d2604b6193d3b464429545dd4a5732b0218e0261943d49cd930af7d5",
+      "size": 8822
+    },
+    {
+      "path": "skills/reviewing-sermon-evidence/assets/references/professional-knowledge/Reference_Usage_Map_v1.1.md",
+      "sha256": "054e91dba8808ed39f109f6f2e779a44163d3d1594547b945aeabd331c83abe2",
+      "size": 5889
+    },
+    {
+      "path": "skills/reviewing-sermon-evidence/assets/references/professional-knowledge/RM-04A_Inductive_Exegesis_Method_Overview.md",
+      "sha256": "12c15fdf5ef1d876d0935b538f92015e7d0ecd7df49f5bb7ffc08b601882f240",
+      "size": 3874
+    },
+    {
+      "path": "skills/reviewing-sermon-evidence/assets/references/professional-knowledge/RM-04B_Observation_Steps_1-3.md",
+      "sha256": "74b904c3eb84fe8a7a06e62c1f1021bdb64ad1e7f9a6c7297218a520948d62db",
+      "size": 4283
+    },
+    {
+      "path": "skills/reviewing-sermon-evidence/assets/references/professional-knowledge/RM-04C_Interpretation_Steps_4-7.md",
+      "sha256": "5718ba0a20f12fc2a14c7b821df2b1819979654c39aa789b5cdf104f8de1e6f5",
+      "size": 4261
+    },
+    {
+      "path": "skills/reviewing-sermon-evidence/assets/references/professional-knowledge/RM-04D_Application_Steps_8-10.md",
+      "sha256": "7e43392f8d421bcd2801c305562713519a296f9517cc6ae802cccded61bb2126",
+      "size": 2974
+    },
+    {
+      "path": "skills/reviewing-sermon-evidence/assets/references/professional-knowledge/RM-04E_Inductive_Study_Questioning_Guide.md",
+      "sha256": "482005257fc9e0baa7902e99cc425b5849a83a57cb3037e6470ba79237dbc7e4",
+      "size": 4514
+    },
+    {
+      "path": "skills/reviewing-sermon-evidence/assets/references/source-materials/Bible 新約聖經和合本(1).pdf",
+      "sha256": "4f0f9ef4c4a78b83f918c74e8f368a7e0eae515c17866c7767c310ca75786490",
+      "size": 1557874
+    },
+    {
+      "path": "skills/reviewing-sermon-evidence/assets/references/source-materials/Bible 舊約聖經和合本(1).pdf",
+      "sha256": "2740a6f824f96374cb127d78c3d646b489963898dacc252b842d9a8894a91125",
+      "size": 4427709
+    },
+    {
+      "path": "skills/reviewing-sermon-evidence/assets/references/source-materials/Integrative Preaching Resource Abstract.md",
+      "sha256": "0f351cd2ee3d0fc04885c02595344f5333b84f0d263f27007a88f2dd3fe1215d",
+      "size": 3539
+    },
+    {
+      "path": "skills/reviewing-sermon-evidence/assets/references/source-materials/The Unforgettable Sermon Resource Abstract.md",
+      "sha256": "e548934f3fbb08ee0e057fb984f3ac258e98f635b56340652f07ee3f2cd1a649",
+      "size": 3706
+    },
+    {
+      "path": "skills/reviewing-sermon-evidence/assets/references/source-materials/歸納釋經法(1).pdf",
+      "sha256": "bd2eda9d9ef862e33645469c034d9d474cca56c03e9467a01d3cf119c1aba520",
+      "size": 1242897
+    },
+    {
+      "path": "skills/reviewing-sermon-evidence/assets/references/source-materials/講章優化教練(1).md",
+      "sha256": "c3c77eda279e3ce8fda28bbfc3122245e944b3ecbac14f75507ef2470490dcde",
+      "size": 15966
+    },
+    {
+      "path": "skills/reviewing-sermon-evidence/SKILL.md",
+      "sha256": "8fd645eedcd0be6c3eff4e533348a0e113fb9db9d7ab2ce7f5f972842576927f",
+      "size": 4818
+    },
+    {
+      "path": "tools/application-contracts.json",
+      "sha256": "539ea3b7f85026a6ceace6fc5819246de8f047ce64eb017a537b7b974626591c",
+      "size": 16942
+    }
+  ],
+  "plan_sha256": "7e4569cb0d59bffd51f0eb17ab0c8b8f0403b3555ad2eaa973844b706db79c01",
+  "tools_sha256": "539ea3b7f85026a6ceace6fc5819246de8f047ce64eb017a537b7b974626591c",
+  "tool_contracts": [
+    {
+      "adapter": null,
+      "configuration": {
+        "authentication": "NOT_REQUIRED",
+        "setup": [],
+        "python_runtime_policy": "Probe candidates and use only a verified Python 3 interpreter; otherwise BLOCK before application execution.",
+        "runtime_role": "offline/package validation utility; not a ChatGPT/Codex installed-runtime callable tool"
+      },
+      "dependencies": [
+        "Python 3 standard library; runtime launcher resolved per platform (Windows: py -3, then verified python; POSIX: python3, then verified python)"
+      ],
+      "execution": {
+        "resolver": {
+          "strategy": "PYTHON3_LAUNCHER_RESOLUTION",
+          "selection_rule": "Select the first candidate whose probe exits 0 and reports sys.version_info.major == 3. Do not invoke application code until the probe passes.",
+          "failure_state": "BLOCKED",
+          "profiles": [
+            {
+              "platform": "windows",
+              "candidates": [
+                {
+                  "launcher": [
+                    "py",
+                    "-3"
+                  ],
+                  "probe": [
+                    "py",
+                    "-3",
+                    "-c",
+                    "import sys; raise SystemExit(0 if sys.version_info.major == 3 else 3)"
+                  ]
+                },
+                {
+                  "launcher": [
+                    "python"
+                  ],
+                  "probe": [
+                    "python",
+                    "-c",
+                    "import sys; raise SystemExit(0 if sys.version_info.major == 3 else 3)"
+                  ]
+                }
+              ]
+            },
+            {
+              "platform": "posix",
+              "candidates": [
+                {
+                  "launcher": [
+                    "python3"
+                  ],
+                  "probe": [
+                    "python3",
+                    "-c",
+                    "import sys; raise SystemExit(0 if sys.version_info.major == 3 else 3)"
+                  ]
+                },
+                {
+                  "launcher": [
+                    "python"
+                  ],
+                  "probe": [
+                    "python",
+                    "-c",
+                    "import sys; raise SystemExit(0 if sys.version_info.major == 3 else 3)"
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        "script": "scripts/sermon_control.py",
+        "argv_suffix": [],
+        "clean_environment": true,
+        "timeout_seconds": 30
+      },
+      "fallback": {
+        "policy": "NOT_APPLICABLE_TO_INSTALLED_RUNTIME",
+        "description": "Normal Skill behavior uses direct host-native reading of Skill-local packaged reference mirrors; this script is optional offline validation only."
+      },
+      "files": [
+        "scripts/sermon_control.py"
+      ],
+      "fixtures": {
+        "input": {
+          "cases": [
+            {
+              "intent": "review",
+              "operation": "route",
+              "sermon_present": false
+            },
+            {
+              "action": "advance",
+              "mode": "full",
+              "operation": "sequence",
+              "step": 3,
+              "user_confirmed": false
+            },
+            {
+              "action": "advance",
+              "mode": "full",
+              "operation": "sequence",
+              "step": 3,
+              "user_confirmed": true
+            },
+            {
+              "claim_type": "method",
+              "operation": "precedence"
+            },
+            {
+              "comparison": "style",
+              "new_present": true,
+              "operation": "eligibility",
+              "prior_present": false
+            },
+            {
+              "before_present": false,
+              "comparison": "revision",
+              "operation": "eligibility",
+              "revision_present": true
+            }
+          ]
+        },
+        "output": {
+          "results": [
+            {
+              "missing": [
+                "sermon"
+              ],
+              "route": "WF-01",
+              "state": "WAIT"
+            },
+            {
+              "state": "WAIT",
+              "step": 3
+            },
+            {
+              "state": "WAIT",
+              "step": 4
+            },
+            {
+              "authority": "RM-04-SOURCE",
+              "state": "SELECTED"
+            },
+            {
+              "allowed": false,
+              "state": "WAIT_OR_SKIP"
+            },
+            {
+              "allowed": false,
+              "state": "SINGLE_VERSION"
+            }
+          ]
+        }
+      },
+      "id": "sermon-control",
+      "implementation_kind": "BUNDLED_LOCAL",
+      "input_schema": {
+        "type": "object"
+      },
+      "mcp": null,
+      "output_schema": {
+        "type": "object"
+      },
+      "permissions": [
+        "workspace:read"
+      ],
+      "redistribution": {
+        "evidence": "Owner-approved v1.0 specification section 13.3 and original handoff rights; generated implementation proposals belong to this project.",
+        "state": "APPROVED"
+      },
+      "required": false,
+      "requirement_ids": [
+        "RQ-005",
+        "RQ-008",
+        "RQ-009",
+        "RQ-010",
+        "RQ-011",
+        "RQ-012",
+        "RQ-014"
+      ],
+      "runtime_capability": "NOT_INSTALLED_RUNTIME_CALLABLE",
+      "runtime_targets": [
+        "offline/package validation only"
+      ],
+      "schema": "plugin-builder-application-tool-v1",
+      "side_effects": [],
+      "skill_bindings": [],
+      "verification": {
+        "kind": "PYTHON3_RESOLVED_ARGV",
+        "resolver": {
+          "strategy": "PYTHON3_LAUNCHER_RESOLUTION",
+          "selection_rule": "Select the first candidate whose probe exits 0 and reports sys.version_info.major == 3. Do not invoke application code until the probe passes.",
+          "failure_state": "BLOCKED",
+          "profiles": [
+            {
+              "platform": "windows",
+              "candidates": [
+                {
+                  "launcher": [
+                    "py",
+                    "-3"
+                  ],
+                  "probe": [
+                    "py",
+                    "-3",
+                    "-c",
+                    "import sys; raise SystemExit(0 if sys.version_info.major == 3 else 3)"
+                  ]
+                },
+                {
+                  "launcher": [
+                    "python"
+                  ],
+                  "probe": [
+                    "python",
+                    "-c",
+                    "import sys; raise SystemExit(0 if sys.version_info.major == 3 else 3)"
+                  ]
+                }
+              ]
+            },
+            {
+              "platform": "posix",
+              "candidates": [
+                {
+                  "launcher": [
+                    "python3"
+                  ],
+                  "probe": [
+                    "python3",
+                    "-c",
+                    "import sys; raise SystemExit(0 if sys.version_info.major == 3 else 3)"
+                  ]
+                },
+                {
+                  "launcher": [
+                    "python"
+                  ],
+                  "probe": [
+                    "python",
+                    "-c",
+                    "import sys; raise SystemExit(0 if sys.version_info.major == 3 else 3)"
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        "script": "scripts/sermon_control.py",
+        "network": false
+      },
+      "notes": "v1.0.3: removed as a normal installed-runtime dependency after installed-runtime evidence showed bundled scripts were not exposed as callable tools."
+    },
+    {
+      "adapter": null,
+      "configuration": {
+        "authentication": "NOT_REQUIRED",
+        "setup": [],
+        "python_runtime_policy": "Probe candidates and use only a verified Python 3 interpreter; otherwise BLOCK before application execution.",
+        "runtime_role": "offline/package validation utility; not a ChatGPT/Codex installed-runtime callable tool"
+      },
+      "dependencies": [
+        "Python 3 standard library; runtime launcher resolved per platform (Windows: py -3, then verified python; POSIX: python3, then verified python); packaged extracted text and structured CUV index are derivative runtime data cryptographically bound to packaged sources"
+      ],
+      "execution": {
+        "resolver": {
+          "strategy": "PYTHON3_LAUNCHER_RESOLUTION",
+          "selection_rule": "Select the first candidate whose probe exits 0 and reports sys.version_info.major == 3. Do not invoke application code until the probe passes.",
+          "failure_state": "BLOCKED",
+          "profiles": [
+            {
+              "platform": "windows",
+              "candidates": [
+                {
+                  "launcher": [
+                    "py",
+                    "-3"
+                  ],
+                  "probe": [
+                    "py",
+                    "-3",
+                    "-c",
+                    "import sys; raise SystemExit(0 if sys.version_info.major == 3 else 3)"
+                  ]
+                },
+                {
+                  "launcher": [
+                    "python"
+                  ],
+                  "probe": [
+                    "python",
+                    "-c",
+                    "import sys; raise SystemExit(0 if sys.version_info.major == 3 else 3)"
+                  ]
+                }
+              ]
+            },
+            {
+              "platform": "posix",
+              "candidates": [
+                {
+                  "launcher": [
+                    "python3"
+                  ],
+                  "probe": [
+                    "python3",
+                    "-c",
+                    "import sys; raise SystemExit(0 if sys.version_info.major == 3 else 3)"
+                  ]
+                },
+                {
+                  "launcher": [
+                    "python"
+                  ],
+                  "probe": [
+                    "python",
+                    "-c",
+                    "import sys; raise SystemExit(0 if sys.version_info.major == 3 else 3)"
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        "script": "scripts/read_packaged_reference.py",
+        "argv_suffix": [],
+        "clean_environment": true,
+        "timeout_seconds": 30
+      },
+      "fallback": {
+        "policy": "NOT_APPLICABLE_TO_INSTALLED_RUNTIME",
+        "description": "Normal Skill behavior uses direct host-native reading of Skill-local packaged reference mirrors; this script is optional offline validation only."
+      },
+      "files": [
+        "scripts/read_packaged_reference.py",
+        "data/source-page-extractions.json",
+        "data/reference-registry.json",
+        "data/cuv-verse-index.json",
+        "references/source-materials/講章優化教練(1).md",
+        "references/source-materials/Integrative Preaching Resource Abstract.md",
+        "references/source-materials/The Unforgettable Sermon Resource Abstract.md",
+        "references/source-materials/歸納釋經法(1).pdf",
+        "references/professional-knowledge/RM-04A_Inductive_Exegesis_Method_Overview.md",
+        "references/professional-knowledge/RM-04B_Observation_Steps_1-3.md",
+        "references/professional-knowledge/RM-04C_Interpretation_Steps_4-7.md",
+        "references/professional-knowledge/RM-04D_Application_Steps_8-10.md",
+        "references/professional-knowledge/RM-04E_Inductive_Study_Questioning_Guide.md",
+        "references/source-materials/Bible 舊約聖經和合本(1).pdf",
+        "references/source-materials/Bible 新約聖經和合本(1).pdf",
+        "references/professional-knowledge/Reference_Material_Evaluation_v1.1.md",
+        "references/professional-knowledge/Reference_Usage_Map_v1.1.md"
+      ],
+      "fixtures": {
+        "input": {
+          "cases": [
+            {
+              "operation": "contains",
+              "page": 1,
+              "query": "起初 神創造天地。",
+              "source": "references/source-materials/Bible 舊約聖經和合本(1).pdf"
+            },
+            {
+              "operation": "contains",
+              "page": 1,
+              "query": "太 1:2 亞伯拉罕生以撒",
+              "source": "references/source-materials/Bible 新約聖經和合本(1).pdf"
+            },
+            {
+              "operation": "contains",
+              "page": 2,
+              "query": "細察事實",
+              "source": "references/source-materials/歸納釋經法(1).pdf"
+            },
+            {
+              "operation": "contains",
+              "query": "解釋",
+              "source": "references/professional-knowledge/RM-04C_Interpretation_Steps_4-7.md"
+            }
+          ]
+        },
+        "output": {
+          "results": [
+            {
+              "contains": true,
+              "page": 1,
+              "source": "references/source-materials/Bible 舊約聖經和合本(1).pdf"
+            },
+            {
+              "contains": true,
+              "page": 1,
+              "source": "references/source-materials/Bible 新約聖經和合本(1).pdf"
+            },
+            {
+              "contains": true,
+              "page": 2,
+              "source": "references/source-materials/歸納釋經法(1).pdf"
+            },
+            {
+              "contains": true,
+              "page": null,
+              "source": "references/professional-knowledge/RM-04C_Interpretation_Steps_4-7.md"
+            }
+          ]
+        }
+      },
+      "id": "packaged-reference-access",
+      "implementation_kind": "BUNDLED_LOCAL",
+      "input_schema": {
+        "type": "object"
+      },
+      "mcp": null,
+      "output_schema": {
+        "type": "object"
+      },
+      "permissions": [
+        "workspace:read"
+      ],
+      "redistribution": {
+        "evidence": "Owner-approved v1.0 specification section 13.3 and original handoff rights; generated implementation proposals belong to this project.",
+        "state": "APPROVED"
+      },
+      "required": false,
+      "requirement_ids": [
+        "RQ-002",
+        "RQ-003",
+        "RQ-004",
+        "RQ-006",
+        "RQ-012",
+        "RQ-013",
+        "DELTA-RQ-01",
+        "DELTA-RQ-02",
+        "DELTA-RQ-03"
+      ],
+      "runtime_capability": "NOT_INSTALLED_RUNTIME_CALLABLE",
+      "runtime_targets": [
+        "offline/package validation only"
+      ],
+      "schema": "plugin-builder-application-tool-v1",
+      "side_effects": [],
+      "skill_bindings": [],
+      "verification": {
+        "kind": "PYTHON3_RESOLVED_ARGV",
+        "resolver": {
+          "strategy": "PYTHON3_LAUNCHER_RESOLUTION",
+          "selection_rule": "Select the first candidate whose probe exits 0 and reports sys.version_info.major == 3. Do not invoke application code until the probe passes.",
+          "failure_state": "BLOCKED",
+          "profiles": [
+            {
+              "platform": "windows",
+              "candidates": [
+                {
+                  "launcher": [
+                    "py",
+                    "-3"
+                  ],
+                  "probe": [
+                    "py",
+                    "-3",
+                    "-c",
+                    "import sys; raise SystemExit(0 if sys.version_info.major == 3 else 3)"
+                  ]
+                },
+                {
+                  "launcher": [
+                    "python"
+                  ],
+                  "probe": [
+                    "python",
+                    "-c",
+                    "import sys; raise SystemExit(0 if sys.version_info.major == 3 else 3)"
+                  ]
+                }
+              ]
+            },
+            {
+              "platform": "posix",
+              "candidates": [
+                {
+                  "launcher": [
+                    "python3"
+                  ],
+                  "probe": [
+                    "python3",
+                    "-c",
+                    "import sys; raise SystemExit(0 if sys.version_info.major == 3 else 3)"
+                  ]
+                },
+                {
+                  "launcher": [
+                    "python"
+                  ],
+                  "probe": [
+                    "python",
+                    "-c",
+                    "import sys; raise SystemExit(0 if sys.version_info.major == 3 else 3)"
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        "script": "scripts/read_packaged_reference.py",
+        "network": false
+      },
+      "notes": "v1.0.3: removed as a normal installed-runtime dependency after installed-runtime evidence showed bundled scripts were not exposed as callable tools."
+    }
+  ],
+  "tool_bindings": [],
+  "runtime_reference_access": {
+    "mode": "SKILL_LOCAL_DIRECT_HOST_NATIVE",
+    "normal_runtime_python_dependency": false,
+    "normal_runtime_mcp_dependency": false,
+    "mirror_manifest": "skills/*/assets/reference-mirrors.json",
+    "canonical_registry": "data/reference-registry.json",
+    "missing_required_reference": "LIMITED_OR_BLOCKED_PER_APPROVED_USAGE_MAP"
+  },
+  "update": {
+    "W1": "APPROVED",
+    "baseline_version": "1.0.2",
+    "baseline_archive_sha256": "bac3d77c9da3ceba2d31fc44b64842644590a107476250eba557eb12fb318233",
+    "delta_id": "sermon-coach-v1.0.3-runtime-native-reference-access-fix",
+    "behavior_change": false
+  }
+}

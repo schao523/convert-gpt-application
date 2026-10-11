@@ -210,6 +210,29 @@ class PluginOnboardingProposalTests(unittest.TestCase):
                     f"onboarding.proposal.{suffix}",
                 )
 
+    def test_offline_validator_declaration_covers_executable_without_claiming_runtime_tool(self) -> None:
+        repository = self.repository_fixture("offline-validator")
+        inspection = replace(
+            self.inspection,
+            executable_files=("scripts/validate.py",),
+            offline_validator_files=("scripts/validate.py",),
+            tool_contracts=(),
+            tool_bindings=(),
+        )
+
+        proposal = build_onboarding_proposal(
+            inspection,
+            self.decisions,
+            repository,
+        )
+
+        self.assertEqual(proposal.builder_evidence["tool_bindings"], ())
+        self.assertEqual(
+            proposal.builder_evidence["offline_validator_files"],
+            ("scripts/validate.py",),
+        )
+        self.assertEqual(set(proposal.runtime_evidence_states.values()), {"NOT VERIFIED"})
+
     def test_existing_application_requires_separate_update_design_without_mutation(self) -> None:
         repository = self.repository_fixture("existing-application")
         (repository / "applications" / "sample-plugin").mkdir()

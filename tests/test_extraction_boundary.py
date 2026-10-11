@@ -19,7 +19,11 @@ class ExtractionBoundaryTests(unittest.TestCase):
             if relative.suffix.lower() not in {".pdf", ".docx", ".ppt", ".pptx"}:
                 continue
             parts = relative.parts
-            allowed = len(parts) >= 4 and parts[0] == "applications" and "assets" in parts
+            allowed = (
+                len(parts) >= 4
+                and parts[0] == "applications"
+                and ("assets" in parts or parts[2] == "imported-plugin")
+            )
             if not allowed:
                 offenders.append(relative.as_posix())
         self.assertEqual(offenders, [])

@@ -16,6 +16,7 @@ from obvious_one_plugin_framework.plugin_onboarding.materialize import (
 from obvious_one_plugin_framework.plugin_onboarding import materialize as onboarding_materialize
 from obvious_one_plugin_framework.provenance import inventory_source
 from obvious_one_plugin_framework.verification import load_application_config_path
+from scripts.verify_extraction import RunContext, _provenance_gate
 from tests.framework.plugin_onboarding_fixtures import (
     canonical_bytes,
     write_legacy_repair_fixture,
@@ -174,6 +175,26 @@ class PluginOnboardingMaterializeTests(unittest.TestCase):
             "imported-plugin/skills/sample/SKILL.md",
             {item["path"] for item in inventory},
         )
+
+    def test_generated_imported_inventory_passes_repository_provenance_gate(self) -> None:
+        output = self.root / "provenance-proposal"
+        self.prepare(output)
+        adopted = self.root / "provenance-repository" / "applications" / "sample-plugin"
+        adopted.parent.mkdir(parents=True)
+        shutil.copytree(output / "application", adopted)
+        config = load_application_config_path(
+            adopted / "conversion.json",
+            self.root / "provenance-repository",
+        )
+        context = RunContext(
+            repository_root=self.root / "provenance-repository",
+            diagnostics=self.root / "provenance-diagnostics",
+            python="python",
+        )
+
+        gate = _provenance_gate(config, context)
+
+        self.assertEqual((gate.state, gate.detail), ("PASS", "application provenance is valid"))
 
     def test_mixed_text_and_binary_files_have_complete_v3_content_rules(self) -> None:
         files = self.fixture.candidate_files

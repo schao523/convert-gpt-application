@@ -1,0 +1,803 @@
+{
+  "approval_record": {
+    "confirmed_by": "SC",
+    "decision": "APPROVED",
+    "recorded_at": "2026-10-11"
+  },
+  "content_members": [
+    {
+      "path": ".codex-plugin/plugin.json",
+      "sha256": "155cfc2e88e640d3c7f9d5de429d1c518d0f4700df2592c15b5b919e7b22a5be",
+      "size": 789
+    },
+    {
+      "path": "LICENSE",
+      "sha256": "e31ef2620c66c2bd09ef56abd6d43264132415e2d1d4cad31452b12143aea8b5",
+      "size": 1059
+    },
+    {
+      "path": "README.md",
+      "sha256": "864676d312be6b457ba4a963383473b8596b9ec3e923d55430d4e37c618175c6",
+      "size": 313
+    },
+    {
+      "path": "THIRD_PARTY_NOTICES.md",
+      "sha256": "d473c0ed7ff9f00a55e1f21e643d0688259505b69132541a85789bc7a5cdf83d",
+      "size": 2123
+    },
+    {
+      "path": "data/cuv-verse-index.json",
+      "sha256": "cdb4861a50b73fa52f37e7933130e54771028e065d4d49704e0c54f0bbd541d9",
+      "size": 6841168
+    },
+    {
+      "path": "data/reference-registry.json",
+      "sha256": "ce096a57d234fa20434ad7046a2195ed5594dd7721a838f682a433b49db25d5e",
+      "size": 3223
+    },
+    {
+      "path": "data/source-page-extractions.json",
+      "sha256": "b5a0ab2c4848a103c48ab45c6618d89f6d5da3604de0f0d40e748025b22b8ea6",
+      "size": 7316364
+    },
+    {
+      "path": "docs/Behavioral_Workflow_Blueprint_v1.0_APPROVED.md",
+      "sha256": "105692b9993bee96e44a319b0970c0c8bacb94e7ac3efe002004bb4892f93d9c",
+      "size": 16508
+    },
+    {
+      "path": "docs/Instruction_Module_Contracts_v1.0_APPROVED.md",
+      "sha256": "eaf60bf813f8244d2216352a342bab6ad00aa64dfb3475d0508b92ee607923b9",
+      "size": 16201
+    },
+    {
+      "path": "docs/User_Interaction_Protocols_v1.0_APPROVED.md",
+      "sha256": "56a92e1cd13866c1e520098a14ee45fcb1631def115f8fdfd2e638c2b8545220",
+      "size": 7620
+    },
+    {
+      "path": "docs/W1-runtime-compatibility-v1.0.2.md",
+      "sha256": "1f5812a1360ea50983bb08a23aa3d3726a564b832aa40da862fe3a542623db74",
+      "size": 687
+    },
+    {
+      "path": "docs/W1-runtime-native-reference-access-v1.0.3.md",
+      "sha256": "7e4569cb0d59bffd51f0eb17ab0c8b8f0403b3555ad2eaa973844b706db79c01",
+      "size": 901
+    },
+    {
+      "path": "docs/W1-update-plan-v1.0-delta-01.json",
+      "sha256": "63132375adc322053ec4446b6794ba24c9f16152a7205868d0da7bb33f415e96",
+      "size": 831
+    },
+    {
+      "path": "docs/acceptance-scenarios.md",
+      "sha256": "d4defe288d58185adbe92a952dc8d6009ba70a02364fc02c1d8b1cbaaba39f4d",
+      "size": 1834
+    },
+    {
+      "path": "docs/application-invariants.md",
+      "sha256": "9d50db472181d3347843a1e2f22fde2b539f44e576a83214611bcb09076359d3",
+      "size": 1177
+    },
+    {
+      "path": "docs/delta-v1.0-delta-01-verification.md",
+      "sha256": "c28d81873306e3d7d6183032cd95749fe8a06f071c344ca3bb45c3765d97d04e",
+      "size": 505
+    },
+    {
+      "path": "docs/provenance/source-PLUGIN-BUILDER-MANIFEST.json",
+      "sha256": "075aaf838c741f8b4b750924124637318f5cecf62ee8feff3f870b638701e3e3",
+      "size": 46739
+    },
+    {
+      "path": "docs/runtime-python3-resolution.md",
+      "sha256": "4cdc41a06bb489f03c2d1012394c949f43801603f0b8085e7885641b121bc7f3",
+      "size": 1360
+    },
+    {
+      "path": "plugin.json",
+      "sha256": "4fb394d61d089cab411d1410c4dcdea2cab86c82bfa1267cac70aa99f29f74f4",
+      "size": 935
+    },
+    {
+      "path": "references/professional-knowledge/RM-04A_Inductive_Exegesis_Method_Overview.md",
+      "sha256": "12c15fdf5ef1d876d0935b538f92015e7d0ecd7df49f5bb7ffc08b601882f240",
+      "size": 3874
+    },
+    {
+      "path": "references/professional-knowledge/RM-04B_Observation_Steps_1-3.md",
+      "sha256": "74b904c3eb84fe8a7a06e62c1f1021bdb64ad1e7f9a6c7297218a520948d62db",
+      "size": 4283
+    },
+    {
+      "path": "references/professional-knowledge/RM-04C_Interpretation_Steps_4-7.md",
+      "sha256": "5718ba0a20f12fc2a14c7b821df2b1819979654c39aa789b5cdf104f8de1e6f5",
+      "size": 4261
+    },
+    {
+      "path": "references/professional-knowledge/RM-04D_Application_Steps_8-10.md",
+      "sha256": "7e43392f8d421bcd2801c305562713519a296f9517cc6ae802cccded61bb2126",
+      "size": 2974
+    },
+    {
+      "path": "references/professional-knowledge/RM-04E_Inductive_Study_Questioning_Guide.md",
+      "sha256": "482005257fc9e0baa7902e99cc425b5849a83a57cb3037e6470ba79237dbc7e4",
+      "size": 4514
+    },
+    {
+      "path": "references/professional-knowledge/Reference_Material_Evaluation_v1.1.md",
+      "sha256": "3130a521d2604b6193d3b464429545dd4a5732b0218e0261943d49cd930af7d5",
+      "size": 8822
+    },
+    {
+      "path": "references/professional-knowledge/Reference_Usage_Map_v1.1.md",
+      "sha256": "054e91dba8808ed39f109f6f2e779a44163d3d1594547b945aeabd331c83abe2",
+      "size": 5889
+    },
+    {
+      "path": "references/source-materials/Bible \u65b0\u7d04\u8056\u7d93\u548c\u5408\u672c(1).pdf",
+      "sha256": "4f0f9ef4c4a78b83f918c74e8f368a7e0eae515c17866c7767c310ca75786490",
+      "size": 1557874
+    },
+    {
+      "path": "references/source-materials/Bible \u820a\u7d04\u8056\u7d93\u548c\u5408\u672c(1).pdf",
+      "sha256": "2740a6f824f96374cb127d78c3d646b489963898dacc252b842d9a8894a91125",
+      "size": 4427709
+    },
+    {
+      "path": "references/source-materials/Integrative Preaching Resource Abstract.md",
+      "sha256": "0f351cd2ee3d0fc04885c02595344f5333b84f0d263f27007a88f2dd3fe1215d",
+      "size": 3539
+    },
+    {
+      "path": "references/source-materials/The Unforgettable Sermon Resource Abstract.md",
+      "sha256": "e548934f3fbb08ee0e057fb984f3ac258e98f635b56340652f07ee3f2cd1a649",
+      "size": 3706
+    },
+    {
+      "path": "references/source-materials/\u6b78\u7d0d\u91cb\u7d93\u6cd5(1).pdf",
+      "sha256": "bd2eda9d9ef862e33645469c034d9d474cca56c03e9467a01d3cf119c1aba520",
+      "size": 1242897
+    },
+    {
+      "path": "references/source-materials/\u8b1b\u7ae0\u512a\u5316\u6559\u7df4(1).md",
+      "sha256": "c3c77eda279e3ce8fda28bbfc3122245e944b3ecbac14f75507ef2470490dcde",
+      "size": 15966
+    },
+    {
+      "path": "scripts/read_packaged_reference.py",
+      "sha256": "f8c1ebe5262c054ac7a17f033264ee319f1943c8d079d4d89321753fe9086a7b",
+      "size": 7132
+    },
+    {
+      "path": "scripts/sermon_control.py",
+      "sha256": "2dbd4bbd17845cfdc469ad73ec66aaaf48b0fa7434a6abb2d49b2ba6ae2cd0f0",
+      "size": 2462
+    },
+    {
+      "path": "skills/coaching-sermon-revisions/SKILL.md",
+      "sha256": "36c42303e8ee906d10ad0c65576ab02505d187d398d588c7ba7f612fb91ea1f3",
+      "size": 4742
+    },
+    {
+      "path": "skills/coaching-sermon-revisions/agents/openai.yaml",
+      "sha256": "76ea6d260e0204714376521e9957a7aaa1f650017e1edb84d2ba823d72c38535",
+      "size": 156
+    },
+    {
+      "path": "skills/coaching-sermon-revisions/assets/docs/Behavioral_Workflow_Blueprint_v1.0_APPROVED.md",
+      "sha256": "105692b9993bee96e44a319b0970c0c8bacb94e7ac3efe002004bb4892f93d9c",
+      "size": 16508
+    },
+    {
+      "path": "skills/coaching-sermon-revisions/assets/docs/Instruction_Module_Contracts_v1.0_APPROVED.md",
+      "sha256": "eaf60bf813f8244d2216352a342bab6ad00aa64dfb3475d0508b92ee607923b9",
+      "size": 16201
+    },
+    {
+      "path": "skills/coaching-sermon-revisions/assets/docs/User_Interaction_Protocols_v1.0_APPROVED.md",
+      "sha256": "56a92e1cd13866c1e520098a14ee45fcb1631def115f8fdfd2e638c2b8545220",
+      "size": 7620
+    },
+    {
+      "path": "skills/coaching-sermon-revisions/assets/docs/acceptance-scenarios.md",
+      "sha256": "d4defe288d58185adbe92a952dc8d6009ba70a02364fc02c1d8b1cbaaba39f4d",
+      "size": 1834
+    },
+    {
+      "path": "skills/coaching-sermon-revisions/assets/docs/application-invariants.md",
+      "sha256": "9d50db472181d3347843a1e2f22fde2b539f44e576a83214611bcb09076359d3",
+      "size": 1177
+    },
+    {
+      "path": "skills/coaching-sermon-revisions/assets/reference-mirrors.json",
+      "sha256": "9caa7681bc0ffcdb93840d3b6d8f79b69afb95bb90914e146fa6d7dc72391a30",
+      "size": 5367
+    },
+    {
+      "path": "skills/coaching-sermon-revisions/assets/references/professional-knowledge/RM-04A_Inductive_Exegesis_Method_Overview.md",
+      "sha256": "12c15fdf5ef1d876d0935b538f92015e7d0ecd7df49f5bb7ffc08b601882f240",
+      "size": 3874
+    },
+    {
+      "path": "skills/coaching-sermon-revisions/assets/references/professional-knowledge/RM-04B_Observation_Steps_1-3.md",
+      "sha256": "74b904c3eb84fe8a7a06e62c1f1021bdb64ad1e7f9a6c7297218a520948d62db",
+      "size": 4283
+    },
+    {
+      "path": "skills/coaching-sermon-revisions/assets/references/professional-knowledge/RM-04C_Interpretation_Steps_4-7.md",
+      "sha256": "5718ba0a20f12fc2a14c7b821df2b1819979654c39aa789b5cdf104f8de1e6f5",
+      "size": 4261
+    },
+    {
+      "path": "skills/coaching-sermon-revisions/assets/references/professional-knowledge/RM-04D_Application_Steps_8-10.md",
+      "sha256": "7e43392f8d421bcd2801c305562713519a296f9517cc6ae802cccded61bb2126",
+      "size": 2974
+    },
+    {
+      "path": "skills/coaching-sermon-revisions/assets/references/professional-knowledge/RM-04E_Inductive_Study_Questioning_Guide.md",
+      "sha256": "482005257fc9e0baa7902e99cc425b5849a83a57cb3037e6470ba79237dbc7e4",
+      "size": 4514
+    },
+    {
+      "path": "skills/coaching-sermon-revisions/assets/references/professional-knowledge/Reference_Material_Evaluation_v1.1.md",
+      "sha256": "3130a521d2604b6193d3b464429545dd4a5732b0218e0261943d49cd930af7d5",
+      "size": 8822
+    },
+    {
+      "path": "skills/coaching-sermon-revisions/assets/references/professional-knowledge/Reference_Usage_Map_v1.1.md",
+      "sha256": "054e91dba8808ed39f109f6f2e779a44163d3d1594547b945aeabd331c83abe2",
+      "size": 5889
+    },
+    {
+      "path": "skills/coaching-sermon-revisions/assets/references/source-materials/Bible \u65b0\u7d04\u8056\u7d93\u548c\u5408\u672c(1).pdf",
+      "sha256": "4f0f9ef4c4a78b83f918c74e8f368a7e0eae515c17866c7767c310ca75786490",
+      "size": 1557874
+    },
+    {
+      "path": "skills/coaching-sermon-revisions/assets/references/source-materials/Bible \u820a\u7d04\u8056\u7d93\u548c\u5408\u672c(1).pdf",
+      "sha256": "2740a6f824f96374cb127d78c3d646b489963898dacc252b842d9a8894a91125",
+      "size": 4427709
+    },
+    {
+      "path": "skills/coaching-sermon-revisions/assets/references/source-materials/Integrative Preaching Resource Abstract.md",
+      "sha256": "0f351cd2ee3d0fc04885c02595344f5333b84f0d263f27007a88f2dd3fe1215d",
+      "size": 3539
+    },
+    {
+      "path": "skills/coaching-sermon-revisions/assets/references/source-materials/The Unforgettable Sermon Resource Abstract.md",
+      "sha256": "e548934f3fbb08ee0e057fb984f3ac258e98f635b56340652f07ee3f2cd1a649",
+      "size": 3706
+    },
+    {
+      "path": "skills/coaching-sermon-revisions/assets/references/source-materials/\u6b78\u7d0d\u91cb\u7d93\u6cd5(1).pdf",
+      "sha256": "bd2eda9d9ef862e33645469c034d9d474cca56c03e9467a01d3cf119c1aba520",
+      "size": 1242897
+    },
+    {
+      "path": "skills/coaching-sermon-revisions/assets/references/source-materials/\u8b1b\u7ae0\u512a\u5316\u6559\u7df4(1).md",
+      "sha256": "c3c77eda279e3ce8fda28bbfc3122245e944b3ecbac14f75507ef2470490dcde",
+      "size": 15966
+    },
+    {
+      "path": "skills/guiding-inductive-study/SKILL.md",
+      "sha256": "de706e00916e4ab841669cd84498b398a60d834eeddffa7c052f0afaa643f7ec",
+      "size": 5019
+    },
+    {
+      "path": "skills/guiding-inductive-study/agents/openai.yaml",
+      "sha256": "71b1ff37cde60fd66582c5d8e80f9956fedde3245954ae7fba811ae5c4a9eb98",
+      "size": 145
+    },
+    {
+      "path": "skills/guiding-inductive-study/assets/docs/Behavioral_Workflow_Blueprint_v1.0_APPROVED.md",
+      "sha256": "105692b9993bee96e44a319b0970c0c8bacb94e7ac3efe002004bb4892f93d9c",
+      "size": 16508
+    },
+    {
+      "path": "skills/guiding-inductive-study/assets/docs/Instruction_Module_Contracts_v1.0_APPROVED.md",
+      "sha256": "eaf60bf813f8244d2216352a342bab6ad00aa64dfb3475d0508b92ee607923b9",
+      "size": 16201
+    },
+    {
+      "path": "skills/guiding-inductive-study/assets/docs/User_Interaction_Protocols_v1.0_APPROVED.md",
+      "sha256": "56a92e1cd13866c1e520098a14ee45fcb1631def115f8fdfd2e638c2b8545220",
+      "size": 7620
+    },
+    {
+      "path": "skills/guiding-inductive-study/assets/docs/acceptance-scenarios.md",
+      "sha256": "d4defe288d58185adbe92a952dc8d6009ba70a02364fc02c1d8b1cbaaba39f4d",
+      "size": 1834
+    },
+    {
+      "path": "skills/guiding-inductive-study/assets/docs/application-invariants.md",
+      "sha256": "9d50db472181d3347843a1e2f22fde2b539f44e576a83214611bcb09076359d3",
+      "size": 1177
+    },
+    {
+      "path": "skills/guiding-inductive-study/assets/reference-mirrors.json",
+      "sha256": "228c9893cfe5da2e88f3281e179094d640c7cc356e99bc6e8c913a2edee87276",
+      "size": 5365
+    },
+    {
+      "path": "skills/guiding-inductive-study/assets/references/professional-knowledge/RM-04A_Inductive_Exegesis_Method_Overview.md",
+      "sha256": "12c15fdf5ef1d876d0935b538f92015e7d0ecd7df49f5bb7ffc08b601882f240",
+      "size": 3874
+    },
+    {
+      "path": "skills/guiding-inductive-study/assets/references/professional-knowledge/RM-04B_Observation_Steps_1-3.md",
+      "sha256": "74b904c3eb84fe8a7a06e62c1f1021bdb64ad1e7f9a6c7297218a520948d62db",
+      "size": 4283
+    },
+    {
+      "path": "skills/guiding-inductive-study/assets/references/professional-knowledge/RM-04C_Interpretation_Steps_4-7.md",
+      "sha256": "5718ba0a20f12fc2a14c7b821df2b1819979654c39aa789b5cdf104f8de1e6f5",
+      "size": 4261
+    },
+    {
+      "path": "skills/guiding-inductive-study/assets/references/professional-knowledge/RM-04D_Application_Steps_8-10.md",
+      "sha256": "7e43392f8d421bcd2801c305562713519a296f9517cc6ae802cccded61bb2126",
+      "size": 2974
+    },
+    {
+      "path": "skills/guiding-inductive-study/assets/references/professional-knowledge/RM-04E_Inductive_Study_Questioning_Guide.md",
+      "sha256": "482005257fc9e0baa7902e99cc425b5849a83a57cb3037e6470ba79237dbc7e4",
+      "size": 4514
+    },
+    {
+      "path": "skills/guiding-inductive-study/assets/references/professional-knowledge/Reference_Material_Evaluation_v1.1.md",
+      "sha256": "3130a521d2604b6193d3b464429545dd4a5732b0218e0261943d49cd930af7d5",
+      "size": 8822
+    },
+    {
+      "path": "skills/guiding-inductive-study/assets/references/professional-knowledge/Reference_Usage_Map_v1.1.md",
+      "sha256": "054e91dba8808ed39f109f6f2e779a44163d3d1594547b945aeabd331c83abe2",
+      "size": 5889
+    },
+    {
+      "path": "skills/guiding-inductive-study/assets/references/source-materials/Bible \u65b0\u7d04\u8056\u7d93\u548c\u5408\u672c(1).pdf",
+      "sha256": "4f0f9ef4c4a78b83f918c74e8f368a7e0eae515c17866c7767c310ca75786490",
+      "size": 1557874
+    },
+    {
+      "path": "skills/guiding-inductive-study/assets/references/source-materials/Bible \u820a\u7d04\u8056\u7d93\u548c\u5408\u672c(1).pdf",
+      "sha256": "2740a6f824f96374cb127d78c3d646b489963898dacc252b842d9a8894a91125",
+      "size": 4427709
+    },
+    {
+      "path": "skills/guiding-inductive-study/assets/references/source-materials/Integrative Preaching Resource Abstract.md",
+      "sha256": "0f351cd2ee3d0fc04885c02595344f5333b84f0d263f27007a88f2dd3fe1215d",
+      "size": 3539
+    },
+    {
+      "path": "skills/guiding-inductive-study/assets/references/source-materials/The Unforgettable Sermon Resource Abstract.md",
+      "sha256": "e548934f3fbb08ee0e057fb984f3ac258e98f635b56340652f07ee3f2cd1a649",
+      "size": 3706
+    },
+    {
+      "path": "skills/guiding-inductive-study/assets/references/source-materials/\u6b78\u7d0d\u91cb\u7d93\u6cd5(1).pdf",
+      "sha256": "bd2eda9d9ef862e33645469c034d9d474cca56c03e9467a01d3cf119c1aba520",
+      "size": 1242897
+    },
+    {
+      "path": "skills/guiding-inductive-study/assets/references/source-materials/\u8b1b\u7ae0\u512a\u5316\u6559\u7df4(1).md",
+      "sha256": "c3c77eda279e3ce8fda28bbfc3122245e944b3ecbac14f75507ef2470490dcde",
+      "size": 15966
+    },
+    {
+      "path": "skills/guiding-sermon-review/SKILL.md",
+      "sha256": "e4cf8e83f4c831de7a2968b1560b004230483d83ff3456e5807d84b380750945",
+      "size": 4832
+    },
+    {
+      "path": "skills/guiding-sermon-review/agents/openai.yaml",
+      "sha256": "560fe8b7678ee65b342b72b9c7b8238bd0819edc7006f19da2ea621bb499a823",
+      "size": 164
+    },
+    {
+      "path": "skills/guiding-sermon-review/assets/docs/Behavioral_Workflow_Blueprint_v1.0_APPROVED.md",
+      "sha256": "105692b9993bee96e44a319b0970c0c8bacb94e7ac3efe002004bb4892f93d9c",
+      "size": 16508
+    },
+    {
+      "path": "skills/guiding-sermon-review/assets/docs/Instruction_Module_Contracts_v1.0_APPROVED.md",
+      "sha256": "eaf60bf813f8244d2216352a342bab6ad00aa64dfb3475d0508b92ee607923b9",
+      "size": 16201
+    },
+    {
+      "path": "skills/guiding-sermon-review/assets/docs/User_Interaction_Protocols_v1.0_APPROVED.md",
+      "sha256": "56a92e1cd13866c1e520098a14ee45fcb1631def115f8fdfd2e638c2b8545220",
+      "size": 7620
+    },
+    {
+      "path": "skills/guiding-sermon-review/assets/docs/acceptance-scenarios.md",
+      "sha256": "d4defe288d58185adbe92a952dc8d6009ba70a02364fc02c1d8b1cbaaba39f4d",
+      "size": 1834
+    },
+    {
+      "path": "skills/guiding-sermon-review/assets/docs/application-invariants.md",
+      "sha256": "9d50db472181d3347843a1e2f22fde2b539f44e576a83214611bcb09076359d3",
+      "size": 1177
+    },
+    {
+      "path": "skills/guiding-sermon-review/assets/reference-mirrors.json",
+      "sha256": "a7fe9c074a59ac9ee0c99f8a01ea1ddfe0d4326b2fd2f27adf5832dc64232c27",
+      "size": 5363
+    },
+    {
+      "path": "skills/guiding-sermon-review/assets/references/professional-knowledge/RM-04A_Inductive_Exegesis_Method_Overview.md",
+      "sha256": "12c15fdf5ef1d876d0935b538f92015e7d0ecd7df49f5bb7ffc08b601882f240",
+      "size": 3874
+    },
+    {
+      "path": "skills/guiding-sermon-review/assets/references/professional-knowledge/RM-04B_Observation_Steps_1-3.md",
+      "sha256": "74b904c3eb84fe8a7a06e62c1f1021bdb64ad1e7f9a6c7297218a520948d62db",
+      "size": 4283
+    },
+    {
+      "path": "skills/guiding-sermon-review/assets/references/professional-knowledge/RM-04C_Interpretation_Steps_4-7.md",
+      "sha256": "5718ba0a20f12fc2a14c7b821df2b1819979654c39aa789b5cdf104f8de1e6f5",
+      "size": 4261
+    },
+    {
+      "path": "skills/guiding-sermon-review/assets/references/professional-knowledge/RM-04D_Application_Steps_8-10.md",
+      "sha256": "7e43392f8d421bcd2801c305562713519a296f9517cc6ae802cccded61bb2126",
+      "size": 2974
+    },
+    {
+      "path": "skills/guiding-sermon-review/assets/references/professional-knowledge/RM-04E_Inductive_Study_Questioning_Guide.md",
+      "sha256": "482005257fc9e0baa7902e99cc425b5849a83a57cb3037e6470ba79237dbc7e4",
+      "size": 4514
+    },
+    {
+      "path": "skills/guiding-sermon-review/assets/references/professional-knowledge/Reference_Material_Evaluation_v1.1.md",
+      "sha256": "3130a521d2604b6193d3b464429545dd4a5732b0218e0261943d49cd930af7d5",
+      "size": 8822
+    },
+    {
+      "path": "skills/guiding-sermon-review/assets/references/professional-knowledge/Reference_Usage_Map_v1.1.md",
+      "sha256": "054e91dba8808ed39f109f6f2e779a44163d3d1594547b945aeabd331c83abe2",
+      "size": 5889
+    },
+    {
+      "path": "skills/guiding-sermon-review/assets/references/source-materials/Bible \u65b0\u7d04\u8056\u7d93\u548c\u5408\u672c(1).pdf",
+      "sha256": "4f0f9ef4c4a78b83f918c74e8f368a7e0eae515c17866c7767c310ca75786490",
+      "size": 1557874
+    },
+    {
+      "path": "skills/guiding-sermon-review/assets/references/source-materials/Bible \u820a\u7d04\u8056\u7d93\u548c\u5408\u672c(1).pdf",
+      "sha256": "2740a6f824f96374cb127d78c3d646b489963898dacc252b842d9a8894a91125",
+      "size": 4427709
+    },
+    {
+      "path": "skills/guiding-sermon-review/assets/references/source-materials/Integrative Preaching Resource Abstract.md",
+      "sha256": "0f351cd2ee3d0fc04885c02595344f5333b84f0d263f27007a88f2dd3fe1215d",
+      "size": 3539
+    },
+    {
+      "path": "skills/guiding-sermon-review/assets/references/source-materials/The Unforgettable Sermon Resource Abstract.md",
+      "sha256": "e548934f3fbb08ee0e057fb984f3ac258e98f635b56340652f07ee3f2cd1a649",
+      "size": 3706
+    },
+    {
+      "path": "skills/guiding-sermon-review/assets/references/source-materials/\u6b78\u7d0d\u91cb\u7d93\u6cd5(1).pdf",
+      "sha256": "bd2eda9d9ef862e33645469c034d9d474cca56c03e9467a01d3cf119c1aba520",
+      "size": 1242897
+    },
+    {
+      "path": "skills/guiding-sermon-review/assets/references/source-materials/\u8b1b\u7ae0\u512a\u5316\u6559\u7df4(1).md",
+      "sha256": "c3c77eda279e3ce8fda28bbfc3122245e944b3ecbac14f75507ef2470490dcde",
+      "size": 15966
+    },
+    {
+      "path": "skills/reviewing-sermon-evidence/SKILL.md",
+      "sha256": "62cad703f9d52e2912e2d3d59c78dc927201bb1ff9218d23b0d3c77afddb801f",
+      "size": 4823
+    },
+    {
+      "path": "skills/reviewing-sermon-evidence/agents/openai.yaml",
+      "sha256": "21ddbe47d2eb09b7a04b35c4d24e3c916890138e0b14ab41c0c5e9f77ed77174",
+      "size": 164
+    },
+    {
+      "path": "skills/reviewing-sermon-evidence/assets/docs/Behavioral_Workflow_Blueprint_v1.0_APPROVED.md",
+      "sha256": "105692b9993bee96e44a319b0970c0c8bacb94e7ac3efe002004bb4892f93d9c",
+      "size": 16508
+    },
+    {
+      "path": "skills/reviewing-sermon-evidence/assets/docs/Instruction_Module_Contracts_v1.0_APPROVED.md",
+      "sha256": "eaf60bf813f8244d2216352a342bab6ad00aa64dfb3475d0508b92ee607923b9",
+      "size": 16201
+    },
+    {
+      "path": "skills/reviewing-sermon-evidence/assets/docs/User_Interaction_Protocols_v1.0_APPROVED.md",
+      "sha256": "56a92e1cd13866c1e520098a14ee45fcb1631def115f8fdfd2e638c2b8545220",
+      "size": 7620
+    },
+    {
+      "path": "skills/reviewing-sermon-evidence/assets/docs/acceptance-scenarios.md",
+      "sha256": "d4defe288d58185adbe92a952dc8d6009ba70a02364fc02c1d8b1cbaaba39f4d",
+      "size": 1834
+    },
+    {
+      "path": "skills/reviewing-sermon-evidence/assets/docs/application-invariants.md",
+      "sha256": "9d50db472181d3347843a1e2f22fde2b539f44e576a83214611bcb09076359d3",
+      "size": 1177
+    },
+    {
+      "path": "skills/reviewing-sermon-evidence/assets/reference-mirrors.json",
+      "sha256": "3fb6ad0ee870c3258d4c9023c05b12252ccbccec4a3adc517b8f50920ddabe75",
+      "size": 5367
+    },
+    {
+      "path": "skills/reviewing-sermon-evidence/assets/references/professional-knowledge/RM-04A_Inductive_Exegesis_Method_Overview.md",
+      "sha256": "12c15fdf5ef1d876d0935b538f92015e7d0ecd7df49f5bb7ffc08b601882f240",
+      "size": 3874
+    },
+    {
+      "path": "skills/reviewing-sermon-evidence/assets/references/professional-knowledge/RM-04B_Observation_Steps_1-3.md",
+      "sha256": "74b904c3eb84fe8a7a06e62c1f1021bdb64ad1e7f9a6c7297218a520948d62db",
+      "size": 4283
+    },
+    {
+      "path": "skills/reviewing-sermon-evidence/assets/references/professional-knowledge/RM-04C_Interpretation_Steps_4-7.md",
+      "sha256": "5718ba0a20f12fc2a14c7b821df2b1819979654c39aa789b5cdf104f8de1e6f5",
+      "size": 4261
+    },
+    {
+      "path": "skills/reviewing-sermon-evidence/assets/references/professional-knowledge/RM-04D_Application_Steps_8-10.md",
+      "sha256": "7e43392f8d421bcd2801c305562713519a296f9517cc6ae802cccded61bb2126",
+      "size": 2974
+    },
+    {
+      "path": "skills/reviewing-sermon-evidence/assets/references/professional-knowledge/RM-04E_Inductive_Study_Questioning_Guide.md",
+      "sha256": "482005257fc9e0baa7902e99cc425b5849a83a57cb3037e6470ba79237dbc7e4",
+      "size": 4514
+    },
+    {
+      "path": "skills/reviewing-sermon-evidence/assets/references/professional-knowledge/Reference_Material_Evaluation_v1.1.md",
+      "sha256": "3130a521d2604b6193d3b464429545dd4a5732b0218e0261943d49cd930af7d5",
+      "size": 8822
+    },
+    {
+      "path": "skills/reviewing-sermon-evidence/assets/references/professional-knowledge/Reference_Usage_Map_v1.1.md",
+      "sha256": "054e91dba8808ed39f109f6f2e779a44163d3d1594547b945aeabd331c83abe2",
+      "size": 5889
+    },
+    {
+      "path": "skills/reviewing-sermon-evidence/assets/references/source-materials/Bible \u65b0\u7d04\u8056\u7d93\u548c\u5408\u672c(1).pdf",
+      "sha256": "4f0f9ef4c4a78b83f918c74e8f368a7e0eae515c17866c7767c310ca75786490",
+      "size": 1557874
+    },
+    {
+      "path": "skills/reviewing-sermon-evidence/assets/references/source-materials/Bible \u820a\u7d04\u8056\u7d93\u548c\u5408\u672c(1).pdf",
+      "sha256": "2740a6f824f96374cb127d78c3d646b489963898dacc252b842d9a8894a91125",
+      "size": 4427709
+    },
+    {
+      "path": "skills/reviewing-sermon-evidence/assets/references/source-materials/Integrative Preaching Resource Abstract.md",
+      "sha256": "0f351cd2ee3d0fc04885c02595344f5333b84f0d263f27007a88f2dd3fe1215d",
+      "size": 3539
+    },
+    {
+      "path": "skills/reviewing-sermon-evidence/assets/references/source-materials/The Unforgettable Sermon Resource Abstract.md",
+      "sha256": "e548934f3fbb08ee0e057fb984f3ac258e98f635b56340652f07ee3f2cd1a649",
+      "size": 3706
+    },
+    {
+      "path": "skills/reviewing-sermon-evidence/assets/references/source-materials/\u6b78\u7d0d\u91cb\u7d93\u6cd5(1).pdf",
+      "sha256": "bd2eda9d9ef862e33645469c034d9d474cca56c03e9467a01d3cf119c1aba520",
+      "size": 1242897
+    },
+    {
+      "path": "skills/reviewing-sermon-evidence/assets/references/source-materials/\u8b1b\u7ae0\u512a\u5316\u6559\u7df4(1).md",
+      "sha256": "c3c77eda279e3ce8fda28bbfc3122245e944b3ecbac14f75507ef2470490dcde",
+      "size": 15966
+    },
+    {
+      "path": "tools/application-contracts.json",
+      "sha256": "539ea3b7f85026a6ceace6fc5819246de8f047ce64eb017a537b7b974626591c",
+      "size": 16942
+    }
+  ],
+  "content_tree_sha256": "c70fb44eaf99076bea2c7898224056c9f65bebe77a3958457011937b8e8c0cab",
+  "offline_validators": [
+    {
+      "files": [
+        "scripts/sermon_control.py"
+      ],
+      "id": "sermon-control",
+      "installed_runtime_callable": false,
+      "required": false,
+      "runtime_role": "OFFLINE_PACKAGE_VALIDATION_ONLY",
+      "source_contract_sha256": "6aa4c968d2df851f7e025ac6a939805a4f53344fc8563ae8d17f4eccd40330d5"
+    },
+    {
+      "files": [
+        "scripts/read_packaged_reference.py",
+        "data/source-page-extractions.json",
+        "data/reference-registry.json",
+        "data/cuv-verse-index.json",
+        "references/source-materials/\u8b1b\u7ae0\u512a\u5316\u6559\u7df4(1).md",
+        "references/source-materials/Integrative Preaching Resource Abstract.md",
+        "references/source-materials/The Unforgettable Sermon Resource Abstract.md",
+        "references/source-materials/\u6b78\u7d0d\u91cb\u7d93\u6cd5(1).pdf",
+        "references/professional-knowledge/RM-04A_Inductive_Exegesis_Method_Overview.md",
+        "references/professional-knowledge/RM-04B_Observation_Steps_1-3.md",
+        "references/professional-knowledge/RM-04C_Interpretation_Steps_4-7.md",
+        "references/professional-knowledge/RM-04D_Application_Steps_8-10.md",
+        "references/professional-knowledge/RM-04E_Inductive_Study_Questioning_Guide.md",
+        "references/source-materials/Bible \u820a\u7d04\u8056\u7d93\u548c\u5408\u672c(1).pdf",
+        "references/source-materials/Bible \u65b0\u7d04\u8056\u7d93\u548c\u5408\u672c(1).pdf",
+        "references/professional-knowledge/Reference_Material_Evaluation_v1.1.md",
+        "references/professional-knowledge/Reference_Usage_Map_v1.1.md"
+      ],
+      "id": "packaged-reference-access",
+      "installed_runtime_callable": false,
+      "required": false,
+      "runtime_role": "OFFLINE_PACKAGE_VALIDATION_ONLY",
+      "source_contract_sha256": "144a9f946dd0bd2475076193eefedea1c6551ccdce69b7a4ab15dc3664b30699"
+    }
+  ],
+  "plugin_id": "sermon-coach",
+  "schema": "workbench-repair-manifest-v1",
+  "skill_local_document_repairs": [
+    {
+      "copied_documents": [
+        {
+          "path": "skills/coaching-sermon-revisions/assets/docs/Behavioral_Workflow_Blueprint_v1.0_APPROVED.md",
+          "sha256": "105692b9993bee96e44a319b0970c0c8bacb94e7ac3efe002004bb4892f93d9c"
+        },
+        {
+          "path": "skills/coaching-sermon-revisions/assets/docs/Instruction_Module_Contracts_v1.0_APPROVED.md",
+          "sha256": "eaf60bf813f8244d2216352a342bab6ad00aa64dfb3475d0508b92ee607923b9"
+        },
+        {
+          "path": "skills/coaching-sermon-revisions/assets/docs/User_Interaction_Protocols_v1.0_APPROVED.md",
+          "sha256": "56a92e1cd13866c1e520098a14ee45fcb1631def115f8fdfd2e638c2b8545220"
+        },
+        {
+          "path": "skills/coaching-sermon-revisions/assets/docs/acceptance-scenarios.md",
+          "sha256": "d4defe288d58185adbe92a952dc8d6009ba70a02364fc02c1d8b1cbaaba39f4d"
+        },
+        {
+          "path": "skills/coaching-sermon-revisions/assets/docs/application-invariants.md",
+          "sha256": "9d50db472181d3347843a1e2f22fde2b539f44e576a83214611bcb09076359d3"
+        }
+      ],
+      "skill": "coaching-sermon-revisions",
+      "skill_sha256_after": "36c42303e8ee906d10ad0c65576ab02505d187d398d588c7ba7f612fb91ea1f3",
+      "skill_sha256_before": "0b451e86b240d038064771d319b5b161cc1f9af0509f818cc56ef72512e5496c"
+    },
+    {
+      "copied_documents": [
+        {
+          "path": "skills/guiding-inductive-study/assets/docs/Behavioral_Workflow_Blueprint_v1.0_APPROVED.md",
+          "sha256": "105692b9993bee96e44a319b0970c0c8bacb94e7ac3efe002004bb4892f93d9c"
+        },
+        {
+          "path": "skills/guiding-inductive-study/assets/docs/Instruction_Module_Contracts_v1.0_APPROVED.md",
+          "sha256": "eaf60bf813f8244d2216352a342bab6ad00aa64dfb3475d0508b92ee607923b9"
+        },
+        {
+          "path": "skills/guiding-inductive-study/assets/docs/User_Interaction_Protocols_v1.0_APPROVED.md",
+          "sha256": "56a92e1cd13866c1e520098a14ee45fcb1631def115f8fdfd2e638c2b8545220"
+        },
+        {
+          "path": "skills/guiding-inductive-study/assets/docs/acceptance-scenarios.md",
+          "sha256": "d4defe288d58185adbe92a952dc8d6009ba70a02364fc02c1d8b1cbaaba39f4d"
+        },
+        {
+          "path": "skills/guiding-inductive-study/assets/docs/application-invariants.md",
+          "sha256": "9d50db472181d3347843a1e2f22fde2b539f44e576a83214611bcb09076359d3"
+        }
+      ],
+      "skill": "guiding-inductive-study",
+      "skill_sha256_after": "de706e00916e4ab841669cd84498b398a60d834eeddffa7c052f0afaa643f7ec",
+      "skill_sha256_before": "4d0ead5b4bf10d28fe161f86dc9f5e4285ddea3f83ee4c7da1d21d03e7cba3b6"
+    },
+    {
+      "copied_documents": [
+        {
+          "path": "skills/guiding-sermon-review/assets/docs/Behavioral_Workflow_Blueprint_v1.0_APPROVED.md",
+          "sha256": "105692b9993bee96e44a319b0970c0c8bacb94e7ac3efe002004bb4892f93d9c"
+        },
+        {
+          "path": "skills/guiding-sermon-review/assets/docs/Instruction_Module_Contracts_v1.0_APPROVED.md",
+          "sha256": "eaf60bf813f8244d2216352a342bab6ad00aa64dfb3475d0508b92ee607923b9"
+        },
+        {
+          "path": "skills/guiding-sermon-review/assets/docs/User_Interaction_Protocols_v1.0_APPROVED.md",
+          "sha256": "56a92e1cd13866c1e520098a14ee45fcb1631def115f8fdfd2e638c2b8545220"
+        },
+        {
+          "path": "skills/guiding-sermon-review/assets/docs/acceptance-scenarios.md",
+          "sha256": "d4defe288d58185adbe92a952dc8d6009ba70a02364fc02c1d8b1cbaaba39f4d"
+        },
+        {
+          "path": "skills/guiding-sermon-review/assets/docs/application-invariants.md",
+          "sha256": "9d50db472181d3347843a1e2f22fde2b539f44e576a83214611bcb09076359d3"
+        }
+      ],
+      "skill": "guiding-sermon-review",
+      "skill_sha256_after": "e4cf8e83f4c831de7a2968b1560b004230483d83ff3456e5807d84b380750945",
+      "skill_sha256_before": "17e6486257462ee9ddc987e5d35ccdd188d6b1ca389481cd0c3ee974eee91004"
+    },
+    {
+      "copied_documents": [
+        {
+          "path": "skills/reviewing-sermon-evidence/assets/docs/Behavioral_Workflow_Blueprint_v1.0_APPROVED.md",
+          "sha256": "105692b9993bee96e44a319b0970c0c8bacb94e7ac3efe002004bb4892f93d9c"
+        },
+        {
+          "path": "skills/reviewing-sermon-evidence/assets/docs/Instruction_Module_Contracts_v1.0_APPROVED.md",
+          "sha256": "eaf60bf813f8244d2216352a342bab6ad00aa64dfb3475d0508b92ee607923b9"
+        },
+        {
+          "path": "skills/reviewing-sermon-evidence/assets/docs/User_Interaction_Protocols_v1.0_APPROVED.md",
+          "sha256": "56a92e1cd13866c1e520098a14ee45fcb1631def115f8fdfd2e638c2b8545220"
+        },
+        {
+          "path": "skills/reviewing-sermon-evidence/assets/docs/acceptance-scenarios.md",
+          "sha256": "d4defe288d58185adbe92a952dc8d6009ba70a02364fc02c1d8b1cbaaba39f4d"
+        },
+        {
+          "path": "skills/reviewing-sermon-evidence/assets/docs/application-invariants.md",
+          "sha256": "9d50db472181d3347843a1e2f22fde2b539f44e576a83214611bcb09076359d3"
+        }
+      ],
+      "skill": "reviewing-sermon-evidence",
+      "skill_sha256_after": "62cad703f9d52e2912e2d3d59c78dc927201bb1ff9218d23b0d3c77afddb801f",
+      "skill_sha256_before": "8fd645eedcd0be6c3eff4e533348a0e113fb9db9d7ab2ce7f5f972842576927f"
+    }
+  ],
+  "source_archive_sha256": "cf425863ede9d205944373b26c1c7f0435d2cc66c8ac6e949afca67939e62c90",
+  "source_content_tree_disposition": "SUPERSEDED_BY_EXACT_MEMBER_CLOSURE",
+  "source_content_tree_sha256_claim": "20353622f3b2f318b8455c5d2faab45b39515db58a86086cc1d9096c7bc1f7ba",
+  "source_content_tree_sha256_recomputed": "6c489776d01b7d05df02f8da5aa985202df74899a0fae3839365be6ef75ba227",
+  "source_manifest_schema": "plugin-builder-manifest-v1.0.3-runtime-native-reference-access",
+  "source_manifest_sha256": "075aaf838c741f8b4b750924124637318f5cecf62ee8feff3f870b638701e3e3",
+  "source_version": "1.0.3",
+  "target_version": "1.0.3",
+  "third_party_sources": [
+    {
+      "path": "references/source-materials/\u8b1b\u7ae0\u512a\u5316\u6559\u7df4(1).md",
+      "reference_id": "RM-01",
+      "rights_basis": "Owner-approved inclusion and public redistribution of the supplied application baseline.",
+      "sha256": "c3c77eda279e3ce8fda28bbfc3122245e944b3ecbac14f75507ef2470490dcde"
+    },
+    {
+      "path": "references/source-materials/Integrative Preaching Resource Abstract.md",
+      "reference_id": "RM-02",
+      "rights_basis": "Owner-approved inclusion and public redistribution of the supplied derivative abstract; public verbatim quotation from the underlying book remains excluded.",
+      "sha256": "0f351cd2ee3d0fc04885c02595344f5333b84f0d263f27007a88f2dd3fe1215d"
+    },
+    {
+      "path": "references/source-materials/The Unforgettable Sermon Resource Abstract.md",
+      "reference_id": "RM-03",
+      "rights_basis": "Owner-approved inclusion and public redistribution of the supplied derivative abstract; public verbatim quotation from the underlying book remains excluded.",
+      "sha256": "e548934f3fbb08ee0e057fb984f3ac258e98f635b56340652f07ee3f2cd1a649"
+    },
+    {
+      "path": "references/source-materials/\u6b78\u7d0d\u91cb\u7d93\u6cd5(1).pdf",
+      "reference_id": "RM-04-SOURCE",
+      "rights_basis": "Owner-approved inclusion, transformation, and public redistribution of the supplied source PDF for the intended application use.",
+      "sha256": "bd2eda9d9ef862e33645469c034d9d474cca56c03e9467a01d3cf119c1aba520"
+    },
+    {
+      "path": "references/source-materials/Bible \u820a\u7d04\u8056\u7d93\u548c\u5408\u672c(1).pdf",
+      "reference_id": "RM-05",
+      "rights_basis": "Owner-approved inclusion and public redistribution of the supplied Chinese Union Version Old Testament reference.",
+      "sha256": "2740a6f824f96374cb127d78c3d646b489963898dacc252b842d9a8894a91125"
+    },
+    {
+      "path": "references/source-materials/Bible \u65b0\u7d04\u8056\u7d93\u548c\u5408\u672c(1).pdf",
+      "reference_id": "RM-06",
+      "rights_basis": "Owner-approved inclusion and public redistribution of the supplied Chinese Union Version New Testament reference.",
+      "sha256": "4f0f9ef4c4a78b83f918c74e8f368a7e0eae515c17866c7767c310ca75786490"
+    }
+  ],
+  "tool_bindings": [],
+  "tool_contracts": []
+}

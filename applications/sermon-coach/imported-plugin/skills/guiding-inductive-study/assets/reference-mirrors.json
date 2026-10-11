@@ -1,0 +1,110 @@
+{
+  "schema": "sermon-coach-skill-reference-mirrors-v1",
+  "skill": "guiding-inductive-study",
+  "references": {
+    "REF-EVAL": {
+      "canonical_id": "REF-EVAL",
+      "canonical_path": "references/professional-knowledge/Reference_Material_Evaluation_v1.1.md",
+      "mirror_path": "assets/references/professional-knowledge/Reference_Material_Evaluation_v1.1.md",
+      "sha256": "3130a521d2604b6193d3b464429545dd4a5732b0218e0261943d49cd930af7d5",
+      "kind": "governance",
+      "authority": "mirror-of-canonical"
+    },
+    "REF-USAGE": {
+      "canonical_id": "REF-USAGE",
+      "canonical_path": "references/professional-knowledge/Reference_Usage_Map_v1.1.md",
+      "mirror_path": "assets/references/professional-knowledge/Reference_Usage_Map_v1.1.md",
+      "sha256": "054e91dba8808ed39f109f6f2e779a44163d3d1594547b945aeabd331c83abe2",
+      "kind": "governance",
+      "authority": "mirror-of-canonical"
+    },
+    "RM-01": {
+      "canonical_id": "RM-01",
+      "canonical_path": "references/source-materials/講章優化教練(1).md",
+      "mirror_path": "assets/references/source-materials/講章優化教練(1).md",
+      "sha256": "c3c77eda279e3ce8fda28bbfc3122245e944b3ecbac14f75507ef2470490dcde",
+      "kind": "behavioral-baseline",
+      "authority": "mirror-of-canonical"
+    },
+    "RM-02": {
+      "canonical_id": "RM-02",
+      "canonical_path": "references/source-materials/Integrative Preaching Resource Abstract.md",
+      "mirror_path": "assets/references/source-materials/Integrative Preaching Resource Abstract.md",
+      "sha256": "0f351cd2ee3d0fc04885c02595344f5333b84f0d263f27007a88f2dd3fe1215d",
+      "kind": "advisory",
+      "authority": "mirror-of-canonical"
+    },
+    "RM-03": {
+      "canonical_id": "RM-03",
+      "canonical_path": "references/source-materials/The Unforgettable Sermon Resource Abstract.md",
+      "mirror_path": "assets/references/source-materials/The Unforgettable Sermon Resource Abstract.md",
+      "sha256": "e548934f3fbb08ee0e057fb984f3ac258e98f635b56340652f07ee3f2cd1a649",
+      "kind": "advisory",
+      "authority": "mirror-of-canonical"
+    },
+    "RM-04-SOURCE": {
+      "canonical_id": "RM-04-SOURCE",
+      "canonical_path": "references/source-materials/歸納釋經法(1).pdf",
+      "mirror_path": "assets/references/source-materials/歸納釋經法(1).pdf",
+      "sha256": "bd2eda9d9ef862e33645469c034d9d474cca56c03e9467a01d3cf119c1aba520",
+      "kind": "source-authority",
+      "authority": "mirror-of-canonical"
+    },
+    "RM-04A": {
+      "canonical_id": "RM-04A",
+      "canonical_path": "references/professional-knowledge/RM-04A_Inductive_Exegesis_Method_Overview.md",
+      "mirror_path": "assets/references/professional-knowledge/RM-04A_Inductive_Exegesis_Method_Overview.md",
+      "sha256": "12c15fdf5ef1d876d0935b538f92015e7d0ecd7df49f5bb7ffc08b601882f240",
+      "kind": "derivative",
+      "authority": "mirror-of-canonical"
+    },
+    "RM-04B": {
+      "canonical_id": "RM-04B",
+      "canonical_path": "references/professional-knowledge/RM-04B_Observation_Steps_1-3.md",
+      "mirror_path": "assets/references/professional-knowledge/RM-04B_Observation_Steps_1-3.md",
+      "sha256": "74b904c3eb84fe8a7a06e62c1f1021bdb64ad1e7f9a6c7297218a520948d62db",
+      "kind": "derivative",
+      "authority": "mirror-of-canonical"
+    },
+    "RM-04C": {
+      "canonical_id": "RM-04C",
+      "canonical_path": "references/professional-knowledge/RM-04C_Interpretation_Steps_4-7.md",
+      "mirror_path": "assets/references/professional-knowledge/RM-04C_Interpretation_Steps_4-7.md",
+      "sha256": "5718ba0a20f12fc2a14c7b821df2b1819979654c39aa789b5cdf104f8de1e6f5",
+      "kind": "derivative",
+      "authority": "mirror-of-canonical"
+    },
+    "RM-04D": {
+      "canonical_id": "RM-04D",
+      "canonical_path": "references/professional-knowledge/RM-04D_Application_Steps_8-10.md",
+      "mirror_path": "assets/references/professional-knowledge/RM-04D_Application_Steps_8-10.md",
+      "sha256": "7e43392f8d421bcd2801c305562713519a296f9517cc6ae802cccded61bb2126",
+      "kind": "derivative",
+      "authority": "mirror-of-canonical"
+    },
+    "RM-04E": {
+      "canonical_id": "RM-04E",
+      "canonical_path": "references/professional-knowledge/RM-04E_Inductive_Study_Questioning_Guide.md",
+      "mirror_path": "assets/references/professional-knowledge/RM-04E_Inductive_Study_Questioning_Guide.md",
+      "sha256": "482005257fc9e0baa7902e99cc425b5849a83a57cb3037e6470ba79237dbc7e4",
+      "kind": "derivative",
+      "authority": "mirror-of-canonical"
+    },
+    "RM-05": {
+      "canonical_id": "RM-05",
+      "canonical_path": "references/source-materials/Bible 舊約聖經和合本(1).pdf",
+      "mirror_path": "assets/references/source-materials/Bible 舊約聖經和合本(1).pdf",
+      "sha256": "2740a6f824f96374cb127d78c3d646b489963898dacc252b842d9a8894a91125",
+      "kind": "exact-scripture-authority",
+      "authority": "mirror-of-canonical"
+    },
+    "RM-06": {
+      "canonical_id": "RM-06",
+      "canonical_path": "references/source-materials/Bible 新約聖經和合本(1).pdf",
+      "mirror_path": "assets/references/source-materials/Bible 新約聖經和合本(1).pdf",
+      "sha256": "4f0f9ef4c4a78b83f918c74e8f368a7e0eae515c17866c7767c310ca75786490",
+      "kind": "exact-scripture-authority",
+      "authority": "mirror-of-canonical"
+    }
+  }
+}

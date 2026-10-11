@@ -257,7 +257,7 @@ class MarketplaceReleaseTests(unittest.TestCase):
             self.assertEqual(target.name, {plugin_id!r})
             expected = sorted(p.relative_to(source / "imported-plugin") for p in (source / "imported-plugin").rglob("*") if p.is_file())
             actual = sorted(p.relative_to(target) for p in target.rglob("*") if p.is_file())
-            self.assertEqual(actual, sorted([*expected, Path("LICENSE")]))
+            self.assertEqual(actual, sorted(set(expected) | {{Path("LICENSE")}}))
             for relative in expected:
                 self.assertEqual((target / relative).read_bytes(), (source / "imported-plugin" / relative).read_bytes())
             self.assertEqual((target / "LICENSE").read_bytes(), (source / "LICENSE").read_bytes())
