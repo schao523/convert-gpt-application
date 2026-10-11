@@ -83,6 +83,27 @@ not render the scanned PDF and was classified as an environment-only failure;
 the unchanged scenario passed after the exact packaged page was rendered in a
 disposable root and supplied to the fresh process.
 
+## Obvious One publication result
+
+- Marketplace release commits: `6663cd7a21e577ac292d37d6c17145b8d6b35a5d`
+  and corrective commit `b3c24a5de0185d7d879d2aa4c5d88b3984b7cbed`.
+- Pull request: `schao523/obvious-one-plugins#6`.
+- Published `main` merge commit:
+  `8682092411d8899d2cd24fbcbad0d75ad7607527`.
+- Exact remote-commit verification: filesystem, Git index, commit, and fresh
+  checkout all `PASS` across the 731-file marketplace catalog.
+- Published marketplace tree SHA-256:
+  `2bfd893862d626efd547e8f6c24d6385f90ea98fb2903296385e4f1e7fa078ed`.
+- Fresh Obvious One installation: 228 installed files matched the published
+  plugin tree byte for byte; plugin version was 1.0.2 and the installed
+  `LICENSE` SHA-256 remained
+  `e31ef2620c66c2bd09ef56abd6d43264132415e2d1d4cad31452b12143aea8b5`.
+- A fresh read-only Codex process loaded the published Obvious One skill files,
+  routed a formal Ephesians 4:32 study from
+  `coaching-parenting-and-sensitive-conversations` to
+  `guiding-biblical-study`, used RM-04B page 228, returned only the first
+  observation step, and waited: `PASS`.
+
 OpenClaw runtime behavior and cross-runtime equivalence remain `NOT VERIFIED`.
 ClawHub and the OpenAI universal directory are `NOT APPLICABLE` to this
 Codex-only Obvious One publication action.
