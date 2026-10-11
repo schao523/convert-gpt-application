@@ -36,6 +36,7 @@ from .capabilities import (
 )
 from .runtime_realization import RuntimeRealizationContract, validate_runtime_realization
 from .materialize import materialize_files, overlay_files
+from .delegated_references import validate_delegated_references
 
 __all__ = [
     "ArchiveInventory",
@@ -72,4 +73,5 @@ __all__ = [
     "validate_runtime_realization",
     "materialize_files",
     "overlay_files",
+    "validate_delegated_references",
 ]

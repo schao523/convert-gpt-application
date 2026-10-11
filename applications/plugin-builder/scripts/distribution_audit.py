@@ -42,6 +42,7 @@ VENDOR_FILES = {
     "scripts/vendor/obvious_one_plugin_framework/plugin_authoring/__init__.py",
     "scripts/vendor/obvious_one_plugin_framework/plugin_authoring/archive.py",
     "scripts/vendor/obvious_one_plugin_framework/plugin_authoring/capabilities.py",
+    "scripts/vendor/obvious_one_plugin_framework/plugin_authoring/delegated_references.py",
     "scripts/vendor/obvious_one_plugin_framework/plugin_authoring/identity.py",
     "scripts/vendor/obvious_one_plugin_framework/plugin_authoring/materialize.py",
     "scripts/vendor/obvious_one_plugin_framework/plugin_authoring/manifests.py",

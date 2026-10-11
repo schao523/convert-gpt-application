@@ -1,0 +1,38 @@
+{
+  "schema": "plugin-delegated-reference-repair-v2",
+  "plugin_id": "growing-with-children",
+  "source_version": "1.0.1",
+  "target_version": "1.0.2",
+  "source_archive_sha256": "e20ab7f970565dde1d2bfa8529d82da12366dfbed6a6672aed9dc51eedb6d1f1",
+  "owner_skill": "guiding-biblical-study",
+  "non_owner_skills": [
+    "coaching-parenting-and-sensitive-conversations",
+    "designing-family-devotions",
+    "guiding-parenting-sessions",
+    "supporting-parent-reflection"
+  ],
+  "references": [
+    {
+      "reference_id": "RM-04A",
+      "owner_relative_path": "assets/reference-material/RM-04A_Bible_舊約聖經和合本_PUBLIC_DOMAIN.pdf",
+      "sha256": "2740a6f824f96374cb127d78c3d646b489963898dacc252b842d9a8894a91125"
+    },
+    {
+      "reference_id": "RM-04B",
+      "owner_relative_path": "assets/reference-material/RM-04B_Bible_新約聖經和合本_PUBLIC_DOMAIN.pdf",
+      "sha256": "4f0f9ef4c4a78b83f918c74e8f368a7e0eae515c17866c7767c310ca75786490"
+    }
+  ],
+  "source_manifest_path": "PLUGIN-BUILDER-MANIFEST.json",
+  "approval_record": {
+    "decision": "APPROVED",
+    "confirmed_by": "decision-owner",
+    "recorded_at": "2026-10-09"
+  },
+  "third_party_notice": {
+    "classification": "PUBLIC_DOMAIN",
+    "redistribution_approved": true,
+    "confirmed_by": "SC",
+    "recorded_at": "2026-10-10"
+  }
+}

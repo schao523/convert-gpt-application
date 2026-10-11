@@ -1,0 +1,17 @@
+{
+  "schema_version": 3,
+  "application_id": "growing-with-children",
+  "plugin_id": "growing-with-children",
+  "source_repository": "externally-supplied-plugin-builder-archive",
+  "source_tree_sha256": "e20ab7f970565dde1d2bfa8529d82da12366dfbed6a6672aed9dc51eedb6d1f1",
+  "marketplace_repository": "schao523/obvious-one-plugins",
+  "marketplace_commit": null,
+  "incorporated_branches": [],
+  "source_inventory": [
+    {
+      "classification": "immutable-external-source-archive",
+      "path": "growing-with-children_v1.0.1 (1).zip",
+      "sha256": "e20ab7f970565dde1d2bfa8529d82da12366dfbed6a6672aed9dc51eedb6d1f1"
+    }
+  ]
+}

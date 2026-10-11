@@ -538,6 +538,31 @@ plugin in small, reviewable stages. Preserve the original source files.
 
 ## Stage 6: let Codex build and validate the plugin
 
+### If an older Plugin Builder ZIP needs a bounded repair
+
+First ask Codex to inspect the exact ZIP without changing it. Legacy producer
+claims, Workbench static observations, and installed-runtime evidence must stay
+separate. Inspection success is not repair approval and is not publication
+approval.
+
+If inspection finds a repairable ownership or path defect, review a small
+repair contract that identifies the exact source SHA-256, target version,
+files or bindings that may change, behavior that must remain unchanged, and
+the decision-owner approval. The repair produces a new derivative ZIP while
+preserving the original. Review and approve that derivative independently.
+
+Then complete four distinct gates:
+
+1. repair approval and deterministic static validation;
+2. local package readiness and two-build byte equality;
+3. installed-runtime invocation and behavior evidence; and
+4. exact marketplace delta and publication authority.
+
+Do not merge these approvals. `STATICALLY VERIFIED` does not become
+`RUNTIME VERIFIED` merely because the ZIP installs or the plugin is
+discoverable. Any unobserved layer remains `NOT VERIFIED`, and publication
+waits for the runtime scenarios required by the approved release design.
+
 ### What you do
 
 You do not need to direct every implementation detail. Ask Codex to report outcomes in language you can review.

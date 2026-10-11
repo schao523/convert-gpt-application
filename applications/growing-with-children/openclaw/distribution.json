@@ -1,0 +1,43 @@
+{
+  "schema_version": 3,
+  "plugin_id": "growing-with-children",
+  "package_name": "@obvious-one/growing-with-children",
+  "family": "bundle-plugin",
+  "version": "1.0.2",
+  "source_root": "..",
+  "include_files": [
+    ".codex-plugin/plugin.json",
+    "plugin.json",
+    "repair/delegated-reference-repair-v1.json",
+    "docs/source-decisions.md"
+  ],
+  "include_prefixes": ["scripts"],
+  "exclude_paths": [],
+  "max_total_bytes": 52428800,
+  "release_repository": "schao523/obvious-one-plugins",
+  "release_tag_template": "growing-with-children-v{version}",
+  "readme_overlay": null,
+  "audit_hook": null,
+  "rag": null,
+  "content_rules": [
+    {
+      "id": "approved-repair-recipe",
+      "paths": [
+        ".codex-plugin/plugin.json",
+        "plugin.json",
+        "repair/delegated-reference-repair-v1.json",
+        "docs/source-decisions.md"
+      ],
+      "prefixes": ["scripts"],
+      "classification": "text",
+      "redistribution": {
+        "status": "approved",
+        "provenance": "docs/source-decisions.md"
+      }
+    }
+  ],
+  "publication": {
+    "github_marketplace": {"enabled": true},
+    "clawhub": {"enabled": false, "family": null, "native_manifest": null}
+  }
+}

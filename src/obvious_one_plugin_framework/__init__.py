@@ -144,6 +144,14 @@ from .workbench_handoff import (
     validate_canonical_handoff,
     validate_update_baseline,
 )
+from .plugin_onboarding import (
+    OnboardingError,
+    PackageMetadata,
+    PublicationDecisions,
+    load_package_metadata,
+    load_publication_decisions,
+    prepare_plugin_zip_marketplace,
+)
 
 __all__ = [
     "AssetGroup",
@@ -264,6 +272,12 @@ __all__ = [
     "canonical_json_bytes",
     "validate_canonical_handoff",
     "validate_update_baseline",
+    "OnboardingError",
+    "PackageMetadata",
+    "PublicationDecisions",
+    "load_package_metadata",
+    "load_publication_decisions",
+    "prepare_plugin_zip_marketplace",
 ]
 
 __version__ = "0.1.0"

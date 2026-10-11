@@ -298,6 +298,116 @@ authorize creating a duplicate, publishing to a marketplace, or submitting to
 the public directory. `hosted_deployment_verified` proves the local artifact,
 not hosted execution and not repository-wide `READY` status.
 
+### Inspect and repair an approved legacy Plugin Builder ZIP
+
+Inspection is read-only and does not make a legacy package publishable:
+
+```powershell
+python -B -m obvious_one_plugin_framework.cli inspect-plugin-zip `
+  --archive .\path\legacy-plugin.zip `
+  --output .\.tmp\plugin-inspection.json `
+  --json
+```
+
+The inspection records legacy producer statements under `producer_claims`,
+but does not relabel them as Plugin Builder v2/v3 evidence. Workbench-derived
+archive and member hashes remain separate, and all unobserved installed-
+runtime layers remain `NOT VERIFIED`. Unknown, mixed, or unsafe envelopes fail
+closed before extraction.
+
+A repair requires a tracked, decision-owner-approved
+`plugin-delegated-reference-repair-v1` contract bound to the exact source ZIP,
+plugin identity, versions, reference bytes, owner skill, and non-owner skills.
+Schema v1 never invents a rights notice. When approved public-domain reference
+files must be redistributed, use the backward-compatible
+`plugin-delegated-reference-repair-v2` contract. Its exact
+`third_party_notice` record requires classification `PUBLIC_DOMAIN`, explicit
+redistribution approval, the confirmer, and the decision date. The repair then
+generates a root `THIRD_PARTY_NOTICES.md` that records every affected reference
+ID, owner path, filename, and SHA-256 digest. Existing notices are not
+overwritten, and other classifications require a later contract revision.
+The product launcher takes explicit paths and writes only below its output
+root. For the approved Growing with Children repair:
+
+```powershell
+python -B .\applications\growing-with-children\scripts\build_repaired_release.py `
+  --source <exact-1.0.1-zip> `
+  --output .\dist\growing-with-children-1.0.2 `
+  --json
+```
+
+Run archive, Git, hard-link, filesystem, and packaging operations in genuine
+system temporary storage with `PYTHONUTF8=1`. The original ZIP is immutable;
+the derivative ZIP and `package-metadata.json` are Workbench-owned evidence,
+not fabricated Plugin Builder v2/v3 evidence. A repair `PASS` is
+`STATICALLY VERIFIED` only and does not establish installation, skill
+invocation, reference use, conversation behavior, or publication authority.
+
+### Prepare a Plugin Builder ZIP onboarding proposal
+
+Use this command only for a new plugin produced by Plugin Builder and only
+after the decision owner has supplied the strict publication-decision record:
+
+```powershell
+python -B -m obvious_one_plugin_framework.cli prepare-plugin-zip-marketplace `
+  --archive .\path\<plugin-id>.zip `
+  --package-metadata .\path\package-metadata.json `
+  --publication-decisions .\path\publication-decisions.json `
+  --repository D:\GitHub\convert-gpt-application `
+  --output .\.tmp\plugin-onboarding\<plugin-id> `
+  --json
+```
+
+`--evidence <runtime-evidence.zip>` is optional. The archive must use the
+Plugin Builder portable single-directory envelope. Metadata may use
+`plugin-builder-package-v2`, `plugin-builder-package-v3`, or the bounded
+`workbench-repaired-plugin-v1` emitted by an approved repair. A legacy
+inspection report by itself is never sufficient. The decision file
+must use `plugin-publication-decisions-v1` and explicitly approve MIT
+licensing, redistribution, third-party-content disposition, Codex as the
+target runtime, the `obvious-one` marketplace, and
+`plugins/<plugin-id>` as the destination. Unknown fields, missing authority,
+identity mismatches, unsafe archives, undeclared executable or dependency
+content, and stale evidence fail closed.
+
+On success the command creates an owned proposal directory containing
+`onboarding-result.json`, `onboarding-proposal.json`, `catalog-entry.json`, and
+an `application/` tree. The application tree contains exact imported plugin
+bytes below `imported-plugin/`, schema-v2 `conversion.json`, schema-v3
+`openclaw/distribution.json`, product-neutral policy documents, a deterministic
+Codex builder, and self-contained Workbench tests. Repeating the command may
+replace only an output carrying its `.obvious-one-plugin-onboarding` marker;
+an unmarked nonempty destination is never overwritten.
+
+A `PASS` result and `plugin-onboarding-proposal-v1` mean only that a static,
+deterministic registration proposal was prepared. They do not mean that the
+application was adopted, the marketplace was changed, the plugin was
+published, or installed-runtime behavior was verified. Runtime observations
+remain exactly `NOT VERIFIED`, `STATICALLY VERIFIED`, or `RUNTIME VERIFIED` at
+the layer actually evidenced; onboarding never promotes them merely because a
+ZIP was accepted.
+
+The decision owner next reviews the complete proposal and, under a separate
+approval, applies exactly these two pieces to a Workbench branch:
+
+1. copy `application/` to `applications/<plugin-id>/`; and
+2. append the exact `catalog-entry.json` object to
+   `marketplaces/obvious-one.json`.
+
+After adoption, run the generated application tests and the normal
+`prepare-marketplace` and `verify-marketplace` sequence below. Existing plugin
+IDs or overlapping destinations are blocked with
+`onboarding.existing_plugin_requires_update_design`; updates require their own
+approved update design and do not use this new-plugin onboarding path.
+OpenClaw and ClawHub are `NOT APPLICABLE` for this bounded ZIP-onboarding flow.
+No command in this flow pushes Git, mutates the baseline marketplace, creates a
+tag or release, publishes to ClawHub, or submits to the OpenAI directory.
+
+Exit codes follow the framework contract: 0 for `PASS`, 2 for `BLOCKED` owner
+decisions or invocation errors, 3 for invalid/tampered inputs and verification
+failure, and 4 for local I/O or environment failure. Always inspect the single
+`result-schema-v1` document; an exit code alone is not evidence.
+
 ### Local marketplace preparation and verification
 
 Preparation copies a read-only marketplace baseline to a separate staging

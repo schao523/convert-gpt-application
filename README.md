@@ -69,6 +69,13 @@ commands:
 The full profile contract and legacy compatibility command are documented in
 `docs/PLUGIN_AND_FRAMEWORK_COMMAND_REFERENCE.md`.
 
+Legacy Plugin Builder ZIPs may be inspected read-only with
+`inspect-plugin-zip`. They are not publishable merely because inspection
+passes. An approved product-specific repair may create a deterministic
+Workbench-owned derivative and metadata record; legacy producer claims remain
+separate from Workbench validation, and installed-runtime layers stay
+`NOT VERIFIED` until directly observed.
+
 ## Validate adopted knowledge-reference policies
 
 New conversions may classify skill-local references as professional knowledge
