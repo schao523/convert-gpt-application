@@ -21,11 +21,9 @@ class GrowingWithChildrenRepairContractTests(unittest.TestCase):
         self.assertEqual(conversion["application_id"], "growing-with-children")
         self.assertEqual(conversion["plugin_id"], "growing-with-children")
         self.assertEqual(conversion["marketplace_repository"], "schao523/obvious-one-plugins")
-        self.assertTrue(
-            all(
-                command.get("marketplace_targets", []) in ([], ["codex"])
-                for command in conversion["verification"]["commands"]
-            )
+        self.assertEqual(
+            [command.get("marketplace_targets", []) for command in conversion["verification"]["commands"]],
+            [[]],
         )
 
         self.assertEqual(contract.plugin_id, "growing-with-children")

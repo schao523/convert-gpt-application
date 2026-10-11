@@ -58,7 +58,7 @@ class DelegatedReferenceRepairRepositoryContractTests(unittest.TestCase):
         self.assertEqual(config.version, contract.target_version)
         self.assertEqual(
             [command.marketplace_targets for command in config.verification.commands],
-            [("codex",)],
+            [()],
         )
 
     def test_repair_recipe_never_embeds_a_machine_specific_source_path(self) -> None:

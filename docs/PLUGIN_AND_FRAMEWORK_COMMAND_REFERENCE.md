@@ -461,13 +461,13 @@ python -B -m obvious_one_plugin_framework.cli verify-marketplace --catalog .\mar
 python -B -m obvious_one_plugin_framework.cli verify-marketplace --catalog .\marketplaces\obvious-one.json --marketplace <external-git-stage> --fresh-checkout --json
 ```
 
-`--index`, `--commit`, and `--fresh-checkout` are mutually exclusive. Cool
-Bible Tutor, Vibe Coding Designer, and Cool Plugin Design Assistant are
-dual-runtime schema-v3 `build` entries. Plugin Builder is a Codex `build`
-entry whose OpenClaw target is `not_applicable` under its approved
-`OPENAI_ONLY_PHASE_ONE` scope. The generic `verify_existing` mode remains
-available for cataloged legacy artifacts that have not yet migrated. Disabled
-ClawHub publication is `NOT APPLICABLE`, not a package failure.
+`--index`, `--commit`, and `--fresh-checkout` are mutually exclusive. Keep
+already-published versions in `verify_existing` mode and use `build` only for
+the explicitly authorized active release targets. This prevents an unrelated
+publication from replacing existing artifact bytes without a versioned release
+decision. Plugin Builder and other Codex-only products keep their OpenClaw
+target `not_applicable` under their approved scope. Disabled ClawHub
+publication is `NOT APPLICABLE`, not a package failure.
 
 Successful preparation and verification authorize no marketplace mutation.
 Applying the staged delta, committing or pushing the marketplace repository,

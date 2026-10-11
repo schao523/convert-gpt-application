@@ -23,8 +23,7 @@
     "commands": [
       {
         "id": "product-repair-tests",
-        "argv": ["{python}", "-B", "-m", "unittest", "discover", "-s", "{application_root}/tests", "-v"],
-        "marketplace_targets": ["codex"]
+        "argv": ["{python}", "-B", "-m", "unittest", "discover", "-s", "{application_root}/tests", "-v"]
       }
     ],
     "codex_build": {
