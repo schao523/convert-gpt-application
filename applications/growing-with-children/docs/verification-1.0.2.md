@@ -5,10 +5,12 @@
 - Source version: 1.0.1
 - Derived version: 1.0.2
 - Source ZIP SHA-256: `e20ab7f970565dde1d2bfa8529d82da12366dfbed6a6672aed9dc51eedb6d1f1`
-- Repaired ZIP SHA-256: `92fdcc725afe1a772386d78d07e5c685a7ef7f2bdf5062029dde4a52614f4b01`
-- Package metadata SHA-256: `8a5003d79217d677f8ddf8c8a5fc839c0348f78467bc2a60b1921f0921cf2c1c`
-- Member-manifest SHA-256: `d0d46060895cb0cd3d994c7699abf8577cc24e98ae0582a38b21d048c5244520`
-- Onboarding proposal SHA-256: `1f5ddb0f64ab0b67946d8adaf5934c729918ad3a9cfd2d841749485475b300d9`
+- Repaired ZIP SHA-256: `e35b5fe14d2a9b0fa2330ad28572aff76df2e907d027444147e4691396e0c25b`
+- Package metadata SHA-256: `3c59ca7cc7188ac6ead19ecbd3262ac6ff1034af764422c0cadf138691f31b6b`
+- Member-manifest SHA-256: `776437ac30c4d16c940ff700963167d1ede8d172651d7c034fe7e742eb045b3d`
+- Onboarding proposal document SHA-256: `bf2ef7db9ab08656cb08c3c12215e550326d001f5ce7aa9077d31cd9a942142a`
+- Onboarding proposal identity SHA-256: `b54a3a97b5a28f65952bb7922f700b7722534b3005407ae6e2ebc18ddaf307c5`
+- Staged Codex artifact content SHA-256: `d7378703283ff62f98e6e7b680f36d5fdc2e82b53f0c5973dea8b98160492c0d`
 
 The source archive remained immutable. Two independent clean builds produced
 byte-identical repaired ZIP and metadata outputs.
@@ -22,6 +24,9 @@ byte-identical repaired ZIP and metadata outputs.
   `local_copy: false` and no stale local PDF binding.
 - The generated root `THIRD_PARTY_NOTICES.md` records both exact owner paths and
   SHA-256 values under the owner-approved `PUBLIC_DOMAIN` classification.
+- The staged and installed Codex plugin includes the owner-approved MIT
+  `LICENSE`; its SHA-256 is
+  `e31ef2620c66c2bd09ef56abd6d43264132415e2d1d4cad31452b12143aea8b5`.
 - All JSON members parse, both plugin manifests declare version 1.0.2, and the
   repaired tree passes current plugin-authoring validation.
 - The five-skill architecture and approved application behavior were not
@@ -29,7 +34,7 @@ byte-identical repaired ZIP and metadata outputs.
 
 ## Test and onboarding results
 
-- Generic framework: 461 passed; 2 documented platform skips.
+- Generic framework: 465 passed; 2 documented platform skips.
 - Plugin Builder: 236 passed; 1 documented Windows symlink-privilege skip.
 - Cool Plugin Design Assistant: 47 passed.
 - Growing with Children: 5 passed.
@@ -65,9 +70,15 @@ tracked skills were invoked in five controlled scenarios:
   skill disclosed the limitation, did not claim exact text, and used the
   documented fallback: `PASS`.
 
+Four additional fresh processes exercised formal ten-step study from each
+non-owner skill. Every process named its originating skill, handed execution
+to `guiding-biblical-study`, consulted RM-04B page 228, returned only the
+first observation step, and waited for the learner before continuing: `PASS`.
+
 These observations make Codex Skill invocation, owner routing, RM-04B visual
 consultation, result return, and representative conversation behavior
-`RUNTIME VERIFIED` for the tested scenarios. The first read-only probe could
+`RUNTIME VERIFIED` for the tested exact-CUV, formal-study, and fallback
+scenarios. The first read-only probe could
 not render the scanned PDF and was classified as an environment-only failure;
 the unchanged scenario passed after the exact packaged page was rendered in a
 disposable root and supplied to the fresh process.
