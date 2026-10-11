@@ -175,7 +175,19 @@ class PluginOnboardingMarketplaceTests(unittest.TestCase):
         )
         self.assertEqual(completed.returncode, 0, completed.stdout)
         built = built_root / "plugins" / "sample-plugin"
-        self.assertEqual(plugin_authoring.tree_manifest(built), plugin_authoring.tree_manifest(fixture.candidate))
+        imported_manifest = plugin_authoring.tree_manifest(fixture.candidate)
+        built_manifest = {
+            member.path: member
+            for member in plugin_authoring.tree_manifest(built)
+        }
+        self.assertEqual(
+            [built_manifest[member.path] for member in imported_manifest],
+            list(imported_manifest),
+        )
+        self.assertEqual(
+            (built / "LICENSE").read_bytes(),
+            (proposal / "application" / "LICENSE").read_bytes(),
+        )
 
     def test_codex_build_rejects_any_imported_tree_drift_before_replacement(self) -> None:
         application = self.proposal / "application"

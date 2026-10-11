@@ -141,7 +141,11 @@ def _identity(root: Path) -> tuple[str, str]:
 
 
 def build(source: Path, destination: Path) -> Path:
-    imported = source.resolve() / "imported-plugin"
+    source = source.resolve()
+    imported = source / "imported-plugin"
+    license_path = source / "LICENSE"
+    if not license_path.is_file():
+        raise ValueError("license_missing")
     _identity(imported)
     _tree_identity(imported)
     target = destination.resolve() / "plugins" / PLUGIN_ID
@@ -152,6 +156,7 @@ def build(source: Path, destination: Path) -> Path:
         shutil.copytree(imported, staged, copy_function=shutil.copy2)
         _identity(staged)
         _tree_identity(staged)
+        shutil.copy2(license_path, staged / "LICENSE")
         if target.exists():
             shutil.rmtree(target)
         os.replace(staged, target)
@@ -252,9 +257,10 @@ class MarketplaceReleaseTests(unittest.TestCase):
             self.assertEqual(target.name, {plugin_id!r})
             expected = sorted(p.relative_to(source / "imported-plugin") for p in (source / "imported-plugin").rglob("*") if p.is_file())
             actual = sorted(p.relative_to(target) for p in target.rglob("*") if p.is_file())
-            self.assertEqual(actual, expected)
+            self.assertEqual(actual, sorted([*expected, Path("LICENSE")]))
             for relative in expected:
                 self.assertEqual((target / relative).read_bytes(), (source / "imported-plugin" / relative).read_bytes())
+            self.assertEqual((target / "LICENSE").read_bytes(), (source / "LICENSE").read_bytes())
 
 
 if __name__ == "__main__":

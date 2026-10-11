@@ -5,6 +5,7 @@ import json
 from pathlib import Path
 import tempfile
 import unittest
+from unittest.mock import patch
 
 from obvious_one_plugin_framework import plugin_authoring
 from obvious_one_plugin_framework.plugin_onboarding import OnboardingError
@@ -195,6 +196,37 @@ class DelegatedReferenceRepairTests(unittest.TestCase):
         self.assertEqual(caught.exception.code, "onboarding.repair.source_digest_mismatch")
         self.assertFalse(output.exists())
         self.assertFalse(metadata.exists())
+
+    def test_final_publish_uses_destination_local_atomic_replaces(self) -> None:
+        output_root = self.root / "cross-volume-simulation"
+        archive = output_root / "candidate.zip"
+        metadata = output_root / "metadata.json"
+        real_replace = __import__("os").replace
+
+        def require_destination_local(source, destination):
+            source_path = Path(source).resolve()
+            destination_path = Path(destination).resolve()
+            if destination_path in {archive.resolve(), metadata.resolve()} and source_path.parent != destination_path.parent:
+                raise OSError("simulated cross-volume replace")
+            return real_replace(source, destination)
+
+        with patch(
+            "obvious_one_plugin_framework.plugin_onboarding.repair.os.replace",
+            side_effect=require_destination_local,
+        ):
+            result = repair_delegated_reference_archive(
+                self.fixture.archive,
+                self.contract,
+                archive,
+                metadata,
+            )
+
+        self.assertEqual(result.archive, archive)
+        self.assertEqual(result.metadata, metadata)
+        self.assertEqual(sorted(path.name for path in output_root.iterdir()), [
+            "candidate.zip",
+            "metadata.json",
+        ])
 
 
 if __name__ == "__main__":

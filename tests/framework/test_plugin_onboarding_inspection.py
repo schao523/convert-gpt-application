@@ -114,6 +114,27 @@ class PluginOnboardingInspectionTests(unittest.TestCase):
         self.assertIsNone(inspected.verification_sha256)
         self.assertEqual(set(inspected.evidence_states.values()), {"NOT VERIFIED"})
 
+    def test_repaired_metadata_source_digest_is_bound_to_repair_manifest(self) -> None:
+        fixture = write_legacy_repair_fixture(self.root / "repair-provenance")
+        contract_path = self.root / "repair-provenance.json"
+        contract_path.write_bytes(canonical_bytes(fixture.contract_payload))
+        repaired = repair_delegated_reference_archive(
+            fixture.archive,
+            load_repair_contract(contract_path),
+            self.root / "provenance-candidate.zip",
+            self.root / "provenance-metadata.json",
+        )
+        payload = json.loads(repaired.metadata.read_text(encoding="utf-8"))
+        payload["source_archive_sha256"] = "f" * 64
+        repaired.metadata.write_bytes(canonical_bytes(payload))
+
+        self.assert_failure(
+            lambda: inspect_workbench_repaired_package(
+                repaired.archive, load_onboarding_metadata(repaired.metadata)
+            ),
+            "onboarding.inspection.source_archive_sha256_mismatch",
+        )
+
     def test_mixed_legacy_and_workbench_authorities_are_rejected(self) -> None:
         fixture = write_legacy_repair_fixture(self.root / "mixed")
         mixed = self.root / "mixed-tree"

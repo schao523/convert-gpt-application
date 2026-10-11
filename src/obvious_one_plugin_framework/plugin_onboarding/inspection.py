@@ -10,6 +10,7 @@ import re
 import tempfile
 from types import MappingProxyType
 from typing import Mapping
+import zipfile
 
 from .. import plugin_authoring
 from ..package_builder import FORBIDDEN_NAMES, SECRET_FRAGMENTS
@@ -593,6 +594,22 @@ def inspect_workbench_repaired_package(
     )
     if repair_member is None or repair_member.sha256 != metadata.repair_manifest_sha256:
         raise _fail("repair_manifest_sha256_mismatch")
+    try:
+        with zipfile.ZipFile(archive, "r") as package:
+            repair_payload = json.loads(
+                package.read("WORKBENCH-REPAIR-MANIFEST.json").decode("utf-8")
+            )
+    except (OSError, KeyError, UnicodeError, json.JSONDecodeError, zipfile.BadZipFile) as exc:
+        raise _fail("repair_manifest_invalid") from exc
+    if not isinstance(repair_payload, dict) or repair_payload.get("schema") != "workbench-repair-manifest-v1":
+        raise _fail("repair_manifest_invalid")
+    if repair_payload.get("source_archive_sha256") != metadata.source_archive_sha256:
+        raise _fail("source_archive_sha256_mismatch")
+    if (
+        repair_payload.get("plugin_id") != metadata.plugin_id
+        or repair_payload.get("target_version") != metadata.version
+    ):
+        raise _fail("repair_manifest_identity_mismatch")
     for field, validation in (
         ("extracted_validation", metadata.extracted_validation),
         ("safety_validation", metadata.safety_validation),

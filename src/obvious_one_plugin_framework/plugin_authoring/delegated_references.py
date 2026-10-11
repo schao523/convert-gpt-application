@@ -62,19 +62,19 @@ def _safe_relative(value: object) -> str | None:
     return path.as_posix()
 
 
-def _index_bindings(skill: Path) -> dict[str, str]:
+def _index_bindings(skill: Path) -> tuple[tuple[str, str], ...]:
     payload = _load_mapping(skill / "assets" / "knowledge-index.json")
     if payload is None or not isinstance(payload.get("assets"), list):
-        return {}
-    bindings: dict[str, str] = {}
+        return ()
+    bindings: list[tuple[str, str]] = []
     for item in payload["assets"]:
         if not isinstance(item, dict):
             continue
         reference_id = item.get("id")
         relative = _safe_relative(item.get("file"))
         if isinstance(reference_id, str) and reference_id and relative is not None:
-            bindings[reference_id] = relative
-    return bindings
+            bindings.append((reference_id, relative))
+    return tuple(bindings)
 
 
 def _matches_reference_id(index_id: str, reference_id: str) -> bool:
@@ -83,10 +83,12 @@ def _matches_reference_id(index_id: str, reference_id: str) -> bool:
     return index_id == reference_id or index_id.startswith(reference_id + "_")
 
 
-def _matching_index_bindings(bindings: dict[str, str], reference_id: str) -> tuple[str, ...]:
+def _matching_index_bindings(
+    bindings: tuple[tuple[str, str], ...], reference_id: str
+) -> tuple[str, ...]:
     return tuple(
-        bindings[index_id]
-        for index_id in sorted(bindings)
+        relative
+        for index_id, relative in sorted(bindings)
         if _matches_reference_id(index_id, reference_id)
     )
 
@@ -117,13 +119,20 @@ def _handoff_prose_issues(
     issues: list[ValidationIssue] = []
     if "handoff" not in text or any(owner.casefold() not in text for owner in owner_names):
         issues.append(_issue("delegated_reference_handoff_missing", relative))
-    if not all(token in text for token in ("exact cuv", "formal bible study")):
+    if "- triggers:" not in text:
         issues.append(_issue("delegated_reference_trigger_missing", relative))
+    if "- input:" not in text:
+        issues.append(_issue("delegated_reference_input_missing", relative))
     if "returns to the response owner" not in text:
         issues.append(_issue("delegated_reference_return_missing", relative))
     if not all(
         token in text
-        for token in ("unavailable", "disclose the limitation", "do not fabricate exact scripture")
+        for token in (
+            "- fallback:",
+            "unavailable",
+            "disclose the limitation",
+            "do not claim reference-grounded output",
+        )
     ):
         issues.append(_issue("delegated_reference_fallback_missing", relative))
     return issues

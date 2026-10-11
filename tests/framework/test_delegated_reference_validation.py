@@ -76,9 +76,10 @@ class DelegatedReferenceValidationTests(unittest.TestCase):
             "# Non-owner\n\n"
             "## Delegated reference handoff\n\n"
             f"- Access: HANDOFF to `{OWNER}` for RM-04A and RM-04B.\n"
-            "- Triggers: exact CUV quotation or verification; formal Bible study.\n"
+            "- Triggers: any request requiring the delegated professional references.\n"
+            "- Input: pass the relevant request, established context, and requested output.\n"
             "- Return: the result returns to the response owner.\n"
-            "- Fallback: if the owner or references are unavailable, disclose the limitation and do not fabricate exact Scripture.\n",
+            "- Fallback: if the owner or references are unavailable, disclose the limitation and do not claim reference-grounded output.\n",
             encoding="utf-8",
             newline="\n",
         )
@@ -118,6 +119,16 @@ class DelegatedReferenceValidationTests(unittest.TestCase):
             {"id": "RM-04A_Second_legacy", "file": REFERENCES["RM-04A"]}
         )
         _write_json(owner_index, payload)
+        self.assertIn("delegated_reference_owner_index_ambiguous", self.codes())
+
+    def test_duplicate_exact_owner_index_ids_are_rejected_before_collapse(self) -> None:
+        owner_index = self.root / "skills" / OWNER / "assets/knowledge-index.json"
+        payload = json.loads(owner_index.read_text(encoding="utf-8"))
+        payload["assets"].append(
+            {"id": "RM-04A", "file": REFERENCES["RM-04B"]}
+        )
+        _write_json(owner_index, payload)
+
         self.assertIn("delegated_reference_owner_index_ambiguous", self.codes())
 
     def test_profile_shape_and_reference_identity_fail_closed(self) -> None:
@@ -208,7 +219,7 @@ class DelegatedReferenceValidationTests(unittest.TestCase):
         skill = self.root / "skills" / NON_OWNER / "SKILL.md"
         variants = {
             "delegated_reference_trigger_missing": (
-                "exact CUV quotation or verification; formal Bible study",
+                "Triggers: any request requiring the delegated professional references",
                 "ordinary question",
             ),
             "delegated_reference_return_missing": (
@@ -216,7 +227,7 @@ class DelegatedReferenceValidationTests(unittest.TestCase):
                 "the result is available",
             ),
             "delegated_reference_fallback_missing": (
-                "if the owner or references are unavailable, disclose the limitation and do not fabricate exact Scripture",
+                "if the owner or references are unavailable, disclose the limitation and do not claim reference-grounded output",
                 "if unavailable, continue",
             ),
         }
@@ -226,6 +237,13 @@ class DelegatedReferenceValidationTests(unittest.TestCase):
                 skill.write_text(original.replace(old, new), encoding="utf-8", newline="\n")
                 self.assertIn(expected, self.codes())
         skill.write_text(original, encoding="utf-8", newline="\n")
+
+    def test_generic_non_bible_handoff_contract_is_valid(self) -> None:
+        skill = self.root / "skills" / NON_OWNER / "SKILL.md"
+        text = skill.read_text(encoding="utf-8")
+        self.assertNotIn("Bible", text)
+        self.assertNotIn("Scripture", text)
+        self.assertEqual(validate_delegated_references(self.root), ())
 
     def test_delegated_reference_asset_must_not_be_duplicated_outside_owner(self) -> None:
         duplicate = self.root / "skills" / NON_OWNER / "assets" / REFERENCES["RM-04A"]

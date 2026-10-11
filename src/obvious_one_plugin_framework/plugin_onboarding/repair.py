@@ -8,6 +8,7 @@ import json
 import os
 from pathlib import Path, PurePosixPath
 import re
+import shutil
 import tempfile
 
 from .. import plugin_authoring
@@ -90,11 +91,27 @@ def _handoff_section(contract: DelegatedReferenceRepair) -> str:
     return (
         "\n## Delegated reference handoff\n\n"
         f"- Access: HANDOFF to `{contract.owner_skill}` for {ids}.\n"
-        "- Triggers: exact CUV quotation or verification; formal Bible study.\n"
-        "- Input: pass the relevant passage, question, established session context, and requested output.\n"
+        "- Triggers: any request requiring the delegated professional references.\n"
+        "- Input: pass the relevant request, established session context, and requested output.\n"
         "- Return: the result returns to the response owner for the ongoing workflow.\n"
-        "- Fallback: if the owner or references are unavailable, disclose the limitation and do not fabricate exact Scripture.\n"
+        "- Fallback: if the owner or references are unavailable, disclose the limitation and do not claim reference-grounded output.\n"
     )
+
+
+def _stage_beside_destination(source: Path, destination: Path) -> Path:
+    """Copy verified bytes beside their destination for a same-volume rename."""
+
+    handle, name = tempfile.mkstemp(
+        prefix=f".{destination.name}.", suffix=".tmp", dir=destination.parent
+    )
+    os.close(handle)
+    staged = Path(name)
+    try:
+        shutil.copyfile(source, staged)
+    except OSError:
+        staged.unlink(missing_ok=True)
+        raise
+    return staged
 
 
 def _third_party_notice(contract: DelegatedReferenceRepair) -> bytes:
@@ -344,16 +361,29 @@ def repair_delegated_reference_archive(
         staged_metadata.write_bytes(_canonical_bytes(metadata_payload))
         destination.parent.mkdir(parents=True, exist_ok=True)
         metadata_destination.parent.mkdir(parents=True, exist_ok=True)
+        local_archive: Path | None = None
+        local_metadata: Path | None = None
         published_archive = False
         try:
-            os.replace(staged_archive, destination)
+            local_archive = _stage_beside_destination(staged_archive, destination)
+            local_metadata = _stage_beside_destination(
+                staged_metadata, metadata_destination
+            )
+            os.replace(local_archive, destination)
+            local_archive = None
             published_archive = True
-            os.replace(staged_metadata, metadata_destination)
+            os.replace(local_metadata, metadata_destination)
+            local_metadata = None
         except OSError as exc:
             if published_archive:
                 destination.unlink(missing_ok=True)
             metadata_destination.unlink(missing_ok=True)
             raise _fail("output_write_failed") from exc
+        finally:
+            if local_archive is not None:
+                local_archive.unlink(missing_ok=True)
+            if local_metadata is not None:
+                local_metadata.unlink(missing_ok=True)
     return RepairResult(
         archive=destination,
         metadata=metadata_destination,
