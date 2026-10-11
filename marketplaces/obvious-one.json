@@ -33,6 +33,14 @@
         "codex": {"mode": "build", "destination": "plugins/plugin-builder"},
         "openclaw": {"mode": "not_applicable"}
       }
+    },
+    {
+      "application_config": "applications/sermon-coach/conversion.json",
+      "distribution_contract": "applications/sermon-coach/openclaw/distribution.json",
+      "targets": {
+        "codex": {"mode": "build", "destination": "plugins/sermon-coach"},
+        "openclaw": {"mode": "not_applicable"}
+      }
     }
   ]
 }

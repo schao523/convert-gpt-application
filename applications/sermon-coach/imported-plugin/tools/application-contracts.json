@@ -1,0 +1,511 @@
+{
+  "tools": [
+    {
+      "adapter": null,
+      "configuration": {
+        "authentication": "NOT_REQUIRED",
+        "setup": [],
+        "python_runtime_policy": "Probe candidates and use only a verified Python 3 interpreter; otherwise BLOCK before application execution.",
+        "runtime_role": "offline/package validation utility; not a ChatGPT/Codex installed-runtime callable tool"
+      },
+      "dependencies": [
+        "Python 3 standard library; runtime launcher resolved per platform (Windows: py -3, then verified python; POSIX: python3, then verified python)"
+      ],
+      "execution": {
+        "resolver": {
+          "strategy": "PYTHON3_LAUNCHER_RESOLUTION",
+          "selection_rule": "Select the first candidate whose probe exits 0 and reports sys.version_info.major == 3. Do not invoke application code until the probe passes.",
+          "failure_state": "BLOCKED",
+          "profiles": [
+            {
+              "platform": "windows",
+              "candidates": [
+                {
+                  "launcher": [
+                    "py",
+                    "-3"
+                  ],
+                  "probe": [
+                    "py",
+                    "-3",
+                    "-c",
+                    "import sys; raise SystemExit(0 if sys.version_info.major == 3 else 3)"
+                  ]
+                },
+                {
+                  "launcher": [
+                    "python"
+                  ],
+                  "probe": [
+                    "python",
+                    "-c",
+                    "import sys; raise SystemExit(0 if sys.version_info.major == 3 else 3)"
+                  ]
+                }
+              ]
+            },
+            {
+              "platform": "posix",
+              "candidates": [
+                {
+                  "launcher": [
+                    "python3"
+                  ],
+                  "probe": [
+                    "python3",
+                    "-c",
+                    "import sys; raise SystemExit(0 if sys.version_info.major == 3 else 3)"
+                  ]
+                },
+                {
+                  "launcher": [
+                    "python"
+                  ],
+                  "probe": [
+                    "python",
+                    "-c",
+                    "import sys; raise SystemExit(0 if sys.version_info.major == 3 else 3)"
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        "script": "scripts/sermon_control.py",
+        "argv_suffix": [],
+        "clean_environment": true,
+        "timeout_seconds": 30
+      },
+      "fallback": {
+        "policy": "NOT_APPLICABLE_TO_INSTALLED_RUNTIME",
+        "description": "Normal Skill behavior uses direct host-native reading of Skill-local packaged reference mirrors; this script is optional offline validation only."
+      },
+      "files": [
+        "scripts/sermon_control.py"
+      ],
+      "fixtures": {
+        "input": {
+          "cases": [
+            {
+              "intent": "review",
+              "operation": "route",
+              "sermon_present": false
+            },
+            {
+              "action": "advance",
+              "mode": "full",
+              "operation": "sequence",
+              "step": 3,
+              "user_confirmed": false
+            },
+            {
+              "action": "advance",
+              "mode": "full",
+              "operation": "sequence",
+              "step": 3,
+              "user_confirmed": true
+            },
+            {
+              "claim_type": "method",
+              "operation": "precedence"
+            },
+            {
+              "comparison": "style",
+              "new_present": true,
+              "operation": "eligibility",
+              "prior_present": false
+            },
+            {
+              "before_present": false,
+              "comparison": "revision",
+              "operation": "eligibility",
+              "revision_present": true
+            }
+          ]
+        },
+        "output": {
+          "results": [
+            {
+              "missing": [
+                "sermon"
+              ],
+              "route": "WF-01",
+              "state": "WAIT"
+            },
+            {
+              "state": "WAIT",
+              "step": 3
+            },
+            {
+              "state": "WAIT",
+              "step": 4
+            },
+            {
+              "authority": "RM-04-SOURCE",
+              "state": "SELECTED"
+            },
+            {
+              "allowed": false,
+              "state": "WAIT_OR_SKIP"
+            },
+            {
+              "allowed": false,
+              "state": "SINGLE_VERSION"
+            }
+          ]
+        }
+      },
+      "id": "sermon-control",
+      "implementation_kind": "BUNDLED_LOCAL",
+      "input_schema": {
+        "type": "object"
+      },
+      "mcp": null,
+      "output_schema": {
+        "type": "object"
+      },
+      "permissions": [
+        "workspace:read"
+      ],
+      "redistribution": {
+        "evidence": "Owner-approved v1.0 specification section 13.3 and original handoff rights; generated implementation proposals belong to this project.",
+        "state": "APPROVED"
+      },
+      "required": false,
+      "requirement_ids": [
+        "RQ-005",
+        "RQ-008",
+        "RQ-009",
+        "RQ-010",
+        "RQ-011",
+        "RQ-012",
+        "RQ-014"
+      ],
+      "runtime_capability": "NOT_INSTALLED_RUNTIME_CALLABLE",
+      "runtime_targets": [
+        "offline/package validation only"
+      ],
+      "schema": "plugin-builder-application-tool-v1",
+      "side_effects": [],
+      "skill_bindings": [],
+      "verification": {
+        "kind": "PYTHON3_RESOLVED_ARGV",
+        "resolver": {
+          "strategy": "PYTHON3_LAUNCHER_RESOLUTION",
+          "selection_rule": "Select the first candidate whose probe exits 0 and reports sys.version_info.major == 3. Do not invoke application code until the probe passes.",
+          "failure_state": "BLOCKED",
+          "profiles": [
+            {
+              "platform": "windows",
+              "candidates": [
+                {
+                  "launcher": [
+                    "py",
+                    "-3"
+                  ],
+                  "probe": [
+                    "py",
+                    "-3",
+                    "-c",
+                    "import sys; raise SystemExit(0 if sys.version_info.major == 3 else 3)"
+                  ]
+                },
+                {
+                  "launcher": [
+                    "python"
+                  ],
+                  "probe": [
+                    "python",
+                    "-c",
+                    "import sys; raise SystemExit(0 if sys.version_info.major == 3 else 3)"
+                  ]
+                }
+              ]
+            },
+            {
+              "platform": "posix",
+              "candidates": [
+                {
+                  "launcher": [
+                    "python3"
+                  ],
+                  "probe": [
+                    "python3",
+                    "-c",
+                    "import sys; raise SystemExit(0 if sys.version_info.major == 3 else 3)"
+                  ]
+                },
+                {
+                  "launcher": [
+                    "python"
+                  ],
+                  "probe": [
+                    "python",
+                    "-c",
+                    "import sys; raise SystemExit(0 if sys.version_info.major == 3 else 3)"
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        "script": "scripts/sermon_control.py",
+        "network": false
+      },
+      "notes": "v1.0.3: removed as a normal installed-runtime dependency after installed-runtime evidence showed bundled scripts were not exposed as callable tools."
+    },
+    {
+      "adapter": null,
+      "configuration": {
+        "authentication": "NOT_REQUIRED",
+        "setup": [],
+        "python_runtime_policy": "Probe candidates and use only a verified Python 3 interpreter; otherwise BLOCK before application execution.",
+        "runtime_role": "offline/package validation utility; not a ChatGPT/Codex installed-runtime callable tool"
+      },
+      "dependencies": [
+        "Python 3 standard library; runtime launcher resolved per platform (Windows: py -3, then verified python; POSIX: python3, then verified python); packaged extracted text and structured CUV index are derivative runtime data cryptographically bound to packaged sources"
+      ],
+      "execution": {
+        "resolver": {
+          "strategy": "PYTHON3_LAUNCHER_RESOLUTION",
+          "selection_rule": "Select the first candidate whose probe exits 0 and reports sys.version_info.major == 3. Do not invoke application code until the probe passes.",
+          "failure_state": "BLOCKED",
+          "profiles": [
+            {
+              "platform": "windows",
+              "candidates": [
+                {
+                  "launcher": [
+                    "py",
+                    "-3"
+                  ],
+                  "probe": [
+                    "py",
+                    "-3",
+                    "-c",
+                    "import sys; raise SystemExit(0 if sys.version_info.major == 3 else 3)"
+                  ]
+                },
+                {
+                  "launcher": [
+                    "python"
+                  ],
+                  "probe": [
+                    "python",
+                    "-c",
+                    "import sys; raise SystemExit(0 if sys.version_info.major == 3 else 3)"
+                  ]
+                }
+              ]
+            },
+            {
+              "platform": "posix",
+              "candidates": [
+                {
+                  "launcher": [
+                    "python3"
+                  ],
+                  "probe": [
+                    "python3",
+                    "-c",
+                    "import sys; raise SystemExit(0 if sys.version_info.major == 3 else 3)"
+                  ]
+                },
+                {
+                  "launcher": [
+                    "python"
+                  ],
+                  "probe": [
+                    "python",
+                    "-c",
+                    "import sys; raise SystemExit(0 if sys.version_info.major == 3 else 3)"
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        "script": "scripts/read_packaged_reference.py",
+        "argv_suffix": [],
+        "clean_environment": true,
+        "timeout_seconds": 30
+      },
+      "fallback": {
+        "policy": "NOT_APPLICABLE_TO_INSTALLED_RUNTIME",
+        "description": "Normal Skill behavior uses direct host-native reading of Skill-local packaged reference mirrors; this script is optional offline validation only."
+      },
+      "files": [
+        "scripts/read_packaged_reference.py",
+        "data/source-page-extractions.json",
+        "data/reference-registry.json",
+        "data/cuv-verse-index.json",
+        "references/source-materials/講章優化教練(1).md",
+        "references/source-materials/Integrative Preaching Resource Abstract.md",
+        "references/source-materials/The Unforgettable Sermon Resource Abstract.md",
+        "references/source-materials/歸納釋經法(1).pdf",
+        "references/professional-knowledge/RM-04A_Inductive_Exegesis_Method_Overview.md",
+        "references/professional-knowledge/RM-04B_Observation_Steps_1-3.md",
+        "references/professional-knowledge/RM-04C_Interpretation_Steps_4-7.md",
+        "references/professional-knowledge/RM-04D_Application_Steps_8-10.md",
+        "references/professional-knowledge/RM-04E_Inductive_Study_Questioning_Guide.md",
+        "references/source-materials/Bible 舊約聖經和合本(1).pdf",
+        "references/source-materials/Bible 新約聖經和合本(1).pdf",
+        "references/professional-knowledge/Reference_Material_Evaluation_v1.1.md",
+        "references/professional-knowledge/Reference_Usage_Map_v1.1.md"
+      ],
+      "fixtures": {
+        "input": {
+          "cases": [
+            {
+              "operation": "contains",
+              "page": 1,
+              "query": "起初 神創造天地。",
+              "source": "references/source-materials/Bible 舊約聖經和合本(1).pdf"
+            },
+            {
+              "operation": "contains",
+              "page": 1,
+              "query": "太 1:2 亞伯拉罕生以撒",
+              "source": "references/source-materials/Bible 新約聖經和合本(1).pdf"
+            },
+            {
+              "operation": "contains",
+              "page": 2,
+              "query": "細察事實",
+              "source": "references/source-materials/歸納釋經法(1).pdf"
+            },
+            {
+              "operation": "contains",
+              "query": "解釋",
+              "source": "references/professional-knowledge/RM-04C_Interpretation_Steps_4-7.md"
+            }
+          ]
+        },
+        "output": {
+          "results": [
+            {
+              "contains": true,
+              "page": 1,
+              "source": "references/source-materials/Bible 舊約聖經和合本(1).pdf"
+            },
+            {
+              "contains": true,
+              "page": 1,
+              "source": "references/source-materials/Bible 新約聖經和合本(1).pdf"
+            },
+            {
+              "contains": true,
+              "page": 2,
+              "source": "references/source-materials/歸納釋經法(1).pdf"
+            },
+            {
+              "contains": true,
+              "page": null,
+              "source": "references/professional-knowledge/RM-04C_Interpretation_Steps_4-7.md"
+            }
+          ]
+        }
+      },
+      "id": "packaged-reference-access",
+      "implementation_kind": "BUNDLED_LOCAL",
+      "input_schema": {
+        "type": "object"
+      },
+      "mcp": null,
+      "output_schema": {
+        "type": "object"
+      },
+      "permissions": [
+        "workspace:read"
+      ],
+      "redistribution": {
+        "evidence": "Owner-approved v1.0 specification section 13.3 and original handoff rights; generated implementation proposals belong to this project.",
+        "state": "APPROVED"
+      },
+      "required": false,
+      "requirement_ids": [
+        "RQ-002",
+        "RQ-003",
+        "RQ-004",
+        "RQ-006",
+        "RQ-012",
+        "RQ-013",
+        "DELTA-RQ-01",
+        "DELTA-RQ-02",
+        "DELTA-RQ-03"
+      ],
+      "runtime_capability": "NOT_INSTALLED_RUNTIME_CALLABLE",
+      "runtime_targets": [
+        "offline/package validation only"
+      ],
+      "schema": "plugin-builder-application-tool-v1",
+      "side_effects": [],
+      "skill_bindings": [],
+      "verification": {
+        "kind": "PYTHON3_RESOLVED_ARGV",
+        "resolver": {
+          "strategy": "PYTHON3_LAUNCHER_RESOLUTION",
+          "selection_rule": "Select the first candidate whose probe exits 0 and reports sys.version_info.major == 3. Do not invoke application code until the probe passes.",
+          "failure_state": "BLOCKED",
+          "profiles": [
+            {
+              "platform": "windows",
+              "candidates": [
+                {
+                  "launcher": [
+                    "py",
+                    "-3"
+                  ],
+                  "probe": [
+                    "py",
+                    "-3",
+                    "-c",
+                    "import sys; raise SystemExit(0 if sys.version_info.major == 3 else 3)"
+                  ]
+                },
+                {
+                  "launcher": [
+                    "python"
+                  ],
+                  "probe": [
+                    "python",
+                    "-c",
+                    "import sys; raise SystemExit(0 if sys.version_info.major == 3 else 3)"
+                  ]
+                }
+              ]
+            },
+            {
+              "platform": "posix",
+              "candidates": [
+                {
+                  "launcher": [
+                    "python3"
+                  ],
+                  "probe": [
+                    "python3",
+                    "-c",
+                    "import sys; raise SystemExit(0 if sys.version_info.major == 3 else 3)"
+                  ]
+                },
+                {
+                  "launcher": [
+                    "python"
+                  ],
+                  "probe": [
+                    "python",
+                    "-c",
+                    "import sys; raise SystemExit(0 if sys.version_info.major == 3 else 3)"
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        "script": "scripts/read_packaged_reference.py",
+        "network": false
+      },
+      "notes": "v1.0.3: removed as a normal installed-runtime dependency after installed-runtime evidence showed bundled scripts were not exposed as callable tools."
+    }
+  ]
+}

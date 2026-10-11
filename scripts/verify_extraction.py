@@ -37,6 +37,7 @@ from obvious_one_plugin_framework.provenance import (  # noqa: E402
     ProvenanceError,
     validate_provenance,
 )
+from obvious_one_plugin_framework import plugin_authoring  # noqa: E402
 from obvious_one_plugin_framework.hosted_deployment_builder import (  # noqa: E402
     build_hosted_deployment,
 )
@@ -293,6 +294,10 @@ def _skipped(gate_id: str, reason: str) -> GateResult:
     return GateResult(gate_id, "NOT VERIFIED", reason)
 
 
+def _not_applicable(gate_id: str, reason: str) -> GateResult:
+    return GateResult(gate_id, "NOT APPLICABLE", reason)
+
+
 def _load_json(path: Path) -> dict[str, object]:
     try:
         value = json.loads(path.read_text(encoding="utf-8"))
@@ -306,10 +311,93 @@ def _load_json(path: Path) -> dict[str, object]:
 def _provenance_gate(config: ApplicationConfig, context: RunContext) -> GateResult:
     path = context.provenance_override or config.source_inventory
     try:
-        validate_provenance(_load_json(path), config)
+        payload = _load_json(path)
+        if payload.get("schema") == "plugin-onboarding-imported-inventory-v1":
+            _validate_onboarding_inventory(payload, config)
+        else:
+            validate_provenance(payload, config)
     except (ProvenanceError, VerificationConfigError) as exc:
         return GateResult("provenance", "FAIL", str(exc))
     return GateResult("provenance", "PASS", "application provenance is valid")
+
+
+def _validate_onboarding_inventory(
+    payload: Mapping[str, object], config: ApplicationConfig
+) -> None:
+    allowed = {
+        "schema",
+        "plugin_id",
+        "archive_sha256",
+        "candidate_sha256",
+        "content_tree_sha256",
+        "members",
+    }
+    if set(payload) - allowed or payload.get("plugin_id") != config.plugin_id:
+        raise ProvenanceError("onboarding_inventory_identity_mismatch")
+    for field in ("archive_sha256", "content_tree_sha256"):
+        value = payload.get(field)
+        if not isinstance(value, str) or re.fullmatch(r"[0-9a-f]{64}", value) is None:
+            raise ProvenanceError("invalid_onboarding_inventory_digest")
+    candidate_sha256 = payload.get("candidate_sha256")
+    if candidate_sha256 is not None and (
+        not isinstance(candidate_sha256, str)
+        or re.fullmatch(r"[0-9a-f]{64}", candidate_sha256) is None
+    ):
+        raise ProvenanceError("invalid_onboarding_inventory_digest")
+    raw_members = payload.get("members")
+    if not isinstance(raw_members, list):
+        raise ProvenanceError("invalid_onboarding_inventory_members")
+    expected: list[dict[str, object]] = []
+    for member in raw_members:
+        if not isinstance(member, dict) or set(member) != {"path", "size", "sha256"}:
+            raise ProvenanceError("invalid_onboarding_inventory_member")
+        path_value = member.get("path")
+        size = member.get("size")
+        digest = member.get("sha256")
+        if (
+            not isinstance(path_value, str)
+            or not path_value
+            or not isinstance(size, int)
+            or isinstance(size, bool)
+            or size < 0
+            or not isinstance(digest, str)
+            or re.fullmatch(r"[0-9a-f]{64}", digest) is None
+        ):
+            raise ProvenanceError("invalid_onboarding_inventory_member")
+        expected.append({"path": path_value, "size": size, "sha256": digest})
+    imported = config.root / "imported-plugin"
+    observed = [
+        {"path": item.path, "size": item.size, "sha256": item.sha256}
+        for item in plugin_authoring.tree_manifest(imported)
+    ]
+    if expected != observed:
+        raise ProvenanceError("onboarding_inventory_member_mismatch")
+    if plugin_authoring.tree_sha256(imported) != payload["content_tree_sha256"]:
+        raise ProvenanceError("onboarding_inventory_tree_mismatch")
+
+
+def _openclaw_applicable(config: ApplicationConfig, repository: Path) -> bool:
+    catalog_path = Path(repository) / "marketplaces" / "obvious-one.json"
+    if not catalog_path.is_file():
+        return True
+    try:
+        payload = _load_json(catalog_path)
+    except VerificationConfigError:
+        return True
+    applications = payload.get("applications")
+    if not isinstance(applications, list):
+        return True
+    expected = config.root.relative_to(Path(repository).resolve()).as_posix() + "/conversion.json"
+    for entry in applications:
+        if not isinstance(entry, dict) or entry.get("application_config") != expected:
+            continue
+        targets = entry.get("targets")
+        openclaw = targets.get("openclaw") if isinstance(targets, dict) else None
+        return not (
+            isinstance(openclaw, dict)
+            and openclaw.get("mode") == "not_applicable"
+        )
+    return True
 
 
 def _hosted_deployment_gate(config: ApplicationConfig, context: RunContext) -> GateResult:
@@ -478,29 +566,39 @@ def run_application(config: ApplicationConfig, context: RunContext) -> Applicati
 
     openclaw_a = application_diagnostics / "openclaw-a" / config.plugin_id
     openclaw_b = application_diagnostics / "openclaw-b" / config.plugin_id
+    openclaw_applicable = _openclaw_applicable(config, context.repository_root)
     build_gates: list[GateResult] = []
-    for gate_id, output in (("openclaw-build-a", openclaw_a), ("openclaw-build-b", openclaw_b)):
-        result = _run_gate(
-            context,
-            gate_id,
-            [context.python, "-B", "-m", "obvious_one_plugin_framework.cli", "build-package", "--contract", str(config.distribution_contract), "--output", str(output), "--json"],
-            log_directory=logs,
-        )
-        build_gates.append(result)
-        gates.append(result)
-
-    if build_gates[0].state == "PASS":
-        verify_gate = _run_gate(
-            context,
-            "openclaw-verify",
-            [context.python, "-B", "-m", "obvious_one_plugin_framework.cli", "verify", "--contract", str(config.distribution_contract), "--output", str(openclaw_a), "--json"],
-            log_directory=logs,
-        )
+    if openclaw_applicable:
+        for gate_id, output in (("openclaw-build-a", openclaw_a), ("openclaw-build-b", openclaw_b)):
+            result = _run_gate(
+                context,
+                gate_id,
+                [context.python, "-B", "-m", "obvious_one_plugin_framework.cli", "build-package", "--contract", str(config.distribution_contract), "--output", str(output), "--json"],
+                log_directory=logs,
+            )
+            build_gates.append(result)
+            gates.append(result)
+        if build_gates[0].state == "PASS":
+            verify_gate = _run_gate(
+                context,
+                "openclaw-verify",
+                [context.python, "-B", "-m", "obvious_one_plugin_framework.cli", "verify", "--contract", str(config.distribution_contract), "--output", str(openclaw_a), "--json"],
+                log_directory=logs,
+            )
+        else:
+            verify_gate = _skipped("openclaw-verify", "openclaw-build-a failed")
     else:
-        verify_gate = _skipped("openclaw-verify", "openclaw-build-a failed")
+        build_gates = [
+            _not_applicable("openclaw-build-a", "catalog target is not applicable"),
+            _not_applicable("openclaw-build-b", "catalog target is not applicable"),
+        ]
+        gates.extend(build_gates)
+        verify_gate = _not_applicable(
+            "openclaw-verify", "catalog target is not applicable"
+        )
     gates.append(verify_gate)
 
-    if all(gate.state == "PASS" for gate in build_gates):
+    if openclaw_applicable and all(gate.state == "PASS" for gate in build_gates):
         differences = compare_trees(openclaw_a, openclaw_b)
         deterministic_gate = GateResult(
             "openclaw-determinism",
@@ -508,11 +606,18 @@ def run_application(config: ApplicationConfig, context: RunContext) -> Applicati
             "builds are byte-identical" if not any(differences.values()) else "builds differ",
             data={"differences": differences},
         )
-    else:
+    elif openclaw_applicable:
         deterministic_gate = _skipped("openclaw-determinism", "both OpenClaw builds must pass")
+    else:
+        deterministic_gate = _not_applicable(
+            "openclaw-determinism", "catalog target is not applicable"
+        )
     gates.append(deterministic_gate)
 
-    prerequisites_pass = codex_gate.state == "PASS" and build_gates[0].state == "PASS" and verify_gate.state == "PASS"
+    prerequisites_pass = codex_gate.state == "PASS" and (
+        not openclaw_applicable
+        or (build_gates[0].state == "PASS" and verify_gate.state == "PASS")
+    )
     if prerequisites_pass:
         gates.append(_marketplace_gate(config, context, expansion, codex_artifact, openclaw_a))
     elif config.verification.marketplace is None:
@@ -524,7 +629,7 @@ def run_application(config: ApplicationConfig, context: RunContext) -> Applicati
     if codex_gate.state == "PASS" and codex_artifact.is_dir():
         artifacts["codex"] = _display_path(codex_artifact, context.repository_root)
         artifacts["codex_content_sha256"] = _tree_identity(codex_artifact)
-    if build_gates[0].state == "PASS" and openclaw_a.is_dir():
+    if openclaw_applicable and build_gates[0].state == "PASS" and openclaw_a.is_dir():
         artifacts["openclaw"] = _display_path(openclaw_a, context.repository_root)
         artifacts["openclaw_content_sha256"] = _tree_identity(openclaw_a)
 

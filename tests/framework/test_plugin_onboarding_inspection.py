@@ -135,6 +135,158 @@ class PluginOnboardingInspectionTests(unittest.TestCase):
             "onboarding.inspection.source_archive_sha256_mismatch",
         )
 
+    def test_repaired_v2_metadata_revalidates_and_restores_tool_declarations(self) -> None:
+        fixture = write_legacy_repair_fixture(self.root / "repair-tools")
+        contract_path = self.root / "repair-tools.json"
+        contract_path.write_bytes(canonical_bytes(fixture.contract_payload))
+        repaired = repair_delegated_reference_archive(
+            fixture.archive,
+            load_repair_contract(contract_path),
+            self.root / "tool-base.zip",
+            self.root / "tool-base-metadata.json",
+        )
+        tree = self.root / "tool-tree"
+        plugin_authoring.extract_archive(repaired.archive, tree)
+        (tree / "tools").mkdir()
+        (tree / "tools" / "normalize.py").write_bytes(b"print('ok')\n")
+        tool = bundled_tool()
+        binding = {
+            "tool_id": tool["id"],
+            "contract_sha256": sha256(canonical_bytes(tool)).hexdigest(),
+            "files": tool["files"],
+            "skills": tool["skill_bindings"],
+            "dependencies": tool["dependencies"],
+        }
+        repair_path = tree / "WORKBENCH-REPAIR-MANIFEST.json"
+        repair_payload = json.loads(repair_path.read_text(encoding="utf-8"))
+        repair_payload["tool_bindings"] = [binding]
+        repair_payload["tool_contracts"] = [tool]
+        repair_path.write_bytes(canonical_bytes(repair_payload))
+        archive = self.root / "tool-candidate.zip"
+        archive_sha256 = plugin_authoring.write_deterministic_zip(tree, archive)
+        inventory = plugin_authoring.inventory_archive(archive)
+        metadata_payload = json.loads(repaired.metadata.read_text(encoding="utf-8"))
+        metadata_payload.update(
+            {
+                "schema": "workbench-repaired-plugin-v2",
+                "archive_sha256": archive_sha256,
+                "member_manifest_sha256": sha256(
+                    canonical_bytes([asdict(member) for member in inventory.members])
+                ).hexdigest(),
+                "content_tree_sha256": plugin_authoring.tree_sha256(tree),
+                "members": [asdict(member) for member in inventory.members],
+                "input_profile": "PLUGIN_BUILDER_VERSIONED_LEGACY_V1",
+                "repair_manifest_sha256": next(
+                    member.sha256
+                    for member in inventory.members
+                    if member.path == "WORKBENCH-REPAIR-MANIFEST.json"
+                ),
+                "tool_bindings": [binding],
+                "tool_contracts_sha256": sha256(canonical_bytes([tool])).hexdigest(),
+                "offline_validators": [],
+                "offline_validators_sha256": sha256(canonical_bytes([])).hexdigest(),
+            }
+        )
+        repair_payload = json.loads(repair_path.read_text(encoding="utf-8"))
+        repair_payload["offline_validators"] = []
+        repair_path.write_bytes(canonical_bytes(repair_payload))
+        archive_sha256 = plugin_authoring.write_deterministic_zip(tree, archive)
+        inventory = plugin_authoring.inventory_archive(archive)
+        metadata_payload["archive_sha256"] = archive_sha256
+        metadata_payload["member_manifest_sha256"] = sha256(
+            canonical_bytes([asdict(member) for member in inventory.members])
+        ).hexdigest()
+        metadata_payload["content_tree_sha256"] = plugin_authoring.tree_sha256(tree)
+        metadata_payload["members"] = [asdict(member) for member in inventory.members]
+        metadata_payload["repair_manifest_sha256"] = next(
+            member.sha256
+            for member in inventory.members
+            if member.path == "WORKBENCH-REPAIR-MANIFEST.json"
+        )
+        metadata_path = self.root / "tool-metadata.json"
+        metadata_path.write_bytes(canonical_bytes(metadata_payload))
+
+        inspected = inspect_workbench_repaired_package(
+            archive,
+            load_onboarding_metadata(metadata_path),
+        )
+
+        self.assertEqual(inspected.tool_contracts[0]["id"], "normalize-input")
+        self.assertEqual(inspected.tool_bindings[0]["tool_id"], "normalize-input")
+        self.assertEqual(inspected.executable_files, ("tools/normalize.py",))
+
+    def test_repaired_v2_metadata_restores_hash_bound_offline_validator_files(self) -> None:
+        fixture = write_legacy_repair_fixture(self.root / "repair-offline")
+        contract_path = self.root / "repair-offline.json"
+        contract_path.write_bytes(canonical_bytes(fixture.contract_payload))
+        repaired = repair_delegated_reference_archive(
+            fixture.archive,
+            load_repair_contract(contract_path),
+            self.root / "offline-base.zip",
+            self.root / "offline-base-metadata.json",
+        )
+        tree = self.root / "offline-tree"
+        plugin_authoring.extract_archive(repaired.archive, tree)
+        (tree / "scripts").mkdir()
+        (tree / "scripts" / "validate.py").write_bytes(b"print('ok')\n")
+        validator = {
+            "id": "package-validator",
+            "files": ["scripts/validate.py"],
+            "runtime_role": "OFFLINE_PACKAGE_VALIDATION_ONLY",
+            "required": False,
+            "installed_runtime_callable": False,
+            "source_contract_sha256": "b" * 64,
+        }
+        repair_path = tree / "WORKBENCH-REPAIR-MANIFEST.json"
+        repair_payload = json.loads(repair_path.read_text(encoding="utf-8"))
+        repair_payload.update(
+            {
+                "tool_bindings": [],
+                "tool_contracts": [],
+                "offline_validators": [validator],
+            }
+        )
+        repair_path.write_bytes(canonical_bytes(repair_payload))
+        archive = self.root / "offline-candidate.zip"
+        archive_sha256 = plugin_authoring.write_deterministic_zip(tree, archive)
+        inventory = plugin_authoring.inventory_archive(archive)
+        metadata_payload = json.loads(repaired.metadata.read_text(encoding="utf-8"))
+        metadata_payload.update(
+            {
+                "schema": "workbench-repaired-plugin-v2",
+                "archive_sha256": archive_sha256,
+                "member_manifest_sha256": sha256(
+                    canonical_bytes([asdict(member) for member in inventory.members])
+                ).hexdigest(),
+                "content_tree_sha256": plugin_authoring.tree_sha256(tree),
+                "members": [asdict(member) for member in inventory.members],
+                "input_profile": "PLUGIN_BUILDER_VERSIONED_LEGACY_V1",
+                "repair_manifest_sha256": next(
+                    member.sha256
+                    for member in inventory.members
+                    if member.path == "WORKBENCH-REPAIR-MANIFEST.json"
+                ),
+                "tool_bindings": [],
+                "tool_contracts_sha256": sha256(canonical_bytes([])).hexdigest(),
+                "offline_validators": [validator],
+                "offline_validators_sha256": sha256(
+                    canonical_bytes([validator])
+                ).hexdigest(),
+            }
+        )
+        metadata_path = self.root / "offline-metadata.json"
+        metadata_path.write_bytes(canonical_bytes(metadata_payload))
+
+        inspected = inspect_workbench_repaired_package(
+            archive,
+            load_onboarding_metadata(metadata_path),
+        )
+
+        self.assertEqual(inspected.offline_validator_files, ("scripts/validate.py",))
+        self.assertEqual(inspected.tool_contracts, ())
+        self.assertEqual(inspected.input_profile, "WORKBENCH_REPAIRED_PLUGIN_V2")
+        self.assertEqual(set(inspected.evidence_states.values()), {"NOT VERIFIED"})
+
     def test_mixed_legacy_and_workbench_authorities_are_rejected(self) -> None:
         fixture = write_legacy_repair_fixture(self.root / "mixed")
         mixed = self.root / "mixed-tree"

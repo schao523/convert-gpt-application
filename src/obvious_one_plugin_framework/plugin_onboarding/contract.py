@@ -134,7 +134,10 @@ class PackageMetadata:
 
 @dataclass(frozen=True)
 class WorkbenchRepairMetadata:
-    schema: Literal["workbench-repaired-plugin-v1"]
+    schema: Literal[
+        "workbench-repaired-plugin-v1",
+        "workbench-repaired-plugin-v2",
+    ]
     plugin_id: str
     version: str
     archive_sha256: str
@@ -142,7 +145,10 @@ class WorkbenchRepairMetadata:
     member_manifest_sha256: str
     content_tree_sha256: str
     members: tuple[PackageMember, ...]
-    input_profile: Literal["PLUGIN_BUILDER_CANDIDATE_V1"]
+    input_profile: Literal[
+        "PLUGIN_BUILDER_CANDIDATE_V1",
+        "PLUGIN_BUILDER_VERSIONED_LEGACY_V1",
+    ]
     envelope_profile: Literal["LEGACY_FLAT"]
     manifest_profile: Literal["PORTABLE_WITH_OPENAI_COMPATIBILITY"]
     repair_manifest_sha256: str
@@ -150,6 +156,10 @@ class WorkbenchRepairMetadata:
     evidence_states: Mapping[str, object]
     extracted_validation: Mapping[str, object]
     safety_validation: Mapping[str, object]
+    tool_bindings: tuple[Mapping[str, object], ...] = ()
+    tool_contracts_sha256: str | None = None
+    offline_validators: tuple[Mapping[str, object], ...] = ()
+    offline_validators_sha256: str | None = None
 
 
 @dataclass(frozen=True)
@@ -330,6 +340,7 @@ def load_onboarding_metadata(path: Path) -> PackageMetadata | WorkbenchRepairMet
     if payload.get("schema") in {"plugin-builder-package-v2", "plugin-builder-package-v3"}:
         return load_package_metadata(path)
     prefix = "onboarding.metadata"
+    schema = payload.get("schema")
     keys = {
         "schema", "plugin_id", "version", "archive_sha256",
         "source_archive_sha256", "member_manifest_sha256", "content_tree_sha256",
@@ -337,8 +348,18 @@ def load_onboarding_metadata(path: Path) -> PackageMetadata | WorkbenchRepairMet
         "repair_manifest_sha256", "producer_claims", "evidence_states",
         "extracted_validation", "safety_validation",
     }
+    if schema == "workbench-repaired-plugin-v2":
+        keys |= {
+            "tool_bindings",
+            "tool_contracts_sha256",
+            "offline_validators",
+            "offline_validators_sha256",
+        }
     _exact_keys(payload, keys, prefix)
-    if payload.get("schema") != "workbench-repaired-plugin-v1":
+    if schema not in {
+        "workbench-repaired-plugin-v1",
+        "workbench-repaired-plugin-v2",
+    }:
         raise OnboardingError(f"{prefix}.unsupported_schema")
     plugin_id = _text(payload["plugin_id"], prefix, "plugin_id")
     if _PLUGIN_ID.fullmatch(plugin_id) is None:
@@ -346,7 +367,15 @@ def load_onboarding_metadata(path: Path) -> PackageMetadata | WorkbenchRepairMet
     version = _text(payload["version"], prefix, "version")
     if _SEMVER.fullmatch(version) is None:
         raise OnboardingError(f"{prefix}.invalid_version")
-    if payload["input_profile"] != "PLUGIN_BUILDER_CANDIDATE_V1":
+    if payload["input_profile"] not in {
+        "PLUGIN_BUILDER_CANDIDATE_V1",
+        "PLUGIN_BUILDER_VERSIONED_LEGACY_V1",
+    }:
+        raise OnboardingError(f"{prefix}.invalid_input_profile")
+    if (
+        schema == "workbench-repaired-plugin-v1"
+        and payload["input_profile"] != "PLUGIN_BUILDER_CANDIDATE_V1"
+    ):
         raise OnboardingError(f"{prefix}.invalid_input_profile")
     if payload["envelope_profile"] != "LEGACY_FLAT":
         raise OnboardingError(f"{prefix}.invalid_envelope_profile")
@@ -356,7 +385,13 @@ def load_onboarding_metadata(path: Path) -> PackageMetadata | WorkbenchRepairMet
     if not states or set(states.values()) != {"NOT VERIFIED"}:
         raise OnboardingError(f"{prefix}.invalid_evidence_states")
     return WorkbenchRepairMetadata(
-        schema="workbench-repaired-plugin-v1",
+        schema=cast(
+            Literal[
+                "workbench-repaired-plugin-v1",
+                "workbench-repaired-plugin-v2",
+            ],
+            schema,
+        ),
         plugin_id=plugin_id,
         version=version,
         archive_sha256=_digest(payload["archive_sha256"], prefix, "archive_sha256"),
@@ -364,7 +399,13 @@ def load_onboarding_metadata(path: Path) -> PackageMetadata | WorkbenchRepairMet
         member_manifest_sha256=_digest(payload["member_manifest_sha256"], prefix, "member_manifest_sha256"),
         content_tree_sha256=_digest(payload["content_tree_sha256"], prefix, "content_tree_sha256"),
         members=cast(tuple[PackageMember, ...], _members(payload["members"], prefix, "members", PackageMember)),
-        input_profile="PLUGIN_BUILDER_CANDIDATE_V1",
+        input_profile=cast(
+            Literal[
+                "PLUGIN_BUILDER_CANDIDATE_V1",
+                "PLUGIN_BUILDER_VERSIONED_LEGACY_V1",
+            ],
+            payload["input_profile"],
+        ),
         envelope_profile="LEGACY_FLAT",
         manifest_profile="PORTABLE_WITH_OPENAI_COMPATIBILITY",
         repair_manifest_sha256=_digest(payload["repair_manifest_sha256"], prefix, "repair_manifest_sha256"),
@@ -372,6 +413,30 @@ def load_onboarding_metadata(path: Path) -> PackageMetadata | WorkbenchRepairMet
         evidence_states=states,
         extracted_validation=_mapping(payload["extracted_validation"], prefix, "extracted_validation"),
         safety_validation=_mapping(payload["safety_validation"], prefix, "safety_validation"),
+        tool_bindings=(
+            _mapping_sequence(payload["tool_bindings"], prefix, "tool_bindings")
+            if schema == "workbench-repaired-plugin-v2"
+            else ()
+        ),
+        tool_contracts_sha256=(
+            _digest(payload["tool_contracts_sha256"], prefix, "tool_contracts_sha256")
+            if schema == "workbench-repaired-plugin-v2"
+            else None
+        ),
+        offline_validators=(
+            _mapping_sequence(payload["offline_validators"], prefix, "offline_validators")
+            if schema == "workbench-repaired-plugin-v2"
+            else ()
+        ),
+        offline_validators_sha256=(
+            _digest(
+                payload["offline_validators_sha256"],
+                prefix,
+                "offline_validators_sha256",
+            )
+            if schema == "workbench-repaired-plugin-v2"
+            else None
+        ),
     )
 
 

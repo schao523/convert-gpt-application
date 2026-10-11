@@ -1,0 +1,86 @@
+{
+  "approval_record": {
+    "confirmed_by": "SC",
+    "decision": "APPROVED",
+    "recorded_at": "2026-10-11"
+  },
+  "copyright_holder": "SC",
+  "copyright_year": 2026,
+  "license": "MIT",
+  "plugin_id": "sermon-coach",
+  "schema": "sermon-coach-publication-normalization-v1",
+  "skill_local_document_bindings": {
+    "documents": [
+      {
+        "path": "docs/Behavioral_Workflow_Blueprint_v1.0_APPROVED.md",
+        "sha256": "105692b9993bee96e44a319b0970c0c8bacb94e7ac3efe002004bb4892f93d9c"
+      },
+      {
+        "path": "docs/Instruction_Module_Contracts_v1.0_APPROVED.md",
+        "sha256": "eaf60bf813f8244d2216352a342bab6ad00aa64dfb3475d0508b92ee607923b9"
+      },
+      {
+        "path": "docs/User_Interaction_Protocols_v1.0_APPROVED.md",
+        "sha256": "56a92e1cd13866c1e520098a14ee45fcb1631def115f8fdfd2e638c2b8545220"
+      },
+      {
+        "path": "docs/acceptance-scenarios.md",
+        "sha256": "d4defe288d58185adbe92a952dc8d6009ba70a02364fc02c1d8b1cbaaba39f4d"
+      },
+      {
+        "path": "docs/application-invariants.md",
+        "sha256": "9d50db472181d3347843a1e2f22fde2b539f44e576a83214611bcb09076359d3"
+      }
+    ],
+    "skills": [
+      "coaching-sermon-revisions",
+      "guiding-inductive-study",
+      "guiding-sermon-review",
+      "reviewing-sermon-evidence"
+    ]
+  },
+  "source_archive_sha256": "cf425863ede9d205944373b26c1c7f0435d2cc66c8ac6e949afca67939e62c90",
+  "source_content_tree_disposition": "SUPERSEDED_BY_EXACT_MEMBER_CLOSURE",
+  "source_content_tree_sha256_claim": "20353622f3b2f318b8455c5d2faab45b39515db58a86086cc1d9096c7bc1f7ba",
+  "source_content_tree_sha256_recomputed": "6c489776d01b7d05df02f8da5aa985202df74899a0fae3839365be6ef75ba227",
+  "source_manifest_schema": "plugin-builder-manifest-v1.0.3-runtime-native-reference-access",
+  "third_party_sources": [
+    {
+      "path": "references/source-materials/講章優化教練(1).md",
+      "reference_id": "RM-01",
+      "rights_basis": "Owner-approved inclusion and public redistribution of the supplied application baseline.",
+      "sha256": "c3c77eda279e3ce8fda28bbfc3122245e944b3ecbac14f75507ef2470490dcde"
+    },
+    {
+      "path": "references/source-materials/Integrative Preaching Resource Abstract.md",
+      "reference_id": "RM-02",
+      "rights_basis": "Owner-approved inclusion and public redistribution of the supplied derivative abstract; public verbatim quotation from the underlying book remains excluded.",
+      "sha256": "0f351cd2ee3d0fc04885c02595344f5333b84f0d263f27007a88f2dd3fe1215d"
+    },
+    {
+      "path": "references/source-materials/The Unforgettable Sermon Resource Abstract.md",
+      "reference_id": "RM-03",
+      "rights_basis": "Owner-approved inclusion and public redistribution of the supplied derivative abstract; public verbatim quotation from the underlying book remains excluded.",
+      "sha256": "e548934f3fbb08ee0e057fb984f3ac258e98f635b56340652f07ee3f2cd1a649"
+    },
+    {
+      "path": "references/source-materials/歸納釋經法(1).pdf",
+      "reference_id": "RM-04-SOURCE",
+      "rights_basis": "Owner-approved inclusion, transformation, and public redistribution of the supplied source PDF for the intended application use.",
+      "sha256": "bd2eda9d9ef862e33645469c034d9d474cca56c03e9467a01d3cf119c1aba520"
+    },
+    {
+      "path": "references/source-materials/Bible 舊約聖經和合本(1).pdf",
+      "reference_id": "RM-05",
+      "rights_basis": "Owner-approved inclusion and public redistribution of the supplied Chinese Union Version Old Testament reference.",
+      "sha256": "2740a6f824f96374cb127d78c3d646b489963898dacc252b842d9a8894a91125"
+    },
+    {
+      "path": "references/source-materials/Bible 新約聖經和合本(1).pdf",
+      "reference_id": "RM-06",
+      "rights_basis": "Owner-approved inclusion and public redistribution of the supplied Chinese Union Version New Testament reference.",
+      "sha256": "4f0f9ef4c4a78b83f918c74e8f368a7e0eae515c17866c7767c310ca75786490"
+    }
+  ],
+  "version": "1.0.3"
+}

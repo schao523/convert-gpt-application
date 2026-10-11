@@ -194,6 +194,68 @@ class VerifierSelectionAndAggregationTests(unittest.TestCase):
             self.assertIn("hosted-deployment", [gate.gate_id for gate in alpha_result.gates])
             self.assertNotIn("hosted-deployment", [gate.gate_id for gate in beta_result.gates])
 
+    def test_catalog_not_applicable_openclaw_target_skips_openclaw_builds(self) -> None:
+        commands: list[list[str]] = []
+
+        def runner(command, **kwargs):
+            commands.append(command)
+            return subprocess.CompletedProcess(command, 0, "", "")
+
+        with tempfile.TemporaryDirectory() as temp:
+            repository = _fixture_repository(Path(temp))
+            marketplaces = repository / "marketplaces"
+            marketplaces.mkdir()
+            alpha = verifier.discover_applications(repository)[0]
+            (marketplaces / "obvious-one.json").write_text(
+                json.dumps(
+                    {
+                        "schema_version": 2,
+                        "marketplace_id": "obvious-one",
+                        "applications": [
+                            {
+                                "application_config": "applications/plugin-alpha/conversion.json",
+                                "distribution_contract": "applications/plugin-alpha/openclaw/distribution.json",
+                                "targets": {
+                                    "codex": {
+                                        "mode": "build",
+                                        "destination": "plugins/plugin-alpha",
+                                    },
+                                    "openclaw": {"mode": "not_applicable"},
+                                },
+                            }
+                        ],
+                    }
+                ),
+                encoding="utf-8",
+            )
+            context = RunContext(
+                repository_root=repository,
+                diagnostics=repository / ".tmp" / "verification",
+                python=sys.executable,
+                command_runner=runner,
+            )
+
+            result = verifier.run_application(alpha, context)
+
+        self.assertFalse(
+            any("build-package" in command for command in commands),
+            commands,
+        )
+        openclaw = {
+            gate.gate_id: gate.state
+            for gate in result.gates
+            if gate.gate_id.startswith("openclaw-")
+        }
+        self.assertEqual(
+            openclaw,
+            {
+                "openclaw-build-a": "NOT APPLICABLE",
+                "openclaw-build-b": "NOT APPLICABLE",
+                "openclaw-verify": "NOT APPLICABLE",
+                "openclaw-determinism": "NOT APPLICABLE",
+            },
+        )
+
     def test_local_hosted_gate_does_not_report_external_actions(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
             repository = _fixture_repository(Path(temp))

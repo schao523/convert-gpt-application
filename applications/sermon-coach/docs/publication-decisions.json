@@ -1,0 +1,17 @@
+{
+  "author": "SC",
+  "codex_destination": "plugins/sermon-coach",
+  "confirmed_by": "SC",
+  "copyright_year": 2026,
+  "decision_recorded_at": "2026-10-11T00:00:00+08:00",
+  "license": "MIT",
+  "marketplace_id": "obvious-one",
+  "plugin_id": "sermon-coach",
+  "public_marketplace_approved": true,
+  "redistribution_approved": true,
+  "schema": "plugin-publication-decisions-v1",
+  "target_runtime": "CODEX",
+  "third_party_content": "INCLUDED_WITH_PLUGIN_NOTICES",
+  "third_party_content_reviewed": true,
+  "version": "1.0.3"
+}

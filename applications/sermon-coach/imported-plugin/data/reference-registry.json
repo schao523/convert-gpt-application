@@ -1,0 +1,83 @@
+{
+  "references": {
+    "REF-EVAL": {
+      "kind": "governance",
+      "path": "references/professional-knowledge/Reference_Material_Evaluation_v1.1.md",
+      "sha256": "3130a521d2604b6193d3b464429545dd4a5732b0218e0261943d49cd930af7d5",
+      "size": 8822
+    },
+    "REF-USAGE": {
+      "kind": "governance",
+      "path": "references/professional-knowledge/Reference_Usage_Map_v1.1.md",
+      "sha256": "054e91dba8808ed39f109f6f2e779a44163d3d1594547b945aeabd331c83abe2",
+      "size": 5889
+    },
+    "RM-01": {
+      "kind": "behavioral-baseline",
+      "path": "references/source-materials/講章優化教練(1).md",
+      "sha256": "c3c77eda279e3ce8fda28bbfc3122245e944b3ecbac14f75507ef2470490dcde",
+      "size": 15966
+    },
+    "RM-02": {
+      "kind": "advisory",
+      "path": "references/source-materials/Integrative Preaching Resource Abstract.md",
+      "sha256": "0f351cd2ee3d0fc04885c02595344f5333b84f0d263f27007a88f2dd3fe1215d",
+      "size": 3539
+    },
+    "RM-03": {
+      "kind": "advisory",
+      "path": "references/source-materials/The Unforgettable Sermon Resource Abstract.md",
+      "sha256": "e548934f3fbb08ee0e057fb984f3ac258e98f635b56340652f07ee3f2cd1a649",
+      "size": 3706
+    },
+    "RM-04-SOURCE": {
+      "kind": "source-authority",
+      "path": "references/source-materials/歸納釋經法(1).pdf",
+      "sha256": "bd2eda9d9ef862e33645469c034d9d474cca56c03e9467a01d3cf119c1aba520",
+      "size": 1242897
+    },
+    "RM-04A": {
+      "kind": "derivative",
+      "path": "references/professional-knowledge/RM-04A_Inductive_Exegesis_Method_Overview.md",
+      "sha256": "12c15fdf5ef1d876d0935b538f92015e7d0ecd7df49f5bb7ffc08b601882f240",
+      "size": 3874
+    },
+    "RM-04B": {
+      "kind": "derivative",
+      "path": "references/professional-knowledge/RM-04B_Observation_Steps_1-3.md",
+      "sha256": "74b904c3eb84fe8a7a06e62c1f1021bdb64ad1e7f9a6c7297218a520948d62db",
+      "size": 4283
+    },
+    "RM-04C": {
+      "kind": "derivative",
+      "path": "references/professional-knowledge/RM-04C_Interpretation_Steps_4-7.md",
+      "sha256": "5718ba0a20f12fc2a14c7b821df2b1819979654c39aa789b5cdf104f8de1e6f5",
+      "size": 4261
+    },
+    "RM-04D": {
+      "kind": "derivative",
+      "path": "references/professional-knowledge/RM-04D_Application_Steps_8-10.md",
+      "sha256": "7e43392f8d421bcd2801c305562713519a296f9517cc6ae802cccded61bb2126",
+      "size": 2974
+    },
+    "RM-04E": {
+      "kind": "derivative",
+      "path": "references/professional-knowledge/RM-04E_Inductive_Study_Questioning_Guide.md",
+      "sha256": "482005257fc9e0baa7902e99cc425b5849a83a57cb3037e6470ba79237dbc7e4",
+      "size": 4514
+    },
+    "RM-05": {
+      "kind": "exact-scripture-authority",
+      "path": "references/source-materials/Bible 舊約聖經和合本(1).pdf",
+      "sha256": "2740a6f824f96374cb127d78c3d646b489963898dacc252b842d9a8894a91125",
+      "size": 4427709
+    },
+    "RM-06": {
+      "kind": "exact-scripture-authority",
+      "path": "references/source-materials/Bible 新約聖經和合本(1).pdf",
+      "sha256": "4f0f9ef4c4a78b83f918c74e8f368a7e0eae515c17866c7767c310ca75786490",
+      "size": 1557874
+    }
+  },
+  "schema": "sermon-coach-reference-registry-v1"
+}

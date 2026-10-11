@@ -1,0 +1,32 @@
+{
+  "approval": {
+    "W1": "APPROVED",
+    "delta": "APPROVED"
+  },
+  "baseline": {
+    "archive_sha256": "31372e283fca2d0f98c534be16e2e6eadaa2dadcc9b074a305eecfc889c024ec",
+    "name": "sermon-coach",
+    "version": "1.0.0"
+  },
+  "delta": "sermon-coach-v1.0-delta-01",
+  "implementation": [
+    "machine-verifiable reference consultation and finding provenance",
+    "source-bound structured CUV address retrieval",
+    "single canonical packaged reference identity with Skill-local duplicate removal"
+  ],
+  "mode": "UPDATE",
+  "preserve": [
+    "WF-01..WF-04",
+    "IM-01..IM-10",
+    "UIP-01..UIP-04",
+    "RQ-001..RQ-015",
+    "reference authority precedence",
+    "existing deterministic behavior"
+  ],
+  "schema": "plugin-builder-update-plan-v1",
+  "scope": [
+    "DELTA-RQ-01",
+    "DELTA-RQ-02",
+    "DELTA-RQ-03"
+  ]
+}
