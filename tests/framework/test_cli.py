@@ -570,6 +570,65 @@ class FrameworkCliTests(unittest.TestCase):
                 self.assertEqual(payload["evidence"]["gates"]["filesystem"], "PASS")
                 self.assertEqual(payload["evidence"]["gates"][gate], "PASS")
 
+    def test_verify_marketplace_cli_writes_receipt_and_validates_it_independently(self) -> None:
+        fixture = self.marketplace_fixture()
+        prepared, _ = self.invoke(
+            "prepare-marketplace",
+            "--catalog", str(fixture.catalog_path),
+            "--marketplace", str(fixture.baseline),
+            "--output", str(fixture.output),
+        )
+        self.assertEqual(prepared, 0)
+        receipt = self.output / "marketplace-receipt.json"
+
+        code, payload = self.invoke(
+            "verify-marketplace",
+            "--catalog", str(fixture.catalog_path),
+            "--marketplace", str(fixture.output),
+            "--receipt-output", str(receipt),
+            "--json",
+        )
+        self.assertEqual((code, payload["status"]), (0, "PASS"))
+        self.assertTrue(receipt.is_file())
+
+        stdout = io.StringIO()
+        with contextlib.redirect_stdout(stdout):
+            validation_code = main([
+                "verify-marketplace-receipt",
+                "--catalog", str(fixture.catalog_path),
+                "--marketplace", str(fixture.output),
+                "--receipt", str(receipt),
+                "--json",
+            ])
+        raw = stdout.getvalue()
+        validated = json.loads(raw)
+        raw.encode("ascii")
+        self.assertEqual((validation_code, validated["status"]), (0, "PASS"))
+        self.assertEqual(raw.count('"result_schema_version"'), 1)
+
+        receipt.write_text("{}", encoding="utf-8")
+        code, payload = self.invoke(
+            "verify-marketplace-receipt",
+            "--catalog", str(fixture.catalog_path),
+            "--marketplace", str(fixture.output),
+            "--receipt", str(receipt),
+            "--json",
+        )
+        self.assertEqual((code, payload["status"]), (3, "FAIL"))
+
+    def test_receipt_option_keeps_git_modes_mutually_exclusive_and_unknown_args_rejected(self) -> None:
+        common = (
+            "verify-marketplace",
+            "--catalog", str(V3),
+            "--marketplace", str(self.output),
+            "--receipt-output", str(self.output / "receipt.json"),
+        )
+        code, payload = self.invoke(*common, "--index", "--commit", "HEAD")
+        self.assertEqual((code, payload["code"]), (2, "invalid_cli_arguments"))
+
+        code, payload = self.invoke(*common, "--unknown")
+        self.assertEqual((code, payload["code"]), (2, "invalid_cli_arguments"))
+
     def test_verify_marketplace_git_modes_are_mutually_exclusive(self) -> None:
         code, payload = self.invoke(
             "verify-marketplace",

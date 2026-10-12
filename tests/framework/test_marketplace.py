@@ -20,6 +20,9 @@ from obvious_one_plugin_framework.marketplace import (
     prepare_marketplace,
     verify_marketplace,
 )
+from obvious_one_plugin_framework.marketplace_receipt import (
+    verify_marketplace_filesystem_receipt,
+)
 
 
 class MarketplaceTests(unittest.TestCase):
@@ -553,6 +556,92 @@ class MarketplaceTests(unittest.TestCase):
                 "commit": "PASS",
                 "fresh_checkout": "PASS",
             },
+        )
+
+    def test_verify_marketplace_writes_and_revalidates_requested_receipt(self) -> None:
+        catalog = load_preparation_catalog(self.catalog_path, self.repository)
+        prepare_marketplace(catalog, self.baseline, self.output)
+        receipt = self.root / "evidence" / "marketplace-receipt.json"
+
+        result = verify_marketplace(catalog, self.output, receipt_output=receipt)
+
+        self.assertEqual((result.status, result.code), ("PASS", "marketplace_verified"))
+        self.assertTrue(receipt.is_file())
+        self.assertEqual(
+            result.artifacts[-1].kind,
+            "marketplace_filesystem_verification_receipt",
+        )
+        self.assertEqual(result.artifacts[-1].path, receipt.name)
+        independently_verified = verify_marketplace_filesystem_receipt(
+            catalog, self.output, receipt
+        )
+        self.assertEqual(independently_verified.status, "PASS")
+
+    def test_failed_marketplace_verification_preserves_existing_receipt(self) -> None:
+        catalog = load_preparation_catalog(self.catalog_path, self.repository)
+        prepare_marketplace(catalog, self.baseline, self.output)
+        (self.output / "tools" / "verify_marketplace.py").write_text(
+            "# changed\n", encoding="utf-8"
+        )
+        receipt = self.root / "marketplace-receipt.json"
+        receipt.write_bytes(b"preserve-existing\r\n")
+
+        result = verify_marketplace(catalog, self.output, receipt_output=receipt)
+
+        self.assertEqual(result.status, "FAIL")
+        self.assertEqual(receipt.read_bytes(), b"preserve-existing\r\n")
+
+    def test_receipt_output_must_not_overlap_marketplace(self) -> None:
+        catalog = load_preparation_catalog(self.catalog_path, self.repository)
+        prepare_marketplace(catalog, self.baseline, self.output)
+        before = self._tree(self.output)
+
+        for receipt in (self.output, self.output / "receipt.json", self.root):
+            with self.subTest(receipt=receipt):
+                with self.assertRaisesRegex(
+                    MarketplaceError, "receipt_output_overlaps_marketplace"
+                ):
+                    verify_marketplace(catalog, self.output, receipt_output=receipt)
+                self.assertEqual(self._tree(self.output), before)
+
+    def test_receipt_keeps_requested_git_gates(self) -> None:
+        self._write_codex_only_modern_catalog()
+        catalog = load_preparation_catalog(self.catalog_path, self.repository)
+        prepare_marketplace(catalog, self.baseline, self.output)
+        self.git(self.output, "init")
+        self.git(self.output, "config", "user.email", "tests@example.invalid")
+        self.git(self.output, "config", "user.name", "Framework Tests")
+        self.git(self.output, "add", ".")
+        self.git(self.output, "commit", "-m", "receipt stage")
+
+        result = verify_marketplace(
+            catalog,
+            self.output,
+            fresh_checkout=True,
+            receipt_output=self.root / "receipt.json",
+        )
+
+        self.assertEqual(result.status, "PASS")
+        self.assertEqual(
+            result.evidence["gates"],
+            {
+                "filesystem": "PASS",
+                "index": "PASS",
+                "commit": "PASS",
+                "fresh_checkout": "PASS",
+            },
+        )
+
+    def test_omitting_receipt_preserves_existing_result_shape(self) -> None:
+        catalog = load_preparation_catalog(self.catalog_path, self.repository)
+        prepare_marketplace(catalog, self.baseline, self.output)
+
+        result = verify_marketplace(catalog, self.output)
+
+        self.assertEqual(len(result.artifacts), 1)
+        self.assertEqual(
+            set(result.evidence),
+            {"diagnostic_plugins", "files_checked", "gates", "git_codes", "marketplace_id"},
         )
 
     def test_exact_byte_attributes_omit_not_applicable_destination(self) -> None:

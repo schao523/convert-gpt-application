@@ -15,8 +15,12 @@ from tempfile import TemporaryDirectory
 
 from .contract import ContractError, DistributionContract, load_contract, require_buildable_contract
 from .package_builder import build_package, verify_package
-from .marketplace_receipt import marketplace_tree_identity
-from .results import ArtifactRecord, MutationRecord, OperationResult
+from .marketplace_receipt import (
+    marketplace_tree_identity,
+    verify_marketplace_filesystem_receipt,
+    write_marketplace_filesystem_receipt,
+)
+from .results import ArtifactRecord, Diagnostic, MutationRecord, OperationResult
 from .verification import (
     ApplicationConfig,
     ExpansionContext,
@@ -265,12 +269,20 @@ def verify_marketplace(
     check_index: bool = False,
     commit: str | None = None,
     fresh_checkout: bool = False,
+    receipt_output: Path | None = None,
 ) -> OperationResult:
     """Verify staged artifacts and optional Git byte evidence without mutation."""
 
     from .git_evidence import verify_git_evidence
 
     root = Path(marketplace).resolve()
+    receipt_destination = Path(receipt_output).resolve() if receipt_output is not None else None
+    if receipt_destination is not None and (
+        receipt_destination == root
+        or receipt_destination.is_relative_to(root)
+        or root.is_relative_to(receipt_destination)
+    ):
+        raise MarketplaceError("receipt_output_overlaps_marketplace")
     registry_path = root / ".obvious-one-validation.json"
     verifier = root / "tools" / "verify_marketplace.py"
     if not registry_path.is_file() or not verifier.is_file():
@@ -370,7 +382,7 @@ def verify_marketplace(
         value == "FAIL" for value in gates.values()
     )
     aggregate, total_bytes = _tree_identity(root)
-    return OperationResult(
+    result = OperationResult(
         operation="verify-marketplace",
         status="FAIL" if failed else "PASS",
         code="marketplace_verification_failed" if failed else "marketplace_verified",
@@ -382,6 +394,58 @@ def verify_marketplace(
             "git_codes": list(git_codes),
             "marketplace_id": catalog.marketplace_id,
         },
+    )
+    if failed or receipt_destination is None:
+        return result
+
+    receipt_destination.parent.mkdir(parents=True, exist_ok=True)
+    try:
+        with TemporaryDirectory(
+            prefix=".marketplace-receipt-integration-",
+            dir=receipt_destination.parent,
+        ) as temporary:
+            staged_receipt = Path(temporary) / receipt_destination.name
+            staged_artifact = write_marketplace_filesystem_receipt(
+                catalog,
+                root,
+                result,
+                staged_receipt,
+            )
+            receipt_verification = verify_marketplace_filesystem_receipt(
+                catalog,
+                root,
+                staged_receipt,
+            )
+            if receipt_verification.status != "PASS":
+                raise ValueError("marketplace_receipt_revalidation_failed")
+            os.replace(staged_receipt, receipt_destination)
+        receipt_artifact = ArtifactRecord(
+            receipt_destination.name,
+            staged_artifact.kind,
+            staged_artifact.sha256,
+            staged_artifact.size,
+        )
+    except (OSError, UnicodeError, ValueError, json.JSONDecodeError):
+        return OperationResult(
+            operation="verify-marketplace",
+            status="FAIL",
+            code="marketplace_receipt_write_failed",
+            diagnostics=(
+                Diagnostic(
+                    "marketplace_receipt_write_failed",
+                    None,
+                    "marketplace receipt production or revalidation failed",
+                ),
+            ),
+            artifacts=result.artifacts,
+            evidence=result.evidence,
+        )
+    return OperationResult(
+        operation=result.operation,
+        status=result.status,
+        code=result.code,
+        artifacts=(*result.artifacts, receipt_artifact),
+        evidence=result.evidence,
     )
 
 

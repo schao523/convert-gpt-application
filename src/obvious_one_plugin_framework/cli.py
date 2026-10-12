@@ -23,6 +23,7 @@ from .hosted_identity import propose_hosted_identity
 from .index_reuse import IndexReuseError, check_index_reuse, derive_index
 from .knowledge_policy import KnowledgePolicyError, validate_knowledge_policy
 from .marketplace import MarketplaceError, load_preparation_catalog, prepare_marketplace, verify_marketplace
+from .marketplace_receipt import verify_marketplace_filesystem_receipt
 from .package_builder import PackageAuditError, build_package, preflight_package, verify_package
 from .plugin_onboarding import OnboardingError, prepare_plugin_zip_marketplace
 from .plugin_onboarding.inspection import (
@@ -104,7 +105,13 @@ def _parser() -> argparse.ArgumentParser:
     git_mode.add_argument("--index", action="store_true")
     git_mode.add_argument("--commit")
     git_mode.add_argument("--fresh-checkout", action="store_true")
+    verify_market.add_argument("--receipt-output", type=Path)
     verify_market.add_argument("--json", action="store_true")
+    verify_receipt = commands.add_parser("verify-marketplace-receipt")
+    verify_receipt.add_argument("--catalog", required=True, type=Path)
+    verify_receipt.add_argument("--marketplace", required=True, type=Path)
+    verify_receipt.add_argument("--receipt", required=True, type=Path)
+    verify_receipt.add_argument("--json", action="store_true")
     report = commands.add_parser("report")
     report.add_argument("--inputs", required=True, nargs="+", type=Path)
     report.add_argument("--output", required=True, type=Path)
@@ -391,17 +398,28 @@ def _dispatch(arguments: argparse.Namespace) -> OperationResult:
                 "upload_status": verified.upload_status,
             },
         )
-    if operation in {"prepare-marketplace", "verify-marketplace"}:
+    if operation in {
+        "prepare-marketplace",
+        "verify-marketplace",
+        "verify-marketplace-receipt",
+    }:
         repository = _catalog_repository(arguments.catalog)
         catalog = load_preparation_catalog(arguments.catalog, repository)
         if operation == "prepare-marketplace":
             return prepare_marketplace(catalog, arguments.marketplace, arguments.output)
+        if operation == "verify-marketplace-receipt":
+            return verify_marketplace_filesystem_receipt(
+                catalog,
+                arguments.marketplace,
+                arguments.receipt,
+            )
         return verify_marketplace(
             catalog,
             arguments.marketplace,
             check_index=arguments.index,
             commit=arguments.commit,
             fresh_checkout=arguments.fresh_checkout,
+            receipt_output=arguments.receipt_output,
         )
     if operation == "report":
         result = combine_results(arguments.inputs)
