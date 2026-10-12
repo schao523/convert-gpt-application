@@ -39,7 +39,7 @@ class ApplicationConfigTests(unittest.TestCase):
             "openclaw/cool-plugin-design-assistant",
         )
 
-    def test_only_active_release_targets_are_built(self) -> None:
+    def test_no_published_release_target_remains_in_build_mode(self) -> None:
         catalog = load_preparation_catalog(
             ROOT / "marketplaces" / "obvious-one.json", ROOT
         )
@@ -50,7 +50,7 @@ class ApplicationConfigTests(unittest.TestCase):
             if target.mode == "build"
         }
 
-        self.assertEqual(build_targets, {("sermon-coach", "codex")})
+        self.assertEqual(build_targets, set())
 
     def test_all_cataloged_target_destinations_match_application_identity(self) -> None:
         catalog = load_preparation_catalog(
