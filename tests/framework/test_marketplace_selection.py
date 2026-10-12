@@ -289,6 +289,18 @@ class MarketplaceSelectionTests(unittest.TestCase):
         self.assertEqual(first, second)
         self.assertNotIn("obvious_one_plugin_framework", self.selector.read_text(encoding="utf-8"))
 
+    def test_matrix_is_exactly_the_validated_selected_plugin_list(self) -> None:
+        changed = self.root / "plugins" / "modern" / ".codex-plugin" / "plugin.json"
+        changed.write_bytes(changed.read_bytes() + b"\n")
+        head = self._commit("matrix contract")
+
+        completed, payload = self._run(head=head)
+
+        self.assertEqual(completed.returncode, 0, completed.stderr)
+        evidence = payload["evidence"]
+        self.assertEqual(set(evidence["matrix"]), {"plugin"})
+        self.assertEqual(evidence["matrix"]["plugin"], evidence["selected_plugins"])
+
     def test_renderer_matches_installed_template_and_generated_stage(self) -> None:
         rendered = render_marketplace_selector()
 

@@ -194,19 +194,83 @@ jobs:
   matrix:
     runs-on: ubuntu-latest
     outputs:
-      matrix: ${{ steps.registry.outputs.matrix }}
+      matrix: ${{ steps.selection.outputs.matrix }}
+      selection_mode: ${{ steps.selection.outputs.selection_mode }}
+      selection_status: ${{ steps.selection.outputs.selection_status }}
     steps:
       - uses: actions/checkout@v4
-      - id: registry
+        with:
+          fetch-depth: 0
+      - id: selection
         shell: python
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          PUSH_BEFORE_SHA: ${{ github.event.before }}
+          PUSH_HEAD_SHA: ${{ github.sha }}
         run: |
-          import json, os
-          data = json.load(open('.obvious-one-validation.json', encoding='utf-8'))
-          matrix = json.dumps({'plugin': [item['plugin_id'] for item in data['plugins']]}, separators=(',', ':'))
+          import json, os, subprocess, sys
+          command = [
+              sys.executable, '-B', 'tools/select_marketplace_plugins.py',
+              '--registry', '.obvious-one-validation.json',
+          ]
+          event = os.environ.get('EVENT_NAME', '')
+          if event == 'workflow_dispatch':
+              command.extend(['--all', 'workflow_dispatch'])
+          else:
+              if event == 'pull_request':
+                  base = os.environ.get('PR_BASE_SHA', '')
+                  head = os.environ.get('PR_HEAD_SHA', '')
+              else:
+                  base = os.environ.get('PUSH_BEFORE_SHA', '')
+                  head = os.environ.get('PUSH_HEAD_SHA', '')
+              command.extend(['--base', base, '--head', head])
+          completed = subprocess.run(
+              command,
+              stdin=subprocess.DEVNULL,
+              stdout=subprocess.PIPE,
+              stderr=subprocess.PIPE,
+              text=True,
+              encoding='utf-8',
+              errors='replace',
+              check=False,
+          )
+          matrix = {'plugin': []}
+          mode = 'INVALID'
+          status = 'FAIL'
+          try:
+              payload = json.loads(completed.stdout)
+              evidence = payload.get('evidence', {})
+              candidate = evidence.get('matrix')
+              selected = candidate.get('plugin') if isinstance(candidate, dict) else None
+              candidate_mode = evidence.get('selection_mode')
+              valid_plugins = (
+                  isinstance(selected, list)
+                  and selected == sorted(set(selected))
+                  and all(isinstance(item, str) and item for item in selected)
+              )
+              if (
+                  payload.get('result_schema_version') == 1
+                  and payload.get('operation') == 'select-marketplace-plugins'
+                  and payload.get('status') in {'PASS', 'FAIL'}
+                  and candidate_mode in {'AFFECTED', 'ALL', 'NONE'}
+                  and valid_plugins
+              ):
+                  matrix = {'plugin': selected}
+                  mode = candidate_mode
+                  status = payload['status']
+          except (AttributeError, TypeError, ValueError, json.JSONDecodeError):
+              pass
           with open(os.environ['GITHUB_OUTPUT'], 'a', encoding='utf-8') as stream:
-              stream.write(f'matrix={matrix}\\n')
+              stream.write('matrix=' + json.dumps(matrix, separators=(',', ':')) + '\\n')
+              stream.write(f'selection_mode={mode}\\n')
+              stream.write(f'selection_status={status}\\n')
+          if completed.returncode != 0 or status != 'PASS':
+              raise SystemExit(1)
   validate:
     needs: matrix
+    if: needs.matrix.outputs.selection_status == 'PASS' && needs.matrix.outputs.selection_mode != 'NONE'
     strategy:
       fail-fast: false
       matrix:
@@ -221,8 +285,28 @@ jobs:
       - run: python -B tools/verify_marketplace.py --registry .obvious-one-validation.json --plugin "${{ matrix.plugin }}" --json
   aggregate:
     if: always()
-    needs: validate
+    needs: [matrix, validate]
     runs-on: ubuntu-latest
     steps:
-      - run: test "${{ needs.validate.result }}" = success
+      - shell: python
+        env:
+          MATRIX_RESULT: ${{ needs.matrix.result }}
+          VALIDATION_RESULT: ${{ needs.validate.result }}
+          SELECTION_MODE: ${{ needs.matrix.outputs.selection_mode }}
+          SELECTION_STATUS: ${{ needs.matrix.outputs.selection_status }}
+        run: |
+          import os, sys
+          matrix = os.environ.get('MATRIX_RESULT')
+          validation = os.environ.get('VALIDATION_RESULT')
+          mode = os.environ.get('SELECTION_MODE')
+          status = os.environ.get('SELECTION_STATUS')
+          accepted = (
+              matrix == 'success'
+              and status == 'PASS'
+              and (
+                  (mode == 'NONE' and validation == 'skipped')
+                  or (mode != 'NONE' and validation == 'success')
+              )
+          )
+          sys.exit(0 if accepted else 1)
 """

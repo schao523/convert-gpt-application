@@ -155,7 +155,42 @@ class MarketplaceCiTests(unittest.TestCase):
             'python -B tools/verify_marketplace.py --registry .obvious-one-validation.json --plugin "${{ matrix.plugin }}" --json',
             workflow,
         )
-        self.assertIn("aggregate:\n    if: always()\n    needs: validate", workflow)
+        self.assertIn("aggregate:\n    if: always()\n    needs: [matrix, validate]", workflow)
+
+    def test_validation_workflow_uses_selector_outputs_and_safe_event_routing(self) -> None:
+        workflow = render_validation_workflow()
+
+        self.assertIn("fetch-depth: 0", workflow)
+        self.assertIn("selection_mode: ${{ steps.selection.outputs.selection_mode }}", workflow)
+        self.assertIn("selection_status: ${{ steps.selection.outputs.selection_status }}", workflow)
+        self.assertIn("PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}", workflow)
+        self.assertIn("PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}", workflow)
+        self.assertIn("PUSH_BEFORE_SHA: ${{ github.event.before }}", workflow)
+        self.assertIn("PUSH_HEAD_SHA: ${{ github.sha }}", workflow)
+        self.assertIn("command.extend(['--all', 'workflow_dispatch'])", workflow)
+        self.assertIn("command.extend(['--base', base, '--head', head])", workflow)
+        self.assertNotIn("--base ${{", workflow)
+        self.assertNotIn("--head ${{", workflow)
+        self.assertIn(
+            "plugin: ${{ fromJson(needs.matrix.outputs.matrix).plugin }}",
+            workflow,
+        )
+        self.assertIn(
+            "if: needs.matrix.outputs.selection_status == 'PASS' && needs.matrix.outputs.selection_mode != 'NONE'",
+            workflow,
+        )
+
+    def test_validation_workflow_aggregate_rejects_unsafe_skip_or_failure(self) -> None:
+        workflow = render_validation_workflow()
+
+        self.assertIn("if: always()", workflow)
+        self.assertIn("MATRIX_RESULT: ${{ needs.matrix.result }}", workflow)
+        self.assertIn("VALIDATION_RESULT: ${{ needs.validate.result }}", workflow)
+        self.assertIn("SELECTION_MODE: ${{ needs.matrix.outputs.selection_mode }}", workflow)
+        self.assertIn("SELECTION_STATUS: ${{ needs.matrix.outputs.selection_status }}", workflow)
+        self.assertIn("mode == 'NONE' and validation == 'skipped'", workflow)
+        self.assertIn("mode != 'NONE' and validation == 'success'", workflow)
+        self.assertIn("sys.exit(0 if accepted else 1)", workflow)
 
     def test_validation_workflow_render_is_byte_deterministic(self) -> None:
         first = render_validation_workflow().encode("utf-8")
