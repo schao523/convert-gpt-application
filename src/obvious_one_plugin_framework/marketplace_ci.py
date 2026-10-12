@@ -176,8 +176,9 @@ def _catalog_path(value: str) -> str:
 _WORKFLOW = """name: Validate marketplace
 
 on:
-  push:
   pull_request:
+  push:
+    branches: [main]
   workflow_dispatch:
 
 jobs:

@@ -66,6 +66,32 @@ class DocumentationContractTests(unittest.TestCase):
             with self.subTest(required=required):
                 self.assertIn(required, combined)
 
+    def test_marketplace_publication_sequence_avoids_redundant_commit_run_and_preserves_evidence(self) -> None:
+        content = COMMAND_REFERENCE.read_text(encoding="utf-8")
+        normalized = " ".join(content.split())
+
+        self.assertIn("--marketplace .\\dist\\marketplace-delta\\obvious-one --json", content)
+        self.assertIn("--marketplace <external-git-stage> --index --json", content)
+        self.assertIn("--marketplace <external-git-stage> --fresh-checkout --json", content)
+        self.assertNotIn("--marketplace <external-git-stage> --commit HEAD --json", content)
+        for gate in (
+            "filesystem: PASS",
+            "index: PASS",
+            "commit: PASS",
+            "fresh_checkout: PASS",
+        ):
+            with self.subTest(gate=gate):
+                self.assertIn(gate, content)
+        for required in (
+            "fresh-checkout mode resolves `HEAD`",
+            "`--commit` remains available for standalone diagnostics",
+            "Save the complete result document below ignored `.tmp` or `dist` storage",
+            "path and SHA-256",
+            "exit code alone is not evidence",
+        ):
+            with self.subTest(required=required):
+                self.assertIn(required, normalized)
+
     def test_documents_application_aware_provenance_and_independent_shared_gates(self) -> None:
         content = COMMAND_REFERENCE.read_text(encoding="utf-8")
         self.assertIn("write_extraction_provenance.py", content)
