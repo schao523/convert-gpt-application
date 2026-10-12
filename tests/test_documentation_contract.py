@@ -92,6 +92,45 @@ class DocumentationContractTests(unittest.TestCase):
             with self.subTest(required=required):
                 self.assertIn(required, normalized)
 
+    def test_documents_marketplace_receipt_identity_and_safe_lifecycle(self) -> None:
+        content = COMMAND_REFERENCE.read_text(encoding="utf-8")
+        normalized = " ".join(content.split())
+
+        for required in (
+            "--receipt-output .\\.tmp\\marketplace-evidence\\filesystem-receipt.json",
+            "verify-marketplace-receipt",
+            "marketplace-filesystem-verification-receipt-v1",
+            "outside the marketplace tree",
+            "transactionally",
+            "preserves any pre-existing receipt",
+            "preparation catalog",
+            "validation registry",
+            "marketplace verifier",
+            "marketplace selector",
+            "SHA-256",
+        ):
+            with self.subTest(required=required):
+                self.assertIn(required, normalized)
+
+    def test_documents_affected_selection_without_weakening_evidence_or_authority(self) -> None:
+        content = COMMAND_REFERENCE.read_text(encoding="utf-8")
+        normalized = " ".join(content.split())
+
+        for required in (
+            "`AFFECTED`",
+            "`ALL`",
+            "`NONE`",
+            "shared control",
+            "conservative fallback",
+            "three operating systems",
+            "complete verification evidence",
+            "does not authorize marketplace mutation",
+            "NOT VERIFIED",
+            "NOT PERFORMED",
+        ):
+            with self.subTest(required=required):
+                self.assertIn(required, normalized)
+
     def test_documents_application_aware_provenance_and_independent_shared_gates(self) -> None:
         content = COMMAND_REFERENCE.read_text(encoding="utf-8")
         self.assertIn("write_extraction_provenance.py", content)

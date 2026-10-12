@@ -461,6 +461,39 @@ python -B -m obvious_one_plugin_framework.cli verify-marketplace --catalog .\mar
 python -B -m obvious_one_plugin_framework.cli verify-marketplace --catalog .\marketplaces\obvious-one.json --marketplace <external-git-stage> --fresh-checkout --json
 ```
 
+To retain compact, identity-bound evidence for a passing filesystem
+verification, request a receipt at a path outside the marketplace tree:
+
+```powershell
+python -B -m obvious_one_plugin_framework.cli verify-marketplace `
+  --catalog .\marketplaces\obvious-one.json `
+  --marketplace .\dist\marketplace-delta\obvious-one `
+  --receipt-output .\.tmp\marketplace-evidence\filesystem-receipt.json `
+  --json
+
+python -B -m obvious_one_plugin_framework.cli verify-marketplace-receipt `
+  --catalog .\marketplaces\obvious-one.json `
+  --marketplace .\dist\marketplace-delta\obvious-one `
+  --receipt .\.tmp\marketplace-evidence\filesystem-receipt.json `
+  --json
+```
+
+The `marketplace-filesystem-verification-receipt-v1` document binds the exact
+SHA-256 identities of the preparation catalog, validation registry,
+marketplace verifier, marketplace selector, complete marketplace tree, and
+each registered plugin target. The receipt is written only after every gate
+requested by that `verify-marketplace` invocation passes. It is staged,
+revalidated, and replaced transactionally; a failed marketplace gate or
+receipt revalidation preserves any pre-existing receipt. The output path must
+be disjoint from the marketplace root: it cannot equal, sit inside, or contain
+the marketplace tree.
+
+Independent `verify-marketplace-receipt` validation recalculates all bound
+identities. A mismatch returns `FAIL`; it never becomes permission to reuse
+stale evidence or skip filesystem, index, commit, fresh-checkout, or runtime
+verification required for the current operation. Store the receipt beside the
+complete result documents under ignored `.tmp` or `dist` evidence storage.
+
 After the index gate passes, create the local commit before running the final
 command. The fresh-checkout mode resolves `HEAD`, verifies working-tree, index, and
 commit evidence, and then reproduces and compares checkout bytes. A successful
@@ -507,8 +540,29 @@ an unstaged rule cannot mask missing committed policy.
 Artifact identity traversal also rejects links and reparse points before
 reading bytes, both in local orchestration and in the generated verifier.
 The generated validation registry and workflow provide catalog-driven CI: each
-registered plugin receives an independent matrix result, while an aggregate
-job fails when any required entry fails.
+registered plugin selected for the current change receives an independent
+matrix result on three operating systems, while an aggregate job fails when
+selection fails, a selected validation fails, or validation is skipped
+unexpectedly. The generated selector reports one of three modes:
+
+- `AFFECTED` means every plugin owning a changed destination is selected;
+- `ALL` means every registered plugin is selected, including the conservative
+  fallback for unavailable revisions, shallow history, unmapped paths, Git
+  execution failure, or any shared control change; and
+- `NONE` means the compared revisions have no changed paths, so validation is
+  intentionally skipped and the aggregate gate verifies that exact state.
+
+Shared controls include both runtime catalogs, the validation registry,
+verifier, selector, workflow, and exact-byte attributes. Ownership comes only
+from the validated registry; it is not duplicated in workflow YAML. Rename,
+copy, and delete endpoints are all evaluated. Manual dispatch selects `ALL`.
+Affected selection reduces redundant jobs, not assurance: each selected plugin
+still runs the standalone verifier across Windows, Linux, and macOS, and all
+complete verification evidence required for publication remains mandatory.
+Live GitHub Actions execution is `NOT VERIFIED` until observed directly, and
+marketplace adoption is `NOT PERFORMED` until separately authorized. A receipt
+does not authorize marketplace mutation, and neither does an affected-plugin CI
+result.
 
 Every CLI command emits one result-schema-v1 JSON document. Status precedence
 is `FAIL`, `BLOCKED`, then `PASS`; exit codes are 0 for pass, 2 for blocked or

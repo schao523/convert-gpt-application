@@ -50,3 +50,17 @@ The repository verifier registers `hosted-deployment` only for an application
 that owns `hosted-openai/deployment.json`. A passing local gate records upload,
 marketplace, and public submission as `NOT_PERFORMED` and installation as
 `NOT VERIFIED`; it never borrows evidence from another application.
+
+## Verify marketplace receipts and affected selection
+
+Run the focused Stage Two marketplace suites with:
+
+```text
+python -B -m unittest tests.framework.test_marketplace_receipt tests.framework.test_marketplace_selection tests.framework.test_marketplace_ci tests.framework.test_marketplace tests.framework.test_cli -v
+```
+
+These synthetic, network-free tests cover receipt identity and transactional
+replacement, conservative Git-diff ownership selection, zero-selection
+aggregation, three-OS workflow generation, and unchanged marketplace
+verification behavior. They do not execute GitHub Actions or authorize a
+marketplace mutation.
