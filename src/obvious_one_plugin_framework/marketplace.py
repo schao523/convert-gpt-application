@@ -15,6 +15,7 @@ from tempfile import TemporaryDirectory
 
 from .contract import ContractError, DistributionContract, load_contract, require_buildable_contract
 from .package_builder import build_package, verify_package
+from .marketplace_receipt import marketplace_tree_identity
 from .results import ArtifactRecord, MutationRecord, OperationResult
 from .verification import (
     ApplicationConfig,
@@ -800,28 +801,7 @@ def _write_json_file(path: Path, value: object) -> None:
 
 def _artifact_identity(root: Path) -> dict[str, object]:
     _reject_links(root)
-    records = []
-    for path in sorted(
-        root.rglob("*"), key=lambda candidate: candidate.relative_to(root).as_posix()
-    ):
-        if path.is_file():
-            data = path.read_bytes()
-            records.append(
-                {
-                    "path": path.relative_to(root).as_posix(),
-                    "size": len(data),
-                    "sha256": sha256(data).hexdigest(),
-                }
-            )
-    identity = json.dumps(
-        records, ensure_ascii=False, separators=(",", ":"), sort_keys=True
-    ).encode("utf-8")
-    return {
-        "content_sha256": sha256(identity).hexdigest(),
-        "file_count": len(records),
-        "total_bytes": sum(record["size"] for record in records),
-        "files": records,
-    }
+    return marketplace_tree_identity(root, exclude_git=False)
 
 
 def _write_text_file(path: Path, value: str) -> None:
@@ -951,15 +931,8 @@ def _tree_delta(before: Path, after: Path) -> list[dict[str, str]]:
 
 
 def _tree_identity(root: Path) -> tuple[str, int]:
-    records = []
-    total = 0
-    for path in sorted(root.rglob("*")):
-        if path.is_file() and ".git" not in path.relative_to(root).parts:
-            data = path.read_bytes()
-            total += len(data)
-            records.append({"path": path.relative_to(root).as_posix(), "sha256": sha256(data).hexdigest(), "size": len(data)})
-    encoded = json.dumps(records, ensure_ascii=False, separators=(",", ":"), sort_keys=True).encode("utf-8")
-    return sha256(encoded).hexdigest(), total
+    identity = marketplace_tree_identity(root)
+    return str(identity["content_sha256"]), int(identity["total_bytes"])
 
 
 def _within(root: Path, value: object, field: str, *, already_relative: bool = True) -> Path:

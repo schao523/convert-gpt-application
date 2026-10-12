@@ -196,6 +196,28 @@ class MarketplaceTests(unittest.TestCase):
             ["Z.txt", "a.txt"],
         )
 
+    def test_artifact_identity_preserves_utf8_path_hash_contract(self) -> None:
+        artifact = self.root / "utf8-identity"
+        artifact.mkdir()
+        (artifact / "講章.txt").write_bytes(b"content\n")
+        records = [
+            {
+                "path": "講章.txt",
+                "size": 8,
+                "sha256": sha256(b"content\n").hexdigest(),
+            }
+        ]
+        encoded = json.dumps(
+            records,
+            ensure_ascii=False,
+            separators=(",", ":"),
+            sort_keys=True,
+        ).encode("utf-8")
+
+        identity = _artifact_identity(artifact)
+
+        self.assertEqual(identity["content_sha256"], sha256(encoded).hexdigest())
+
     def test_build_requires_v3_and_verify_existing_accepts_legacy(self) -> None:
         catalog = load_preparation_catalog(self.catalog_path, self.repository)
         self.assertEqual([entry.mode for entry in catalog.applications], ["verify_existing", "build"])

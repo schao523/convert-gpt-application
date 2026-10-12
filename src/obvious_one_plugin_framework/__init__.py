@@ -64,6 +64,11 @@ from .marketplace_ci import (
     render_marketplace_verifier,
     render_validation_workflow,
 )
+from .marketplace_receipt import (
+    build_marketplace_filesystem_receipt,
+    verify_marketplace_filesystem_receipt,
+    write_marketplace_filesystem_receipt,
+)
 from .git_evidence import GitEvidenceReport, exact_byte_attributes, verify_git_evidence
 from .results import (
     ArtifactRecord,
@@ -204,6 +209,9 @@ __all__ = [
     "build_validation_registry",
     "render_marketplace_verifier",
     "render_validation_workflow",
+    "build_marketplace_filesystem_receipt",
+    "verify_marketplace_filesystem_receipt",
+    "write_marketplace_filesystem_receipt",
     "GitEvidenceReport",
     "exact_byte_attributes",
     "verify_git_evidence",
