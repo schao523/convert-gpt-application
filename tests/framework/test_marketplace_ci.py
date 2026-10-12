@@ -135,6 +135,33 @@ class MarketplaceCiTests(unittest.TestCase):
         self.assertNotIn("modern", workflow)
         self.assertIn("matrix.plugin", workflow)
 
+    def test_validation_workflow_uses_pr_main_and_manual_triggers(self) -> None:
+        workflow = render_validation_workflow()
+
+        self.assertIn(
+            "on:\n  pull_request:\n  push:\n    branches: [main]\n  workflow_dispatch:\n",
+            workflow,
+        )
+        self.assertNotIn("on:\n  push:\n  pull_request:\n", workflow)
+
+    def test_validation_workflow_preserves_plugin_os_matrix_and_aggregate_gate(self) -> None:
+        workflow = render_validation_workflow()
+
+        self.assertIn("fail-fast: false", workflow)
+        self.assertIn("plugin: ${{ fromJson(needs.matrix.outputs.matrix).plugin }}", workflow)
+        self.assertIn("os: [windows-latest, ubuntu-latest, macos-latest]", workflow)
+        self.assertIn(
+            'python -B tools/verify_marketplace.py --registry .obvious-one-validation.json --plugin "${{ matrix.plugin }}" --json',
+            workflow,
+        )
+        self.assertIn("aggregate:\n    if: always()\n    needs: validate", workflow)
+
+    def test_validation_workflow_render_is_byte_deterministic(self) -> None:
+        first = render_validation_workflow().encode("utf-8")
+        second = render_validation_workflow().encode("utf-8")
+
+        self.assertEqual(first, second)
+
     def test_catalog_disagreement_missing_and_duplicate_entries_fail(self) -> None:
         codex, openclaw = self.catalogs()
         cases = []
