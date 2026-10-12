@@ -1,10 +1,12 @@
 # Marketplace Publication Efficiency Stage One Design
 
-Status: **PROPOSED — WRITTEN REVIEW PENDING**  
-Date: 2026-10-12  
+Status: **APPROVED**
+Date: 2026-10-12
 Scope approval: Stage One approved by the owner in the development session on
+2026-10-12
+Written approval: confirmed by the owner in the development session on
 2026-10-12  
-Implementation authorization: **NOT YET GRANTED**
+Implementation authorization: **PLAN REVIEW PENDING**
 
 ## 1. Purpose
 
@@ -174,4 +176,3 @@ verification passes.
 Completion does not update `D:\GitHub\obvious-one-plugins`. Adopting the newly
 generated workflow in that repository requires a separately reviewed exact
 delta and explicit owner authorization to apply, commit, push, and merge it.
-
