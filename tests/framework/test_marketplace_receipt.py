@@ -64,8 +64,6 @@ class MarketplaceReceiptTests(unittest.TestCase):
             fixture.repository,
         )
         prepare_marketplace(self.catalog, fixture.baseline, fixture.output)
-        selector = fixture.output / "tools" / "select_marketplace_plugins.py"
-        selector.write_bytes(b"# deterministic selector fixture\n")
         self.verification = verify_marketplace(self.catalog, fixture.output)
         self.receipt_path = fixture.root / "evidence" / "filesystem-receipt.json"
 
@@ -223,9 +221,6 @@ class MarketplaceReceiptTests(unittest.TestCase):
         for name, mutate in mutations.items():
             with self.subTest(name=name):
                 prepare_marketplace(self.catalog, self.fixture.baseline, self.fixture.output)
-                (self.fixture.output / "tools" / "select_marketplace_plugins.py").write_bytes(
-                    b"# deterministic selector fixture\n"
-                )
                 self.verification = verify_marketplace(self.catalog, self.fixture.output)
                 self._write_receipt()
                 mutate()

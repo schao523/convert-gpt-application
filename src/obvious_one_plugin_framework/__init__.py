@@ -61,6 +61,7 @@ from .marketplace import (
 )
 from .marketplace_ci import (
     build_validation_registry,
+    render_marketplace_selector,
     render_marketplace_verifier,
     render_validation_workflow,
 )
@@ -207,6 +208,7 @@ __all__ = [
     "prepare_marketplace",
     "verify_marketplace",
     "build_validation_registry",
+    "render_marketplace_selector",
     "render_marketplace_verifier",
     "render_validation_workflow",
     "build_marketplace_filesystem_receipt",

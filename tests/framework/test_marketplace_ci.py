@@ -19,6 +19,7 @@ from obvious_one_plugin_framework.marketplace import (
 )
 from obvious_one_plugin_framework.marketplace_ci import (
     build_validation_registry,
+    render_marketplace_selector,
     render_marketplace_verifier,
     render_validation_workflow,
 )
@@ -304,6 +305,13 @@ class MarketplaceCiTests(unittest.TestCase):
         )
         self.assertTrue(resource.is_file())
         self.assertEqual(render_marketplace_verifier(), resource.read_text(encoding="utf-8"))
+
+    def test_packaged_selector_template_is_loaded_from_resources(self) -> None:
+        resource = files("obvious_one_plugin_framework").joinpath(
+            "templates/marketplace/select_marketplace_plugins.py.template"
+        )
+        self.assertTrue(resource.is_file())
+        self.assertEqual(render_marketplace_selector(), resource.read_text(encoding="utf-8"))
 
     def test_generated_verifier_validates_stage_and_detects_legacy_drift(self) -> None:
         prepare_marketplace(self.catalog, self.fixture.baseline, self.fixture.output)

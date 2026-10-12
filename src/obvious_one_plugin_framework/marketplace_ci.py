@@ -118,6 +118,15 @@ def render_marketplace_verifier() -> str:
     return resource.read_text(encoding="utf-8")
 
 
+def render_marketplace_selector() -> str:
+    """Load the standalone affected-plugin selector from package resources."""
+
+    resource = files("obvious_one_plugin_framework").joinpath(
+        "templates/marketplace/select_marketplace_plugins.py.template"
+    )
+    return resource.read_text(encoding="utf-8")
+
+
 def render_validation_workflow() -> str:
     """Render plugin-neutral cross-platform GitHub Actions validation."""
 

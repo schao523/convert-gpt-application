@@ -628,6 +628,7 @@ def _check_plugin_manifest(root: Path, plugin_id: str, version: str) -> None:
 def _write_generated_controls(catalog: PreparationCatalog, stage: Path) -> None:
     from .marketplace_ci import (
         build_validation_registry,
+        render_marketplace_selector,
         render_marketplace_verifier,
         render_validation_workflow,
     )
@@ -676,6 +677,7 @@ def _write_generated_controls(catalog: PreparationCatalog, stage: Path) -> None:
     registry = _expected_registry(catalog, stage, codex_catalog, openclaw_catalog)
     _write_json_file(stage / ".obvious-one-validation.json", registry)
     _write_text_file(stage / "tools" / "verify_marketplace.py", render_marketplace_verifier())
+    _write_text_file(stage / "tools" / "select_marketplace_plugins.py", render_marketplace_selector())
     _write_text_file(stage / ".github" / "workflows" / "validate.yml", render_validation_workflow())
     _merge_exact_byte_attributes(catalog, stage)
 
@@ -747,12 +749,17 @@ def _marketplace_controls_valid(
     registry_path: Path,
     verifier: Path,
 ) -> bool:
-    from .marketplace_ci import render_marketplace_verifier
+    from .marketplace_ci import render_marketplace_selector, render_marketplace_verifier
 
     try:
         expected_verifier = render_marketplace_verifier().replace("\r\n", "\n").replace("\r", "\n")
         observed_verifier = verifier.read_text(encoding="utf-8").replace("\r\n", "\n").replace("\r", "\n")
         if observed_verifier != expected_verifier:
+            return False
+        selector = root / "tools" / "select_marketplace_plugins.py"
+        expected_selector = render_marketplace_selector().replace("\r\n", "\n").replace("\r", "\n")
+        observed_selector = selector.read_text(encoding="utf-8").replace("\r\n", "\n").replace("\r", "\n")
+        if observed_selector != expected_selector:
             return False
         codex = _load_json_mapping(_first_catalog(root, (".agents/plugins/marketplace.json", ".codex-plugin/marketplace.json")))
         openclaw = _load_json_mapping(_first_catalog(root, (".claude-plugin/marketplace.json", "openclaw/marketplace.json")))
@@ -779,6 +786,15 @@ def _merge_exact_byte_attributes(catalog: PreparationCatalog, stage: Path) -> No
     lines = existing.splitlines()
     scopes = _applicable_destinations(catalog)
     for line in exact_byte_attributes(scopes).splitlines():
+        if line not in lines:
+            lines.append(line)
+    for relative in (
+        ".obvious-one-validation.json",
+        "tools/verify_marketplace.py",
+        "tools/select_marketplace_plugins.py",
+        ".github/workflows/validate.yml",
+    ):
+        line = f"/{relative} -text -whitespace"
         if line not in lines:
             lines.append(line)
     _write_text_file(path, "\n".join(lines) + "\n")
