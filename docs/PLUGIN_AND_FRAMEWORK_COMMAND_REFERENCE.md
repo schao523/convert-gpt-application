@@ -458,11 +458,25 @@ that external path for the remaining commands:
 ```powershell
 python -B -m obvious_one_plugin_framework.cli verify-marketplace --catalog .\marketplaces\obvious-one.json --marketplace .\dist\marketplace-delta\obvious-one --json
 python -B -m obvious_one_plugin_framework.cli verify-marketplace --catalog .\marketplaces\obvious-one.json --marketplace <external-git-stage> --index --json
-python -B -m obvious_one_plugin_framework.cli verify-marketplace --catalog .\marketplaces\obvious-one.json --marketplace <external-git-stage> --commit HEAD --json
 python -B -m obvious_one_plugin_framework.cli verify-marketplace --catalog .\marketplaces\obvious-one.json --marketplace <external-git-stage> --fresh-checkout --json
 ```
 
-`--index`, `--commit`, and `--fresh-checkout` are mutually exclusive. Keep
+After the index gate passes, create the local commit before running the final
+command. The fresh-checkout mode resolves `HEAD`, verifies working-tree, index, and
+commit evidence, and then reproduces and compares checkout bytes. A successful
+final result therefore reports:
+
+```text
+filesystem: PASS
+index: PASS
+commit: PASS
+fresh_checkout: PASS
+```
+
+`--index`, `--commit`, and `--fresh-checkout` are mutually exclusive per
+invocation. `--commit` remains available for standalone diagnostics, but a
+separate `--commit HEAD` run is not part of the required publication sequence
+because `--fresh-checkout` already supplies that commit gate. Keep
 already-published versions in `verify_existing` mode and use `build` only for
 the explicitly authorized active release targets. This prevents an unrelated
 publication from replacing existing artifact bytes without a versioned release
@@ -499,7 +513,15 @@ job fails when any required entry fails.
 Every CLI command emits one result-schema-v1 JSON document. Status precedence
 is `FAIL`, `BLOCKED`, then `PASS`; exit codes are 0 for pass, 2 for blocked or
 invocation errors, 3 for verification/build failure, and 4 for local I/O or
-environment failure. Consolidate saved result documents with:
+environment failure. Save the complete result document below ignored `.tmp` or
+`dist` storage, and retain its path and SHA-256 with the publication evidence.
+Before continuing, inspect `operation`, `status`, `code`, gate states, artifact
+identities, and diagnostics; exit code alone is not evidence. Routine agent
+commentary should report only those decision-relevant fields and link the saved
+document when detailed review is needed. Do not truncate, rewrite, or discard
+the authoritative result document merely to reduce commentary size.
+
+Consolidate saved result documents with:
 
 ```powershell
 python -B -m obvious_one_plugin_framework.cli report `
