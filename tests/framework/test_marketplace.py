@@ -20,6 +20,7 @@ from obvious_one_plugin_framework.marketplace import (
     prepare_marketplace,
     verify_marketplace,
 )
+from obvious_one_plugin_framework import marketplace_ci
 from obvious_one_plugin_framework.marketplace_receipt import (
     verify_marketplace_filesystem_receipt,
 )
@@ -643,6 +644,37 @@ class MarketplaceTests(unittest.TestCase):
             set(result.evidence),
             {"diagnostic_plugins", "files_checked", "gates", "git_codes", "marketplace_id"},
         )
+
+    def test_stage_one_generated_controls_remain_verifiable_without_selector(self) -> None:
+        catalog = load_preparation_catalog(self.catalog_path, self.repository)
+        prepare_marketplace(catalog, self.baseline, self.output)
+        (self.output / "tools" / "select_marketplace_plugins.py").unlink()
+        (self.output / ".github" / "workflows" / "validate.yml").write_text(
+            marketplace_ci._LEGACY_WORKFLOW_V1,
+            encoding="utf-8",
+            newline="\n",
+        )
+
+        result = verify_marketplace(catalog, self.output)
+
+        self.assertEqual((result.status, result.code), ("PASS", "marketplace_verified"))
+
+    def test_receipt_output_cannot_replace_catalog_or_escape_repository_output_roots(self) -> None:
+        catalog = load_preparation_catalog(self.catalog_path, self.repository)
+        prepare_marketplace(catalog, self.baseline, self.output)
+        catalog_before = self.catalog_path.read_bytes()
+
+        for receipt in (self.catalog_path, self.repository / "receipt.json"):
+            with self.subTest(receipt=receipt):
+                with self.assertRaisesRegex(MarketplaceError, "unsafe_receipt_output"):
+                    verify_marketplace(catalog, self.output, receipt_output=receipt)
+                self.assertEqual(self.catalog_path.read_bytes(), catalog_before)
+                self.assertFalse((self.repository / "receipt.json").exists())
+
+        safe = self.repository / ".tmp" / "receipt.json"
+        result = verify_marketplace(catalog, self.output, receipt_output=safe)
+        self.assertEqual(result.status, "PASS")
+        self.assertTrue(safe.is_file())
 
     def test_exact_byte_attributes_omit_not_applicable_destination(self) -> None:
         self._write_codex_only_modern_catalog()

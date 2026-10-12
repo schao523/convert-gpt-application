@@ -63,6 +63,103 @@ def _safe_relative(value):
     return posix.as_posix()
 
 
+def _safe_git_relative(value):
+    if not isinstance(value, str) or not value:
+        raise SelectionError("git_diff_unrecognized")
+    posix = PurePosixPath(value)
+    if (
+        posix.is_absolute()
+        or any(part in ("", ".", "..") for part in posix.parts)
+    ):
+        raise SelectionError("git_diff_unrecognized")
+    return value
+
+
+def _digest(value):
+    return (
+        isinstance(value, str)
+        and len(value) == 64
+        and all(character in "0123456789abcdef" for character in value)
+    )
+
+
+def _validate_artifact(artifact):
+    if not isinstance(artifact, dict) or set(artifact) != {
+        "content_sha256", "file_count", "files", "total_bytes"
+    }:
+        raise SelectionError("registry_invalid")
+    records = artifact.get("files")
+    if not isinstance(records, list):
+        raise SelectionError("registry_invalid")
+    normalized = []
+    for record in records:
+        if not isinstance(record, dict) or set(record) != {"path", "size", "sha256"}:
+            raise SelectionError("registry_invalid")
+        path = _safe_relative(record.get("path"))
+        size = record.get("size")
+        if (
+            not isinstance(size, int)
+            or isinstance(size, bool)
+            or size < 0
+            or not _digest(record.get("sha256"))
+        ):
+            raise SelectionError("registry_invalid")
+        normalized.append({"path": path, "size": size, "sha256": record["sha256"]})
+    paths = [record["path"] for record in normalized]
+    if paths != sorted(set(paths)):
+        raise SelectionError("registry_invalid")
+    encoded = json.dumps(
+        normalized,
+        ensure_ascii=False,
+        separators=(",", ":"),
+        sort_keys=True,
+    ).encode("utf-8")
+    if (
+        artifact.get("file_count") != len(normalized)
+        or artifact.get("total_bytes") != sum(record["size"] for record in normalized)
+        or artifact.get("content_sha256") != sha256(encoded).hexdigest()
+    ):
+        raise SelectionError("registry_invalid")
+
+
+def _validate_commands(commands, applicable_targets):
+    if not isinstance(commands, list):
+        raise SelectionError("registry_invalid")
+    identifiers = []
+    for command in commands:
+        if not isinstance(command, dict) or set(command) != {"id", "artifact", "argv"}:
+            raise SelectionError("registry_invalid")
+        identifier = command.get("id")
+        artifact = command.get("artifact")
+        argv = command.get("argv")
+        if (
+            not isinstance(identifier, str)
+            or not identifier
+            or artifact not in applicable_targets
+            or not isinstance(argv, list)
+            or not argv
+            or not all(isinstance(argument, str) and argument for argument in argv)
+        ):
+            raise SelectionError("registry_invalid")
+        identifiers.append(identifier)
+    if len(identifiers) != len(set(identifiers)):
+        raise SelectionError("registry_invalid")
+
+
+def _validate_clawhub(clawhub, applicable_targets):
+    if clawhub == {"state": "NOT APPLICABLE"}:
+        return
+    if (
+        not isinstance(clawhub, dict)
+        or set(clawhub) != {"state", "family", "native_manifest"}
+        or clawhub.get("state") != "CONFIGURED"
+        or clawhub.get("family") != "native-plugin"
+        or "openclaw" not in applicable_targets
+    ):
+        raise SelectionError("registry_invalid")
+    _safe_relative(clawhub.get("native_manifest"))
+
+
 def _load_registry(path):
     try:
         value = json.loads(path.read_text(encoding="utf-8"))
@@ -72,7 +169,11 @@ def _load_registry(path):
         "schema_version", "marketplace_id", "plugins"
     }:
         raise SelectionError("registry_invalid")
-    if value.get("schema_version") != 2 or not isinstance(value.get("marketplace_id"), str):
+    if (
+        value.get("schema_version") != 2
+        or not isinstance(value.get("marketplace_id"), str)
+        or not value.get("marketplace_id")
+    ):
         raise SelectionError("registry_invalid")
     records = value.get("plugins")
     if not isinstance(records, list) or not records:
@@ -86,13 +187,19 @@ def _load_registry(path):
         }:
             raise SelectionError("registry_invalid")
         plugin_id = plugin.get("plugin_id")
-        if not isinstance(plugin_id, str) or not plugin_id:
+        version = plugin.get("version")
+        if (
+            not isinstance(plugin_id, str)
+            or not plugin_id
+            or not isinstance(version, str)
+            or not version
+        ):
             raise SelectionError("registry_invalid")
         plugin_ids.append(plugin_id)
         targets = plugin.get("targets")
         if not isinstance(targets, dict) or set(targets) != {"codex", "openclaw"}:
             raise SelectionError("registry_invalid")
-        applicable = 0
+        applicable_targets = set()
         for name in ("codex", "openclaw"):
             target = targets[name]
             if target == {"state": "NOT APPLICABLE"}:
@@ -102,13 +209,15 @@ def _load_registry(path):
                 or set(target) != {"state", "mode", "path", "artifact"}
                 or target.get("state") != "STATICALLY VERIFIED"
                 or target.get("mode") not in {"build", "verify_existing"}
-                or not isinstance(target.get("artifact"), dict)
             ):
                 raise SelectionError("registry_invalid")
+            _validate_artifact(target.get("artifact"))
             ownership.append((_safe_relative(target.get("path")), plugin_id))
-            applicable += 1
-        if applicable == 0:
+            applicable_targets.add(name)
+        if not applicable_targets:
             raise SelectionError("registry_invalid")
+        _validate_commands(plugin.get("commands"), applicable_targets)
+        _validate_clawhub(plugin.get("clawhub"), applicable_targets)
     if plugin_ids != sorted(set(plugin_ids)):
         raise SelectionError("registry_duplicate_plugin")
 
@@ -181,7 +290,7 @@ def _changes(root, base, head):
                 raise SelectionError("git_diff_unrecognized")
             paths = []
             for field in fields[index:index + count]:
-                paths.append(_safe_relative(field.decode("utf-8", "surrogateescape")))
+                paths.append(_safe_git_relative(field.decode("utf-8", "surrogateescape")))
             index += count
             result.append({"status": status, "paths": paths})
     except (UnicodeError, SelectionError) as exc:

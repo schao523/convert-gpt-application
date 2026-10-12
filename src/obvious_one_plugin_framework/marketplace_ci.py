@@ -182,6 +182,52 @@ def _catalog_path(value: str) -> str:
     return value[2:] if value.startswith("./") else value
 
 
+_LEGACY_WORKFLOW_V1 = """name: Validate marketplace
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  matrix:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.registry.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: registry
+        shell: python
+        run: |
+          import json, os
+          data = json.load(open('.obvious-one-validation.json', encoding='utf-8'))
+          matrix = json.dumps({'plugin': [item['plugin_id'] for item in data['plugins']]}, separators=(',', ':'))
+          with open(os.environ['GITHUB_OUTPUT'], 'a', encoding='utf-8') as stream:
+              stream.write(f'matrix={matrix}\\n')
+  validate:
+    needs: matrix
+    strategy:
+      fail-fast: false
+      matrix:
+        plugin: ${{ fromJson(needs.matrix.outputs.matrix).plugin }}
+        os: [windows-latest, ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -B tools/verify_marketplace.py --registry .obvious-one-validation.json --plugin "${{ matrix.plugin }}" --json
+  aggregate:
+    if: always()
+    needs: validate
+    runs-on: ubuntu-latest
+    steps:
+      - run: test "${{ needs.validate.result }}" = success
+"""
+
+
 _WORKFLOW = """name: Validate marketplace
 
 on:

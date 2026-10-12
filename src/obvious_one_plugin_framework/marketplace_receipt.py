@@ -97,9 +97,11 @@ def write_marketplace_filesystem_receipt(
     """Write one receipt transactionally outside the marketplace tree."""
 
     root = Path(marketplace).resolve()
-    destination = Path(output).resolve()
-    if destination == root or destination.is_relative_to(root):
-        raise ValueError("receipt_output_overlaps_marketplace")
+    destination = validate_marketplace_receipt_output(
+        catalog,
+        root,
+        output,
+    )
     payload = build_marketplace_filesystem_receipt(catalog, root, verification)
     encoded = _document_bytes(payload)
     destination.parent.mkdir(parents=True, exist_ok=True)
@@ -113,6 +115,35 @@ def write_marketplace_filesystem_receipt(
         sha256(encoded).hexdigest(),
         len(encoded),
     )
+
+
+def validate_marketplace_receipt_output(
+    catalog: PreparationCatalog,
+    marketplace: Path,
+    output: Path,
+) -> Path:
+    """Return a safe receipt destination without following linked components."""
+
+    root = Path(marketplace).resolve()
+    lexical = Path(os.path.abspath(Path(output)))
+    for component in reversed((lexical, *lexical.parents)):
+        if _path_is_link(component):
+            raise ValueError("unsafe_receipt_output")
+    destination = lexical.resolve()
+    if (
+        destination == root
+        or destination.is_relative_to(root)
+        or root.is_relative_to(destination)
+    ):
+        raise ValueError("receipt_output_overlaps_marketplace")
+    if destination == catalog.catalog_path.resolve():
+        raise ValueError("unsafe_receipt_output")
+    repository = catalog.repository_root.resolve()
+    if destination.is_relative_to(repository):
+        relative = destination.relative_to(repository)
+        if not relative.parts or relative.parts[0].casefold() not in {".tmp", "dist"}:
+            raise ValueError("unsafe_receipt_output")
+    return destination
 
 
 def verify_marketplace_filesystem_receipt(

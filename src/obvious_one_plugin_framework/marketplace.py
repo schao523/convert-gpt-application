@@ -17,6 +17,7 @@ from .contract import ContractError, DistributionContract, load_contract, requir
 from .package_builder import build_package, verify_package
 from .marketplace_receipt import (
     marketplace_tree_identity,
+    validate_marketplace_receipt_output,
     verify_marketplace_filesystem_receipt,
     write_marketplace_filesystem_receipt,
 )
@@ -276,13 +277,17 @@ def verify_marketplace(
     from .git_evidence import verify_git_evidence
 
     root = Path(marketplace).resolve()
-    receipt_destination = Path(receipt_output).resolve() if receipt_output is not None else None
-    if receipt_destination is not None and (
-        receipt_destination == root
-        or receipt_destination.is_relative_to(root)
-        or root.is_relative_to(receipt_destination)
-    ):
-        raise MarketplaceError("receipt_output_overlaps_marketplace")
+    try:
+        receipt_destination = (
+            validate_marketplace_receipt_output(catalog, root, receipt_output)
+            if receipt_output is not None
+            else None
+        )
+    except ValueError as exc:
+        code = str(exc)
+        if code not in {"receipt_output_overlaps_marketplace", "unsafe_receipt_output"}:
+            code = "unsafe_receipt_output"
+        raise MarketplaceError(code) from exc
     registry_path = root / ".obvious-one-validation.json"
     verifier = root / "tools" / "verify_marketplace.py"
     if not registry_path.is_file() or not verifier.is_file():
@@ -813,7 +818,12 @@ def _marketplace_controls_valid(
     registry_path: Path,
     verifier: Path,
 ) -> bool:
-    from .marketplace_ci import render_marketplace_selector, render_marketplace_verifier
+    from .marketplace_ci import (
+        _LEGACY_WORKFLOW_V1,
+        render_marketplace_selector,
+        render_marketplace_verifier,
+        render_validation_workflow,
+    )
 
     try:
         expected_verifier = render_marketplace_verifier().replace("\r\n", "\n").replace("\r", "\n")
@@ -821,9 +831,16 @@ def _marketplace_controls_valid(
         if observed_verifier != expected_verifier:
             return False
         selector = root / "tools" / "select_marketplace_plugins.py"
-        expected_selector = render_marketplace_selector().replace("\r\n", "\n").replace("\r", "\n")
-        observed_selector = selector.read_text(encoding="utf-8").replace("\r\n", "\n").replace("\r", "\n")
-        if observed_selector != expected_selector:
+        workflow = root / ".github" / "workflows" / "validate.yml"
+        observed_workflow = workflow.read_text(encoding="utf-8").replace("\r\n", "\n").replace("\r", "\n")
+        if selector.is_file():
+            expected_selector = render_marketplace_selector().replace("\r\n", "\n").replace("\r", "\n")
+            observed_selector = selector.read_text(encoding="utf-8").replace("\r\n", "\n").replace("\r", "\n")
+            if observed_selector != expected_selector:
+                return False
+            if observed_workflow != render_validation_workflow().replace("\r\n", "\n").replace("\r", "\n"):
+                return False
+        elif observed_workflow != _LEGACY_WORKFLOW_V1:
             return False
         codex = _load_json_mapping(_first_catalog(root, (".agents/plugins/marketplace.json", ".codex-plugin/marketplace.json")))
         openclaw = _load_json_mapping(_first_catalog(root, (".claude-plugin/marketplace.json", "openclaw/marketplace.json")))

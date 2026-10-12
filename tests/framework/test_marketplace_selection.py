@@ -260,6 +260,18 @@ class MarketplaceSelectionTests(unittest.TestCase):
         unsafe = json.loads(json.dumps(original))
         unsafe["plugins"][0]["targets"]["codex"]["path"] = "../outside"
         cases["unsafe"] = unsafe
+        invalid_version = json.loads(json.dumps(original))
+        invalid_version["plugins"][0]["version"] = None
+        cases["invalid-version"] = invalid_version
+        invalid_commands = json.loads(json.dumps(original))
+        invalid_commands["plugins"][0]["commands"] = None
+        cases["invalid-commands"] = invalid_commands
+        invalid_clawhub = json.loads(json.dumps(original))
+        invalid_clawhub["plugins"][0]["clawhub"] = None
+        cases["invalid-clawhub"] = invalid_clawhub
+        empty_artifact = json.loads(json.dumps(original))
+        empty_artifact["plugins"][0]["targets"]["codex"]["artifact"] = {}
+        cases["empty-artifact"] = empty_artifact
 
         for name, registry in cases.items():
             with self.subTest(name=name):
@@ -275,6 +287,24 @@ class MarketplaceSelectionTests(unittest.TestCase):
                     json.dumps(original, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
                     encoding="utf-8",
                 )
+
+    def test_malformed_unselected_plugin_metadata_fails_closed(self) -> None:
+        registry_path = self.root / ".obvious-one-validation.json"
+        registry = json.loads(registry_path.read_text(encoding="utf-8"))
+        registry["plugins"][0]["commands"] = None
+        registry_path.write_text(
+            json.dumps(registry, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+            encoding="utf-8",
+        )
+        changed = self.root / "plugins" / "modern" / ".codex-plugin" / "plugin.json"
+        changed.write_bytes(changed.read_bytes() + b"\n")
+        head = self._commit("modern with malformed legacy metadata")
+
+        completed, payload = self._run(head=head)
+
+        self.assertNotEqual(completed.returncode, 0)
+        self.assertEqual(payload["status"], "FAIL")
+        self.assertEqual(payload["code"], "marketplace_selection_failed")
 
     def test_result_is_deterministic_and_script_is_framework_independent(self) -> None:
         changed = self.root / "plugins" / "legacy" / ".codex-plugin" / "plugin.json"
@@ -300,6 +330,23 @@ class MarketplaceSelectionTests(unittest.TestCase):
         evidence = payload["evidence"]
         self.assertEqual(set(evidence["matrix"]), {"plugin"})
         self.assertEqual(evidence["matrix"]["plugin"], evidence["selected_plugins"])
+
+    def test_literal_backslash_git_endpoint_is_unmapped_not_rewritten(self) -> None:
+        namespace = {"__name__": "marketplace_selector_test"}
+        exec(render_marketplace_selector(), namespace)
+        endpoint = r"plugins\legacy\outside.txt"
+
+        preserved = namespace["_safe_git_relative"](endpoint)
+        mode, selected, reason = namespace["_selection"](
+            ("legacy", "modern"),
+            [{"status": "A", "paths": [preserved]}],
+            (("plugins/legacy", "legacy"), ("plugins/modern", "modern")),
+        )
+
+        self.assertEqual(preserved, endpoint)
+        self.assertEqual((mode, selected, reason), (
+            "ALL", ["legacy", "modern"], "changed_path_unmapped"
+        ))
 
     def test_renderer_matches_installed_template_and_generated_stage(self) -> None:
         rendered = render_marketplace_selector()

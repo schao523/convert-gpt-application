@@ -6,6 +6,7 @@ import json
 from pathlib import Path
 import tempfile
 import unittest
+from unittest.mock import patch
 
 from obvious_one_plugin_framework.marketplace import (
     load_preparation_catalog,
@@ -139,6 +140,32 @@ class MarketplaceReceiptTests(unittest.TestCase):
                 self.receipt_path,
             )
         self.assertEqual(self.receipt_path.read_bytes(), b"preserve-me\n")
+
+    def test_writer_rejects_catalog_collision_and_linked_parent_without_mutation(self) -> None:
+        catalog_before = self.fixture.catalog_path.read_bytes()
+        with self.assertRaisesRegex(ValueError, "unsafe_receipt_output"):
+            write_marketplace_filesystem_receipt(
+                self.catalog,
+                self.fixture.output,
+                self.verification,
+                self.fixture.catalog_path,
+            )
+        self.assertEqual(self.fixture.catalog_path.read_bytes(), catalog_before)
+
+        linked_parent = self.fixture.root / "linked-evidence"
+        linked_output = linked_parent / "receipt.json"
+        with patch(
+            "obvious_one_plugin_framework.marketplace_receipt._path_is_link",
+            side_effect=lambda path: Path(path) == linked_parent,
+        ):
+            with self.assertRaisesRegex(ValueError, "unsafe_receipt_output"):
+                write_marketplace_filesystem_receipt(
+                    self.catalog,
+                    self.fixture.output,
+                    self.verification,
+                    linked_output,
+                )
+        self.assertFalse(linked_output.exists())
 
     def test_build_rejects_nonpassing_or_wrong_marketplace_verification(self) -> None:
         cases = (
