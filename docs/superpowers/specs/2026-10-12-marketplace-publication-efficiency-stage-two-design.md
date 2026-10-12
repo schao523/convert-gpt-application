@@ -1,7 +1,7 @@
 # Marketplace Publication Efficiency Stage Two Design
 
-**Date:** 2026-10-12  
-**Status:** OWNER-APPROVED CONVERSATIONAL DESIGN; WRITTEN SPECIFICATION PENDING REVIEW  
+**Date:** 2026-10-12
+**Status:** OWNER-APPROVED CONVERSATIONAL DESIGN; WRITTEN SPECIFICATION PENDING REVIEW
 **Scope:** Identity-bound filesystem-verification receipts and affected-plugin CI matrix selection
 
 ## 1. Purpose
