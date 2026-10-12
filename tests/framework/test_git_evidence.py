@@ -125,9 +125,25 @@ class GitEvidenceTests(unittest.TestCase):
     def test_exact_byte_attributes_are_sorted_and_scoped(self) -> None:
         self.assertEqual(
             exact_byte_attributes(("openclaw/demo/", "plugins/demo", "plugins/demo")),
-            "/openclaw/demo/** -text whitespace=cr-at-eol\n"
-            "/plugins/demo/** -text whitespace=cr-at-eol\n",
+            "/openclaw/demo/** -text -whitespace\n"
+            "/plugins/demo/** -text -whitespace\n",
         )
+
+    def test_exact_byte_attributes_preserve_whitespace_without_diff_noise(self) -> None:
+        path = self.repo / "plugins/demo/space 名稱.txt"
+        path.write_bytes(b"approved trailing spaces  \n")
+        _git(self.repo, "add", "--", "plugins/demo/space 名稱.txt")
+
+        checked = subprocess.run(
+            ["git", "diff", "--cached", "--check"],
+            cwd=self.repo,
+            text=True,
+            encoding="utf-8",
+            capture_output=True,
+            check=False,
+        )
+
+        self.assertEqual(checked.returncode, 0, checked.stdout + checked.stderr)
 
     def test_attribute_queries_stream_paths_over_stdin(self) -> None:
         paths = ("plugins/demo/one.txt", "plugins/demo/two.txt")

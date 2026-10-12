@@ -860,8 +860,8 @@ python -B -m obvious_one_plugin_framework.cli prepare-marketplace `
 Preparation updates only declared destinations, preserves unrelated content,
 reconstructs both runtime catalogs, and generates the self-contained verifier
 and catalog-driven CI workflow. It also writes scoped Git attributes such as
-`-text whitespace=cr-at-eol` so exact manifest bytes survive Windows, Linux,
-and macOS checkouts.
+`-text -whitespace` so exact artifact bytes survive Windows, Linux, and macOS
+checkouts without whitespace warnings for immutable, hash-bound content.
 
 Verify filesystem evidence first, then Git index, commit, and fresh-checkout
 evidence as separate modes:

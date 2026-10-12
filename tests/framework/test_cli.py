@@ -494,7 +494,7 @@ class FrameworkCliTests(unittest.TestCase):
         self.assertIn(".obvious-one-validation.json", changed)
         attributes = (fixture.output / ".gitattributes").read_text(encoding="utf-8")
         self.assertIn("/docs/** text\n", attributes)
-        self.assertIn("/plugins/modern/** -text whitespace=cr-at-eol\n", attributes)
+        self.assertIn("/plugins/modern/** -text -whitespace\n", attributes)
 
     def test_prepare_marketplace_reports_published_excluded_target_as_blocked(self) -> None:
         fixture = self.marketplace_fixture()

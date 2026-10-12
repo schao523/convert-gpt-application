@@ -61,7 +61,7 @@ class DocumentationContractTests(unittest.TestCase):
             "schema v1 and schema v2",
             "does not apply or publish the delta",
             "NOT APPLICABLE",
-            "-text whitespace=cr-at-eol",
+            "-text -whitespace",
         ):
             with self.subTest(required=required):
                 self.assertIn(required, combined)
@@ -92,7 +92,7 @@ class DocumentationContractTests(unittest.TestCase):
             "content_rules",
             "verify_existing",
             "catalog-driven",
-            "-text whitespace=cr-at-eol",
+            "-text -whitespace",
             "ClawHub",
         ):
             with self.subTest(required=required):

@@ -540,7 +540,7 @@ class MarketplaceTests(unittest.TestCase):
         prepare_marketplace(catalog, self.baseline, self.output)
 
         attributes = (self.output / ".gitattributes").read_text(encoding="utf-8")
-        self.assertIn("/plugins/modern/** -text whitespace=cr-at-eol", attributes)
+        self.assertIn("/plugins/modern/** -text -whitespace", attributes)
         self.assertNotIn("openclaw/modern", attributes)
 
     def test_failed_product_audit_preserves_existing_output(self) -> None:

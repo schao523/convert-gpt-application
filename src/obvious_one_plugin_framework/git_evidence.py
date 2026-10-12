@@ -21,11 +21,11 @@ class GitEvidenceReport:
 
 
 def exact_byte_attributes(scopes: Sequence[str]) -> str:
-    """Return sorted `.gitattributes` rules that disable text conversion."""
+    """Return sorted rules that preserve bytes and suppress immutable whitespace noise."""
 
     normalized = sorted({_scope(scope) for scope in scopes})
     return "".join(
-        f"/{scope.rstrip('/')}/** -text whitespace=cr-at-eol\n"
+        f"/{scope.rstrip('/')}/** -text -whitespace\n"
         for scope in normalized
     )
 

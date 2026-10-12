@@ -423,8 +423,9 @@ python -B -m obvious_one_plugin_framework.cli prepare-marketplace `
 ```
 
 `prepare-marketplace` does not apply or publish the delta. It writes scoped
-rules such as `/plugins/<plugin-id>/** -text whitespace=cr-at-eol` so committed
-manifest bytes survive Windows, Linux, and macOS checkouts.
+rules such as `/plugins/<plugin-id>/** -text -whitespace` so committed artifact
+bytes survive Windows, Linux, and macOS checkouts without asking Git to rewrite
+or whitespace-lint immutable, hash-bound imported content.
 
 Preparation-catalog schema v2 declares `targets.codex` and
 `targets.openclaw` independently. Each target uses `build`, `verify_existing`,
