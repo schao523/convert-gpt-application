@@ -22,7 +22,7 @@ def load_script(name: str):
 
 
 class MarketplaceReleaseTests(unittest.TestCase):
-    def test_obvious_one_catalog_verifies_published_plugins_and_builds_active_release(self) -> None:
+    def test_obvious_one_catalog_verifies_published_plugins(self) -> None:
         catalog = load_preparation_catalog(
             REPOSITORY / "marketplaces" / "obvious-one.json", REPOSITORY
         )
@@ -33,7 +33,7 @@ class MarketplaceReleaseTests(unittest.TestCase):
         }
         self.assertEqual(modes["cool-bible-tutor"], "verify_existing")
         self.assertEqual(modes["vibe-coding-designer"], "verify_existing")
-        self.assertEqual(modes["sermon-coach"], "build")
+        self.assertEqual(modes["sermon-coach"], "verify_existing")
 
     def test_codex_release_is_deterministic_and_allowlisted(self) -> None:
         release = load_script("build_marketplace_release.py")

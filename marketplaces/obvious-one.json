@@ -46,7 +46,7 @@
       "application_config": "applications/sermon-coach/conversion.json",
       "distribution_contract": "applications/sermon-coach/openclaw/distribution.json",
       "targets": {
-        "codex": {"mode": "build", "destination": "plugins/sermon-coach"},
+        "codex": {"mode": "verify_existing", "destination": "plugins/sermon-coach"},
         "openclaw": {"mode": "not_applicable"}
       }
     }
