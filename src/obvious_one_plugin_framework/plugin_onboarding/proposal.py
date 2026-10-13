@@ -183,6 +183,11 @@ def _audit_declared_content(inspection: OnboardingInspection) -> None:
         dependencies_declared = dependencies_declared or bool(dependencies)
         mcp_declared = mcp_declared or contract.get("implementation_kind") == "MCP_ADAPTER"
     declared_files.update(inspection.offline_validator_files)
+    if inspection.input_profile == "PLUGIN_BUILDER_DETERMINISTIC_CONTENT_V2":
+        declared_files.update(inspection.approved_executable_files)
+        dependencies_declared = dependencies_declared or bool(
+            inspection.approved_dependency_files
+        )
     undeclared_executable = sorted(set(inspection.executable_files) - declared_files)
     if undeclared_executable:
         raise _error("undeclared_executable", detail=undeclared_executable[0])
@@ -198,6 +203,9 @@ def _audit_declared_content(inspection: OnboardingInspection) -> None:
         "/vector-index/",
     )
     for member in inspection.members:
+        relative = member.path.removeprefix(f"{inspection.plugin_id}/")
+        if relative == "LICENSE":
+            raise _error("overlay_collision", detail=relative)
         folded = f"/{member.path.casefold()}"
         if any(marker in folded for marker in remote_markers):
             raise _error("undeclared_remote_asset", detail=member.path)
@@ -329,6 +337,14 @@ def build_onboarding_proposal(
         builder_evidence["candidate_sha256"] = inspection.candidate_sha256
     if inspection.verification_sha256 is not None:
         builder_evidence["verification_sha256"] = inspection.verification_sha256
+    if inspection.adoption_identity_sha256 is not None:
+        builder_evidence.update(
+            {
+                "adoption_identity_sha256": inspection.adoption_identity_sha256,
+                "approved_executable_files": inspection.approved_executable_files,
+                "approved_dependency_files": inspection.approved_dependency_files,
+            }
+        )
     identity_payload = _identity_payload(
         inspection,
         decisions,

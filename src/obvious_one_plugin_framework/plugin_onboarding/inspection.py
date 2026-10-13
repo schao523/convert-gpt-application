@@ -113,6 +113,7 @@ class OnboardingInspection:
     producer_claims: Mapping[str, object]
     approved_executable_files: tuple[str, ...] = ()
     approved_dependency_files: tuple[str, ...] = ()
+    adoption_identity_sha256: str | None = None
     diagnostics: tuple[str, ...] = ()
 
 
@@ -769,6 +770,9 @@ def inspect_legacy_plugin_builder_package(
             producer_claims=MappingProxyType(producer_claims),
             approved_executable_files=adoption.executable_files,
             approved_dependency_files=adoption.dependency_files,
+            adoption_identity_sha256=sha256(
+                _canonical_bytes(adoption.identity_payload())
+            ).hexdigest(),
         )
 
 

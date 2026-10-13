@@ -204,13 +204,49 @@ def audit_distribution(stage: Path, contract: object) -> tuple[str, ...]:
     )
 
 
-def _generated_test_imported(plugin_id: str, version: str) -> bytes:
+def _generated_test_imported(
+    plugin_id: str,
+    version: str,
+    expected_members: tuple[object, ...],
+    expected_tree_sha256: str,
+) -> bytes:
+    member_payload = [asdict(member) for member in expected_members]
     return lf_bytes(
         f'''from __future__ import annotations
 
+from hashlib import sha256
 import json
+import os
 from pathlib import Path
+import stat
 import unittest
+
+
+EXPECTED_MEMBERS = {member_payload!r}
+EXPECTED_TREE_SHA256 = {expected_tree_sha256!r}
+
+
+def _tree_manifest(root: Path) -> list[dict[str, object]]:
+    members = []
+    for directory, names, files in os.walk(root, topdown=True, followlinks=False):
+        directory_path = Path(directory)
+        for name in sorted(names):
+            child = directory_path / name
+            attributes = getattr(child.lstat(), "st_file_attributes", 0)
+            if child.is_symlink() or attributes & getattr(stat, "FILE_ATTRIBUTE_REPARSE_POINT", 0):
+                raise ValueError("imported_plugin_tree_mismatch")
+        for name in sorted(files):
+            child = directory_path / name
+            attributes = getattr(child.lstat(), "st_file_attributes", 0)
+            if child.is_symlink() or attributes & getattr(stat, "FILE_ATTRIBUTE_REPARSE_POINT", 0):
+                raise ValueError("imported_plugin_tree_mismatch")
+            content = child.read_bytes()
+            members.append({{
+                "path": child.relative_to(root).as_posix(),
+                "size": len(content),
+                "sha256": sha256(content).hexdigest(),
+            }})
+    return sorted(members, key=lambda item: item["path"])
 
 
 class ImportedPackageTests(unittest.TestCase):
@@ -221,6 +257,15 @@ class ImportedPackageTests(unittest.TestCase):
             payload = json.loads((root / relative).read_text(encoding="utf-8"))
             identities.append((payload["name"], payload["version"]))
         self.assertEqual(identities, [({plugin_id!r}, {version!r})] * 2)
+
+    def test_exact_member_bytes(self) -> None:
+        root = Path(__file__).resolve().parents[1] / "imported-plugin"
+        members = _tree_manifest(root)
+        encoded = json.dumps(
+            members, ensure_ascii=True, sort_keys=True, separators=(",", ":")
+        ).encode("ascii")
+        self.assertEqual(members, EXPECTED_MEMBERS)
+        self.assertEqual(sha256(encoded).hexdigest(), EXPECTED_TREE_SHA256)
 
 
 if __name__ == "__main__":
@@ -410,6 +455,11 @@ def render_application_files(
             inspection.content_tree_sha256,
         ),
         "scripts/distribution_audit.py": _audit_script(),
-        "tests/test_imported_package.py": _generated_test_imported(plugin_id, version),
+        "tests/test_imported_package.py": _generated_test_imported(
+            plugin_id,
+            version,
+            inspection.candidate_members,
+            inspection.content_tree_sha256,
+        ),
         "tests/test_marketplace_release.py": _generated_test_release(plugin_id),
     }

@@ -15,13 +15,16 @@ from ..contract import load_contract
 from ..results import ArtifactRecord, MutationRecord, OperationResult, result_json
 from ..verification import load_application_config_path
 from .contract import (
+    LegacyPluginBuilderAdoption,
     OnboardingError,
     PackageMetadata,
     WorkbenchRepairMetadata,
+    load_legacy_plugin_builder_adoption,
     load_onboarding_metadata,
     load_publication_decisions,
 )
 from .inspection import (
+    inspect_legacy_plugin_builder_package,
     inspect_plugin_builder_package,
     inspect_workbench_repaired_package,
 )
@@ -96,12 +99,18 @@ def _publish_output(stage: Path, output: Path, temporary_root: Path) -> None:
         shutil.rmtree(backup)
 
 
-def _validate_stage(application: Path, imported: Path) -> None:
-    issues = plugin_authoring.validate_plugin_tree(imported)
-    if issues:
-        raise OnboardingError(
-            "onboarding.materialize.imported_plugin_invalid", "FAIL", issues[0].code
-        )
+def _validate_stage(
+    application: Path,
+    imported: Path,
+    *,
+    strict_plugin_tree: bool = True,
+) -> None:
+    if strict_plugin_tree:
+        issues = plugin_authoring.validate_plugin_tree(imported)
+        if issues:
+            raise OnboardingError(
+                "onboarding.materialize.imported_plugin_invalid", "FAIL", issues[0].code
+            )
     contract = load_contract(application / "openclaw" / "distribution.json")
     if contract.schema_version != 3:
         raise OnboardingError("onboarding.materialize.contract_invalid", "FAIL")
@@ -121,17 +130,29 @@ def _validate_stage(application: Path, imported: Path) -> None:
 
 def prepare_plugin_zip_marketplace(
     archive: Path,
-    package_metadata: Path,
+    package_metadata: Path | None,
     publication_decisions: Path,
     repository: Path,
     output: Path,
     *,
+    legacy_adoption: Path | None = None,
     evidence: Path | None = None,
 ) -> OperationResult:
     """Create one deterministic, unapproved marketplace-registration proposal."""
 
+    if (package_metadata is None) == (legacy_adoption is None):
+        raise OnboardingError("onboarding.authority_selection_invalid", "FAIL")
+    if legacy_adoption is not None and evidence is not None:
+        raise OnboardingError(
+            "onboarding.legacy_runtime_evidence_unsupported", "FAIL"
+        )
     archive_path = Path(archive).resolve()
-    metadata_path = Path(package_metadata).resolve()
+    metadata_path = (
+        Path(package_metadata).resolve() if package_metadata is not None else None
+    )
+    adoption_path = (
+        Path(legacy_adoption).resolve() if legacy_adoption is not None else None
+    )
     decisions_path = Path(publication_decisions).resolve()
     repository_path = Path(repository).resolve()
     evidence_path = Path(evidence).resolve() if evidence is not None else None
@@ -141,21 +162,38 @@ def prepare_plugin_zip_marketplace(
         repository_path,
         tuple(
             path
-            for path in (archive_path, metadata_path, decisions_path, evidence_path)
+            for path in (
+                archive_path,
+                metadata_path,
+                adoption_path,
+                decisions_path,
+                evidence_path,
+            )
             if path is not None
         ),
     )
     _preflight_output(destination)
-    metadata = load_onboarding_metadata(metadata_path)
     decisions = load_publication_decisions(decisions_path)
-    if isinstance(metadata, PackageMetadata):
-        inspection = inspect_plugin_builder_package(
-            archive_path, metadata, evidence=evidence_path
-        )
+    metadata: PackageMetadata | WorkbenchRepairMetadata | None
+    adoption: LegacyPluginBuilderAdoption | None
+    if adoption_path is not None:
+        metadata = None
+        adoption = load_legacy_plugin_builder_adoption(adoption_path)
+        inspection = inspect_legacy_plugin_builder_package(archive_path, adoption)
     else:
-        if evidence_path is not None:
-            raise OnboardingError("onboarding.repair_runtime_evidence_unsupported", "FAIL")
-        inspection = inspect_workbench_repaired_package(archive_path, metadata)
+        adoption = None
+        assert metadata_path is not None
+        metadata = load_onboarding_metadata(metadata_path)
+        if isinstance(metadata, PackageMetadata):
+            inspection = inspect_plugin_builder_package(
+                archive_path, metadata, evidence=evidence_path
+            )
+        else:
+            if evidence_path is not None:
+                raise OnboardingError(
+                    "onboarding.repair_runtime_evidence_unsupported", "FAIL"
+                )
+            inspection = inspect_workbench_repaired_package(archive_path, metadata)
     proposal = build_onboarding_proposal(inspection, decisions, repository_path)
 
     destination.parent.mkdir(parents=True, exist_ok=True)
@@ -199,7 +237,11 @@ def prepare_plugin_zip_marketplace(
                 }
             )
         )
-        _validate_stage(application, imported)
+        _validate_stage(
+            application,
+            imported,
+            strict_plugin_tree=adoption is None,
+        )
 
         proposal_bytes = (stage / "onboarding-proposal.json").read_bytes()
         result_evidence: dict[str, object] = {
@@ -212,6 +254,10 @@ def prepare_plugin_zip_marketplace(
             result_evidence["candidate_sha256"] = inspection.candidate_sha256
         if inspection.verification_sha256 is not None:
             result_evidence["verification_sha256"] = inspection.verification_sha256
+        if inspection.adoption_identity_sha256 is not None:
+            result_evidence["adoption_identity_sha256"] = (
+                inspection.adoption_identity_sha256
+            )
         result = OperationResult(
             operation="prepare-plugin-zip-marketplace",
             status="PASS",
