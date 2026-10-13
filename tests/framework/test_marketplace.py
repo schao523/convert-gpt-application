@@ -578,6 +578,21 @@ class MarketplaceTests(unittest.TestCase):
         )
         self.assertEqual(independently_verified.status, "PASS")
 
+    def test_receipt_output_allows_platform_temp_alias_above_owned_root(self) -> None:
+        catalog = load_preparation_catalog(self.catalog_path, self.repository)
+        prepare_marketplace(catalog, self.baseline, self.output)
+        receipt = self.root / "evidence" / "marketplace-receipt.json"
+        platform_temp = self.root.parent
+
+        with patch(
+            "obvious_one_plugin_framework.marketplace_receipt._path_is_link",
+            side_effect=lambda path: Path(path) == platform_temp,
+        ):
+            result = verify_marketplace(catalog, self.output, receipt_output=receipt)
+
+        self.assertEqual((result.status, result.code), ("PASS", "marketplace_verified"))
+        self.assertTrue(receipt.is_file())
+
     def test_failed_marketplace_verification_preserves_existing_receipt(self) -> None:
         catalog = load_preparation_catalog(self.catalog_path, self.repository)
         prepare_marketplace(catalog, self.baseline, self.output)

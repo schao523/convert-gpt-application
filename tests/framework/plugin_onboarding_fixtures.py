@@ -38,12 +38,206 @@ class PluginBuilderFixture:
 
 
 @dataclass(frozen=True)
+class LegacyPluginBuilderFixture:
+    root: Path
+    candidate: Path
+    archive: Path
+    adoption: Path
+    adoption_payload: Mapping[str, object]
+
+
+@dataclass(frozen=True)
 class LegacyRepairFixture:
     root: Path
     candidate: Path
     archive: Path
     source_manifest: bytes
     contract_payload: Mapping[str, object]
+
+
+def write_legacy_plugin_builder_fixture(
+    root: Path,
+    *,
+    files: Mapping[str, bytes] | None = None,
+) -> LegacyPluginBuilderFixture:
+    fixture_root = Path(root)
+    fixture_root.mkdir(parents=True, exist_ok=True)
+    candidate = fixture_root / "legacy-plugin-builder-candidate"
+    candidate.mkdir()
+    source_files = dict(files) if files is not None else _default_files()
+    source_files.setdefault(
+        "scripts/helper.py",
+        b"from __future__ import annotations\n\nprint('sample')\n",
+    )
+    source_files.setdefault("requirements.txt", b"sample-dependency==1.0\n")
+    source_files["docs/verification-report.json"] = canonical_bytes(
+        {
+            "plugin_identity": "sample-plugin",
+            "candidate_version": "1.2.3",
+            "candidate_logical_sha256": "c" * 64,
+            "verification_stage": "PRE_W2",
+            "blocking_failures": 0,
+            "representative_reference_consultation": {
+                "state": "STATICALLY/LOCALLY VERIFIED",
+                "installed_runtime_consultation": "NOT VERIFIED",
+            },
+        }
+    )
+    for relative, content in source_files.items():
+        destination = candidate.joinpath(*relative.split("/"))
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        destination.write_bytes(content)
+
+    candidate_members = [
+        asdict(member) for member in plugin_authoring.tree_manifest(candidate)
+    ]
+    candidate_manifest = {
+        "version": "1.2.3",
+        "format": "candidate-content-manifest-v2",
+        "self_excluded": True,
+        "package_manifest_excluded": True,
+        "files": candidate_members,
+    }
+    candidate_manifest_path = candidate / "docs" / "candidate-content-manifest.json"
+    candidate_manifest_path.write_bytes(canonical_bytes(candidate_manifest))
+
+    content_members = [
+        asdict(member) for member in plugin_authoring.tree_manifest(candidate)
+    ]
+    content_manifest = {
+        "plugin": "sample-plugin",
+        "version": "1.2.3",
+        "format": "deterministic-content-manifest-v2",
+        "file_count_excluding_manifest": len(content_members),
+        "files": content_members,
+    }
+    content_manifest_path = candidate / "CONTENT-MANIFEST.json"
+    content_manifest_path.write_bytes(canonical_bytes(content_manifest))
+
+    archive = fixture_root / "legacy-plugin-builder.zip"
+    archive_sha256 = plugin_authoring.write_deterministic_zip(candidate, archive)
+    inventory = plugin_authoring.inventory_archive(archive)
+    members = [asdict(member) for member in inventory.members]
+    adoption_payload: dict[str, object] = {
+        "schema": "workbench-legacy-plugin-builder-adoption-v1",
+        "input_profile": "PLUGIN_BUILDER_DETERMINISTIC_CONTENT_V2",
+        "plugin_id": "sample-plugin",
+        "version": "1.2.3",
+        "archive_sha256": archive_sha256,
+        "member_manifest_sha256": sha256(canonical_bytes(members)).hexdigest(),
+        "members": members,
+        "content_tree_sha256": plugin_authoring.tree_sha256(candidate),
+        "content_manifest_path": "CONTENT-MANIFEST.json",
+        "content_manifest_sha256": sha256(content_manifest_path.read_bytes()).hexdigest(),
+        "candidate_manifest_path": "docs/candidate-content-manifest.json",
+        "candidate_manifest_sha256": sha256(candidate_manifest_path.read_bytes()).hexdigest(),
+        "verification_report_path": "docs/verification-report.json",
+        "verification_report_sha256": sha256(
+            (candidate / "docs" / "verification-report.json").read_bytes()
+        ).hexdigest(),
+        "executable_files": ["scripts/helper.py"],
+        "dependency_files": ["requirements.txt"],
+        "adoption_approved": True,
+        "confirmed_by": "Plugin Owner",
+        "decision_recorded_at": "2026-10-13T10:30:00+08:00",
+        "purpose": "OBVIOUS_ONE_CODEX_MARKETPLACE_ONBOARDING",
+    }
+    adoption = fixture_root / "legacy-adoption.json"
+    adoption.write_bytes(canonical_bytes(adoption_payload))
+    return LegacyPluginBuilderFixture(
+        fixture_root,
+        candidate,
+        archive,
+        adoption,
+        adoption_payload,
+    )
+
+
+def write_legacy_adoption(
+    path: Path,
+    fixture: LegacyPluginBuilderFixture,
+    *,
+    overrides: Mapping[str, object] | None = None,
+) -> Path:
+    payload = dict(fixture.adoption_payload)
+    if overrides:
+        payload.update(overrides)
+    destination = Path(path)
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    destination.write_bytes(canonical_bytes(payload))
+    return destination
+
+
+def rebuild_legacy_plugin_builder_fixture(
+    fixture: LegacyPluginBuilderFixture,
+    *,
+    regenerate_candidate_manifest: bool = True,
+    regenerate_content_manifest: bool = True,
+) -> LegacyPluginBuilderFixture:
+    candidate_manifest_path = fixture.candidate / "docs" / "candidate-content-manifest.json"
+    content_manifest_path = fixture.candidate / "CONTENT-MANIFEST.json"
+    if regenerate_candidate_manifest:
+        candidate_members = [
+            asdict(member)
+            for member in plugin_authoring.tree_manifest(fixture.candidate)
+            if member.path
+            not in {"CONTENT-MANIFEST.json", "docs/candidate-content-manifest.json"}
+        ]
+        candidate_manifest_path.write_bytes(
+            canonical_bytes(
+                {
+                    "version": "1.2.3",
+                    "format": "candidate-content-manifest-v2",
+                    "self_excluded": True,
+                    "package_manifest_excluded": True,
+                    "files": candidate_members,
+                }
+            )
+        )
+    if regenerate_content_manifest:
+        content_members = [
+            asdict(member)
+            for member in plugin_authoring.tree_manifest(fixture.candidate)
+            if member.path != "CONTENT-MANIFEST.json"
+        ]
+        content_manifest_path.write_bytes(
+            canonical_bytes(
+                {
+                    "plugin": "sample-plugin",
+                    "version": "1.2.3",
+                    "format": "deterministic-content-manifest-v2",
+                    "file_count_excluding_manifest": len(content_members),
+                    "files": content_members,
+                }
+            )
+        )
+    archive_sha256 = plugin_authoring.write_deterministic_zip(
+        fixture.candidate, fixture.archive
+    )
+    inventory = plugin_authoring.inventory_archive(fixture.archive)
+    members = [asdict(member) for member in inventory.members]
+    payload = json.loads(fixture.adoption.read_text(encoding="utf-8"))
+    payload.update(
+        {
+            "archive_sha256": archive_sha256,
+            "member_manifest_sha256": sha256(canonical_bytes(members)).hexdigest(),
+            "members": members,
+            "content_tree_sha256": plugin_authoring.tree_sha256(fixture.candidate),
+            "content_manifest_sha256": sha256(content_manifest_path.read_bytes()).hexdigest(),
+            "candidate_manifest_sha256": sha256(candidate_manifest_path.read_bytes()).hexdigest(),
+            "verification_report_sha256": sha256(
+                (fixture.candidate / "docs" / "verification-report.json").read_bytes()
+            ).hexdigest(),
+        }
+    )
+    fixture.adoption.write_bytes(canonical_bytes(payload))
+    return LegacyPluginBuilderFixture(
+        fixture.root,
+        fixture.candidate,
+        fixture.archive,
+        fixture.adoption,
+        payload,
+    )
 
 
 def write_legacy_repair_fixture(root: Path) -> LegacyRepairFixture:

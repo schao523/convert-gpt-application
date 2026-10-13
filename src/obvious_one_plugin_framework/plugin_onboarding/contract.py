@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import datetime
 import json
-from pathlib import Path
+from pathlib import Path, PurePosixPath, PureWindowsPath
 import re
 from types import MappingProxyType
 from typing import Literal, Mapping, TypeAlias, cast
@@ -73,6 +73,28 @@ _AUTHORITY_KEYS = (
     "third_party_content_reviewed",
     "public_marketplace_approved",
 )
+_LEGACY_ADOPTION_KEYS = {
+    "schema",
+    "input_profile",
+    "plugin_id",
+    "version",
+    "archive_sha256",
+    "member_manifest_sha256",
+    "members",
+    "content_tree_sha256",
+    "content_manifest_path",
+    "content_manifest_sha256",
+    "candidate_manifest_path",
+    "candidate_manifest_sha256",
+    "verification_report_path",
+    "verification_report_sha256",
+    "executable_files",
+    "dependency_files",
+    "adoption_approved",
+    "confirmed_by",
+    "decision_recorded_at",
+    "purpose",
+}
 
 
 class OnboardingError(ValueError):
@@ -160,6 +182,58 @@ class WorkbenchRepairMetadata:
     tool_contracts_sha256: str | None = None
     offline_validators: tuple[Mapping[str, object], ...] = ()
     offline_validators_sha256: str | None = None
+
+
+@dataclass(frozen=True)
+class LegacyPluginBuilderAdoption:
+    schema: Literal["workbench-legacy-plugin-builder-adoption-v1"]
+    input_profile: Literal["PLUGIN_BUILDER_DETERMINISTIC_CONTENT_V2"]
+    plugin_id: str
+    version: str
+    archive_sha256: str
+    member_manifest_sha256: str
+    members: tuple[PackageMember, ...]
+    content_tree_sha256: str
+    content_manifest_path: Literal["CONTENT-MANIFEST.json"]
+    content_manifest_sha256: str
+    candidate_manifest_path: Literal["docs/candidate-content-manifest.json"]
+    candidate_manifest_sha256: str
+    verification_report_path: Literal["docs/verification-report.json"]
+    verification_report_sha256: str
+    executable_files: tuple[str, ...]
+    dependency_files: tuple[str, ...]
+    adoption_approved: Literal[True]
+    confirmed_by: str
+    decision_recorded_at: str
+    purpose: Literal["OBVIOUS_ONE_CODEX_MARKETPLACE_ONBOARDING"]
+
+    def identity_payload(self) -> dict[str, object]:
+        """Return the exact adoption authority excluding observation time."""
+
+        return {
+            "schema": self.schema,
+            "input_profile": self.input_profile,
+            "plugin_id": self.plugin_id,
+            "version": self.version,
+            "archive_sha256": self.archive_sha256,
+            "member_manifest_sha256": self.member_manifest_sha256,
+            "members": [
+                {"path": item.path, "size": item.size, "sha256": item.sha256}
+                for item in self.members
+            ],
+            "content_tree_sha256": self.content_tree_sha256,
+            "content_manifest_path": self.content_manifest_path,
+            "content_manifest_sha256": self.content_manifest_sha256,
+            "candidate_manifest_path": self.candidate_manifest_path,
+            "candidate_manifest_sha256": self.candidate_manifest_sha256,
+            "verification_report_path": self.verification_report_path,
+            "verification_report_sha256": self.verification_report_sha256,
+            "executable_files": list(self.executable_files),
+            "dependency_files": list(self.dependency_files),
+            "adoption_approved": self.adoption_approved,
+            "confirmed_by": self.confirmed_by,
+            "purpose": self.purpose,
+        }
 
 
 @dataclass(frozen=True)
@@ -282,6 +356,147 @@ def _members(
         digest = _digest(item.get("sha256"), prefix, "member_sha256")
         members.append(member_type(path, size, digest))
     return tuple(members)  # type: ignore[return-value]
+
+
+def _safe_posix_member_path(value: str, prefix: str) -> str:
+    if "\\" in value or "\x00" in value or value.endswith("/"):
+        raise OnboardingError(f"{prefix}.invalid_member_path")
+    candidate = PurePosixPath(value)
+    if (
+        candidate.is_absolute()
+        or PureWindowsPath(value).is_absolute()
+        or candidate.as_posix() != value
+        or any(part in {"", ".", ".."} for part in candidate.parts)
+    ):
+        raise OnboardingError(f"{prefix}.invalid_member_path")
+    return value
+
+
+def _approved_member_paths(
+    value: object,
+    prefix: str,
+    field: str,
+    member_paths: set[str],
+) -> tuple[str, ...]:
+    if not isinstance(value, list):
+        raise OnboardingError(f"{prefix}.invalid_type", detail=field)
+    result: list[str] = []
+    folded: set[str] = set()
+    for item in value:
+        path = _safe_posix_member_path(_text(item, prefix, field), prefix)
+        identity = path.casefold()
+        if identity in folded:
+            raise OnboardingError(f"{prefix}.duplicate_approved_path", detail=field)
+        if path not in member_paths:
+            raise OnboardingError(f"{prefix}.path_not_in_members", detail=field)
+        folded.add(identity)
+        result.append(path)
+    return tuple(result)
+
+
+def load_legacy_plugin_builder_adoption(path: Path) -> LegacyPluginBuilderAdoption:
+    """Load exact owner authority for one deterministic-content-v2 archive."""
+
+    prefix = "onboarding.legacy_adoption"
+    payload = _load_json(path, prefix)
+    _exact_keys(
+        payload,
+        _LEGACY_ADOPTION_KEYS,
+        prefix,
+        authority_keys=("adoption_approved", "confirmed_by"),
+    )
+    if payload["schema"] != "workbench-legacy-plugin-builder-adoption-v1":
+        raise OnboardingError(f"{prefix}.unsupported_schema")
+    if payload["input_profile"] != "PLUGIN_BUILDER_DETERMINISTIC_CONTENT_V2":
+        raise OnboardingError(f"{prefix}.invalid_input_profile")
+    if payload["purpose"] != "OBVIOUS_ONE_CODEX_MARKETPLACE_ONBOARDING":
+        raise OnboardingError(f"{prefix}.invalid_purpose")
+    plugin_id = _text(payload["plugin_id"], prefix, "plugin_id")
+    if _PLUGIN_ID.fullmatch(plugin_id) is None:
+        raise OnboardingError(f"{prefix}.invalid_plugin_id")
+    version = _text(payload["version"], prefix, "version")
+    if _SEMVER.fullmatch(version) is None:
+        raise OnboardingError(f"{prefix}.invalid_version")
+
+    fixed_paths = {
+        "content_manifest_path": "CONTENT-MANIFEST.json",
+        "candidate_manifest_path": "docs/candidate-content-manifest.json",
+        "verification_report_path": "docs/verification-report.json",
+    }
+    for field, expected in fixed_paths.items():
+        if payload[field] != expected:
+            raise OnboardingError(f"{prefix}.invalid_{field}")
+
+    members = cast(
+        tuple[PackageMember, ...],
+        _members(payload["members"], prefix, "members", PackageMember),
+    )
+    member_paths: set[str] = set()
+    folded_paths: set[str] = set()
+    for member in members:
+        path_value = _safe_posix_member_path(member.path, prefix)
+        folded = path_value.casefold()
+        if path_value in member_paths or folded in folded_paths:
+            raise OnboardingError(f"{prefix}.duplicate_member_path")
+        member_paths.add(path_value)
+        folded_paths.add(folded)
+
+    if payload["adoption_approved"] is not True:
+        raise OnboardingError(f"{prefix}.adoption_approval_required", "BLOCKED")
+    try:
+        confirmed_by = _text(payload["confirmed_by"], prefix, "confirmed_by")
+    except OnboardingError as exc:
+        raise OnboardingError(f"{prefix}.invalid_confirmed_by", "BLOCKED") from exc
+    recorded_at = _text(
+        payload["decision_recorded_at"], prefix, "decision_recorded_at"
+    )
+    try:
+        parsed_time = datetime.fromisoformat(recorded_at)
+    except ValueError as exc:
+        raise OnboardingError(f"{prefix}.invalid_decision_recorded_at") from exc
+    if parsed_time.tzinfo is None or parsed_time.utcoffset() is None:
+        raise OnboardingError(f"{prefix}.invalid_decision_recorded_at")
+
+    return LegacyPluginBuilderAdoption(
+        schema="workbench-legacy-plugin-builder-adoption-v1",
+        input_profile="PLUGIN_BUILDER_DETERMINISTIC_CONTENT_V2",
+        plugin_id=plugin_id,
+        version=version,
+        archive_sha256=_digest(payload["archive_sha256"], prefix, "archive_sha256"),
+        member_manifest_sha256=_digest(
+            payload["member_manifest_sha256"], prefix, "member_manifest_sha256"
+        ),
+        members=members,
+        content_tree_sha256=_digest(
+            payload["content_tree_sha256"], prefix, "content_tree_sha256"
+        ),
+        content_manifest_path="CONTENT-MANIFEST.json",
+        content_manifest_sha256=_digest(
+            payload["content_manifest_sha256"], prefix, "content_manifest_sha256"
+        ),
+        candidate_manifest_path="docs/candidate-content-manifest.json",
+        candidate_manifest_sha256=_digest(
+            payload["candidate_manifest_sha256"],
+            prefix,
+            "candidate_manifest_sha256",
+        ),
+        verification_report_path="docs/verification-report.json",
+        verification_report_sha256=_digest(
+            payload["verification_report_sha256"],
+            prefix,
+            "verification_report_sha256",
+        ),
+        executable_files=_approved_member_paths(
+            payload["executable_files"], prefix, "executable_files", member_paths
+        ),
+        dependency_files=_approved_member_paths(
+            payload["dependency_files"], prefix, "dependency_files", member_paths
+        ),
+        adoption_approved=True,
+        confirmed_by=confirmed_by,
+        decision_recorded_at=recorded_at,
+        purpose="OBVIOUS_ONE_CODEX_MARKETPLACE_ONBOARDING",
+    )
 
 
 def load_package_metadata(path: Path) -> PackageMetadata:

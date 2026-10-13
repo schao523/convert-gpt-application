@@ -1,0 +1,71 @@
+{
+  "plugin_identity": "gpt-37ecb98690a080478ad351d953cdf07e",
+  "candidate_version": "1.0.2",
+  "candidate_logical_sha256": "2c2fe719e22e631f350c8a21877606083474c9fb302c9bedff6d8e6aae0af94d",
+  "verification_stage": "PRE_W2",
+  "blocking_failures": 0,
+  "representative_reference_consultation": {
+    "state": "STATICALLY/LOCALLY VERIFIED",
+    "tests": [
+      {
+        "test_id": "RC-01",
+        "skill": "production-spec-packaging",
+        "references": [
+          "RM-P01",
+          "RM-P02"
+        ],
+        "resolved_paths": [
+          "skills/production-spec-packaging/references/RM-P01_canonical_production_specification_standard.md",
+          "skills/production-spec-packaging/references/RM-P02_portable_production_package_standard.md"
+        ],
+        "state": "PASS",
+        "missing": [],
+        "missing_semantic_anchors": []
+      },
+      {
+        "test_id": "RC-02",
+        "skill": "target-capability-adaptation",
+        "references": [
+          "RM-P03"
+        ],
+        "resolved_paths": [
+          "skills/target-capability-adaptation/references/RM-P03_target_capability_adaptation_standard.md"
+        ],
+        "state": "PASS",
+        "missing": [],
+        "missing_semantic_anchors": []
+      },
+      {
+        "test_id": "RC-03",
+        "skill": "production-execution-review",
+        "references": [
+          "RM-P04"
+        ],
+        "resolved_paths": [
+          "skills/production-execution-review/references/RM-P04_production_execution_result_contract.md"
+        ],
+        "state": "PASS",
+        "missing": [],
+        "missing_semantic_anchors": []
+      },
+      {
+        "test_id": "RC-04",
+        "skill": "director-orchestrator-state",
+        "references": [
+          "RM-P05"
+        ],
+        "resolved_paths": [
+          "skills/director-orchestrator-state/references/RM-P05_project_state_asset_provenance_standard.md"
+        ],
+        "state": "PASS",
+        "missing": [],
+        "missing_semantic_anchors": []
+      }
+    ],
+    "installed_runtime_consultation": "NOT VERIFIED",
+    "note": "These probes prove exact Skill-to-reference resolution and consultation-semantic availability in the candidate filesystem. They do not prove ChatGPT Work/Codex installed-runtime Skill consultation."
+  },
+  "deterministic_helper_installed_runtime_callability": "NOT VERIFIED",
+  "installed_runtime_suite": "T-01–T-30 NOT VERIFIED",
+  "stale_evidence_policy": "This report supersedes prior pre-fix/pre-test verification evidence and describes the current v1.0.2 candidate."
+}

@@ -1,0 +1,463 @@
+{
+  "version": "1.0.2",
+  "format": "candidate-content-manifest-v2",
+  "self_excluded": true,
+  "package_manifest_excluded": true,
+  "files": [
+    {
+      "path": ".codex-plugin/plugin.json",
+      "sha256": "1a3b6d30f27726516ae2719606463396c1da91def2f89e3a0740e8666218d0a3",
+      "size": 1275
+    },
+    {
+      "path": "assets/gpt-icon.png",
+      "sha256": "dd705cb5d209da1d5e0f3f9e5057d4d69bdc0f85e28764002de0dd1c09135259",
+      "size": 554398
+    },
+    {
+      "path": "docs/acceptance-tests.md",
+      "sha256": "567b20d2c72bd915c5bb430f3fa174374f7c36f830e2d1685b05a917ccf4c39d",
+      "size": 510
+    },
+    {
+      "path": "docs/application-tool-binding.json",
+      "sha256": "a60b1c17174a3d7243464a707aa995ea652f6a90bdcb9861e41547528719dfbb",
+      "size": 253
+    },
+    {
+      "path": "docs/application-tool-contract.json",
+      "sha256": "344a7cf69b33c1bb546a2b70ce6ba45f1d52500832f704b5ea70aa43a815433b",
+      "size": 953
+    },
+    {
+      "path": "docs/approved-behavioral-contracts.md",
+      "sha256": "2f26f754825e3928eaf5e16e5e698ca144f181bbcf16c2b96bdaba81b4b33ef5",
+      "size": 1604
+    },
+    {
+      "path": "docs/approved-design-specification.md",
+      "sha256": "e88b1c01ea3648e1eacd2699b3a4e999ad19598a3fd5a15a3e3633efd615859c",
+      "size": 52725
+    },
+    {
+      "path": "docs/architecture-decisions.md",
+      "sha256": "f6c6299b775c3fcd2c91a3962a86db890d65eb80ee846c6af0086e8be1237c78",
+      "size": 891
+    },
+    {
+      "path": "docs/build-source.json",
+      "sha256": "b6aa75948c63310b98253d181d1677f9c31f017fde4e2010f89d95954232ed4b",
+      "size": 486
+    },
+    {
+      "path": "docs/reference-bindings.json",
+      "sha256": "9375dfb11411a19281261c6b597071d6454ca5d8ed7087b9631ab7c9a287d50f",
+      "size": 2729
+    },
+    {
+      "path": "docs/reference-traceability.json",
+      "sha256": "62329db6ee1dee616a52bf2ff7ceb57c223cca20fbcdcd0e48a9855e5ae475cf",
+      "size": 4015
+    },
+    {
+      "path": "docs/representative-reference-consultation-results.json",
+      "sha256": "64e4df4f12b6152783702cc4837a76a984d7e0e89574490671d33cbf3f9e4715",
+      "size": 1663
+    },
+    {
+      "path": "docs/representative-reference-consultation-tests.md",
+      "sha256": "1241231cd583c3fdcd5ab59bf62609fbd58de3951e37f9eeab68559bccf1996e",
+      "size": 1571
+    },
+    {
+      "path": "docs/requirement-coverage.json",
+      "sha256": "7e4839e3ec0e88e4ec551b7dead4fbb6d085aa061f49bde1de42107bc4a2e7c0",
+      "size": 18402
+    },
+    {
+      "path": "docs/upgrade-identity-fix-v1.0.1.json",
+      "sha256": "c28159ef2c456cd65b98b1a5f65f79458d164740c3ed663965702dc4861fdaed",
+      "size": 534
+    },
+    {
+      "path": "docs/verification-report.json",
+      "sha256": "edcf46d8c2b2cf03b490dedf2826786209007d5c9fb7a09b7ffdc13eed26d981",
+      "size": 2551
+    },
+    {
+      "path": "legacy-baseline/README.md",
+      "sha256": "563eff01530127cd61d79aada4252e571408cea836f800ba3349d5b9f38bdd2d",
+      "size": 192
+    },
+    {
+      "path": "legacy-baseline/instructions/SKILL.md",
+      "sha256": "5f7b1ef487e34cbed8969b67dc9212fae6d0a03a2b15e732b9634c20f8a8a6e0",
+      "size": 14378
+    },
+    {
+      "path": "legacy-baseline/instructions/agents/openai.yaml",
+      "sha256": "219b8e6c2921049a415c89646b289ebfc13181386546a2f22aa1a9e9d8d3e675",
+      "size": 411
+    },
+    {
+      "path": "legacy-baseline/instructions/lookup/knowledge-index.json",
+      "sha256": "7b5f1ebf1e7e28fe33d9f5a725d468e47246343be2bbd7a01a12800711f8199e",
+      "size": 2063
+    },
+    {
+      "path": "legacy-baseline/instructions/references/Resource Index.txt",
+      "sha256": "cdd0889495bbc1900c20299fd67b3ecdc5569624a2d09295bab4caa985723b04",
+      "size": 6782
+    },
+    {
+      "path": "legacy-baseline/instructions/references/ai_video_production_package_guide.md",
+      "sha256": "cd0b1cca0d5038b30fd9f0f3ae611ffda980403a9b61af2bf094890557a96153",
+      "size": 1524
+    },
+    {
+      "path": "legacy-baseline/instructions/references/ai_video_prompt_template.md",
+      "sha256": "80ca6edd5f76af9bd8874b79c64f1c33e8bc17968d007cad339069dc95ab5602",
+      "size": 3621
+    },
+    {
+      "path": "legacy-baseline/instructions/references/bible_story_template_rubric.md",
+      "sha256": "bba95fb28d6bb8536d2907e4acbb6ec5cbb7d0187e0d4c57ba131c28eedff2c8",
+      "size": 1045
+    },
+    {
+      "path": "legacy-baseline/instructions/references/bible_story_templates_list.md",
+      "sha256": "2c2c0f84e86dd6c2c6ced31dd926e686fb7b6f325576eeb26d59ffe9aa902259",
+      "size": 2394
+    },
+    {
+      "path": "legacy-baseline/instructions/references/camera_techniques_glossary.md",
+      "sha256": "553fc28b1bb5b431ddabe889872efe270e21bf255f35c96b9fb1ef0d4c8187ca",
+      "size": 3622
+    },
+    {
+      "path": "legacy-baseline/instructions/references/character_acting_reference.md",
+      "sha256": "388cf093698265ab8a6d44d74cbf35314d2f2bec0bedefe753f14c40d80ce918",
+      "size": 3955
+    },
+    {
+      "path": "legacy-baseline/instructions/references/cinematic_lighting_mood_reference.md",
+      "sha256": "acead014b4a802ff69a347bf446362db07d3d26c2e629cfa5186a917b522ae2e",
+      "size": 4247
+    },
+    {
+      "path": "legacy-baseline/instructions/references/dialogue_script_support_guide.md",
+      "sha256": "911a88aa9a4d6b594b97c4233cb53ef5e10c9498fa541ba15f2f38ccbc389495",
+      "size": 1368
+    },
+    {
+      "path": "legacy-baseline/instructions/references/director_bundle_spec.txt",
+      "sha256": "a5447c30e36821a05f50f7df95071c8668e777b87cec79dc46a9c23494fea49f",
+      "size": 1907
+    },
+    {
+      "path": "legacy-baseline/instructions/references/directors_cinematic_output_format_guide.md",
+      "sha256": "22107dbb986c823cd5ea97e1259faf763da25793515fa8bfac47d0ba2dde99e1",
+      "size": 4950
+    },
+    {
+      "path": "legacy-baseline/instructions/references/export_metadata_standard.md",
+      "sha256": "9808469dce9f50c6e12aece4ec0845fee3fd2d847181470aa4648bf418f3da2c",
+      "size": 1299
+    },
+    {
+      "path": "legacy-baseline/instructions/references/inspirational_story_rubric.md",
+      "sha256": "3eb9494827e82e7341032ca8a82c31114a7c37dbe2d7805a4194c3894dd2222b",
+      "size": 4078
+    },
+    {
+      "path": "legacy-baseline/instructions/references/inspirational_story_templates_list.md",
+      "sha256": "c3016d5a0d5f3bff093fd6972efe2824cf0966031da3026845f3acdfbea84416",
+      "size": 3676
+    },
+    {
+      "path": "legacy-baseline/instructions/references/sound_music_cues_reference.md",
+      "sha256": "c0bd0fd2243dffe0e5304d32d68be25c55f4442f7806e10a1f580693b58246cd",
+      "size": 3526
+    },
+    {
+      "path": "legacy-baseline/instructions/references/storyboard_composition_reference.md",
+      "sha256": "d8eab29365fe3652ea27104399038e2969402e392174e0281f6d387057bbd958",
+      "size": 3988
+    },
+    {
+      "path": "legacy-baseline/instructions/references/visual_rhythm_support_module.md",
+      "sha256": "89369beb529ad933e4f8e66181a06054f82aeaf12825b56586f6acf284c703be",
+      "size": 3147
+    },
+    {
+      "path": "plugin.json",
+      "sha256": "2e6eecaf34477c990811cae3e0349a42d013e32cfe4554b454fbc1251b053c43",
+      "size": 1309
+    },
+    {
+      "path": "scripts/production_engine.py",
+      "sha256": "8e30843103335cc79b6002e0bf43b47fa29b7c13b85f36e4007efd407e15c546",
+      "size": 3818
+    },
+    {
+      "path": "scripts/reference_consultation_probe.py",
+      "sha256": "ff9040a864d00ad7a3cfc734530a02c17e3fc7c8ab154e335eb9fa4cc7384b7d",
+      "size": 2208
+    },
+    {
+      "path": "skills/cinematic-direction-quality/SKILL.md",
+      "sha256": "f1627c0953e7b4c4426da641bb228005c3a3ec40a4ae1bf540cbb474493e4427",
+      "size": 1375
+    },
+    {
+      "path": "skills/cinematic-direction-quality/lookup/knowledge-index.json",
+      "sha256": "08ae92504b90e312def77ca070eafa5ac7d17cdc490ccc185848a6878f42742d",
+      "size": 1376
+    },
+    {
+      "path": "skills/cinematic-direction-quality/references/RM-C01_visual_rhythm_support_module.md",
+      "sha256": "89369beb529ad933e4f8e66181a06054f82aeaf12825b56586f6acf284c703be",
+      "size": 3147
+    },
+    {
+      "path": "skills/cinematic-direction-quality/references/RM-C02_camera_techniques_glossary.md",
+      "sha256": "553fc28b1bb5b431ddabe889872efe270e21bf255f35c96b9fb1ef0d4c8187ca",
+      "size": 3622
+    },
+    {
+      "path": "skills/cinematic-direction-quality/references/RM-C03_storyboard_composition_reference.md",
+      "sha256": "d8eab29365fe3652ea27104399038e2969402e392174e0281f6d387057bbd958",
+      "size": 3988
+    },
+    {
+      "path": "skills/cinematic-direction-quality/references/RM-C04_cinematic_lighting_mood_reference.md",
+      "sha256": "acead014b4a802ff69a347bf446362db07d3d26c2e629cfa5186a917b522ae2e",
+      "size": 4247
+    },
+    {
+      "path": "skills/cinematic-direction-quality/references/RM-C05_character_acting_reference.md",
+      "sha256": "388cf093698265ab8a6d44d74cbf35314d2f2bec0bedefe753f14c40d80ce918",
+      "size": 3955
+    },
+    {
+      "path": "skills/cinematic-direction-quality/references/RM-C06_sound_music_cues_reference.md",
+      "sha256": "c0bd0fd2243dffe0e5304d32d68be25c55f4442f7806e10a1f580693b58246cd",
+      "size": 3526
+    },
+    {
+      "path": "skills/cinematic-direction-quality/references/RM-C07_dialogue_script_support_guide.md",
+      "sha256": "911a88aa9a4d6b594b97c4233cb53ef5e10c9498fa541ba15f2f38ccbc389495",
+      "size": 1368
+    },
+    {
+      "path": "skills/cinematic-direction-quality/references/RM-C08_visual_style_options_reference.md",
+      "sha256": "6447a81443b0e35492b2d313bf9135a1639e38831d24a308eb4df35bd0cfe02f",
+      "size": 3312
+    },
+    {
+      "path": "skills/cinematic-direction-quality/references/RM-S02_bible_story_template_rubric.md",
+      "sha256": "bba95fb28d6bb8536d2907e4acbb6ec5cbb7d0187e0d4c57ba131c28eedff2c8",
+      "size": 1045
+    },
+    {
+      "path": "skills/cinematic-direction-quality/references/RM-S04_inspirational_story_rubric.md",
+      "sha256": "3eb9494827e82e7341032ca8a82c31114a7c37dbe2d7805a4194c3894dd2222b",
+      "size": 4078
+    },
+    {
+      "path": "skills/director-orchestrator-state/SKILL.md",
+      "sha256": "99d6a86ee7427bfc93418c70bca20fb72319ac57bded9b62a3a292ada64fefa9",
+      "size": 2972
+    },
+    {
+      "path": "skills/director-orchestrator-state/lookup/knowledge-index.json",
+      "sha256": "66458b462b8f024f95f39bc3174ba5f1953aa462bc34e123694f51230da1aa0f",
+      "size": 177
+    },
+    {
+      "path": "skills/director-orchestrator-state/references/RM-P05_project_state_asset_provenance_standard.md",
+      "sha256": "1b73fa6896374f7226fed13ced8fa26779914578de2c39d13b34c14ebee681d7",
+      "size": 26142
+    },
+    {
+      "path": "skills/director-orchestrator-state/scripts/production_engine.py",
+      "sha256": "8e30843103335cc79b6002e0bf43b47fa29b7c13b85f36e4007efd407e15c546",
+      "size": 3818
+    },
+    {
+      "path": "skills/production-execution-review/SKILL.md",
+      "sha256": "a0a70fb7182ed897ce7e3ce255a5f08e4a00ee3e9a97bc821b91c4f9d419bc10",
+      "size": 2596
+    },
+    {
+      "path": "skills/production-execution-review/lookup/knowledge-index.json",
+      "sha256": "6733463238b15e082c9dedae887f285150bab3f7a9f1dd623e79bd238c27234f",
+      "size": 1327
+    },
+    {
+      "path": "skills/production-execution-review/references/RM-C02_camera_techniques_glossary.md",
+      "sha256": "553fc28b1bb5b431ddabe889872efe270e21bf255f35c96b9fb1ef0d4c8187ca",
+      "size": 3622
+    },
+    {
+      "path": "skills/production-execution-review/references/RM-C03_storyboard_composition_reference.md",
+      "sha256": "d8eab29365fe3652ea27104399038e2969402e392174e0281f6d387057bbd958",
+      "size": 3988
+    },
+    {
+      "path": "skills/production-execution-review/references/RM-C04_cinematic_lighting_mood_reference.md",
+      "sha256": "acead014b4a802ff69a347bf446362db07d3d26c2e629cfa5186a917b522ae2e",
+      "size": 4247
+    },
+    {
+      "path": "skills/production-execution-review/references/RM-C05_character_acting_reference.md",
+      "sha256": "388cf093698265ab8a6d44d74cbf35314d2f2bec0bedefe753f14c40d80ce918",
+      "size": 3955
+    },
+    {
+      "path": "skills/production-execution-review/references/RM-C06_sound_music_cues_reference.md",
+      "sha256": "c0bd0fd2243dffe0e5304d32d68be25c55f4442f7806e10a1f580693b58246cd",
+      "size": 3526
+    },
+    {
+      "path": "skills/production-execution-review/references/RM-P01_canonical_production_specification_standard.md",
+      "sha256": "3a9c270ebbed207475a1943fb44db302726f56749d30cf68cc428bdaf6a0f428",
+      "size": 21484
+    },
+    {
+      "path": "skills/production-execution-review/references/RM-P03_target_capability_adaptation_standard.md",
+      "sha256": "55cb17de9295d99824d5843fc821a93c3e9431781f05b02639ffac469390aad2",
+      "size": 29243
+    },
+    {
+      "path": "skills/production-execution-review/references/RM-P04_production_execution_result_contract.md",
+      "sha256": "e3925c8b799b35a6762f609e691de401f5d05b1b4af7c4abb341b2db402e9a75",
+      "size": 22936
+    },
+    {
+      "path": "skills/production-execution-review/references/RM-P05_project_state_asset_provenance_standard.md",
+      "sha256": "1b73fa6896374f7226fed13ced8fa26779914578de2c39d13b34c14ebee681d7",
+      "size": 26142
+    },
+    {
+      "path": "skills/production-execution-review/scripts/production_engine.py",
+      "sha256": "8e30843103335cc79b6002e0bf43b47fa29b7c13b85f36e4007efd407e15c546",
+      "size": 3818
+    },
+    {
+      "path": "skills/production-spec-packaging/SKILL.md",
+      "sha256": "c2a62c387670eab96d4bc64edd5950915c5fb7c9c953fff9e540f60a6a9484f1",
+      "size": 2331
+    },
+    {
+      "path": "skills/production-spec-packaging/lookup/knowledge-index.json",
+      "sha256": "5dff4a6dcd2b17b2b00642e7272b8a20218a0d126d08988c85fa75d3fce8392c",
+      "size": 632
+    },
+    {
+      "path": "skills/production-spec-packaging/references/RM-C08_visual_style_options_reference.md",
+      "sha256": "6447a81443b0e35492b2d313bf9135a1639e38831d24a308eb4df35bd0cfe02f",
+      "size": 3312
+    },
+    {
+      "path": "skills/production-spec-packaging/references/RM-P01_canonical_production_specification_standard.md",
+      "sha256": "3a9c270ebbed207475a1943fb44db302726f56749d30cf68cc428bdaf6a0f428",
+      "size": 21484
+    },
+    {
+      "path": "skills/production-spec-packaging/references/RM-P02_portable_production_package_standard.md",
+      "sha256": "62b0e900be8fee0013d7db4476521bcb5cd800a270491faed438377c55bfbd45",
+      "size": 24776
+    },
+    {
+      "path": "skills/production-spec-packaging/references/RM-P05_project_state_asset_provenance_standard.md",
+      "sha256": "1b73fa6896374f7226fed13ced8fa26779914578de2c39d13b34c14ebee681d7",
+      "size": 26142
+    },
+    {
+      "path": "skills/production-spec-packaging/scripts/production_engine.py",
+      "sha256": "8e30843103335cc79b6002e0bf43b47fa29b7c13b85f36e4007efd407e15c546",
+      "size": 3818
+    },
+    {
+      "path": "skills/story-and-creative-development/SKILL.md",
+      "sha256": "7420d736cdd09ae32128b3a9885e00fe887dbb2c2b73b78d22752f95199e506a",
+      "size": 1659
+    },
+    {
+      "path": "skills/story-and-creative-development/lookup/knowledge-index.json",
+      "sha256": "6969962847078d546871224e6213bbdbfad3c4b2361a981427ab1c8506e81f47",
+      "size": 1116
+    },
+    {
+      "path": "skills/story-and-creative-development/references/RM-C01_visual_rhythm_support_module.md",
+      "sha256": "89369beb529ad933e4f8e66181a06054f82aeaf12825b56586f6acf284c703be",
+      "size": 3147
+    },
+    {
+      "path": "skills/story-and-creative-development/references/RM-C03_storyboard_composition_reference.md",
+      "sha256": "d8eab29365fe3652ea27104399038e2969402e392174e0281f6d387057bbd958",
+      "size": 3988
+    },
+    {
+      "path": "skills/story-and-creative-development/references/RM-C07_dialogue_script_support_guide.md",
+      "sha256": "911a88aa9a4d6b594b97c4233cb53ef5e10c9498fa541ba15f2f38ccbc389495",
+      "size": 1368
+    },
+    {
+      "path": "skills/story-and-creative-development/references/RM-C08_visual_style_options_reference.md",
+      "sha256": "6447a81443b0e35492b2d313bf9135a1639e38831d24a308eb4df35bd0cfe02f",
+      "size": 3312
+    },
+    {
+      "path": "skills/story-and-creative-development/references/RM-S01_bible_story_templates_list.md",
+      "sha256": "2c2c0f84e86dd6c2c6ced31dd926e686fb7b6f325576eeb26d59ffe9aa902259",
+      "size": 2394
+    },
+    {
+      "path": "skills/story-and-creative-development/references/RM-S02_bible_story_template_rubric.md",
+      "sha256": "bba95fb28d6bb8536d2907e4acbb6ec5cbb7d0187e0d4c57ba131c28eedff2c8",
+      "size": 1045
+    },
+    {
+      "path": "skills/story-and-creative-development/references/RM-S03_inspirational_story_templates_list.md",
+      "sha256": "c3016d5a0d5f3bff093fd6972efe2824cf0966031da3026845f3acdfbea84416",
+      "size": 3676
+    },
+    {
+      "path": "skills/story-and-creative-development/references/RM-S04_inspirational_story_rubric.md",
+      "sha256": "3eb9494827e82e7341032ca8a82c31114a7c37dbe2d7805a4194c3894dd2222b",
+      "size": 4078
+    },
+    {
+      "path": "skills/target-capability-adaptation/SKILL.md",
+      "sha256": "5ed13f0c0f34e64472ade53801b962c1db17f4eafbf53955d3b2e2abaaf88ee3",
+      "size": 2572
+    },
+    {
+      "path": "skills/target-capability-adaptation/lookup/knowledge-index.json",
+      "sha256": "c8be7c07b7915447b2514bac36c09ad77c8a9fff80ccfa93403221d2c33a5fcf",
+      "size": 495
+    },
+    {
+      "path": "skills/target-capability-adaptation/references/RM-P01_canonical_production_specification_standard.md",
+      "sha256": "3a9c270ebbed207475a1943fb44db302726f56749d30cf68cc428bdaf6a0f428",
+      "size": 21484
+    },
+    {
+      "path": "skills/target-capability-adaptation/references/RM-P03_target_capability_adaptation_standard.md",
+      "sha256": "55cb17de9295d99824d5843fc821a93c3e9431781f05b02639ffac469390aad2",
+      "size": 29243
+    },
+    {
+      "path": "skills/target-capability-adaptation/references/RM-P05_project_state_asset_provenance_standard.md",
+      "sha256": "1b73fa6896374f7226fed13ced8fa26779914578de2c39d13b34c14ebee681d7",
+      "size": 26142
+    },
+    {
+      "path": "skills/target-capability-adaptation/scripts/production_engine.py",
+      "sha256": "8e30843103335cc79b6002e0bf43b47fa29b7c13b85f36e4007efd407e15c546",
+      "size": 3818
+    }
+  ]
+}

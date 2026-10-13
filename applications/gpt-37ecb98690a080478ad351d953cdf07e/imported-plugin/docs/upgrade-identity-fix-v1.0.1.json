@@ -1,0 +1,14 @@
+{
+  "package_version": "1.0.1",
+  "change_type": "upgrade-identity compatibility fix",
+  "existing_plugin_name": "gpt-37ecb98690a080478ad351d953cdf07e",
+  "preserved_display_name": "酷 Vibe 動畫故事導演  Vibe StorySpirit Director",
+  "behavioral_change": false,
+  "source_package": "Vibe_StorySpirit_Director_v1.0.0.zip",
+  "verification": {
+    "active_manifest_name_match": true,
+    "active_manifest_version_match": true,
+    "display_name_match_existing_baseline": true,
+    "other_candidate_content_preserved": true
+  }
+}

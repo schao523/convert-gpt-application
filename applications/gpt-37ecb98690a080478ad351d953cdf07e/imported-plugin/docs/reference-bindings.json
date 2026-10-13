@@ -1,0 +1,80 @@
+{
+  "schema_version": "1.0",
+  "reference_failure_state": "REFERENCE_CONSULTATION_UNVERIFIED",
+  "skills": {
+    "production-spec-packaging": [
+      {
+        "reference_id": "RM-P01",
+        "path": "references/RM-P01_canonical_production_specification_standard.md",
+        "authority": "APPROVED_OPERATIONAL",
+        "required_or_conditional": "required"
+      },
+      {
+        "reference_id": "RM-P02",
+        "path": "references/RM-P02_portable_production_package_standard.md",
+        "authority": "APPROVED_OPERATIONAL",
+        "required_or_conditional": "required"
+      },
+      {
+        "reference_id": "RM-P05",
+        "path": "references/RM-P05_project_state_asset_provenance_standard.md",
+        "authority": "APPROVED_OPERATIONAL",
+        "required_or_conditional": "required"
+      }
+    ],
+    "target-capability-adaptation": [
+      {
+        "reference_id": "RM-P01",
+        "path": "references/RM-P01_canonical_production_specification_standard.md",
+        "authority": "APPROVED_OPERATIONAL",
+        "required_or_conditional": "required"
+      },
+      {
+        "reference_id": "RM-P03",
+        "path": "references/RM-P03_target_capability_adaptation_standard.md",
+        "authority": "APPROVED_OPERATIONAL",
+        "required_or_conditional": "required"
+      },
+      {
+        "reference_id": "RM-P05",
+        "path": "references/RM-P05_project_state_asset_provenance_standard.md",
+        "authority": "APPROVED_OPERATIONAL",
+        "required_or_conditional": "required"
+      }
+    ],
+    "production-execution-review": [
+      {
+        "reference_id": "RM-P01",
+        "path": "references/RM-P01_canonical_production_specification_standard.md",
+        "authority": "APPROVED_OPERATIONAL",
+        "required_or_conditional": "required"
+      },
+      {
+        "reference_id": "RM-P03",
+        "path": "references/RM-P03_target_capability_adaptation_standard.md",
+        "authority": "APPROVED_OPERATIONAL",
+        "required_or_conditional": "required"
+      },
+      {
+        "reference_id": "RM-P04",
+        "path": "references/RM-P04_production_execution_result_contract.md",
+        "authority": "APPROVED_OPERATIONAL",
+        "required_or_conditional": "required"
+      },
+      {
+        "reference_id": "RM-P05",
+        "path": "references/RM-P05_project_state_asset_provenance_standard.md",
+        "authority": "APPROVED_OPERATIONAL",
+        "required_or_conditional": "required"
+      }
+    ],
+    "director-orchestrator-state": [
+      {
+        "reference_id": "RM-P05",
+        "path": "references/RM-P05_project_state_asset_provenance_standard.md",
+        "authority": "APPROVED_OPERATIONAL",
+        "required_or_conditional": "required"
+      }
+    ]
+  }
+}

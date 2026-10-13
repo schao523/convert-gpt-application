@@ -1,0 +1,4 @@
+interface:
+  default_prompt: 我想從零開始製作一個完整的聖經動畫故事，你可以帶我一步步完成嗎？
+  display_name: 酷 Vibe 動畫故事導演  Vibe StorySpirit Director
+  short_description: 一位充滿靈感與創意的動畫故事導演，結合神學準確、故事敘事與電影級分鏡設計，協助你從零打造屬靈又具現代感的聖經與啟發動畫故事，並可

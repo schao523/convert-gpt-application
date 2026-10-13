@@ -222,6 +222,18 @@ exact Git evidence as one trust boundary. `prepare-marketplace` must stage a
 separate tree without mutating the baseline marketplace, and publication is a
 later, separately approved action.
 
+Historical deterministic-content-v2 Plugin Builder ZIPs may enter the bounded
+Codex-only onboarding path only through an approved
+`workbench-legacy-plugin-builder-adoption-v1` record supplied with
+`--legacy-adoption`. Treat that record as explicit owner authority for the
+exact archive, manifests, executable/dependency inventory, and immutable imported bytes.
+It is not Plugin Builder v2/v3 evidence and does not grant
+licensing, redistribution, third-party-content, or publication authority.
+Reject mixed or unknown authorities, changed bytes, and unsupported legacy runtime evidence.
+Keep installed-runtime states `NOT VERIFIED`, require the
+separate publication-decision record, and stop at a local proposal until a
+later explicit marketplace approval.
+
 The Python package also provides distribution-contract validation, package and
 asset builders, RAG identity adapters, content-addressed cache paths, verified
 remote-asset setup, and runtime-status primitives. Prefer public package APIs

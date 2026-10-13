@@ -3,6 +3,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 import shutil
+import subprocess
+import sys
 import tempfile
 import unittest
 from unittest.mock import patch
@@ -19,6 +21,8 @@ from obvious_one_plugin_framework.verification import load_application_config_pa
 from scripts.verify_extraction import RunContext, _provenance_gate
 from tests.framework.plugin_onboarding_fixtures import (
     canonical_bytes,
+    rebuild_legacy_plugin_builder_fixture,
+    write_legacy_plugin_builder_fixture,
     write_legacy_repair_fixture,
     write_plugin_builder_fixture,
     write_publication_decisions,
@@ -33,6 +37,7 @@ class PluginOnboardingMaterializeTests(unittest.TestCase):
         self.temporary = tempfile.TemporaryDirectory()
         self.root = Path(self.temporary.name)
         self.fixture = write_plugin_builder_fixture(self.root / "package")
+        self.legacy_fixture = write_legacy_plugin_builder_fixture(self.root / "legacy-package")
         self.decisions = write_publication_decisions(self.root / "decisions.json")
 
     def tearDown(self) -> None:
@@ -46,6 +51,25 @@ class PluginOnboardingMaterializeTests(unittest.TestCase):
             decisions or self.decisions,
             REPOSITORY,
             output,
+        )
+
+    def prepare_legacy(
+        self,
+        output: Path,
+        *,
+        fixture=None,
+        decisions: Path | None = None,
+        evidence: Path | None = None,
+    ):
+        selected = fixture or self.legacy_fixture
+        return prepare_plugin_zip_marketplace(
+            selected.archive,
+            None,
+            decisions or self.decisions,
+            REPOSITORY,
+            output,
+            legacy_adoption=selected.adoption,
+            evidence=evidence,
         )
 
     def test_materialization_writes_exact_specified_tree_and_relative_result_paths(self) -> None:
@@ -124,6 +148,126 @@ class PluginOnboardingMaterializeTests(unittest.TestCase):
         self.assertEqual(evidence["input_profile"], "WORKBENCH_REPAIRED_PLUGIN_V1")
         self.assertNotIn("candidate_sha256", evidence)
         self.assertNotIn("verification_sha256", evidence)
+
+    def test_legacy_adoption_materializes_exact_flat_archive_bytes(self) -> None:
+        output = self.root / "legacy-proposal"
+
+        result = self.prepare_legacy(output)
+
+        self.assertEqual(result.status, "PASS")
+        imported = output / "application" / "imported-plugin"
+        self.assertEqual(
+            plugin_authoring.tree_manifest(imported),
+            plugin_authoring.tree_manifest(self.legacy_fixture.candidate),
+        )
+        proposal = json.loads(
+            (output / "onboarding-proposal.json").read_text(encoding="ascii")
+        )
+        evidence = proposal["builder_evidence"]
+        self.assertEqual(
+            evidence["input_profile"],
+            "PLUGIN_BUILDER_DETERMINISTIC_CONTENT_V2",
+        )
+        self.assertRegex(evidence["adoption_identity_sha256"], r"^[0-9a-f]{64}$")
+        self.assertNotIn("candidate_sha256", evidence)
+        self.assertNotIn("verification_sha256", evidence)
+
+    def test_generated_imported_test_detects_changed_legacy_member_bytes(self) -> None:
+        output = self.root / "legacy-generated-test"
+        self.prepare_legacy(output)
+        application = output / "application"
+        generated_test = application / "tests" / "test_imported_package.py"
+
+        passing = subprocess.run(
+            [sys.executable, "-B", str(generated_test)],
+            cwd=application,
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        self.assertEqual(passing.returncode, 0, passing.stdout + passing.stderr)
+
+        helper = application / "imported-plugin" / "scripts" / "helper.py"
+        helper.write_bytes(helper.read_bytes() + b"# changed\n")
+        changed = subprocess.run(
+            [sys.executable, "-B", str(generated_test)],
+            cwd=application,
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        self.assertNotEqual(changed.returncode, 0, changed.stdout + changed.stderr)
+
+    def test_legacy_outputs_are_deterministic_and_allow_historical_portable_omissions(self) -> None:
+        fixture = write_legacy_plugin_builder_fixture(self.root / "legacy-omissions")
+        portable_path = fixture.candidate / "plugin.json"
+        portable = json.loads(portable_path.read_text(encoding="utf-8"))
+        interface = portable["extensions"]["com.openai"]["interface"]
+        for field in ("longDescription", "developerName", "category", "capabilities"):
+            interface.pop(field)
+        portable_path.write_bytes(canonical_bytes(portable))
+        fixture = rebuild_legacy_plugin_builder_fixture(fixture)
+        first = self.root / "legacy-first"
+        second = self.root / "legacy-second"
+
+        first_result = self.prepare_legacy(first, fixture=fixture)
+        second_result = self.prepare_legacy(second, fixture=fixture)
+
+        self.assertEqual(plugin_authoring.tree_sha256(first), plugin_authoring.tree_sha256(second))
+        self.assertEqual(first_result.evidence, second_result.evidence)
+
+    def test_legacy_authority_selection_and_runtime_evidence_fail_before_output(self) -> None:
+        cases = (
+            (
+                lambda output: prepare_plugin_zip_marketplace(
+                    self.legacy_fixture.archive,
+                    None,
+                    self.decisions,
+                    REPOSITORY,
+                    output,
+                ),
+                "onboarding.authority_selection_invalid",
+            ),
+            (
+                lambda output: prepare_plugin_zip_marketplace(
+                    self.fixture.archive,
+                    self.fixture.metadata,
+                    self.decisions,
+                    REPOSITORY,
+                    output,
+                    legacy_adoption=self.legacy_fixture.adoption,
+                ),
+                "onboarding.authority_selection_invalid",
+            ),
+            (
+                lambda output: self.prepare_legacy(
+                    output,
+                    evidence=self.root / "unsupported-evidence.zip",
+                ),
+                "onboarding.legacy_runtime_evidence_unsupported",
+            ),
+        )
+        for index, (operation, code) in enumerate(cases):
+            with self.subTest(code=code):
+                output = self.root / f"legacy-authority-{index}"
+                with self.assertRaises(OnboardingError) as caught:
+                    operation(output)
+                self.assertEqual(caught.exception.code, code)
+                self.assertFalse(output.exists())
+
+    def test_legacy_archive_change_after_approval_and_overlay_collision_fail_closed(self) -> None:
+        changed = write_legacy_plugin_builder_fixture(self.root / "legacy-changed")
+        changed.archive.write_bytes(changed.archive.read_bytes() + b"changed")
+        with self.assertRaises(OnboardingError) as caught:
+            self.prepare_legacy(self.root / "legacy-changed-output", fixture=changed)
+        self.assertEqual(caught.exception.code, "onboarding.inspection.archive_sha256_mismatch")
+
+        collision = write_legacy_plugin_builder_fixture(self.root / "legacy-collision")
+        (collision.candidate / "LICENSE").write_bytes(b"source license\n")
+        collision = rebuild_legacy_plugin_builder_fixture(collision)
+        with self.assertRaises(OnboardingError) as caught:
+            self.prepare_legacy(self.root / "legacy-collision-output", fixture=collision)
+        self.assertEqual(caught.exception.code, "onboarding.proposal.overlay_collision")
 
     def test_imported_plugin_bytes_equal_archive_candidate_members(self) -> None:
         output = self.root / "exact"
@@ -261,8 +405,17 @@ class PluginOnboardingMaterializeTests(unittest.TestCase):
         output = self.root / "swapped"
         original_validate = onboarding_materialize._validate_stage
 
-        def swap_after_validation(application: Path, imported: Path) -> None:
-            original_validate(application, imported)
+        def swap_after_validation(
+            application: Path,
+            imported: Path,
+            *,
+            strict_plugin_tree: bool = True,
+        ) -> None:
+            original_validate(
+                application,
+                imported,
+                strict_plugin_tree=strict_plugin_tree,
+            )
             output.mkdir()
             (output / "intruder.txt").write_bytes(b"preserve\r\n")
 

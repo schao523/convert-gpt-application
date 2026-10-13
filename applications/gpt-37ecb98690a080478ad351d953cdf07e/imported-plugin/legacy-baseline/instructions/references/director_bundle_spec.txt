@@ -1,0 +1,58 @@
+---
+title: Director Bundle Schema
+version: 1.0
+author: Director GPT
+date: 2025-10-23
+---
+
+# 🎮 Director Bundle Specification
+
+## Purpose
+Defines the standard Markdown structure used by Director GPT to create, read, and export
+animation projects across all Starters.  
+Each bundle represents one self-contained project (story + production data).
+
+---
+
+## Front-Matter (YAML)
+```yaml
+title: <Project Title>
+version: v1.0
+story_type: Bible | Inspirational | Original
+audience: Kids | Youth | Adult
+date: YYYY-MM-DD
+```
+
+---
+
+## Required Sections (H2 Headings in Order)
+1. `## Storyboard` – scene list, narration, stage directions  
+2. `## CinematicPlan` – camera moves, pacing, acting direction  
+3. `## Dialogue` – all character lines with tone markers  
+4. `## StartFrames` – AI image prompts per scene  
+5. `## Lighting` – lighting style and color palette  
+6. `## SoundCues` – sound design, music, ambience  
+7. `## Rubric` – quality scores & analysis (five dimensions)  
+8. `## RevisedNotes` – revision log / Prompt Patch suggestions  
+9. `## AIVideoPrompts` *(optional)* – ready-to-use prompts for Runway, Pika, Kaiber etc.
+
+---
+
+## Validation Rules
+- All required headings must appear once; empty sections are acceptable but flagged.  
+- Front-matter must include `title`; other fields optional but recommended.  
+- Case-insensitive header matching allowed.  
+- Missing optional section → ignored (not error).  
+- When imported, GPT loads each section into memory for analysis or export.  
+- When generated, GPT must output all required sections in this sequence.
+
+---
+
+## Usage Guidelines
+- **Starter 1** → Creates a full Director Bundle (.md) matching this schema.  
+- **Starters 2–4** → Accept an uploaded bundle; parse by these rules before analysis.  
+- `/export_package` → Validates or rebuilds bundle per this spec for packaging.
+
+---
+
+_End of Director Bundle Spec_

@@ -1,3 +1,4 @@
 applications/plugin-builder/tests/fixtures/design-package-create/* text eol=lf
 applications/sermon-coach/LICENSE -text
 applications/sermon-coach/imported-plugin/** -text
+applications/gpt-37ecb98690a080478ad351d953cdf07e/imported-plugin/** -whitespace

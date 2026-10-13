@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import replace
+from hashlib import sha256
 import json
 from pathlib import Path
 import shutil
@@ -12,10 +13,12 @@ from obvious_one_plugin_framework import plugin_authoring
 from obvious_one_plugin_framework.plugin_onboarding.contract import (
     OnboardingError,
     PackageMember,
+    load_legacy_plugin_builder_adoption,
     load_package_metadata,
     load_publication_decisions,
 )
 from obvious_one_plugin_framework.plugin_onboarding.inspection import (
+    inspect_legacy_plugin_builder_package,
     inspect_plugin_builder_package,
 )
 from obvious_one_plugin_framework.plugin_onboarding.proposal import (
@@ -23,6 +26,7 @@ from obvious_one_plugin_framework.plugin_onboarding.proposal import (
 )
 from tests.framework.plugin_onboarding_fixtures import (
     canonical_bytes,
+    write_legacy_plugin_builder_fixture,
     write_plugin_builder_fixture,
     write_publication_decisions,
 )
@@ -135,6 +139,37 @@ class PluginOnboardingProposalTests(unittest.TestCase):
         self.assertEqual(proposal.runtime_evidence_states, self.inspection.evidence_states)
         self.assertEqual(set(proposal.runtime_evidence_states.values()), {"NOT VERIFIED"})
 
+    def test_legacy_adoption_uses_approved_content_and_records_adoption_identity(self) -> None:
+        fixture = write_legacy_plugin_builder_fixture(self.root / "legacy-proposal")
+        adoption = load_legacy_plugin_builder_adoption(fixture.adoption)
+        inspection = inspect_legacy_plugin_builder_package(fixture.archive, adoption)
+
+        proposal = build_onboarding_proposal(
+            inspection,
+            self.decisions,
+            self.repository_fixture("legacy-proposal-repository"),
+        )
+
+        self.assertEqual(
+            proposal.builder_evidence["input_profile"],
+            "PLUGIN_BUILDER_DETERMINISTIC_CONTENT_V2",
+        )
+        self.assertEqual(
+            proposal.builder_evidence["approved_executable_files"],
+            ("scripts/helper.py",),
+        )
+        self.assertEqual(
+            proposal.builder_evidence["approved_dependency_files"],
+            ("requirements.txt",),
+        )
+        self.assertEqual(
+            proposal.builder_evidence["adoption_identity_sha256"],
+            sha256(canonical_bytes(adoption.identity_payload())).hexdigest(),
+        )
+        self.assertNotIn("candidate_sha256", proposal.builder_evidence)
+        self.assertNotIn("verification_sha256", proposal.builder_evidence)
+        self.assertEqual(set(proposal.runtime_evidence_states.values()), {"NOT VERIFIED"})
+
     def test_repository_paths_and_private_input_locations_never_enter_payload(self) -> None:
         repository = self.repository_fixture("private-owner-repository")
         inspection = replace(
@@ -189,6 +224,14 @@ class PluginOnboardingProposalTests(unittest.TestCase):
         repository = self.repository_fixture("findings")
         cases = (
             (replace(self.inspection, executable_files=("tools/run.py",)), "undeclared_executable"),
+            (
+                replace(
+                    self.inspection,
+                    executable_files=("tools/run.py",),
+                    approved_executable_files=("tools/run.py",),
+                ),
+                "undeclared_executable",
+            ),
             (replace(self.inspection, dependency_files=("requirements.txt",)), "undeclared_dependency"),
             (replace(self.inspection, mcp_files=("mcp.json",)), "undeclared_external_service"),
             (

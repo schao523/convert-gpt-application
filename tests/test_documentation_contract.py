@@ -137,6 +137,21 @@ class DocumentationContractTests(unittest.TestCase):
         self.assertIn("--application <plugin-id>", content)
         self.assertIn("Shared gates do not require a reference application", content)
 
+    def test_command_reference_documents_explicit_legacy_plugin_builder_adoption(self) -> None:
+        content = COMMAND_REFERENCE.read_text(encoding="utf-8")
+        for required in (
+            "workbench-legacy-plugin-builder-adoption-v1",
+            "--legacy-adoption",
+            "immutable imported bytes",
+            "explicit owner authority",
+            "Legacy runtime evidence is unsupported",
+            "not Plugin Builder v2/v3 evidence",
+            "publication decisions",
+            "does not publish",
+        ):
+            with self.subTest(required=required):
+                self.assertIn(required, content)
+
     def test_documents_runtime_and_schema_prerequisites(self) -> None:
         command_reference = COMMAND_REFERENCE.read_text(encoding="utf-8")
         technical_reference = TECHNICAL_REFERENCE.read_text(encoding="utf-8")
