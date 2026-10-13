@@ -1,0 +1,31 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "gpt-37ecb98690a080478ad351d953cdf07e",
+  "version": "1.0.2",
+  "description": "Creation-first AI animation story director with canonical production specifications, portable packages, target-aware adaptation, governed execution, and production-result review.",
+  "author": {
+    "name": "Shen-Chang Chao"
+  },
+  "keywords": [
+    "animation",
+    "storyboard",
+    "cinematic",
+    "video-production",
+    "creative-direction"
+  ],
+  "extensions": {
+    "com.openai": {
+      "interface": {
+        "displayName": "酷 Vibe 動畫故事導演  Vibe StorySpirit Director",
+        "shortDescription": "從故事、分鏡與電影化設計一路到可攜式製作包、目標適配與製作結果審查。",
+        "defaultPrompt": [
+          "我想從零開始製作一個完整的聖經動畫故事，你可以帶我一步步完成嗎？",
+          "啟動結構與節奏稽核模組：幫我檢查結構與故事節奏，並給出修正建議。",
+          "啟動運鏡與畫面精修模組：優化腳本的畫面與運鏡設計，幫我重寫每一幕的運鏡說明與 Start Frame 描述。"
+        ],
+        "composerIcon": "./assets/gpt-icon.png",
+        "logo": "./assets/gpt-icon.png"
+      }
+    }
+  }
+}

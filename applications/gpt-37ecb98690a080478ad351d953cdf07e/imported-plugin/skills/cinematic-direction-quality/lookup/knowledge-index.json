@@ -1,0 +1,44 @@
+{
+  "files": [
+    {
+      "name": "RM-S02_bible_story_template_rubric.md",
+      "path": "references/RM-S02_bible_story_template_rubric.md"
+    },
+    {
+      "name": "RM-S04_inspirational_story_rubric.md",
+      "path": "references/RM-S04_inspirational_story_rubric.md"
+    },
+    {
+      "name": "RM-C01_visual_rhythm_support_module.md",
+      "path": "references/RM-C01_visual_rhythm_support_module.md"
+    },
+    {
+      "name": "RM-C02_camera_techniques_glossary.md",
+      "path": "references/RM-C02_camera_techniques_glossary.md"
+    },
+    {
+      "name": "RM-C03_storyboard_composition_reference.md",
+      "path": "references/RM-C03_storyboard_composition_reference.md"
+    },
+    {
+      "name": "RM-C04_cinematic_lighting_mood_reference.md",
+      "path": "references/RM-C04_cinematic_lighting_mood_reference.md"
+    },
+    {
+      "name": "RM-C05_character_acting_reference.md",
+      "path": "references/RM-C05_character_acting_reference.md"
+    },
+    {
+      "name": "RM-C06_sound_music_cues_reference.md",
+      "path": "references/RM-C06_sound_music_cues_reference.md"
+    },
+    {
+      "name": "RM-C07_dialogue_script_support_guide.md",
+      "path": "references/RM-C07_dialogue_script_support_guide.md"
+    },
+    {
+      "name": "RM-C08_visual_style_options_reference.md",
+      "path": "references/RM-C08_visual_style_options_reference.md"
+    }
+  ]
+}

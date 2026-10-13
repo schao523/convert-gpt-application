@@ -1,0 +1,117 @@
+# 📚 Resource Index
+
+*(Director GPT External Knowledge Resources — Grouped & Updated Version)*  
+
+---
+
+## 🎯 Purpose
+
+此索引文件統一管理 Director GPT 使用的所有外部資源，並依照專業領域分組。  
+確保 GPT 具備完整的敘事、視覺、聲音與表演層能力，並保持一致性與可維護性。  
+
+所有 `.md` 檔案皆應上傳至：  
+
+> **GPTs Builder → Configure → Knowledge**  
+
+---
+
+## 📚 Story & Structure Layer （故事與結構層）
+
+| #   | 資源名稱                                   | 檔名                                      | 功能用途                |
+| --- | -------------------------------------- | --------------------------------------- | ------------------- |
+| 1   | **Bible Story Templates List**         | `Bible Story Templates List.md`         | 聖經故事模板（含主題、章節、動畫建議） |
+| 2   | **Bible Story Template Rubric**        | `Bible Story Template Rubric.md`        | 評估聖經故事品質五維度標準       |
+| 3   | **Inspirational Story Templates List** | `Inspirational Story Templates List.md` | 啟發性故事模板（非聖經題材）      |
+| 4   | **Inspirational Story Rubric**         | `Inspirational Story Rubric.md`         | 評估啟發故事品質五維度標準       |
+| 5   | **Visual Rhythm Support Module**       | `Visual Rhythm Support Module.md`       | 故事情節節奏與畫面情感控制指南     |
+
+---
+
+## 🎥 Visual Composition & Cinematic Layer （視覺構圖與電影層）
+
+| #   | 資源名稱                                         | 檔名                                            | 功能用途                                                 |
+| --- | -------------------------------------------- | --------------------------------------------- | ---------------------------------------------------- |
+| 6   | **Camera Techniques Glossary**               | `Camera Techniques Glossary.md`               | 鏡頭語言與運鏡術語詞庫                                          |
+| 7   | **Storyboard Composition Reference**         | `Storyboard Composition Reference.md`         | 構圖與視覺敘事參考指南                                          |
+| 8   | **Cinematic Lighting & Mood Reference**      | `Cinematic Lighting & Mood Reference.md`      | 光影與情緒控制指引（Lighting & Mood Layer）                     |
+| 9   | **Director’s Cinematic Output Format Guide** | `Director’s Cinematic Output Format Guide.md` | 標準化輸出格式（分鏡、運鏡、Start Frame、Rubric、修訂稿）                |
+| 10  | **AI Video Prompt Template**                 | `AI Video Prompt Template.md`                 | 將導演輸出格式轉換為可供 Runway、Pika、Kaiber 等 AI 影片生成代理使用的影片提示模板 |
+
+---
+
+## 🔊 Audio & Sound Design Layer （聲音與音效層）
+
+| #   | 資源名稱                             | 檔名                                | 功能用途                  |
+| --- | -------------------------------- | --------------------------------- | --------------------- |
+| 11  | **Sound & Music Cues Reference** | `Sound & Music Cues Reference.md` | 音效與配樂提示指南，支援音畫對位與氣氛營造 |
+
+---
+
+## 🎭 Character & Performance Layer （角色與表演層）
+
+| #   | 資源名稱                           | 檔名                              | 功能用途                         |
+| --- | ------------------------------ | ------------------------------- | ---------------------------- |
+| 12  | **Character Acting Reference** | `Character Acting Reference.md` | 角色情緒、肢體與語音表演指南（Acting Layer） |
+
+---
+
+## 🧠 Quality & Export Layer （品質與輸出層）
+
+| #   | 資源名稱                                  | 檔名                                     | 功能用途                                             |
+| --- | ------------------------------------- | -------------------------------------- | ------------------------------------------------ |
+| 13  | **Director Bundle Specification**     | `Director_Bundle_Spec.md`              | 定義 Director Bundle 的章節結構、輸入/輸出格式與跨 Starter 資料一致性 |
+| 14  | **AI Video Production Package Guide** | `AI Video Production Package Guide.md` | 定義影片素材包結構與自動生成流程                                 |
+| 15  | **Dialogue Script Support Guide**     | `Dialogue Script Support Guide.md`     | 定義對白腳本格式、表演提示與輸出規範                               |
+| 16  | **Export Metadata Standard**          | `Export Metadata Standard.md`          | 統一導出索引格式與自動附加規則                                  |
+
+---
+
+## ⚙️ System Integration & Control Layer （系統整合與控制層）
+
+| #   | 資源名稱                     | 檔名                  | 功能用途         |
+| --- | ------------------------ | ------------------- | ------------ |
+| 17  | **Resource Index (本文件)** | `Resource Index.md` | 所有資源的索引與維護文件 |
+
+---
+
+## ⚙️ 使用規則（Usage Rules）
+
+1️⃣ **自動檢索原則**  
+
+- 當使用者輸入故事主題時 → 先搜尋 Template List。  
+- 若未找到相符模板 → 依 Rubric 自動生成新模板。  
+
+2️⃣ **Rubric 自動切換**  
+
+- 聖經故事 → 使用 `Bible Story Template Rubric.md`。  
+- 啟發／非聖經故事 → 使用 `Inspirational Story Rubric.md`（以「道德一致性」取代「神學準確性」）。  
+
+3️⃣ **多層模組整合規則**  
+| 功能階段 | 引用資源 |
+|------------|------------|
+| 分鏡腳本生成 | Story Templates, Rhythm Module, Acting Reference |
+| 運鏡與畫面 | Camera Techniques, Composition Reference, Lighting & Mood, **AI Video Prompt Template** |
+| 音效與配樂 | Sound & Music Cues |
+| 光影與色調 | Lighting & Mood Reference |
+| 表演與情緒 | Character Acting Reference |
+| 品質評測 | Story Rubric + Output Format Guide + Export Metadata Standard |
+
+4️⃣ **維護與版本控制**  
+
+- 每次新增或修訂 `.md` 資源，需更新此索引。  
+- 檔案命名統一英文，版本格式如：`v1.0`, `v1.1`, `v2.0`。  
+- 建議每半年審查一次模板與 Rubric 準確性。  
+
+---
+
+## 🧠 維護建議（Maintenance Notes）
+
+- 建立專用資料夾：`/DirectorGPT_Resources/`  
+- 每個檔案保留版本記錄（更新日期、修改摘要、測試結果）。  
+- 確保新加入的文件已在 System Instructions 中被明確引用。  
+
+---
+
+✅ **建議檔名：** `Resource Index.md`  
+✅ **上傳位置：** GPTs Builder → Configure → “Knowledge”  
+✅ **用途：** Director GPT 的外部知識中央索引與維護手冊。

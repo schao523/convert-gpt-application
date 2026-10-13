@@ -1,0 +1,36 @@
+{
+  "files": [
+    {
+      "name": "RM-S01_bible_story_templates_list.md",
+      "path": "references/RM-S01_bible_story_templates_list.md"
+    },
+    {
+      "name": "RM-S02_bible_story_template_rubric.md",
+      "path": "references/RM-S02_bible_story_template_rubric.md"
+    },
+    {
+      "name": "RM-S03_inspirational_story_templates_list.md",
+      "path": "references/RM-S03_inspirational_story_templates_list.md"
+    },
+    {
+      "name": "RM-S04_inspirational_story_rubric.md",
+      "path": "references/RM-S04_inspirational_story_rubric.md"
+    },
+    {
+      "name": "RM-C01_visual_rhythm_support_module.md",
+      "path": "references/RM-C01_visual_rhythm_support_module.md"
+    },
+    {
+      "name": "RM-C03_storyboard_composition_reference.md",
+      "path": "references/RM-C03_storyboard_composition_reference.md"
+    },
+    {
+      "name": "RM-C07_dialogue_script_support_guide.md",
+      "path": "references/RM-C07_dialogue_script_support_guide.md"
+    },
+    {
+      "name": "RM-C08_visual_style_options_reference.md",
+      "path": "references/RM-C08_visual_style_options_reference.md"
+    }
+  ]
+}

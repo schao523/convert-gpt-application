@@ -1,0 +1,37 @@
+{
+  "tool_id": "production-state-engine",
+  "version": "1.0.0",
+  "implementation_kind": "BUNDLED_LOCAL",
+  "requirements": [
+    "REQ-005",
+    "REQ-007",
+    "REQ-008",
+    "REQ-009",
+    "REQ-010",
+    "REQ-011",
+    "REQ-012",
+    "REQ-014",
+    "REQ-015",
+    "REQ-020",
+    "REQ-027"
+  ],
+  "skill_bindings": [
+    "director-orchestrator-state",
+    "production-spec-packaging",
+    "target-capability-adaptation",
+    "production-execution-review"
+  ],
+  "entrypoint": "./scripts/production_engine.py",
+  "network": false,
+  "credentials": false,
+  "side_effects": "none",
+  "operations": {
+    "state-check": "DO-01",
+    "asset-check": "DO-02",
+    "compatibility": "DO-03",
+    "package-check": "DO-04",
+    "provenance": "DO-05",
+    "execution-state": "DO-06"
+  },
+  "fallback": "When command execution is unavailable, preserve model-level workflow but mark deterministic/runtime evidence NOT VERIFIED; never fabricate execution success."
+}

@@ -1,0 +1,145 @@
+{
+  "authority_precedence": [
+    "approved design specification",
+    "RM-P01–RM-P05 modernized production standards",
+    "retained creative professional references",
+    "legacy production references (subordinate)",
+    "current verified external capability evidence"
+  ],
+  "skills": {
+    "director-orchestrator-state": {
+      "requirements": [
+        "REQ-003",
+        "REQ-004",
+        "REQ-014",
+        "REQ-015",
+        "REQ-017",
+        "REQ-020",
+        "REQ-027"
+      ],
+      "references": [
+        "RM-P05_project_state_asset_provenance_standard.md"
+      ]
+    },
+    "story-and-creative-development": {
+      "requirements": [
+        "REQ-001",
+        "REQ-002",
+        "REQ-006",
+        "REQ-017",
+        "REQ-018",
+        "REQ-021",
+        "REQ-022",
+        "REQ-023",
+        "REQ-024",
+        "REQ-025"
+      ],
+      "references": [
+        "RM-S01_bible_story_templates_list.md",
+        "RM-S02_bible_story_template_rubric.md",
+        "RM-S03_inspirational_story_templates_list.md",
+        "RM-S04_inspirational_story_rubric.md",
+        "RM-C01_visual_rhythm_support_module.md",
+        "RM-C03_storyboard_composition_reference.md",
+        "RM-C07_dialogue_script_support_guide.md",
+        "RM-C08_visual_style_options_reference.md"
+      ]
+    },
+    "cinematic-direction-quality": {
+      "requirements": [
+        "REQ-002",
+        "REQ-006",
+        "REQ-016",
+        "REQ-018",
+        "REQ-021",
+        "REQ-022",
+        "REQ-023",
+        "REQ-024",
+        "REQ-025"
+      ],
+      "references": [
+        "RM-S02_bible_story_template_rubric.md",
+        "RM-S04_inspirational_story_rubric.md",
+        "RM-C01_visual_rhythm_support_module.md",
+        "RM-C02_camera_techniques_glossary.md",
+        "RM-C03_storyboard_composition_reference.md",
+        "RM-C04_cinematic_lighting_mood_reference.md",
+        "RM-C05_character_acting_reference.md",
+        "RM-C06_sound_music_cues_reference.md",
+        "RM-C07_dialogue_script_support_guide.md",
+        "RM-C08_visual_style_options_reference.md"
+      ]
+    },
+    "production-spec-packaging": {
+      "requirements": [
+        "REQ-005",
+        "REQ-006",
+        "REQ-007",
+        "REQ-011",
+        "REQ-014",
+        "REQ-015",
+        "REQ-018",
+        "REQ-021",
+        "REQ-022",
+        "REQ-023",
+        "REQ-024",
+        "REQ-025",
+        "REQ-027"
+      ],
+      "references": [
+        "RM-P01_canonical_production_specification_standard.md",
+        "RM-P02_portable_production_package_standard.md",
+        "RM-P05_project_state_asset_provenance_standard.md",
+        "RM-C08_visual_style_options_reference.md"
+      ]
+    },
+    "target-capability-adaptation": {
+      "requirements": [
+        "REQ-008",
+        "REQ-011",
+        "REQ-012",
+        "REQ-013",
+        "REQ-018",
+        "REQ-021",
+        "REQ-022",
+        "REQ-023",
+        "REQ-024",
+        "REQ-025",
+        "REQ-026",
+        "REQ-027",
+        "REQ-028"
+      ],
+      "references": [
+        "RM-P01_canonical_production_specification_standard.md",
+        "RM-P03_target_capability_adaptation_standard.md",
+        "RM-P05_project_state_asset_provenance_standard.md"
+      ]
+    },
+    "production-execution-review": {
+      "requirements": [
+        "REQ-009",
+        "REQ-010",
+        "REQ-016",
+        "REQ-020",
+        "REQ-021",
+        "REQ-022",
+        "REQ-023",
+        "REQ-024",
+        "REQ-025",
+        "REQ-026",
+        "REQ-027"
+      ],
+      "references": [
+        "RM-P01_canonical_production_specification_standard.md",
+        "RM-P03_target_capability_adaptation_standard.md",
+        "RM-P04_production_execution_result_contract.md",
+        "RM-P05_project_state_asset_provenance_standard.md",
+        "RM-C02_camera_techniques_glossary.md",
+        "RM-C03_storyboard_composition_reference.md",
+        "RM-C04_cinematic_lighting_mood_reference.md",
+        "RM-C05_character_acting_reference.md",
+        "RM-C06_sound_music_cues_reference.md"
+      ]
+    }
+  }
+}

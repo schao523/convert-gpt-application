@@ -1,0 +1,7 @@
+{
+  "tool_id": "production-state-engine",
+  "contract_sha256": "344a7cf69b33c1bb546a2b70ce6ba45f1d52500832f704b5ea70aa43a815433b",
+  "entrypoint": "scripts/production_engine.py",
+  "approved_w1": "2026-10-06",
+  "implementation_kind": "BUNDLED_LOCAL"
+}

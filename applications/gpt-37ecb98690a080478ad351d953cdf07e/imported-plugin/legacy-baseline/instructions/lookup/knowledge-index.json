@@ -1,0 +1,72 @@
+{
+  "files": [
+    {
+      "name": "Resource Index.txt",
+      "path": "references/Resource Index.txt"
+    },
+    {
+      "name": "ai_video_production_package_guide.md",
+      "path": "references/ai_video_production_package_guide.md"
+    },
+    {
+      "name": "ai_video_prompt_template.md",
+      "path": "references/ai_video_prompt_template.md"
+    },
+    {
+      "name": "bible_story_template_rubric.md",
+      "path": "references/bible_story_template_rubric.md"
+    },
+    {
+      "name": "bible_story_templates_list.md",
+      "path": "references/bible_story_templates_list.md"
+    },
+    {
+      "name": "camera_techniques_glossary.md",
+      "path": "references/camera_techniques_glossary.md"
+    },
+    {
+      "name": "character_acting_reference.md",
+      "path": "references/character_acting_reference.md"
+    },
+    {
+      "name": "cinematic_lighting_mood_reference.md",
+      "path": "references/cinematic_lighting_mood_reference.md"
+    },
+    {
+      "name": "dialogue_script_support_guide.md",
+      "path": "references/dialogue_script_support_guide.md"
+    },
+    {
+      "name": "director_bundle_spec.txt",
+      "path": "references/director_bundle_spec.txt"
+    },
+    {
+      "name": "directors_cinematic_output_format_guide.md",
+      "path": "references/directors_cinematic_output_format_guide.md"
+    },
+    {
+      "name": "export_metadata_standard.md",
+      "path": "references/export_metadata_standard.md"
+    },
+    {
+      "name": "inspirational_story_rubric.md",
+      "path": "references/inspirational_story_rubric.md"
+    },
+    {
+      "name": "inspirational_story_templates_list.md",
+      "path": "references/inspirational_story_templates_list.md"
+    },
+    {
+      "name": "sound_music_cues_reference.md",
+      "path": "references/sound_music_cues_reference.md"
+    },
+    {
+      "name": "storyboard_composition_reference.md",
+      "path": "references/storyboard_composition_reference.md"
+    },
+    {
+      "name": "visual_rhythm_support_module.md",
+      "path": "references/visual_rhythm_support_module.md"
+    }
+  ]
+}

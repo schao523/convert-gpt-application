@@ -1,0 +1,9 @@
+{
+  "handoff_contract": "WORKBENCH_HANDOFF_V1_1",
+  "handoff_gate": "READY FOR WORKBENCH",
+  "baseline": {
+    "source_archive": "gpt-37ecb98690a080478ad351d953cdf07e.zip",
+    "sha256": "a2e0407cae67b634e368d64c50f480562d64a0a3ddcc38a5b4e6de41047d51e0",
+    "preservation_contract": "Preserve unrelated useful baseline behavior and reference knowledge. Implement the approved upgrade requirements without treating implementation architecture as prescribed by the specification."
+  }
+}

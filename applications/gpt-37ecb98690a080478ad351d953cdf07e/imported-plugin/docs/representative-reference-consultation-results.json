@@ -1,0 +1,60 @@
+{
+  "scope": "PRE_W2_LOCAL_REFERENCE_CONSULTATION_PROBE",
+  "installed_runtime_evidence": "NOT VERIFIED",
+  "results": [
+    {
+      "test_id": "RC-01",
+      "skill": "production-spec-packaging",
+      "references": [
+        "RM-P01",
+        "RM-P02"
+      ],
+      "resolved_paths": [
+        "skills/production-spec-packaging/references/RM-P01_canonical_production_specification_standard.md",
+        "skills/production-spec-packaging/references/RM-P02_portable_production_package_standard.md"
+      ],
+      "state": "PASS",
+      "missing": [],
+      "missing_semantic_anchors": []
+    },
+    {
+      "test_id": "RC-02",
+      "skill": "target-capability-adaptation",
+      "references": [
+        "RM-P03"
+      ],
+      "resolved_paths": [
+        "skills/target-capability-adaptation/references/RM-P03_target_capability_adaptation_standard.md"
+      ],
+      "state": "PASS",
+      "missing": [],
+      "missing_semantic_anchors": []
+    },
+    {
+      "test_id": "RC-03",
+      "skill": "production-execution-review",
+      "references": [
+        "RM-P04"
+      ],
+      "resolved_paths": [
+        "skills/production-execution-review/references/RM-P04_production_execution_result_contract.md"
+      ],
+      "state": "PASS",
+      "missing": [],
+      "missing_semantic_anchors": []
+    },
+    {
+      "test_id": "RC-04",
+      "skill": "director-orchestrator-state",
+      "references": [
+        "RM-P05"
+      ],
+      "resolved_paths": [
+        "skills/director-orchestrator-state/references/RM-P05_project_state_asset_provenance_standard.md"
+      ],
+      "state": "PASS",
+      "missing": [],
+      "missing_semantic_anchors": []
+    }
+  ]
+}

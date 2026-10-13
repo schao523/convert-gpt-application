@@ -1,0 +1,346 @@
+[
+  {
+    "requirement_id": "REQ-001",
+    "source": "Vibe_StorySpirit_Director_Application_Plugin_Design_Specification_v1.0_Revision_01_APPROVED.md",
+    "verbatim": "Preserve plugin name and core creative identity.",
+    "implementation_owner": [
+      "story-and-creative-development"
+    ],
+    "evidence_target": "Static skill/reference mapping plus representative installed-runtime scenario from approved T-01–T-22.",
+    "evidence_state": "EXPECTED",
+    "notes": "Runtime behavior to be verified after candidate build; current-provider/L3 evidence cannot be inferred statically."
+  },
+  {
+    "requirement_id": "REQ-002",
+    "source": "Vibe_StorySpirit_Director_Application_Plugin_Design_Specification_v1.0_Revision_01_APPROVED.md",
+    "verbatim": "Preserve existing story/storyboard/cinematic capability.",
+    "implementation_owner": [
+      "story-and-creative-development",
+      "cinematic-direction-quality"
+    ],
+    "evidence_target": "Static skill/reference mapping plus representative installed-runtime scenario from approved T-01–T-22.",
+    "evidence_state": "EXPECTED",
+    "notes": "Runtime behavior to be verified after candidate build; current-provider/L3 evidence cannot be inferred statically."
+  },
+  {
+    "requirement_id": "REQ-003",
+    "source": "Vibe_StorySpirit_Director_Application_Plugin_Design_Specification_v1.0_Revision_01_APPROVED.md",
+    "verbatim": "Use creation-first, target-neutral workflow.",
+    "implementation_owner": [
+      "director-orchestrator-state"
+    ],
+    "evidence_target": "Static skill/reference mapping plus representative installed-runtime scenario from approved T-01–T-22.",
+    "evidence_state": "EXPECTED",
+    "notes": "Runtime behavior to be verified after candidate build; current-provider/L3 evidence cannot be inferred statically."
+  },
+  {
+    "requirement_id": "REQ-004",
+    "source": "Vibe_StorySpirit_Director_Application_Plugin_Design_Specification_v1.0_Revision_01_APPROVED.md",
+    "verbatim": "Establish approved Director Project before production realization.",
+    "implementation_owner": [
+      "director-orchestrator-state"
+    ],
+    "evidence_target": "Static skill/reference mapping plus representative installed-runtime scenario from approved T-01–T-22.",
+    "evidence_state": "EXPECTED",
+    "notes": "Runtime behavior to be verified after candidate build; current-provider/L3 evidence cannot be inferred statically."
+  },
+  {
+    "requirement_id": "REQ-005",
+    "source": "Vibe_StorySpirit_Director_Application_Plugin_Design_Specification_v1.0_Revision_01_APPROVED.md",
+    "verbatim": "Create canonical provider-neutral Production Specification.",
+    "implementation_owner": [
+      "production-spec-packaging"
+    ],
+    "evidence_target": "Static skill/reference mapping plus representative installed-runtime scenario from approved T-01–T-22.",
+    "evidence_state": "EXPECTED",
+    "notes": "Runtime behavior to be verified after candidate build; current-provider/L3 evidence cannot be inferred statically."
+  },
+  {
+    "requirement_id": "REQ-006",
+    "source": "Vibe_StorySpirit_Director_Application_Plugin_Design_Specification_v1.0_Revision_01_APPROVED.md",
+    "verbatim": "Support asset and continuity planning.",
+    "implementation_owner": [
+      "story-and-creative-development",
+      "cinematic-direction-quality",
+      "production-spec-packaging"
+    ],
+    "evidence_target": "Static skill/reference mapping plus representative installed-runtime scenario from approved T-01–T-22.",
+    "evidence_state": "EXPECTED",
+    "notes": "Runtime behavior to be verified after candidate build; current-provider/L3 evidence cannot be inferred statically."
+  },
+  {
+    "requirement_id": "REQ-007",
+    "source": "Vibe_StorySpirit_Director_Application_Plugin_Design_Specification_v1.0_Revision_01_APPROVED.md",
+    "verbatim": "L1 portable package is mandatory.",
+    "implementation_owner": [
+      "production-spec-packaging"
+    ],
+    "evidence_target": "Static skill/reference mapping plus representative installed-runtime scenario from approved T-01–T-22.",
+    "evidence_state": "EXPECTED",
+    "notes": "Runtime behavior to be verified after candidate build; current-provider/L3 evidence cannot be inferred statically."
+  },
+  {
+    "requirement_id": "REQ-008",
+    "source": "Vibe_StorySpirit_Director_Application_Plugin_Design_Specification_v1.0_Revision_01_APPROVED.md",
+    "verbatim": "L2 target-aware export is first-class.",
+    "implementation_owner": [
+      "target-capability-adaptation"
+    ],
+    "evidence_target": "Static skill/reference mapping plus representative installed-runtime scenario from approved T-01–T-22.",
+    "evidence_state": "EXPECTED",
+    "notes": "Runtime behavior to be verified after candidate build; current-provider/L3 evidence cannot be inferred statically."
+  },
+  {
+    "requirement_id": "REQ-009",
+    "source": "Vibe_StorySpirit_Director_Application_Plugin_Design_Specification_v1.0_Revision_01_APPROVED.md",
+    "verbatim": "L3 direct execution is optional/runtime-dependent.",
+    "implementation_owner": [
+      "production-execution-review"
+    ],
+    "evidence_target": "Static skill/reference mapping plus representative installed-runtime scenario from approved T-01–T-22.",
+    "evidence_state": "EXPECTED",
+    "notes": "Runtime behavior to be verified after candidate build; current-provider/L3 evidence cannot be inferred statically."
+  },
+  {
+    "requirement_id": "REQ-010",
+    "source": "Vibe_StorySpirit_Director_Application_Plugin_Design_Specification_v1.0_Revision_01_APPROVED.md",
+    "verbatim": "L3 unavailable falls back to L2.",
+    "implementation_owner": [
+      "production-execution-review"
+    ],
+    "evidence_target": "Static skill/reference mapping plus representative installed-runtime scenario from approved T-01–T-22.",
+    "evidence_state": "EXPECTED",
+    "notes": "Runtime behavior to be verified after candidate build; current-provider/L3 evidence cannot be inferred statically."
+  },
+  {
+    "requirement_id": "REQ-011",
+    "source": "Vibe_StorySpirit_Director_Application_Plugin_Design_Specification_v1.0_Revision_01_APPROVED.md",
+    "verbatim": "Target adaptation cannot silently rewrite canonical source.",
+    "implementation_owner": [
+      "production-spec-packaging",
+      "target-capability-adaptation"
+    ],
+    "evidence_target": "Static skill/reference mapping plus representative installed-runtime scenario from approved T-01–T-22.",
+    "evidence_state": "EXPECTED",
+    "notes": "Runtime behavior to be verified after candidate build; current-provider/L3 evidence cannot be inferred statically."
+  },
+  {
+    "requirement_id": "REQ-012",
+    "source": "Vibe_StorySpirit_Director_Application_Plugin_Design_Specification_v1.0_Revision_01_APPROVED.md",
+    "verbatim": "Material semantic loss must be disclosed.",
+    "implementation_owner": [
+      "target-capability-adaptation"
+    ],
+    "evidence_target": "Static skill/reference mapping plus representative installed-runtime scenario from approved T-01–T-22.",
+    "evidence_state": "EXPECTED",
+    "notes": "Runtime behavior to be verified after candidate build; current-provider/L3 evidence cannot be inferred statically."
+  },
+  {
+    "requirement_id": "REQ-013",
+    "source": "Vibe_StorySpirit_Director_Application_Plugin_Design_Specification_v1.0_Revision_01_APPROVED.md",
+    "verbatim": "Current provider capabilities must not be fabricated from stale static references.",
+    "implementation_owner": [
+      "target-capability-adaptation"
+    ],
+    "evidence_target": "Static skill/reference mapping plus representative installed-runtime scenario from approved T-01–T-22.",
+    "evidence_state": "EXPECTED",
+    "notes": "Runtime behavior to be verified after candidate build; current-provider/L3 evidence cannot be inferred statically."
+  },
+  {
+    "requirement_id": "REQ-014",
+    "source": "Vibe_StorySpirit_Director_Application_Plugin_Design_Specification_v1.0_Revision_01_APPROVED.md",
+    "verbatim": "Maintain project/version/provenance relationships.",
+    "implementation_owner": [
+      "director-orchestrator-state",
+      "production-spec-packaging"
+    ],
+    "evidence_target": "Static skill/reference mapping plus representative installed-runtime scenario from approved T-01–T-22.",
+    "evidence_state": "EXPECTED",
+    "notes": "Runtime behavior to be verified after candidate build; current-provider/L3 evidence cannot be inferred statically."
+  },
+  {
+    "requirement_id": "REQ-015",
+    "source": "Vibe_StorySpirit_Director_Application_Plugin_Design_Specification_v1.0_Revision_01_APPROVED.md",
+    "verbatim": "Detect stale downstream artifacts.",
+    "implementation_owner": [
+      "director-orchestrator-state",
+      "production-spec-packaging"
+    ],
+    "evidence_target": "Static skill/reference mapping plus representative installed-runtime scenario from approved T-01–T-22.",
+    "evidence_state": "EXPECTED",
+    "notes": "Runtime behavior to be verified after candidate build; current-provider/L3 evidence cannot be inferred statically."
+  },
+  {
+    "requirement_id": "REQ-016",
+    "source": "Vibe_StorySpirit_Director_Application_Plugin_Design_Specification_v1.0_Revision_01_APPROVED.md",
+    "verbatim": "Support production-result evaluation.",
+    "implementation_owner": [
+      "cinematic-direction-quality",
+      "production-execution-review"
+    ],
+    "evidence_target": "Static skill/reference mapping plus representative installed-runtime scenario from approved T-01–T-22.",
+    "evidence_state": "EXPECTED",
+    "notes": "Runtime behavior to be verified after candidate build; current-provider/L3 evidence cannot be inferred statically."
+  },
+  {
+    "requirement_id": "REQ-017",
+    "source": "Vibe_StorySpirit_Director_Application_Plugin_Design_Specification_v1.0_Revision_01_APPROVED.md",
+    "verbatim": "Preserve backward-compatible user intents where reasonable.",
+    "implementation_owner": [
+      "director-orchestrator-state",
+      "story-and-creative-development"
+    ],
+    "evidence_target": "Static skill/reference mapping plus representative installed-runtime scenario from approved T-01–T-22.",
+    "evidence_state": "EXPECTED",
+    "notes": "Runtime behavior to be verified after candidate build; current-provider/L3 evidence cannot be inferred statically."
+  },
+  {
+    "requirement_id": "REQ-018",
+    "source": "Vibe_StorySpirit_Director_Application_Plugin_Design_Specification_v1.0_Revision_01_APPROVED.md",
+    "verbatim": "Use mapped professional references at relevant behavioral decisions.",
+    "implementation_owner": [
+      "story-and-creative-development",
+      "cinematic-direction-quality",
+      "production-spec-packaging",
+      "target-capability-adaptation"
+    ],
+    "evidence_target": "Static skill/reference mapping plus representative installed-runtime scenario from approved T-01–T-22.",
+    "evidence_state": "EXPECTED",
+    "notes": "Runtime behavior to be verified after candidate build; current-provider/L3 evidence cannot be inferred statically."
+  },
+  {
+    "requirement_id": "REQ-019",
+    "source": "Vibe_StorySpirit_Director_Application_Plugin_Design_Specification_v1.0_Revision_01_APPROVED.md",
+    "verbatim": "Do not prescribe Workbench Skill Architecture.",
+    "implementation_owner": [
+      "docs/architecture-decisions.md (Workbench architecture boundary)"
+    ],
+    "evidence_target": "Static skill/reference mapping plus representative installed-runtime scenario from approved T-01–T-22.",
+    "evidence_state": "EXPECTED",
+    "notes": "Implemented by preserving the design/implementation boundary: the six-Skill decomposition is Workbench-derived and non-canonical."
+  },
+  {
+    "requirement_id": "REQ-020",
+    "source": "Vibe_StorySpirit_Director_Application_Plugin_Design_Specification_v1.0_Revision_01_APPROVED.md",
+    "verbatim": "Require human authorization before consequential L3 production actions.",
+    "implementation_owner": [
+      "director-orchestrator-state",
+      "production-execution-review"
+    ],
+    "evidence_target": "Static skill/reference mapping plus representative installed-runtime scenario from approved T-01–T-22.",
+    "evidence_state": "EXPECTED",
+    "notes": "Runtime behavior to be verified after candidate build; current-provider/L3 evidence cannot be inferred statically."
+  },
+  {
+    "requirement_id": "REQ-021",
+    "source": "Vibe_StorySpirit_Director_Application_Plugin_Design_Specification_v1.0_Revision_01_APPROVED.md",
+    "verbatim": "Each reference-dependent workflow declares when and why reference consultation is required.",
+    "implementation_owner": [
+      "story-and-creative-development",
+      "cinematic-direction-quality",
+      "production-spec-packaging",
+      "target-capability-adaptation",
+      "production-execution-review"
+    ],
+    "evidence_target": "Static skill/reference mapping plus representative installed-runtime scenario from approved T-01–T-22.",
+    "evidence_state": "EXPECTED",
+    "notes": "Runtime behavior to be verified after candidate build; current-provider/L3 evidence cannot be inferred statically."
+  },
+  {
+    "requirement_id": "REQ-022",
+    "source": "Vibe_StorySpirit_Director_Application_Plugin_Design_Specification_v1.0_Revision_01_APPROVED.md",
+    "verbatim": "Each reference-dependent IM identifies Required, Conditional, and Optional references as applicable.",
+    "implementation_owner": [
+      "story-and-creative-development",
+      "cinematic-direction-quality",
+      "production-spec-packaging",
+      "target-capability-adaptation",
+      "production-execution-review"
+    ],
+    "evidence_target": "Static skill/reference mapping plus representative installed-runtime scenario from approved T-01–T-22.",
+    "evidence_state": "EXPECTED",
+    "notes": "Runtime behavior to be verified after candidate build; current-provider/L3 evidence cannot be inferred statically."
+  },
+  {
+    "requirement_id": "REQ-023",
+    "source": "Vibe_StorySpirit_Director_Application_Plugin_Design_Specification_v1.0_Revision_01_APPROVED.md",
+    "verbatim": "Section 13 is the authoritative Reference Material Usage Map.",
+    "implementation_owner": [
+      "story-and-creative-development",
+      "cinematic-direction-quality",
+      "production-spec-packaging",
+      "target-capability-adaptation",
+      "production-execution-review"
+    ],
+    "evidence_target": "Static skill/reference mapping plus representative installed-runtime scenario from approved T-01–T-22.",
+    "evidence_state": "EXPECTED",
+    "notes": "Runtime behavior to be verified after candidate build; current-provider/L3 evidence cannot be inferred statically."
+  },
+  {
+    "requirement_id": "REQ-024",
+    "source": "Vibe_StorySpirit_Director_Application_Plugin_Design_Specification_v1.0_Revision_01_APPROVED.md",
+    "verbatim": "Required-reference compliance requires actual runtime consultation, not package presence.",
+    "implementation_owner": [
+      "story-and-creative-development",
+      "cinematic-direction-quality",
+      "production-spec-packaging",
+      "target-capability-adaptation",
+      "production-execution-review"
+    ],
+    "evidence_target": "Static skill/reference mapping plus representative installed-runtime scenario from approved T-01–T-22.",
+    "evidence_state": "EXPECTED",
+    "notes": "Runtime behavior to be verified after candidate build; current-provider/L3 evidence cannot be inferred statically."
+  },
+  {
+    "requirement_id": "REQ-025",
+    "source": "Vibe_StorySpirit_Director_Application_Plugin_Design_Specification_v1.0_Revision_01_APPROVED.md",
+    "verbatim": "Conditional references become mandatory when their documented trigger occurs.",
+    "implementation_owner": [
+      "story-and-creative-development",
+      "cinematic-direction-quality",
+      "production-spec-packaging",
+      "target-capability-adaptation",
+      "production-execution-review"
+    ],
+    "evidence_target": "Static skill/reference mapping plus representative installed-runtime scenario from approved T-01–T-22.",
+    "evidence_state": "EXPECTED",
+    "notes": "Runtime behavior to be verified after candidate build; current-provider/L3 evidence cannot be inferred statically."
+  },
+  {
+    "requirement_id": "REQ-026",
+    "source": "Vibe_StorySpirit_Director_Application_Plugin_Design_Specification_v1.0_Revision_01_APPROVED.md",
+    "verbatim": "Current provider capabilities must be verified independently from static professional reference materials when necessary.",
+    "implementation_owner": [
+      "target-capability-adaptation",
+      "production-execution-review"
+    ],
+    "evidence_target": "Static skill/reference mapping plus representative installed-runtime scenario from approved T-01–T-22.",
+    "evidence_state": "EXPECTED",
+    "notes": "Runtime behavior to be verified after candidate build; current-provider/L3 evidence cannot be inferred statically."
+  },
+  {
+    "requirement_id": "REQ-027",
+    "source": "Vibe_StorySpirit_Director_Application_Plugin_Design_Specification_v1.0_Revision_01_APPROVED.md",
+    "verbatim": "Workbench implementation must preserve traceability from behavioral requirement through runtime reference consultation and verification evidence.",
+    "implementation_owner": [
+      "director-orchestrator-state",
+      "production-spec-packaging",
+      "target-capability-adaptation",
+      "production-execution-review"
+    ],
+    "evidence_target": "Static skill/reference mapping plus representative installed-runtime scenario from approved T-01–T-22.",
+    "evidence_state": "EXPECTED",
+    "notes": "Runtime behavior to be verified after candidate build; current-provider/L3 evidence cannot be inferred statically."
+  },
+  {
+    "requirement_id": "REQ-028",
+    "source": "Vibe_StorySpirit_Director_Application_Plugin_Design_Specification_v1.0_Revision_01_APPROVED.md",
+    "verbatim": "Reference requirements do not prescribe Skill count, Skill ownership, Skill-to-reference binding, or runtime loading mechanism.",
+    "implementation_owner": [
+      "target-capability-adaptation"
+    ],
+    "evidence_target": "Static skill/reference mapping plus representative installed-runtime scenario from approved T-01–T-22.",
+    "evidence_state": "EXPECTED",
+    "notes": "Runtime behavior to be verified after candidate build; current-provider/L3 evidence cannot be inferred statically."
+  }
+]

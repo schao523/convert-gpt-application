@@ -1,0 +1,20 @@
+{
+  "files": [
+    {
+      "name": "RM-P01_canonical_production_specification_standard.md",
+      "path": "references/RM-P01_canonical_production_specification_standard.md"
+    },
+    {
+      "name": "RM-P02_portable_production_package_standard.md",
+      "path": "references/RM-P02_portable_production_package_standard.md"
+    },
+    {
+      "name": "RM-P05_project_state_asset_provenance_standard.md",
+      "path": "references/RM-P05_project_state_asset_provenance_standard.md"
+    },
+    {
+      "name": "RM-C08_visual_style_options_reference.md",
+      "path": "references/RM-C08_visual_style_options_reference.md"
+    }
+  ]
+}

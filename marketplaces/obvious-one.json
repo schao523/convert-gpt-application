@@ -49,6 +49,19 @@
         "codex": {"mode": "verify_existing", "destination": "plugins/sermon-coach"},
         "openclaw": {"mode": "not_applicable"}
       }
+    },
+    {
+      "application_config": "applications/gpt-37ecb98690a080478ad351d953cdf07e/conversion.json",
+      "distribution_contract": "applications/gpt-37ecb98690a080478ad351d953cdf07e/openclaw/distribution.json",
+      "targets": {
+        "codex": {
+          "destination": "plugins/gpt-37ecb98690a080478ad351d953cdf07e",
+          "mode": "build"
+        },
+        "openclaw": {
+          "mode": "not_applicable"
+        }
+      }
     }
   ]
 }
