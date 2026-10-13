@@ -218,7 +218,18 @@ def _verify_fresh_checkout(
     with TemporaryDirectory(prefix="git-evidence-") as temporary:
         checkout = Path(temporary) / "checkout"
         clone = subprocess.run(
-            ["git", "-c", "core.autocrlf=true", "clone", "--no-hardlinks", "--no-checkout", str(root), str(checkout)],
+            [
+                "git",
+                "-c",
+                "core.autocrlf=true",
+                "-c",
+                "core.longpaths=true",
+                "clone",
+                "--no-hardlinks",
+                "--no-checkout",
+                str(root),
+                str(checkout),
+            ],
             shell=False,
             timeout=30,
             check=False,
@@ -228,7 +239,16 @@ def _verify_fresh_checkout(
             codes.add("fresh_checkout_failed")
             return
         checked_out = subprocess.run(
-            ["git", "-c", "core.autocrlf=true", "checkout", "--detach", commit],
+            [
+                "git",
+                "-c",
+                "core.autocrlf=true",
+                "-c",
+                "core.longpaths=true",
+                "checkout",
+                "--detach",
+                commit,
+            ],
             cwd=checkout,
             shell=False,
             timeout=30,

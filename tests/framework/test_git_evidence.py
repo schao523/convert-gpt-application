@@ -51,6 +51,23 @@ class GitEvidenceTests(unittest.TestCase):
         self.assertEqual(report.status, "PASS")
         self.assertEqual(report.codes, ())
 
+    def test_fresh_checkout_enables_git_long_paths(self) -> None:
+        with mock.patch(
+            "obvious_one_plugin_framework.git_evidence.subprocess.run",
+            wraps=subprocess.run,
+        ) as run:
+            report = verify_git_evidence(
+                self.repo, SCOPES, commit="HEAD", fresh_checkout=True
+            )
+
+        clone = next(call for call in run.call_args_list if "clone" in call.args[0])
+        checkout = next(
+            call for call in run.call_args_list if "checkout" in call.args[0]
+        )
+        self.assertEqual(report.status, "PASS")
+        self.assertIn("core.longpaths=true", clone.args[0])
+        self.assertIn("core.longpaths=true", checkout.args[0])
+
     def test_dual_runtime_git_evidence_still_checks_both_scopes(self) -> None:
         (self.repo / "openclaw/demo/CONTENT-MANIFEST.json").write_bytes(b'{"drift":true}\n')
 
