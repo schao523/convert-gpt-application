@@ -75,6 +75,19 @@ class AgentsContractTests(unittest.TestCase):
         ):
             self.assertIn(fragment, text)
 
+    def test_governs_legacy_plugin_builder_adoption_without_evidence_relabeling(self) -> None:
+        text = AGENTS.read_text(encoding="utf-8")
+        for fragment in (
+            "workbench-legacy-plugin-builder-adoption-v1",
+            "--legacy-adoption",
+            "immutable imported bytes",
+            "explicit owner authority",
+            "unsupported legacy runtime evidence",
+            "not Plugin Builder v2/v3 evidence",
+        ):
+            with self.subTest(fragment=fragment):
+                self.assertIn(fragment, text)
+
 
 if __name__ == "__main__":
     unittest.main()

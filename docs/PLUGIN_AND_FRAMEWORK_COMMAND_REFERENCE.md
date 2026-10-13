@@ -370,6 +370,37 @@ target runtime, the `obvious-one` marketplace, and
 identity mismatches, unsafe archives, undeclared executable or dependency
 content, and stale evidence fail closed.
 
+For an exact historical deterministic-content-v2 Plugin Builder ZIP, use the
+separate `workbench-legacy-plugin-builder-adoption-v1` record as explicit owner authority
+instead of package metadata:
+
+```powershell
+python -B -m obvious_one_plugin_framework.cli prepare-plugin-zip-marketplace `
+  --archive .\path\<plugin-id>.zip `
+  --legacy-adoption .\path\legacy-adoption.json `
+  --publication-decisions .\path\publication-decisions.json `
+  --repository D:\GitHub\convert-gpt-application `
+  --output .\.tmp\plugin-onboarding\<plugin-id> `
+  --json
+```
+
+The `--package-metadata` and `--legacy-adoption` options are mutually
+exclusive and exactly one is required. The adoption record must close the
+archive inventory, internal manifests, plugin identity, approved executable
+and dependency paths, and immutable imported bytes. It is not Plugin Builder v2/v3 evidence,
+does not authenticate the historical producer, and cannot be
+inferred from an inspection report. Legacy runtime evidence is unsupported:
+do not combine `--legacy-adoption` with `--evidence`. Successful adoption is
+only `STATICALLY VERIFIED`; installed-runtime layers remain `NOT VERIFIED`.
+Arbitrary legacy ZIPs, mixed authorities, changed bytes, stale approvals, and
+undeclared content fail closed.
+
+The separate `plugin-publication-decisions-v1` publication decisions remain
+mandatory. They supply licensing, redistribution, third-party-content,
+destination, and public-marketplace authority that the adoption record does
+not grant. This command prepares a reviewable proposal; it does not publish,
+adopt the application, mutate the marketplace, push Git, or create a release.
+
 On success the command creates an owned proposal directory containing
 `onboarding-result.json`, `onboarding-proposal.json`, `catalog-entry.json`, and
 an `application/` tree. The application tree contains exact imported plugin
