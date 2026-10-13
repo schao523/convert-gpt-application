@@ -6,7 +6,7 @@ from hashlib import sha256
 import json
 import os
 from pathlib import Path, PurePosixPath, PureWindowsPath
-from tempfile import TemporaryDirectory
+from tempfile import TemporaryDirectory, gettempdir
 from typing import TYPE_CHECKING, Mapping
 
 from .results import ArtifactRecord, Diagnostic, OperationResult
@@ -126,8 +126,13 @@ def validate_marketplace_receipt_output(
 
     root = Path(marketplace).resolve()
     lexical = Path(os.path.abspath(Path(output)))
+    platform_temp = Path(os.path.abspath(gettempdir()))
     for component in reversed((lexical, *lexical.parents)):
         if _path_is_link(component):
+            if lexical.is_relative_to(platform_temp) and platform_temp.is_relative_to(
+                component
+            ):
+                continue
             raise ValueError("unsafe_receipt_output")
     destination = lexical.resolve()
     if (
