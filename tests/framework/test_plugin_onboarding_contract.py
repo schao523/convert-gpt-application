@@ -6,8 +6,10 @@ import tempfile
 import unittest
 
 from obvious_one_plugin_framework.plugin_onboarding.contract import (
+    LegacyPluginBuilderAdoption,
     OnboardingError,
     WorkbenchRepairMetadata,
+    load_legacy_plugin_builder_adoption,
     load_onboarding_metadata,
     load_package_metadata,
     load_publication_decisions,
@@ -15,6 +17,8 @@ from obvious_one_plugin_framework.plugin_onboarding.contract import (
 from tests.framework.plugin_onboarding_fixtures import (
     canonical_bytes,
     write_plugin_builder_fixture,
+    write_legacy_adoption,
+    write_legacy_plugin_builder_fixture,
     write_legacy_repair_fixture,
     write_publication_decisions,
 )
@@ -67,6 +71,61 @@ class PluginOnboardingContractTests(unittest.TestCase):
                 self.assertEqual(
                     metadata.capabilities_sha256,
                     "3" * 64 if schema.endswith("v3") else None,
+                )
+
+    def test_legacy_plugin_builder_adoption_loads_exact_authority(self) -> None:
+        fixture = write_legacy_plugin_builder_fixture(self.root / "legacy-adoption")
+
+        adoption = load_legacy_plugin_builder_adoption(fixture.adoption)
+
+        self.assertIsInstance(adoption, LegacyPluginBuilderAdoption)
+        self.assertEqual(adoption.schema, "workbench-legacy-plugin-builder-adoption-v1")
+        self.assertEqual(adoption.input_profile, "PLUGIN_BUILDER_DETERMINISTIC_CONTENT_V2")
+        self.assertEqual(adoption.plugin_id, "sample-plugin")
+        self.assertEqual(adoption.version, "1.2.3")
+        self.assertEqual(adoption.archive_sha256, fixture.adoption_payload["archive_sha256"])
+        self.assertEqual(tuple(member.path for member in adoption.members), tuple(item["path"] for item in fixture.adoption_payload["members"]))
+        self.assertEqual(adoption.executable_files, ("scripts/helper.py",))
+        self.assertEqual(adoption.dependency_files, ("requirements.txt",))
+        identity = adoption.identity_payload()
+        self.assertNotIn("decision_recorded_at", identity)
+        self.assertEqual(set(identity), set(fixture.adoption_payload) - {"decision_recorded_at"})
+
+    def test_legacy_plugin_builder_adoption_fails_closed(self) -> None:
+        fixture = write_legacy_plugin_builder_fixture(self.root / "legacy-invalid")
+        members = list(fixture.adoption_payload["members"])
+        cases = (
+            ({"unexpected": True}, None, "onboarding.legacy_adoption.unknown_key", "FAIL"),
+            ({}, "archive_sha256", "onboarding.legacy_adoption.missing_key", "FAIL"),
+            ({"archive_sha256": "A" * 64}, None, "onboarding.legacy_adoption.invalid_digest", "FAIL"),
+            ({"plugin_id": "Sample Plugin"}, None, "onboarding.legacy_adoption.invalid_plugin_id", "FAIL"),
+            ({"version": "1.2"}, None, "onboarding.legacy_adoption.invalid_version", "FAIL"),
+            ({"input_profile": "PLUGIN_BUILDER_PACKAGE_V3"}, None, "onboarding.legacy_adoption.invalid_input_profile", "FAIL"),
+            ({"purpose": "SOMETHING_ELSE"}, None, "onboarding.legacy_adoption.invalid_purpose", "FAIL"),
+            ({"content_manifest_path": "docs/CONTENT-MANIFEST.json"}, None, "onboarding.legacy_adoption.invalid_content_manifest_path", "FAIL"),
+            ({"candidate_manifest_path": "candidate.json"}, None, "onboarding.legacy_adoption.invalid_candidate_manifest_path", "FAIL"),
+            ({"verification_report_path": "verification.json"}, None, "onboarding.legacy_adoption.invalid_verification_report_path", "FAIL"),
+            ({"members": [*members, members[0]]}, None, "onboarding.legacy_adoption.duplicate_member_path", "FAIL"),
+            ({"members": [{**members[0], "path": "../escape"}, *members[1:]]}, None, "onboarding.legacy_adoption.invalid_member_path", "FAIL"),
+            ({"executable_files": ["missing.py"]}, None, "onboarding.legacy_adoption.path_not_in_members", "FAIL"),
+            ({"dependency_files": ["requirements.txt", "requirements.txt"]}, None, "onboarding.legacy_adoption.duplicate_approved_path", "FAIL"),
+            ({"adoption_approved": False}, None, "onboarding.legacy_adoption.adoption_approval_required", "BLOCKED"),
+            ({"confirmed_by": ""}, None, "onboarding.legacy_adoption.invalid_confirmed_by", "BLOCKED"),
+            ({"decision_recorded_at": "2026-10-13T10:30:00"}, None, "onboarding.legacy_adoption.invalid_decision_recorded_at", "FAIL"),
+        )
+        for index, (overrides, removed, code, status) in enumerate(cases):
+            with self.subTest(code=code):
+                path = write_legacy_adoption(
+                    self.root / f"legacy-invalid-{index}.json",
+                    fixture,
+                    overrides=overrides,
+                )
+                if removed is not None:
+                    self.rewrite(path, lambda value, removed=removed: value.pop(removed))
+                self.assert_error(
+                    lambda path=path: load_legacy_plugin_builder_adoption(path),
+                    code=code,
+                    status=status,
                 )
 
     def test_workbench_repair_metadata_is_separate_from_builder_evidence(self) -> None:
