@@ -5,6 +5,8 @@ from pathlib import Path
 import tempfile
 import unittest
 
+import obvious_one_plugin_framework.plugin_onboarding as onboarding
+
 from obvious_one_plugin_framework.plugin_onboarding.contract import (
     LegacyPluginBuilderAdoption,
     OnboardingError,
@@ -25,6 +27,14 @@ from tests.framework.plugin_onboarding_fixtures import (
 
 
 class PluginOnboardingContractTests(unittest.TestCase):
+    def test_public_api_exports_legacy_adoption_loader_and_inspector(self) -> None:
+        self.assertIs(onboarding.LegacyPluginBuilderAdoption, LegacyPluginBuilderAdoption)
+        self.assertIs(
+            onboarding.load_legacy_plugin_builder_adoption,
+            load_legacy_plugin_builder_adoption,
+        )
+        self.assertTrue(callable(onboarding.inspect_legacy_plugin_builder_package))
+
     def setUp(self) -> None:
         self.temporary = tempfile.TemporaryDirectory()
         self.root = Path(self.temporary.name)

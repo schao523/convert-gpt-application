@@ -14,6 +14,7 @@ from .contract import (
     load_publication_decisions,
 )
 from .materialize import prepare_plugin_zip_marketplace
+from .inspection import inspect_legacy_plugin_builder_package
 from .repair_contract import (
     DelegatedReferenceRepair,
     RepairReference,
@@ -34,6 +35,7 @@ __all__ = [
     "load_onboarding_metadata",
     "load_publication_decisions",
     "prepare_plugin_zip_marketplace",
+    "inspect_legacy_plugin_builder_package",
     "DelegatedReferenceRepair",
     "RepairReference",
     "RepairResult",
