@@ -147,7 +147,9 @@ def _parser() -> argparse.ArgumentParser:
     knowledge.add_argument("--json", action="store_true")
     onboarding = commands.add_parser("prepare-plugin-zip-marketplace")
     onboarding.add_argument("--archive", required=True, type=Path)
-    onboarding.add_argument("--package-metadata", required=True, type=Path)
+    onboarding_authority = onboarding.add_mutually_exclusive_group(required=True)
+    onboarding_authority.add_argument("--package-metadata", type=Path)
+    onboarding_authority.add_argument("--legacy-adoption", type=Path)
     onboarding.add_argument("--publication-decisions", required=True, type=Path)
     onboarding.add_argument("--repository", required=True, type=Path)
     onboarding.add_argument("--output", required=True, type=Path)
@@ -264,6 +266,7 @@ def _dispatch(arguments: argparse.Namespace) -> OperationResult:
             arguments.publication_decisions,
             arguments.repository,
             arguments.output,
+            legacy_adoption=arguments.legacy_adoption,
             evidence=arguments.evidence,
         )
     if operation == "validate-knowledge":
