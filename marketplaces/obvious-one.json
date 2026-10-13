@@ -56,7 +56,7 @@
       "targets": {
         "codex": {
           "destination": "plugins/gpt-37ecb98690a080478ad351d953cdf07e",
-          "mode": "build"
+          "mode": "verify_existing"
         },
         "openclaw": {
           "mode": "not_applicable"
