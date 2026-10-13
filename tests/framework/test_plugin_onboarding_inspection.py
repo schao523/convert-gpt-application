@@ -13,11 +13,13 @@ import zipfile
 from obvious_one_plugin_framework import plugin_authoring
 from obvious_one_plugin_framework.plugin_onboarding.contract import (
     OnboardingError,
+    load_legacy_plugin_builder_adoption,
     load_onboarding_metadata,
     load_package_metadata,
 )
 from obvious_one_plugin_framework.plugin_onboarding.inspection import (
     inspect_legacy_plugin_archive,
+    inspect_legacy_plugin_builder_package,
     inspect_workbench_repaired_package,
     inspect_plugin_builder_package,
 )
@@ -27,7 +29,10 @@ from obvious_one_plugin_framework.plugin_onboarding import (
 )
 from tests.framework.plugin_onboarding_fixtures import (
     canonical_bytes,
+    rebuild_legacy_plugin_builder_fixture,
     write_plugin_builder_fixture,
+    write_legacy_adoption,
+    write_legacy_plugin_builder_fixture,
     write_legacy_repair_fixture,
     write_runtime_evidence_bundle,
 )
@@ -94,6 +99,199 @@ class PluginOnboardingInspectionTests(unittest.TestCase):
         self.assertEqual(set(inspected.evidence_states.values()), {"NOT VERIFIED"})
         self.assertIsNone(inspected.candidate_sha256)
         self.assertIsNone(inspected.verification_sha256)
+
+    def inspect_legacy_builder(self, fixture):
+        return inspect_legacy_plugin_builder_package(
+            fixture.archive,
+            load_legacy_plugin_builder_adoption(fixture.adoption),
+        )
+
+    def test_deterministic_content_v2_adoption_closes_without_runtime_promotion(self) -> None:
+        fixture = write_legacy_plugin_builder_fixture(self.root / "legacy-builder")
+
+        inspected = self.inspect_legacy_builder(fixture)
+
+        self.assertEqual(inspected.input_profile, "PLUGIN_BUILDER_DETERMINISTIC_CONTENT_V2")
+        self.assertEqual(inspected.plugin_id, "sample-plugin")
+        self.assertEqual(inspected.version, "1.2.3")
+        self.assertEqual(inspected.package_state, "STATICALLY VERIFIED")
+        self.assertIsNone(inspected.candidate_sha256)
+        self.assertIsNone(inspected.verification_sha256)
+        self.assertEqual(inspected.approved_executable_files, ("scripts/helper.py",))
+        self.assertEqual(inspected.approved_dependency_files, ("requirements.txt",))
+        self.assertEqual(inspected.executable_files, ("scripts/helper.py",))
+        self.assertEqual(inspected.dependency_files, ("requirements.txt",))
+        self.assertEqual(set(inspected.evidence_states.values()), {"NOT VERIFIED"})
+        self.assertEqual(inspected.runtime_realization_state, "NOT VERIFIED")
+        self.assertEqual(inspected.evidence_bundle_state, "NOT VERIFIED")
+        self.assertEqual(inspected.producer_claims["content_manifest_format"], "deterministic-content-manifest-v2")
+        self.assertEqual(inspected.producer_claims["candidate_manifest_format"], "candidate-content-manifest-v2")
+        self.assertEqual(inspected.producer_claims["verification_stage"], "PRE_W2")
+        self.assertEqual(inspected.producer_claims["blocking_failures"], 0)
+
+    def test_legacy_adoption_archive_and_internal_hashes_are_non_transferable(self) -> None:
+        fixture = write_legacy_plugin_builder_fixture(self.root / "legacy-hashes")
+        cases = (
+            ({"archive_sha256": "f" * 64}, "archive_sha256_mismatch"),
+            ({"member_manifest_sha256": "f" * 64}, "member_manifest_sha256_mismatch"),
+            ({"content_tree_sha256": "f" * 64}, "content_tree_sha256_mismatch"),
+            ({"content_manifest_sha256": "f" * 64}, "content_manifest_sha256_mismatch"),
+            ({"candidate_manifest_sha256": "f" * 64}, "candidate_manifest_sha256_mismatch"),
+            ({"verification_report_sha256": "f" * 64}, "verification_report_sha256_mismatch"),
+        )
+        for index, (overrides, suffix) in enumerate(cases):
+            with self.subTest(suffix=suffix):
+                adoption = write_legacy_adoption(
+                    self.root / f"legacy-hash-{index}.json",
+                    fixture,
+                    overrides=overrides,
+                )
+                self.assert_failure(
+                    lambda adoption=adoption: inspect_legacy_plugin_builder_package(
+                        fixture.archive,
+                        load_legacy_plugin_builder_adoption(adoption),
+                    ),
+                    f"onboarding.inspection.{suffix}",
+                )
+
+    def test_legacy_content_manifest_must_close_every_other_archive_member(self) -> None:
+        fixture = write_legacy_plugin_builder_fixture(self.root / "legacy-content-closure")
+        manifest_path = fixture.candidate / "CONTENT-MANIFEST.json"
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        manifest["files"] = manifest["files"][:-1]
+        manifest["file_count_excluding_manifest"] -= 1
+        manifest_path.write_bytes(canonical_bytes(manifest))
+        fixture = rebuild_legacy_plugin_builder_fixture(
+            fixture,
+            regenerate_candidate_manifest=False,
+            regenerate_content_manifest=False,
+        )
+
+        self.assert_failure(
+            lambda: self.inspect_legacy_builder(fixture),
+            "onboarding.inspection.content_manifest_members_mismatch",
+        )
+
+    def test_legacy_candidate_manifest_exclusions_are_enforced(self) -> None:
+        fixture = write_legacy_plugin_builder_fixture(self.root / "legacy-candidate-exclusions")
+        candidate_path = fixture.candidate / "docs" / "candidate-content-manifest.json"
+        candidate = json.loads(candidate_path.read_text(encoding="utf-8"))
+        candidate["self_excluded"] = False
+        candidate_path.write_bytes(canonical_bytes(candidate))
+        fixture = rebuild_legacy_plugin_builder_fixture(
+            fixture,
+            regenerate_candidate_manifest=False,
+            regenerate_content_manifest=True,
+        )
+
+        self.assert_failure(
+            lambda: self.inspect_legacy_builder(fixture),
+            "onboarding.inspection.candidate_manifest_exclusions_invalid",
+        )
+
+    def test_legacy_verification_identity_must_match_the_manifests(self) -> None:
+        fixture = write_legacy_plugin_builder_fixture(self.root / "legacy-verification")
+        report_path = fixture.candidate / "docs" / "verification-report.json"
+        report = json.loads(report_path.read_text(encoding="utf-8"))
+        report["plugin_identity"] = "other-plugin"
+        report_path.write_bytes(canonical_bytes(report))
+        fixture = rebuild_legacy_plugin_builder_fixture(fixture)
+
+        self.assert_failure(
+            lambda: self.inspect_legacy_builder(fixture),
+            "onboarding.inspection.verification_report_identity_mismatch",
+        )
+
+    def test_legacy_authority_mixing_and_unknown_internal_formats_fail_closed(self) -> None:
+        mixed = write_legacy_plugin_builder_fixture(self.root / "legacy-mixed")
+        (mixed.candidate / "PLUGIN-BUILDER-MANIFEST.json").write_bytes(
+            canonical_bytes({"schema": "plugin-builder-candidate-manifest-v3"})
+        )
+        mixed = rebuild_legacy_plugin_builder_fixture(mixed)
+        self.assert_failure(
+            lambda: self.inspect_legacy_builder(mixed),
+            "onboarding.inspection.authority_ambiguous",
+        )
+
+        unknown = write_legacy_plugin_builder_fixture(self.root / "legacy-unknown")
+        content_path = unknown.candidate / "CONTENT-MANIFEST.json"
+        content = json.loads(content_path.read_text(encoding="utf-8"))
+        content["format"] = "deterministic-content-manifest-v1"
+        content_path.write_bytes(canonical_bytes(content))
+        unknown = rebuild_legacy_plugin_builder_fixture(
+            unknown,
+            regenerate_candidate_manifest=False,
+            regenerate_content_manifest=False,
+        )
+        self.assert_failure(
+            lambda: self.inspect_legacy_builder(unknown),
+            "onboarding.inspection.content_manifest_invalid",
+        )
+
+    def test_legacy_approved_executable_and_dependency_sets_must_match_observation(self) -> None:
+        fixture = write_legacy_plugin_builder_fixture(self.root / "legacy-approved-paths")
+        cases = (
+            ({"executable_files": []}, "executable_files_mismatch"),
+            ({"dependency_files": []}, "dependency_files_mismatch"),
+        )
+        for index, (overrides, suffix) in enumerate(cases):
+            with self.subTest(suffix=suffix):
+                adoption = write_legacy_adoption(
+                    self.root / f"legacy-paths-{index}.json",
+                    fixture,
+                    overrides=overrides,
+                )
+                self.assert_failure(
+                    lambda adoption=adoption: inspect_legacy_plugin_builder_package(
+                        fixture.archive,
+                        load_legacy_plugin_builder_adoption(adoption),
+                    ),
+                    f"onboarding.inspection.{suffix}",
+                )
+
+    def test_legacy_manifest_pair_allows_later_omissions_but_not_contradictions(self) -> None:
+        omitted = write_legacy_plugin_builder_fixture(self.root / "legacy-omitted")
+        portable_path = omitted.candidate / "plugin.json"
+        portable = json.loads(portable_path.read_text(encoding="utf-8"))
+        interface = portable["extensions"]["com.openai"]["interface"]
+        for field in ("longDescription", "developerName", "category", "capabilities"):
+            interface.pop(field)
+        portable_path.write_bytes(canonical_bytes(portable))
+        omitted = rebuild_legacy_plugin_builder_fixture(omitted)
+        inspected = self.inspect_legacy_builder(omitted)
+        self.assertEqual(inspected.manifest_identity["long_description"], "A portable sample plugin for onboarding tests.")
+
+        contradictory = write_legacy_plugin_builder_fixture(self.root / "legacy-contradictory")
+        compatibility_path = contradictory.candidate / ".codex-plugin" / "plugin.json"
+        compatibility = json.loads(compatibility_path.read_text(encoding="utf-8"))
+        compatibility["description"] = "Contradictory description"
+        compatibility_path.write_bytes(canonical_bytes(compatibility))
+        contradictory = rebuild_legacy_plugin_builder_fixture(contradictory)
+        self.assert_failure(
+            lambda: self.inspect_legacy_builder(contradictory),
+            "onboarding.inspection.manifest_pair_mismatch",
+        )
+
+    def test_legacy_public_content_scan_rejects_development_imports_and_secrets(self) -> None:
+        cases = (
+            ("development.py", b"import obvious_one_plugin_framework\n", "development_import_forbidden"),
+            ("secret.txt", b"api_key = 'not-for-publication'\n", "credential_material_forbidden"),
+        )
+        for filename, content, suffix in cases:
+            with self.subTest(filename=filename):
+                fixture = write_legacy_plugin_builder_fixture(self.root / filename)
+                path = fixture.candidate / "tools" / filename
+                path.parent.mkdir(exist_ok=True)
+                path.write_bytes(content)
+                fixture = rebuild_legacy_plugin_builder_fixture(fixture)
+                adoption_payload = json.loads(fixture.adoption.read_text(encoding="utf-8"))
+                if filename.endswith(".py"):
+                    adoption_payload["executable_files"].append(f"tools/{filename}")
+                    fixture.adoption.write_bytes(canonical_bytes(adoption_payload))
+                self.assert_failure(
+                    lambda fixture=fixture: self.inspect_legacy_builder(fixture),
+                    f"onboarding.inspection.{suffix}",
+                )
 
     def test_repaired_inspection_closes_workbench_metadata_without_builder_claims(self) -> None:
         fixture = write_legacy_repair_fixture(self.root / "repair")

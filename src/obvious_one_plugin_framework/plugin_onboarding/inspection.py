@@ -15,6 +15,7 @@ import zipfile
 from .. import plugin_authoring
 from ..package_builder import FORBIDDEN_NAMES, SECRET_FRAGMENTS
 from .contract import (
+    LegacyPluginBuilderAdoption,
     OnboardingError,
     PackageMember,
     PackageMetadata,
@@ -110,6 +111,8 @@ class OnboardingInspection:
     evidence_bundle_state: str
     input_profile: str
     producer_claims: Mapping[str, object]
+    approved_executable_files: tuple[str, ...] = ()
+    approved_dependency_files: tuple[str, ...] = ()
     diagnostics: tuple[str, ...] = ()
 
 
@@ -466,6 +469,307 @@ def _flat_manifest_identity(root: Path) -> dict[str, object]:
             else interface.get("defaultPrompt")
         ),
     }
+
+
+def _legacy_manifest_members(value: object, code: str) -> tuple[PackageMember, ...]:
+    if not isinstance(value, list):
+        raise _fail(code)
+    members: list[PackageMember] = []
+    paths: set[str] = set()
+    folded: set[str] = set()
+    for item in value:
+        if not isinstance(item, dict) or set(item) != {"path", "size", "sha256"}:
+            raise _fail(code)
+        path = item.get("path")
+        size = item.get("size")
+        digest = item.get("sha256")
+        if (
+            not isinstance(path, str)
+            or not path
+            or "\\" in path
+            or PurePosixPath(path).is_absolute()
+            or PurePosixPath(path).as_posix() != path
+            or any(part in {"", ".", ".."} for part in PurePosixPath(path).parts)
+            or not isinstance(size, int)
+            or isinstance(size, bool)
+            or size < 0
+            or not isinstance(digest, str)
+            or _DIGEST.fullmatch(digest) is None
+        ):
+            raise _fail(code)
+        if path in paths or path.casefold() in folded:
+            raise _fail(code)
+        paths.add(path)
+        folded.add(path.casefold())
+        members.append(PackageMember(path, size, digest))
+    return tuple(members)
+
+
+def _legacy_manifest_identity(root: Path) -> dict[str, object]:
+    portable = _load_json(root / "plugin.json", "portable_manifest_invalid")
+    compatibility = _load_json(
+        root / ".codex-plugin" / "plugin.json", "compatibility_manifest_invalid"
+    )
+    portable_author = portable.get("author")
+    compatibility_author = compatibility.get("author")
+    portable_extensions = portable.get("extensions")
+    portable_openai = (
+        portable_extensions.get("com.openai")
+        if isinstance(portable_extensions, dict)
+        else None
+    )
+    portable_interface = (
+        portable_openai.get("interface") if isinstance(portable_openai, dict) else None
+    )
+    compatibility_interface = compatibility.get("interface")
+    if (
+        not isinstance(portable_author, dict)
+        or not isinstance(compatibility_author, dict)
+        or not isinstance(portable_interface, dict)
+        or not isinstance(compatibility_interface, dict)
+    ):
+        raise _fail("portable_manifest_invalid")
+    for field in ("name", "version", "description"):
+        if not isinstance(portable.get(field), str) or not portable.get(field):
+            raise _fail("portable_manifest_invalid")
+        if compatibility.get(field) != portable.get(field):
+            raise _fail("manifest_pair_mismatch")
+    if (
+        not isinstance(portable_author.get("name"), str)
+        or compatibility_author.get("name") != portable_author.get("name")
+    ):
+        raise _fail("manifest_pair_mismatch")
+    for field in set(portable_interface) & set(compatibility_interface):
+        if _canonical_bytes(portable_interface[field]) != _canonical_bytes(
+            compatibility_interface[field]
+        ):
+            raise _fail("manifest_pair_mismatch")
+
+    def interface_value(field: str) -> object:
+        if field in compatibility_interface:
+            return compatibility_interface[field]
+        return portable_interface.get(field)
+
+    capabilities = interface_value("capabilities")
+    if capabilities is not None and not isinstance(capabilities, list):
+        raise _fail("compatibility_manifest_invalid")
+    default_prompt = interface_value("defaultPrompt")
+    return {
+        "plugin_id": portable["name"],
+        "version": portable["version"],
+        "author": portable_author["name"],
+        "description": portable["description"],
+        "display_name": interface_value("displayName"),
+        "short_description": interface_value("shortDescription"),
+        "long_description": interface_value("longDescription"),
+        "developer_name": interface_value("developerName"),
+        "category": interface_value("category"),
+        "capabilities": tuple(capabilities or ()),
+        "default_prompt": (
+            tuple(default_prompt) if isinstance(default_prompt, list) else default_prompt
+        ),
+    }
+
+
+def inspect_legacy_plugin_builder_package(
+    archive: Path,
+    adoption: LegacyPluginBuilderAdoption,
+) -> OnboardingInspection:
+    """Close one approved deterministic-content-v2 historical package."""
+
+    try:
+        inventory = plugin_authoring.inventory_archive(Path(archive))
+    except plugin_authoring.PluginAuthoringError as exc:
+        raise _fail(exc.code, exc.detail) from exc
+    if inventory.archive_sha256 != adoption.archive_sha256:
+        raise _fail("archive_sha256_mismatch")
+    if (
+        sha256(_canonical_bytes([asdict(member) for member in adoption.members])).hexdigest()
+        != adoption.member_manifest_sha256
+    ):
+        raise _fail("member_manifest_sha256_mismatch")
+    if tuple(map(_member_tuple, inventory.members)) != tuple(
+        map(_member_tuple, adoption.members)
+    ):
+        raise _fail("archive_members_mismatch")
+
+    with tempfile.TemporaryDirectory(prefix="plugin-onboarding-legacy-builder-") as name:
+        extracted = Path(name) / "archive"
+        try:
+            plugin_authoring.extract_archive(Path(archive), extracted)
+            located = plugin_authoring.locate_plugin_archive_root(extracted)
+        except plugin_authoring.PluginAuthoringError as exc:
+            raise _fail(exc.code, exc.detail) from exc
+        if located.profile != "LEGACY_FLAT":
+            raise _fail("envelope_profile_mismatch")
+        root = located.path
+        required = {
+            "plugin.json",
+            ".codex-plugin/plugin.json",
+            adoption.content_manifest_path,
+            adoption.candidate_manifest_path,
+            adoption.verification_report_path,
+        }
+        observed_paths = {member.path for member in inventory.members}
+        if not required.issubset(observed_paths):
+            raise _fail("authority_unknown")
+        competing = {
+            "PLUGIN-BUILDER-MANIFEST.json",
+            "WORKBENCH-REPAIR-MANIFEST.json",
+        } & observed_paths
+        if competing:
+            raise _fail("authority_ambiguous")
+        if plugin_authoring.tree_sha256(root) != adoption.content_tree_sha256:
+            raise _fail("content_tree_sha256_mismatch")
+
+        bound_files = (
+            (adoption.content_manifest_path, adoption.content_manifest_sha256, "content_manifest_sha256_mismatch"),
+            (adoption.candidate_manifest_path, adoption.candidate_manifest_sha256, "candidate_manifest_sha256_mismatch"),
+            (adoption.verification_report_path, adoption.verification_report_sha256, "verification_report_sha256_mismatch"),
+        )
+        members_by_path = {member.path: member for member in inventory.members}
+        for relative, expected_digest, error in bound_files:
+            member = members_by_path.get(relative)
+            if member is None or member.sha256 != expected_digest:
+                raise _fail(error)
+
+        content = _load_json(
+            root / adoption.content_manifest_path, "content_manifest_invalid"
+        )
+        if (
+            set(content)
+            != {"plugin", "version", "format", "file_count_excluding_manifest", "files"}
+            or content.get("format") != "deterministic-content-manifest-v2"
+            or content.get("plugin") != adoption.plugin_id
+            or content.get("version") != adoption.version
+        ):
+            raise _fail("content_manifest_invalid")
+        content_members = _legacy_manifest_members(
+            content.get("files"), "content_manifest_invalid"
+        )
+        expected_content_members = tuple(
+            member
+            for member in inventory.members
+            if member.path != adoption.content_manifest_path
+        )
+        if (
+            content.get("file_count_excluding_manifest") != len(expected_content_members)
+            or tuple(map(_member_tuple, content_members))
+            != tuple(map(_member_tuple, expected_content_members))
+        ):
+            raise _fail("content_manifest_members_mismatch")
+
+        candidate = _load_json(
+            root / adoption.candidate_manifest_path, "candidate_manifest_invalid"
+        )
+        if (
+            set(candidate)
+            != {"version", "format", "self_excluded", "package_manifest_excluded", "files"}
+            or candidate.get("format") != "candidate-content-manifest-v2"
+            or candidate.get("version") != adoption.version
+        ):
+            raise _fail("candidate_manifest_invalid")
+        if (
+            candidate.get("self_excluded") is not True
+            or candidate.get("package_manifest_excluded") is not True
+        ):
+            raise _fail("candidate_manifest_exclusions_invalid")
+        candidate_members = _legacy_manifest_members(
+            candidate.get("files"), "candidate_manifest_invalid"
+        )
+        excluded = {adoption.content_manifest_path, adoption.candidate_manifest_path}
+        expected_candidate_members = tuple(
+            member for member in inventory.members if member.path not in excluded
+        )
+        if tuple(map(_member_tuple, candidate_members)) != tuple(
+            map(_member_tuple, expected_candidate_members)
+        ):
+            raise _fail("candidate_manifest_members_mismatch")
+
+        identity = _legacy_manifest_identity(root)
+        if (
+            identity["plugin_id"] != adoption.plugin_id
+            or identity["version"] != adoption.version
+        ):
+            raise _fail("plugin_identity_mismatch")
+        verification = _load_json(
+            root / adoption.verification_report_path, "verification_report_invalid"
+        )
+        if (
+            verification.get("plugin_identity") != adoption.plugin_id
+            or verification.get("candidate_version") != adoption.version
+        ):
+            raise _fail("verification_report_identity_mismatch")
+
+        mcp_files, dependency_files, executable_files = _scan_public_content(root)
+        if tuple(sorted(adoption.executable_files)) != executable_files:
+            raise _fail("executable_files_mismatch")
+        if tuple(sorted(adoption.dependency_files)) != dependency_files:
+            raise _fail("dependency_files_mismatch")
+        evidence_states = MappingProxyType(
+            {layer: "NOT VERIFIED" for layer in _EVIDENCE_LAYERS}
+        )
+        producer_claims = {
+            "content_manifest_format": content["format"],
+            "candidate_manifest_format": candidate["format"],
+            "plugin_identity": verification.get("plugin_identity"),
+            "candidate_version": verification.get("candidate_version"),
+            "candidate_logical_sha256": verification.get("candidate_logical_sha256"),
+            "verification_stage": verification.get("verification_stage"),
+            "blocking_failures": verification.get("blocking_failures"),
+            **{
+                key: value
+                for key, value in verification.items()
+                if key
+                not in {
+                    "plugin_identity",
+                    "candidate_version",
+                    "candidate_logical_sha256",
+                    "verification_stage",
+                    "blocking_failures",
+                }
+            },
+        }
+        return OnboardingInspection(
+            schema="plugin-onboarding-inspection-v1",
+            plugin_id=adoption.plugin_id,
+            version=adoption.version,
+            package_state="STATICALLY VERIFIED",
+            archive_sha256=adoption.archive_sha256,
+            candidate_sha256=None,
+            verification_sha256=None,
+            content_tree_sha256=adoption.content_tree_sha256,
+            member_manifest_sha256=adoption.member_manifest_sha256,
+            members=adoption.members,
+            candidate_members=plugin_authoring.tree_manifest(root),
+            manifest_profile="PORTABLE_WITH_OPENAI_COMPATIBILITY",
+            manifest_identity=MappingProxyType(identity),
+            preflight_evidence=MappingProxyType({}),
+            preflight_evidence_sha256=sha256(_canonical_bytes({})).hexdigest(),
+            command_evidence=(),
+            fallback_activations=(),
+            producer_evidence_states=MappingProxyType({}),
+            tool_bindings=(),
+            tool_contracts_sha256=sha256(_canonical_bytes([])).hexdigest(),
+            tool_contracts=(),
+            offline_validator_files=(),
+            mcp_files=mcp_files,
+            dependency_files=dependency_files,
+            executable_files=executable_files,
+            executed_files=(),
+            runtime_realization_state="NOT VERIFIED",
+            capabilities_sha256=None,
+            realizations_sha256=None,
+            adapter_registry_sha256=None,
+            generated_runtime_configuration_sha256=None,
+            runtime_realizations=(),
+            evidence_states=evidence_states,
+            evidence_bundle_state="NOT VERIFIED",
+            input_profile="PLUGIN_BUILDER_DETERMINISTIC_CONTENT_V2",
+            producer_claims=MappingProxyType(producer_claims),
+            approved_executable_files=adoption.executable_files,
+            approved_dependency_files=adoption.dependency_files,
+        )
 
 
 def inspect_legacy_plugin_archive(archive: Path) -> OnboardingInspection:

@@ -168,6 +168,78 @@ def write_legacy_adoption(
     return destination
 
 
+def rebuild_legacy_plugin_builder_fixture(
+    fixture: LegacyPluginBuilderFixture,
+    *,
+    regenerate_candidate_manifest: bool = True,
+    regenerate_content_manifest: bool = True,
+) -> LegacyPluginBuilderFixture:
+    candidate_manifest_path = fixture.candidate / "docs" / "candidate-content-manifest.json"
+    content_manifest_path = fixture.candidate / "CONTENT-MANIFEST.json"
+    if regenerate_candidate_manifest:
+        candidate_members = [
+            asdict(member)
+            for member in plugin_authoring.tree_manifest(fixture.candidate)
+            if member.path
+            not in {"CONTENT-MANIFEST.json", "docs/candidate-content-manifest.json"}
+        ]
+        candidate_manifest_path.write_bytes(
+            canonical_bytes(
+                {
+                    "version": "1.2.3",
+                    "format": "candidate-content-manifest-v2",
+                    "self_excluded": True,
+                    "package_manifest_excluded": True,
+                    "files": candidate_members,
+                }
+            )
+        )
+    if regenerate_content_manifest:
+        content_members = [
+            asdict(member)
+            for member in plugin_authoring.tree_manifest(fixture.candidate)
+            if member.path != "CONTENT-MANIFEST.json"
+        ]
+        content_manifest_path.write_bytes(
+            canonical_bytes(
+                {
+                    "plugin": "sample-plugin",
+                    "version": "1.2.3",
+                    "format": "deterministic-content-manifest-v2",
+                    "file_count_excluding_manifest": len(content_members),
+                    "files": content_members,
+                }
+            )
+        )
+    archive_sha256 = plugin_authoring.write_deterministic_zip(
+        fixture.candidate, fixture.archive
+    )
+    inventory = plugin_authoring.inventory_archive(fixture.archive)
+    members = [asdict(member) for member in inventory.members]
+    payload = json.loads(fixture.adoption.read_text(encoding="utf-8"))
+    payload.update(
+        {
+            "archive_sha256": archive_sha256,
+            "member_manifest_sha256": sha256(canonical_bytes(members)).hexdigest(),
+            "members": members,
+            "content_tree_sha256": plugin_authoring.tree_sha256(fixture.candidate),
+            "content_manifest_sha256": sha256(content_manifest_path.read_bytes()).hexdigest(),
+            "candidate_manifest_sha256": sha256(candidate_manifest_path.read_bytes()).hexdigest(),
+            "verification_report_sha256": sha256(
+                (fixture.candidate / "docs" / "verification-report.json").read_bytes()
+            ).hexdigest(),
+        }
+    )
+    fixture.adoption.write_bytes(canonical_bytes(payload))
+    return LegacyPluginBuilderFixture(
+        fixture.root,
+        fixture.candidate,
+        fixture.archive,
+        fixture.adoption,
+        payload,
+    )
+
+
 def write_legacy_repair_fixture(root: Path) -> LegacyRepairFixture:
     fixture_root = Path(root)
     fixture_root.mkdir(parents=True, exist_ok=True)
