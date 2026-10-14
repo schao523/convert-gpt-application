@@ -28,5 +28,15 @@ jobs:
         run: python -B -m unittest discover -s . -v
       - name: Run Vibe Coding Designer suite
         run: python -B -m unittest discover -s applications/vibe-coding-designer/tests -v
+      - name: Run every application verification profile
+        run: python -B scripts/verify_extraction.py --all
+      - name: Verify published Growing With Children artifact
+        shell: pwsh
+        run: |
+          $marketplacePath = Join-Path $env:RUNNER_TEMP 'obvious-one-plugins'
+          git clone --depth 1 https://github.com/schao523/obvious-one-plugins.git $marketplacePath
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python -B scripts/verify_extraction.py --application growing-with-children --marketplace $marketplacePath
+          exit $LASTEXITCODE
       - name: Check patch whitespace
         run: git diff --check

@@ -142,6 +142,59 @@ class VerificationConfigTests(unittest.TestCase):
             self.assertIsNone(config.verification.marketplace)
             self.assertEqual(config.verification.commands[0].marketplace_targets, ())
 
+    def test_verify_existing_codex_profile_requires_pinned_digest_and_no_build_command(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            repository = Path(temp)
+            application = _make_application(repository)
+            data = self._conversion(application)
+            profile = data["verification"]["codex_build"]  # type: ignore[index]
+            profile.clear()
+            profile.update({
+                "mode": "verify_existing",
+                "artifact_path": "plugins/{plugin_id}",
+                "expected_content_sha256": "a" * 64,
+            })
+            self._write_conversion(application, data)
+
+            config = self._load(application, repository)
+            self.assertEqual(config.verification.codex_build.mode, "verify_existing")
+            self.assertEqual(config.verification.codex_build.argv, ())
+            self.assertEqual(config.verification.codex_build.expected_content_sha256, "a" * 64)
+
+            del profile["expected_content_sha256"]
+            self._write_conversion(application, data)
+            with self.assertRaisesRegex(ValueError, "expected_content_sha256"):
+                self._load(application, repository)
+
+            profile["expected_content_sha256"] = "a" * 64
+            profile["argv"] = ["{python}", "build.py"]
+            self._write_conversion(application, data)
+            with self.assertRaisesRegex(ValueError, "argv"):
+                self._load(application, repository)
+
+            del profile["argv"]
+            profile["mode"] = []
+            self._write_conversion(application, data)
+            with self.assertRaisesRegex(ValueError, "mode"):
+                self._load(application, repository)
+
+    def test_external_source_kind_must_be_explicit_and_valid(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            repository = Path(temp)
+            application = _make_application(repository)
+            data = self._conversion(application)
+            provenance = data["provenance"]
+            provenance["source_kind"] = "external_content_addressed"
+            self._write_conversion(application, data)
+            self.assertEqual(
+                self._load(application, repository).provenance.source_kind,
+                "external_content_addressed",
+            )
+            provenance["source_kind"] = []
+            self._write_conversion(application, data)
+            with self.assertRaisesRegex(ValueError, "source_kind"):
+                self._load(application, repository)
+
     def test_marketplace_command_targets_are_explicit_and_portable(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
             repository = Path(temp)

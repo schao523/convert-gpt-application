@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 import json
 from pathlib import Path, PurePosixPath
+import re
 from string import Formatter
 from typing import Any, Iterable, Mapping, Sequence
 
@@ -38,9 +39,9 @@ _ROOT_KEYS = {
 }
 _VERIFICATION_KEYS = {"test_directory", "commands", "codex_build", "marketplace"}
 _COMMAND_KEYS = {"id", "argv", "clean_environment_prefixes", "marketplace_targets"}
-_CODEX_BUILD_KEYS = {"argv", "artifact_path"}
+_CODEX_BUILD_KEYS = {"argv", "artifact_path", "mode", "expected_content_sha256"}
 _MARKETPLACE_KEYS = {"codex_path", "openclaw_path", "approved_delta"}
-_PROVENANCE_KEYS = {"source_repository", "incorporated_branches", "inventory_rules"}
+_PROVENANCE_KEYS = {"source_repository", "source_kind", "incorporated_branches", "inventory_rules"}
 _INVENTORY_RULE_KEYS = {"root", "classification", "include"}
 
 
@@ -60,6 +61,8 @@ class VerificationCommand:
 class CodexBuildProfile:
     argv: tuple[str, ...]
     artifact_path: str
+    mode: str = "build"
+    expected_content_sha256: str | None = None
 
 
 @dataclass(frozen=True)
@@ -81,6 +84,7 @@ class ProvenanceProfile:
     source_repository: str
     incorporated_branches: tuple[str, ...]
     inventory_rules: tuple[ProvenanceInventoryRule, ...]
+    source_kind: str = "git"
 
 
 @dataclass(frozen=True)
@@ -241,7 +245,10 @@ def _safe_rule_path(value: Any, config_path: Path, field: str, *, allow_dot: boo
 
 def _load_provenance(raw: Any, *, config_path: Path) -> ProvenanceProfile:
     profile = _mapping(raw, config_path, "provenance")
-    _only_keys(profile, _PROVENANCE_KEYS, config_path, "provenance")
+    _only_keys(profile, _PROVENANCE_KEYS, config_path, "provenance", optional={"source_kind"})
+    source_kind = profile.get("source_kind", "git")
+    if not isinstance(source_kind, str) or source_kind not in {"git", "external_content_addressed"}:
+        raise _error(config_path, "provenance.source_kind", "invalid source kind")
     rules_raw = profile["inventory_rules"]
     if not isinstance(rules_raw, list) or not rules_raw:
         raise _error(config_path, "provenance.inventory_rules", "must be a non-empty list")
@@ -275,6 +282,7 @@ def _load_provenance(raw: Any, *, config_path: Path) -> ProvenanceProfile:
             "provenance.incorporated_branches",
         ),
         inventory_rules=tuple(rules),
+        source_kind=source_kind,
     )
 
 
@@ -354,12 +362,30 @@ def _load_verification(
         )
 
     build = _mapping(profile["codex_build"], config_path, "verification.codex_build")
-    _only_keys(build, _CODEX_BUILD_KEYS, config_path, "verification.codex_build")
+    mode = build.get("mode", "build")
+    if not isinstance(mode, str) or mode not in {"build", "verify_existing"}:
+        raise _error(config_path, "verification.codex_build.mode", "invalid mode")
+    _only_keys(
+        build, _CODEX_BUILD_KEYS, config_path, "verification.codex_build",
+        optional={"mode", "expected_content_sha256"} if mode == "build" else {"argv"},
+    )
+    if mode == "verify_existing" and "argv" in build:
+        raise _error(config_path, "verification.codex_build.argv", "not allowed for verify_existing")
+    if mode == "build" and "expected_content_sha256" in build:
+        raise _error(config_path, "verification.codex_build.expected_content_sha256", "not allowed for build")
+    expected_digest = build.get("expected_content_sha256")
+    if mode == "verify_existing" and (
+        not isinstance(expected_digest, str)
+        or re.fullmatch(r"[0-9a-f]{64}", expected_digest) is None
+    ):
+        raise _error(config_path, "verification.codex_build.expected_content_sha256", "invalid digest")
     codex_build = CodexBuildProfile(
-        argv=_argv(build["argv"], config_path, "verification.codex_build.argv"),
+        argv=_argv(build["argv"], config_path, "verification.codex_build.argv") if mode == "build" else (),
         artifact_path=_artifact_template(
             build["artifact_path"], config_path, "verification.codex_build.artifact_path"
         ),
+        mode=mode,
+        expected_content_sha256=expected_digest,
     )
 
     marketplace_profile: MarketplaceProfile | None = None

@@ -75,6 +75,87 @@ class VerifierSelectionAndAggregationTests(unittest.TestCase):
             command_runner=lambda command, **kwargs: subprocess.CompletedProcess(command, 0, "", ""),
         )
 
+    def test_verify_existing_codex_uses_pinned_published_bytes_without_rebuild(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            repository = _fixture_repository(Path(temp))
+            marketplace = Path(temp) / "marketplace"
+            plugin = marketplace / "plugins" / "plugin-alpha"
+            plugin.mkdir(parents=True)
+            (plugin / "plugin.json").write_text('{"name":"plugin-alpha"}\n', encoding="utf-8")
+            subprocess.run(["git", "init", str(marketplace)], check=True, capture_output=True)
+            subprocess.run(["git", "-C", str(marketplace), "add", "."], check=True, capture_output=True)
+            subprocess.run(
+                ["git", "-C", str(marketplace), "-c", "user.name=Test", "-c", "user.email=test@example.org", "commit", "-m", "fixture"],
+                check=True, capture_output=True,
+            )
+            application = repository / "applications" / "plugin-alpha"
+            conversion_path = application / "conversion.json"
+            conversion = json.loads(conversion_path.read_text(encoding="utf-8"))
+            conversion["verification"]["codex_build"] = {
+                "mode": "verify_existing",
+                "artifact_path": "plugins/{plugin_id}",
+                "expected_content_sha256": verifier._tree_identity(plugin),
+            }
+            conversion_path.write_text(json.dumps(conversion), encoding="utf-8")
+            config = verifier.discover_applications(repository)[0]
+            commands = []
+            context = RunContext(
+                repository_root=repository,
+                diagnostics=repository / ".tmp" / "verification",
+                python=sys.executable,
+                command_runner=lambda command, **kwargs: (
+                    commands.append(command) or subprocess.CompletedProcess(command, 0, "", "")
+                ),
+            )
+
+            absent = verifier.run_application(config, context)
+            self.assertEqual(next(g.state for g in absent.gates if g.gate_id == "codex-build"), "NOT VERIFIED")
+            self.assertNotIn("codex", absent.artifacts)
+
+            available = verifier.run_application(config, RunContext(
+                repository_root=repository, diagnostics=context.diagnostics,
+                python=sys.executable, marketplace=marketplace,
+                command_runner=context.command_runner,
+            ))
+            self.assertEqual(next(g.state for g in available.gates if g.gate_id == "codex-build"), "PASS")
+            self.assertEqual(available.artifacts["codex_content_sha256"], verifier._tree_identity(plugin))
+            self.assertFalse(any("build.py" in part for command in commands for part in command))
+
+            (plugin / "plugin.json").write_text('{"name":"changed"}\n', encoding="utf-8")
+            dirty = verifier.run_application(config, RunContext(
+                repository_root=repository, diagnostics=context.diagnostics,
+                python=sys.executable, marketplace=marketplace,
+                command_runner=context.command_runner,
+            ))
+            self.assertIn("not clean", next(g.detail for g in dirty.gates if g.gate_id == "codex-build"))
+            subprocess.run(["git", "-C", str(marketplace), "add", "."], check=True, capture_output=True)
+            subprocess.run(
+                ["git", "-C", str(marketplace), "-c", "user.name=Test", "-c", "user.email=test@example.org", "commit", "-m", "changed"],
+                check=True, capture_output=True,
+            )
+            changed = verifier.run_application(config, RunContext(
+                repository_root=repository, diagnostics=context.diagnostics,
+                python=sys.executable, marketplace=marketplace,
+                command_runner=context.command_runner,
+            ))
+            self.assertIn("digest differs", next(g.detail for g in changed.gates if g.gate_id == "codex-build"))
+
+    def test_absent_marketplace_comparison_profile_does_not_claim_unpublished(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            repository = _fixture_repository(Path(temp))
+            application = repository / "applications" / "plugin-alpha"
+            path = application / "conversion.json"
+            conversion = json.loads(path.read_text(encoding="utf-8"))
+            del conversion["verification"]["marketplace"]
+            path.write_text(json.dumps(conversion), encoding="utf-8")
+            config = verifier.discover_applications(repository)[0]
+
+            result = verifier.run_application(config, self.context(repository))
+
+            gate = next(g for g in result.gates if g.gate_id == "marketplace")
+            self.assertEqual(gate.state, "NOT APPLICABLE")
+            self.assertEqual(gate.detail, "marketplace comparison is not configured")
+
     def add_hosted_contract(
         self,
         repository: Path,

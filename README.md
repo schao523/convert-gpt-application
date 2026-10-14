@@ -38,6 +38,11 @@ python -B .\scripts\verify_extraction.py `
   --marketplace D:\GitHub\obvious-one-plugins
 ```
 
+Some legacy marketplace-comparison profiles require their recorded historical
+baseline commit; a newer marketplace checkout can fail those comparisons.
+The report identifies each affected gate. Do not relabel that failure as a
+product build failure or change its historical provenance to match `HEAD`.
+
 Each invocation writes ignored logs and a combined `report.json` below a unique
 `.tmp/verification/` directory. `PASS` and `FAIL` are required-gate outcomes;
 `NOT VERIFIED` means an optional evidence source was not evaluated, and
@@ -68,6 +73,10 @@ commands:
 
 The full profile contract and legacy compatibility command are documented in
 `docs/PLUGIN_AND_FRAMEWORK_COMMAND_REFERENCE.md`.
+An approved published-only Codex artifact can use `codex_build.mode` set to
+`verify_existing` with a pinned content digest instead of requiring an
+untracked source archive. Supply a clean marketplace checkout to verify it;
+without one the artifact gate remains `NOT VERIFIED`.
 
 Legacy Plugin Builder ZIPs may be inspected read-only with
 `inspect-plugin-zip`. They are not publishable merely because inspection

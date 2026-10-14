@@ -125,11 +125,12 @@ def build_provenance(
         "incorporated_branches": list(config.provenance.incorporated_branches),
         "source_inventory": inventory,
     }
-    try:
-        return {"schema_version": 2, **common, "source_commit": _git_head(Path(source_repo).resolve())}
-    except ProvenanceError as exc:
-        if str(exc) != "git_commit_unavailable":
-            raise
+    if config.provenance.source_kind != "external_content_addressed":
+        try:
+            return {"schema_version": 2, **common, "source_commit": _git_head(Path(source_repo).resolve())}
+        except ProvenanceError as exc:
+            if str(exc) != "git_commit_unavailable":
+                raise
     encoded = json.dumps(
         inventory, ensure_ascii=False, separators=(",", ":"), sort_keys=True
     ).encode("utf-8")
@@ -156,6 +157,8 @@ def validate_provenance(
     version = payload.get("schema_version")
     if type(version) is not int or version not in (1, 2, 3):
         raise ProvenanceError("unsupported_schema_version")
+    if config.provenance.source_kind == "external_content_addressed" and version != 3:
+        raise ProvenanceError("source_kind_schema_mismatch")
     if set(payload) - _SCHEMA_KEYS[version]:
         raise ProvenanceError("unknown_provenance_field")
     if version in (2, 3):
@@ -172,7 +175,17 @@ def validate_provenance(
             raise ProvenanceError("invalid_source_tree_sha256")
     elif not _COMMIT.fullmatch(_required_text(payload, "source_commit")):
         raise ProvenanceError("invalid_source_commit")
-    if not _COMMIT.fullmatch(_required_text(payload, "marketplace_commit")):
+    marketplace_commit = payload.get("marketplace_commit")
+    explicit_external_source = (
+        version == 3
+        and config.provenance.source_kind == "external_content_addressed"
+        and "marketplace_commit" in payload
+        and marketplace_commit is None
+    )
+    if not explicit_external_source and (
+        not isinstance(marketplace_commit, str)
+        or not _COMMIT.fullmatch(marketplace_commit)
+    ):
         raise ProvenanceError("invalid_marketplace_commit")
     branches = payload.get("incorporated_branches")
     if not isinstance(branches, list) or not all(

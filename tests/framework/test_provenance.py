@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from hashlib import sha256
+from dataclasses import replace
 from pathlib import Path, PurePosixPath
 import contextlib
 import io
@@ -74,6 +75,25 @@ def _config(root: Path) -> ApplicationConfig:
 
 
 class ProvenanceGenerationTests(unittest.TestCase):
+    def test_explicit_external_source_stays_content_addressed_when_stored_in_git(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            source = root / "source"
+            marketplace = root / "marketplace"
+            _git_repository(source, "source.pdf")
+            _git_repository(marketplace, "catalog.json")
+            config = _config(root)
+            config = replace(config, provenance=replace(
+                config.provenance, source_kind="external_content_addressed"
+            ))
+
+            payload = build_provenance(config, source, marketplace)
+
+            self.assertEqual(payload["schema_version"], 3)
+            self.assertIn("source_tree_sha256", payload)
+            self.assertNotIn("source_commit", payload)
+            validate_provenance(payload, config)
+
     def test_non_git_source_uses_content_addressed_tree_identity(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)
@@ -187,6 +207,30 @@ class ProvenanceValidationTests(unittest.TestCase):
         self.payload["marketplace_repository"] = "example/other"
         with self.assertRaisesRegex(ProvenanceError, "marketplace_identity_mismatch"):
             validate_provenance(self.payload, self.config)
+
+    def test_content_addressed_external_source_may_have_no_marketplace_baseline_commit(self) -> None:
+        external = dict(self.payload)
+        external["schema_version"] = 3
+        del external["source_commit"]
+        external["source_tree_sha256"] = "4" * 64
+        external["marketplace_commit"] = None
+        external_config = replace(
+            self.config,
+            provenance=replace(self.config.provenance, source_kind="external_content_addressed"),
+        )
+
+        validate_provenance(external, external_config)
+
+        with self.assertRaisesRegex(ProvenanceError, "invalid_marketplace_commit"):
+            validate_provenance(external, self.config)
+
+        with self.assertRaisesRegex(ProvenanceError, "source_kind_schema_mismatch"):
+            validate_provenance(self.payload, external_config)
+
+        git_source = dict(self.payload)
+        git_source["marketplace_commit"] = None
+        with self.assertRaisesRegex(ProvenanceError, "invalid_marketplace_commit"):
+            validate_provenance(git_source, self.config)
 
     def test_rejects_duplicate_inventory_paths(self) -> None:
         self.payload["source_inventory"].append(dict(self.payload["source_inventory"][0]))

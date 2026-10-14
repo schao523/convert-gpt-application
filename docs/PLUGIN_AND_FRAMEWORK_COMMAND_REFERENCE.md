@@ -670,6 +670,13 @@ python -B .\scripts\verify_extraction.py `
   --marketplace D:\GitHub\obvious-one-plugins
 ```
 
+The configured marketplace-comparison profiles for some published applications
+are bound to historical baseline commits. A newer marketplace `HEAD` may fail
+their `marketplace commit differs from provenance` gate even when the product
+build and byte checks pass. Do not rewrite a historical provenance commit to
+silence that failure. The separate `verify_existing` Codex profile checks a
+pinned published tree at the supplied clean marketplace checkout.
+
 The migration-compatible single-application form remains accepted:
 
 ```powershell
@@ -699,10 +706,22 @@ invariants.
 Application-configuration schema v2 uses `"schema_version": 2`. Its required
 `provenance` object declares `source_repository`, `incorporated_branches`, and
 ordered `inventory_rules`; each rule has a safe source-relative `root`, a
-`classification`, and one or more `include` glob patterns. Its required
-`verification` object declares `test_directory`, ordered command objects with
-unique `id` and direct `argv` arrays, and a `codex_build` command plus artifact
-path. A previously published application also declares `marketplace.codex_path`,
+`classification`, and one or more `include` glob patterns. The
+`source_repository` remains the recorded source identity. An external,
+content-addressed archive may additionally declare
+`provenance.source_kind: external_content_addressed`; only that explicit
+classification permits a schema-v3 source inventory to record
+`marketplace_commit: null` when no marketplace baseline was observed. Git-source
+records still require a 40-character commit. The required `verification` object
+declares `test_directory`, ordered command objects with
+unique `id` and direct `argv` arrays, and a `codex_build` profile. The default
+profile runs a build command (`argv`) and checks its `artifact_path`. For a
+published artifact whose approved source archive is intentionally external,
+`codex_build` may instead declare `mode: verify_existing`, a marketplace-relative
+`artifact_path`, and a pinned `expected_content_sha256`. This mode runs no build:
+without `--marketplace` its gate is `NOT VERIFIED`; with a clean marketplace
+checkout it checks the published plugin's actual file bytes against that digest.
+A separately configured marketplace comparison also declares `marketplace.codex_path`,
 `marketplace.openclaw_path`, and `marketplace.approved_delta`. Supported command
 placeholders are `{python}`, `{repository_root}`, `{application_root}`,
 `{diagnostics}`, `{plugin_id}`, `{application_id}`, and `{version}`. The version

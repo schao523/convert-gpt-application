@@ -32,7 +32,7 @@ class ConversionContractTests(unittest.TestCase):
 
         self.assertEqual(catalog.schema_version, 2)
         self.assertEqual(builder.application.version, "1.0.1")
-        self.assertEqual(builder.target("codex").mode, "build")
+        self.assertEqual(builder.target("codex").mode, "verify_existing")
         self.assertEqual(builder.target("codex").destination, "plugins/plugin-builder")
         self.assertEqual(builder.target("openclaw").mode, "not_applicable")
         self.assertIsNone(builder.target("openclaw").destination)

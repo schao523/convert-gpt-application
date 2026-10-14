@@ -475,7 +475,7 @@ def _marketplace_gate(
 ) -> GateResult:
     profile = config.verification.marketplace
     if profile is None:
-        return GateResult("marketplace", "NOT APPLICABLE", "application is not published")
+        return GateResult("marketplace", "NOT APPLICABLE", "marketplace comparison is not configured")
     if context.marketplace is None:
         return GateResult("marketplace", "NOT VERIFIED", "marketplace was not supplied")
     marketplace = context.marketplace.resolve()
@@ -518,6 +518,32 @@ def _marketplace_gate(
         return GateResult("marketplace", "FAIL", str(exc))
 
 
+def _verify_existing_codex(
+    config: ApplicationConfig,
+    context: RunContext,
+    artifact_relative: str,
+) -> tuple[GateResult, Path]:
+    marketplace = context.marketplace
+    if marketplace is None:
+        return _skipped("codex-build", "published marketplace was not supplied"), context.diagnostics
+    if not marketplace.is_dir():
+        return GateResult("codex-build", "FAIL", "marketplace directory does not exist"), marketplace
+    try:
+        if _git_output(marketplace, "status", "--short"):
+            return GateResult("codex-build", "FAIL", "marketplace working tree is not clean"), marketplace
+        artifact = resolve_within(marketplace, artifact_relative, field="codex artifact")
+        if not artifact.is_dir():
+            return GateResult("codex-build", "FAIL", "published Codex artifact is missing"), artifact
+        plugin_authoring.tree_manifest(artifact)
+        observed = _tree_identity(artifact)
+        expected = config.verification.codex_build.expected_content_sha256
+        if observed != expected:
+            return GateResult("codex-build", "FAIL", "published Codex artifact digest differs"), artifact
+        return GateResult("codex-build", "PASS", "published Codex artifact matches pinned bytes"), artifact
+    except (VerificationConfigError, plugin_authoring.PluginAuthoringError, OSError) as exc:
+        return GateResult("codex-build", "FAIL", str(exc)), marketplace
+
+
 def run_application(config: ApplicationConfig, context: RunContext) -> ApplicationResult:
     """Run independent and dependency-ordered gates for one application."""
 
@@ -553,16 +579,19 @@ def run_application(config: ApplicationConfig, context: RunContext) -> Applicati
     if (config.root / "hosted-openai" / "deployment.json").is_file():
         gates.append(_hosted_deployment_gate(config, context))
 
-    codex_gate = _run_gate(
-        context,
-        "codex-build",
-        expand_argv(config.verification.codex_build.argv, expansion),
-        log_directory=logs,
-    )
-    gates.append(codex_gate)
     codex_root = application_diagnostics / "codex-marketplace"
     artifact_relative = expand_argv((config.verification.codex_build.artifact_path,), expansion)[0]
-    codex_artifact = resolve_within(codex_root, artifact_relative, field="codex artifact")
+    if config.verification.codex_build.mode == "verify_existing":
+        codex_gate, codex_artifact = _verify_existing_codex(config, context, artifact_relative)
+    else:
+        codex_gate = _run_gate(
+            context,
+            "codex-build",
+            expand_argv(config.verification.codex_build.argv, expansion),
+            log_directory=logs,
+        )
+        codex_artifact = resolve_within(codex_root, artifact_relative, field="codex artifact")
+    gates.append(codex_gate)
 
     openclaw_a = application_diagnostics / "openclaw-a" / config.plugin_id
     openclaw_b = application_diagnostics / "openclaw-b" / config.plugin_id
@@ -621,7 +650,7 @@ def run_application(config: ApplicationConfig, context: RunContext) -> Applicati
     if prerequisites_pass:
         gates.append(_marketplace_gate(config, context, expansion, codex_artifact, openclaw_a))
     elif config.verification.marketplace is None:
-        gates.append(GateResult("marketplace", "NOT APPLICABLE", "application is not published"))
+        gates.append(GateResult("marketplace", "NOT APPLICABLE", "marketplace comparison is not configured"))
     else:
         gates.append(_skipped("marketplace", "artifact prerequisites failed"))
 

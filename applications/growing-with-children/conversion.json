@@ -9,6 +9,7 @@
   "marketplace_repository": "schao523/obvious-one-plugins",
   "provenance": {
     "source_repository": "externally-supplied-plugin-builder-archive",
+    "source_kind": "external_content_addressed",
     "incorporated_branches": [],
     "inventory_rules": [
       {
@@ -27,8 +28,9 @@
       }
     ],
     "codex_build": {
-      "argv": ["{python}", "-B", "{application_root}/scripts/build_repaired_release.py", "--source", "{application_root}/source/growing-with-children-v1.0.1.zip", "--output", "{diagnostics}/growing-with-children-1.0.2", "--json"],
-      "artifact_path": "growing-with-children-1.0.2.zip"
+      "mode": "verify_existing",
+      "artifact_path": "plugins/{plugin_id}",
+      "expected_content_sha256": "a24e039c4c7123bde708aed8c8c12015506d0dc2a793f64a084c6d083b72dc75"
     }
   }
 }

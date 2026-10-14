@@ -11,9 +11,17 @@
 - Onboarding proposal document SHA-256: `bf2ef7db9ab08656cb08c3c12215e550326d001f5ce7aa9077d31cd9a942142a`
 - Onboarding proposal identity SHA-256: `b54a3a97b5a28f65952bb7922f700b7722534b3005407ae6e2ebc18ddaf307c5`
 - Staged Codex artifact content SHA-256: `d7378703283ff62f98e6e7b680f36d5fdc2e82b53f0c5973dea8b98160492c0d`
+- Published Codex plugin filesystem digest for Workbench `verify_existing`: `a24e039c4c7123bde708aed8c8c12015506d0dc2a793f64a084c6d083b72dc75`. This is the framework verifier's path-and-file-SHA-256 tree identity over `plugins/growing-with-children` at the published merge commit below; it is distinct from the staged artifact digest above.
 
 The source archive remained immutable. Two independent clean builds produced
 byte-identical repaired ZIP and metadata outputs.
+The source ZIP is not tracked in Workbench. Repository-wide verification therefore
+checks the pinned published plugin tree when an Obvious One marketplace checkout
+is supplied; without one, the Codex artifact gate remains `NOT VERIFIED` and
+does not attempt to reconstruct the release from an unavailable source ZIP.
+The source inventory retains its original null marketplace-baseline commit;
+`conversion.json` explicitly classifies this source as an external,
+content-addressed archive rather than assigning a later release commit to it.
 
 ## Structural and behavior-preservation results
 
