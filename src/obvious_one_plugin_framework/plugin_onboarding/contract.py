@@ -95,6 +95,24 @@ _LEGACY_ADOPTION_KEYS = {
     "decision_recorded_at",
     "purpose",
 }
+_PORTABLE_CONTENT_ADOPTION_KEYS = {
+    "schema",
+    "input_profile",
+    "plugin_id",
+    "version",
+    "archive_sha256",
+    "member_manifest_sha256",
+    "members",
+    "content_tree_sha256",
+    "content_manifest_path",
+    "content_manifest_sha256",
+    "executable_files",
+    "dependency_files",
+    "adoption_approved",
+    "confirmed_by",
+    "decision_recorded_at",
+    "purpose",
+}
 
 
 class OnboardingError(ValueError):
@@ -228,6 +246,50 @@ class LegacyPluginBuilderAdoption:
             "candidate_manifest_sha256": self.candidate_manifest_sha256,
             "verification_report_path": self.verification_report_path,
             "verification_report_sha256": self.verification_report_sha256,
+            "executable_files": list(self.executable_files),
+            "dependency_files": list(self.dependency_files),
+            "adoption_approved": self.adoption_approved,
+            "confirmed_by": self.confirmed_by,
+            "purpose": self.purpose,
+        }
+
+
+@dataclass(frozen=True)
+class PortableContentManifestAdoption:
+    """Owner authority for one exact wrapped content-manifest package."""
+
+    schema: Literal["workbench-portable-content-manifest-adoption-v1"]
+    input_profile: Literal["PLUGIN_BUILDER_PORTABLE_CONTENT_MANIFEST_V1"]
+    plugin_id: str
+    version: str
+    archive_sha256: str
+    member_manifest_sha256: str
+    members: tuple[PackageMember, ...]
+    content_tree_sha256: str
+    content_manifest_path: Literal["content-manifest.json"]
+    content_manifest_sha256: str
+    executable_files: tuple[str, ...]
+    dependency_files: tuple[str, ...]
+    adoption_approved: Literal[True]
+    confirmed_by: str
+    decision_recorded_at: str
+    purpose: Literal["OBVIOUS_ONE_CODEX_MARKETPLACE_ONBOARDING"]
+
+    def identity_payload(self) -> dict[str, object]:
+        return {
+            "schema": self.schema,
+            "input_profile": self.input_profile,
+            "plugin_id": self.plugin_id,
+            "version": self.version,
+            "archive_sha256": self.archive_sha256,
+            "member_manifest_sha256": self.member_manifest_sha256,
+            "members": [
+                {"path": item.path, "size": item.size, "sha256": item.sha256}
+                for item in self.members
+            ],
+            "content_tree_sha256": self.content_tree_sha256,
+            "content_manifest_path": self.content_manifest_path,
+            "content_manifest_sha256": self.content_manifest_sha256,
             "executable_files": list(self.executable_files),
             "dependency_files": list(self.dependency_files),
             "adoption_approved": self.adoption_approved,
@@ -497,6 +559,125 @@ def load_legacy_plugin_builder_adoption(path: Path) -> LegacyPluginBuilderAdopti
         decision_recorded_at=recorded_at,
         purpose="OBVIOUS_ONE_CODEX_MARKETPLACE_ONBOARDING",
     )
+
+
+def load_portable_content_manifest_adoption(
+    path: Path,
+) -> PortableContentManifestAdoption:
+    """Load exact owner authority for one wrapped content-manifest package."""
+
+    prefix = "onboarding.portable_content_adoption"
+    payload = _load_json(path, prefix)
+    _exact_keys(
+        payload,
+        _PORTABLE_CONTENT_ADOPTION_KEYS,
+        prefix,
+        authority_keys=("adoption_approved", "confirmed_by"),
+    )
+    if payload["schema"] != "workbench-portable-content-manifest-adoption-v1":
+        raise OnboardingError(f"{prefix}.unsupported_schema")
+    if payload["input_profile"] != "PLUGIN_BUILDER_PORTABLE_CONTENT_MANIFEST_V1":
+        raise OnboardingError(f"{prefix}.invalid_input_profile")
+    if payload["purpose"] != "OBVIOUS_ONE_CODEX_MARKETPLACE_ONBOARDING":
+        raise OnboardingError(f"{prefix}.invalid_purpose")
+    plugin_id = _text(payload["plugin_id"], prefix, "plugin_id")
+    if _PLUGIN_ID.fullmatch(plugin_id) is None:
+        raise OnboardingError(f"{prefix}.invalid_plugin_id")
+    version = _text(payload["version"], prefix, "version")
+    if _SEMVER.fullmatch(version) is None:
+        raise OnboardingError(f"{prefix}.invalid_version")
+    if payload["content_manifest_path"] != "content-manifest.json":
+        raise OnboardingError(f"{prefix}.invalid_content_manifest_path")
+
+    members = cast(
+        tuple[PackageMember, ...],
+        _members(payload["members"], prefix, "members", PackageMember),
+    )
+    member_paths: set[str] = set()
+    folded_paths: set[str] = set()
+    for member in members:
+        path_value = _safe_posix_member_path(member.path, prefix)
+        folded = path_value.casefold()
+        if path_value in member_paths or folded in folded_paths:
+            raise OnboardingError(f"{prefix}.duplicate_member_path")
+        member_paths.add(path_value)
+        folded_paths.add(folded)
+
+    def approved_paths(field: str) -> tuple[str, ...]:
+        value = payload[field]
+        if not isinstance(value, list):
+            raise OnboardingError(f"{prefix}.invalid_type", detail=field)
+        result: list[str] = []
+        folded: set[str] = set()
+        for item in value:
+            relative = _safe_posix_member_path(
+                _text(item, prefix, field), prefix
+            )
+            identity = relative.casefold()
+            if identity in folded:
+                raise OnboardingError(
+                    f"{prefix}.duplicate_approved_path", detail=field
+                )
+            if f"{plugin_id}/{relative}" not in member_paths:
+                raise OnboardingError(f"{prefix}.path_not_in_members", detail=field)
+            folded.add(identity)
+            result.append(relative)
+        return tuple(result)
+
+    if payload["adoption_approved"] is not True:
+        raise OnboardingError(f"{prefix}.adoption_approval_required", "BLOCKED")
+    try:
+        confirmed_by = _text(payload["confirmed_by"], prefix, "confirmed_by")
+    except OnboardingError as exc:
+        raise OnboardingError(f"{prefix}.invalid_confirmed_by", "BLOCKED") from exc
+    recorded_at = _text(
+        payload["decision_recorded_at"], prefix, "decision_recorded_at"
+    )
+    try:
+        parsed_time = datetime.fromisoformat(recorded_at)
+    except ValueError as exc:
+        raise OnboardingError(f"{prefix}.invalid_decision_recorded_at") from exc
+    if parsed_time.tzinfo is None or parsed_time.utcoffset() is None:
+        raise OnboardingError(f"{prefix}.invalid_decision_recorded_at")
+
+    return PortableContentManifestAdoption(
+        schema="workbench-portable-content-manifest-adoption-v1",
+        input_profile="PLUGIN_BUILDER_PORTABLE_CONTENT_MANIFEST_V1",
+        plugin_id=plugin_id,
+        version=version,
+        archive_sha256=_digest(payload["archive_sha256"], prefix, "archive_sha256"),
+        member_manifest_sha256=_digest(
+            payload["member_manifest_sha256"], prefix, "member_manifest_sha256"
+        ),
+        members=members,
+        content_tree_sha256=_digest(
+            payload["content_tree_sha256"], prefix, "content_tree_sha256"
+        ),
+        content_manifest_path="content-manifest.json",
+        content_manifest_sha256=_digest(
+            payload["content_manifest_sha256"], prefix, "content_manifest_sha256"
+        ),
+        executable_files=approved_paths("executable_files"),
+        dependency_files=approved_paths("dependency_files"),
+        adoption_approved=True,
+        confirmed_by=confirmed_by,
+        decision_recorded_at=recorded_at,
+        purpose="OBVIOUS_ONE_CODEX_MARKETPLACE_ONBOARDING",
+    )
+
+
+def load_plugin_builder_adoption(
+    path: Path,
+) -> LegacyPluginBuilderAdoption | PortableContentManifestAdoption:
+    """Load one supported exact-byte historical Plugin Builder authority."""
+
+    payload = _load_json(path, "onboarding.adoption")
+    schema = payload.get("schema")
+    if schema == "workbench-legacy-plugin-builder-adoption-v1":
+        return load_legacy_plugin_builder_adoption(path)
+    if schema == "workbench-portable-content-manifest-adoption-v1":
+        return load_portable_content_manifest_adoption(path)
+    raise OnboardingError("onboarding.adoption.unsupported_schema")
 
 
 def load_package_metadata(path: Path) -> PackageMetadata:

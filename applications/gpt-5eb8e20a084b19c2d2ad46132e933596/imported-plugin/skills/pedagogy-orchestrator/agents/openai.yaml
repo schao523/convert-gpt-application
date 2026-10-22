@@ -1,0 +1,5 @@
+interface:
+  default_prompt: 我想設計一門 AI 課程，你能依學生族群與課程目標，使用模板幫我產生完整課綱嗎？
+  display_name: 酷 AI 課程設計助教  Thinking-First AI Pedagogy Assistant
+  short_description: 一位專業的課程設計助教，協助教師設計可教的課程內容，並在課程中加入以人類判斷為核心、實用且有創意的應用實踐與受控的 AI
+    練習。

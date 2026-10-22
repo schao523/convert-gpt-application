@@ -1,0 +1,133 @@
+{
+  "schema_version": "3.1",
+  "canonical_mapping": "Application Plugin Design Specification v1.0 Revision 01 §13 + approved delta v1.0-delta-01",
+  "guidelines": "Routing metadata only. Specific workflow-stage/trigger mappings control activation; module summaries do not make conditional references universal. Every entry resolves to a packaged source via target_skill + target_relative_path. Consult the actual source before claiming reference-grounded behavior. RM-04-Legacy is provenance only.",
+  "files": [
+    {
+      "id": "RM-01",
+      "name": "AI Pedagogy Rulebook.md",
+      "status": "active",
+      "purpose": "pedagogy authority",
+      "target_skill": "pedagogy-orchestrator",
+      "target_relative_path": "references/AI Pedagogy Rulebook.md",
+      "access": "Resolve to target skill/path and consult the actual source; index metadata is not authority."
+    },
+    {
+      "id": "RM-02",
+      "name": "AI-Course-Design-Principles.md",
+      "status": "active",
+      "purpose": "course-design authority",
+      "target_skill": "course-design",
+      "target_relative_path": "references/AI-Course-Design-Principles.md",
+      "access": "Resolve to target skill/path and consult the actual source; index metadata is not authority."
+    },
+    {
+      "id": "RM-03",
+      "name": "AI-course-syllabus-template.md",
+      "status": "active",
+      "purpose": "capability-first syllabus template",
+      "target_skill": "course-design",
+      "target_relative_path": "references/AI-course-syllabus-template.md",
+      "access": "Resolve to target skill/path and consult the actual source; index metadata is not authority."
+    },
+    {
+      "id": "RM-04-New",
+      "name": "AI-Application-Routing-Authority.md",
+      "status": "active",
+      "purpose": "canonical capability/application routing authority",
+      "target_skill": "thinking-first-reference-integrity",
+      "target_relative_path": "references/AI-Application-Routing-Authority.md",
+      "access": "Resolve to target skill/path and consult the actual source; index metadata is not authority."
+    },
+    {
+      "id": "RM-05",
+      "name": "Course-Content-Generation-Logic.md",
+      "status": "active",
+      "purpose": "course-content authority",
+      "target_skill": "course-content-generation",
+      "target_relative_path": "references/Course-Content-Generation-Logic.md",
+      "access": "Resolve to target skill/path and consult the actual source; index metadata is not authority."
+    },
+    {
+      "id": "RM-06",
+      "name": "Teaching-Prompt-Design-Checklist.md",
+      "status": "active",
+      "purpose": "teaching-prompt authority",
+      "target_skill": "teaching-prompt-design",
+      "target_relative_path": "references/Teaching-Prompt-Design-Checklist.md",
+      "access": "Resolve to target skill/path and consult the actual source; index metadata is not authority."
+    },
+    {
+      "id": "RM-07",
+      "name": "application_practice_design_authority.md",
+      "status": "active",
+      "purpose": "Application Practice governing authority",
+      "target_skill": "application-practice-design",
+      "target_relative_path": "references/application_practice_design_authority.md",
+      "access": "Resolve to target skill/path and consult the actual source; index metadata is not authority."
+    },
+    {
+      "id": "RM-08",
+      "name": "application_topic_selection_template.md",
+      "status": "active",
+      "purpose": "Application Practice topic selection",
+      "target_skill": "application-practice-design",
+      "target_relative_path": "references/application_topic_selection_template.md",
+      "access": "Resolve to target skill/path and consult the actual source; index metadata is not authority."
+    },
+    {
+      "id": "RM-09",
+      "name": "application_practice_support_logic.md",
+      "status": "active",
+      "purpose": "Application Practice operational authority",
+      "target_skill": "application-practice-design",
+      "target_relative_path": "references/application_practice_support_logic.md",
+      "access": "Resolve to target skill/path and consult the actual source; index metadata is not authority."
+    },
+    {
+      "id": "RM-10",
+      "name": "application_based_assessment_lens.md",
+      "status": "optional",
+      "purpose": "design-quality lens",
+      "target_skill": "application-practice-design",
+      "target_relative_path": "references/application_based_assessment_lens.md",
+      "access": "Resolve to target skill/path and consult the actual source; index metadata is not authority."
+    },
+    {
+      "id": "RM-11",
+      "name": "提示分隔符簡介.pdf",
+      "status": "conditional",
+      "purpose": "prompt-method reference",
+      "target_skill": "teaching-prompt-design",
+      "target_relative_path": "references/提示分隔符簡介.pdf",
+      "access": "Resolve to target skill/path and consult the actual source; index metadata is not authority."
+    },
+    {
+      "id": "RM-12",
+      "name": "提示設計規則簡介.pdf",
+      "status": "conditional",
+      "purpose": "prompt-method reference",
+      "target_skill": "teaching-prompt-design",
+      "target_relative_path": "references/提示設計規則簡介.pdf",
+      "access": "Resolve to target skill/path and consult the actual source; index metadata is not authority."
+    },
+    {
+      "id": "RM-13",
+      "name": "c8d1ccc4-7a3f-476f-9309-00ffa9205c17.png",
+      "status": "optional",
+      "purpose": "visual support",
+      "target_skill": "thinking-first-reference-integrity",
+      "target_relative_path": "references/c8d1ccc4-7a3f-476f-9309-00ffa9205c17.png",
+      "access": "Resolve to target skill/path and consult the actual source; index metadata is not authority."
+    },
+    {
+      "id": "RM-04-Legacy",
+      "name": "AI-tools-list.md",
+      "status": "provenance_only",
+      "purpose": "superseded historical tool-routing reference",
+      "target_skill": "thinking-first-reference-integrity",
+      "target_relative_path": "provenance/AI-tools-list.md",
+      "access": "Never use as active routing authority."
+    }
+  ]
+}

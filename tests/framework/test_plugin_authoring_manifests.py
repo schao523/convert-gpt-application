@@ -147,6 +147,20 @@ class PluginAuthoringManifestTests(unittest.TestCase):
         mismatches = sorted(issue.detail for issue in issues if issue.code == "manifest_pair_mismatch")
         self.assertEqual(mismatches, ["interface.defaultPrompt", "interface.displayName", "version"])
 
+    def test_manifest_pair_accepts_matching_composer_icon_and_logo(self) -> None:
+        portable = self.portable()
+        legacy = self.legacy()
+        for payload in (
+            portable["extensions"]["com.openai"]["interface"],  # type: ignore[index]
+            legacy["interface"],
+        ):
+            payload["composerIcon"] = "./assets/icon.png"  # type: ignore[index]
+            payload["logo"] = "./assets/icon.png"  # type: ignore[index]
+        self.write_json("plugin.json", portable)
+        self.write_json(".codex-plugin/plugin.json", legacy)
+
+        self.assertEqual(validate_manifest_pair(self.root), ())
+
     def test_manifest_pair_rejects_unknown_and_dependency_overlay_fields(self) -> None:
         portable = self.portable()
         legacy = self.legacy()

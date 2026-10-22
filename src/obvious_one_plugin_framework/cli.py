@@ -149,7 +149,12 @@ def _parser() -> argparse.ArgumentParser:
     onboarding.add_argument("--archive", required=True, type=Path)
     onboarding_authority = onboarding.add_mutually_exclusive_group(required=True)
     onboarding_authority.add_argument("--package-metadata", type=Path)
-    onboarding_authority.add_argument("--legacy-adoption", type=Path)
+    onboarding_authority.add_argument(
+        "--legacy-adoption",
+        "--compatibility-adoption",
+        dest="legacy_adoption",
+        type=Path,
+    )
     onboarding.add_argument("--publication-decisions", required=True, type=Path)
     onboarding.add_argument("--repository", required=True, type=Path)
     onboarding.add_argument("--output", required=True, type=Path)

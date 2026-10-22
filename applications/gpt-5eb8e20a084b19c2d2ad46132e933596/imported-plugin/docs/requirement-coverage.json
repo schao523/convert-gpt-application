@@ -1,0 +1,145 @@
+{
+  "evidence_policy": "Static evidence does not prove actual reference consultation, human evaluation, workflow execution, or installed-runtime behavior. Runtime claims require installed-runtime observation.",
+  "requirements": [
+    {
+      "requirement_id": "REQ-001",
+      "static_evidence_state": "STATICALLY VERIFIED",
+      "static_evidence_scope": "contract/structure/reference-packaging/routing-declaration as applicable",
+      "runtime_evidence_state": "NOT APPLICABLE",
+      "note": "Static verification proves implementation contract presence, package structure, reference packaging, and/or routing declarations only. It does not prove runtime execution or consultation."
+    },
+    {
+      "requirement_id": "REQ-002",
+      "static_evidence_state": "STATICALLY VERIFIED",
+      "static_evidence_scope": "contract/structure/reference-packaging/routing-declaration as applicable",
+      "runtime_evidence_state": "NOT APPLICABLE",
+      "note": "Static verification proves implementation contract presence, package structure, reference packaging, and/or routing declarations only. It does not prove runtime execution or consultation."
+    },
+    {
+      "requirement_id": "REQ-003",
+      "static_evidence_state": "STATICALLY VERIFIED",
+      "static_evidence_scope": "contract/structure/reference-packaging/routing-declaration as applicable",
+      "runtime_evidence_state": "NOT VERIFIED",
+      "note": "Static verification proves implementation contract presence, package structure, reference packaging, and/or routing declarations only. It does not prove runtime execution or consultation."
+    },
+    {
+      "requirement_id": "REQ-004",
+      "static_evidence_state": "STATICALLY VERIFIED",
+      "static_evidence_scope": "contract/structure/reference-packaging/routing-declaration as applicable",
+      "runtime_evidence_state": "NOT VERIFIED",
+      "note": "Static verification proves implementation contract presence, package structure, reference packaging, and/or routing declarations only. It does not prove runtime execution or consultation."
+    },
+    {
+      "requirement_id": "REQ-005",
+      "static_evidence_state": "STATICALLY VERIFIED",
+      "static_evidence_scope": "contract/structure/reference-packaging/routing-declaration as applicable",
+      "runtime_evidence_state": "NOT VERIFIED",
+      "note": "Static verification proves implementation contract presence, package structure, reference packaging, and/or routing declarations only. It does not prove runtime execution or consultation."
+    },
+    {
+      "requirement_id": "REQ-006",
+      "static_evidence_state": "STATICALLY VERIFIED",
+      "static_evidence_scope": "contract/structure/reference-packaging/routing-declaration as applicable",
+      "runtime_evidence_state": "NOT VERIFIED",
+      "note": "Static verification proves implementation contract presence, package structure, reference packaging, and/or routing declarations only. It does not prove runtime execution or consultation."
+    },
+    {
+      "requirement_id": "REQ-007",
+      "static_evidence_state": "STATICALLY VERIFIED",
+      "static_evidence_scope": "contract/structure/reference-packaging/routing-declaration as applicable",
+      "runtime_evidence_state": "NOT VERIFIED",
+      "note": "Static verification proves implementation contract presence, package structure, reference packaging, and/or routing declarations only. It does not prove runtime execution or consultation."
+    },
+    {
+      "requirement_id": "REQ-008",
+      "static_evidence_state": "STATICALLY VERIFIED",
+      "static_evidence_scope": "contract/structure/reference-packaging/routing-declaration as applicable",
+      "runtime_evidence_state": "NOT APPLICABLE",
+      "note": "Static verification proves implementation contract presence, package structure, reference packaging, and/or routing declarations only. It does not prove runtime execution or consultation."
+    },
+    {
+      "requirement_id": "REQ-009",
+      "static_evidence_state": "STATICALLY VERIFIED",
+      "static_evidence_scope": "contract/structure/reference-packaging/routing-declaration as applicable",
+      "runtime_evidence_state": "NOT APPLICABLE",
+      "note": "Static verification proves implementation contract presence, package structure, reference packaging, and/or routing declarations only. It does not prove runtime execution or consultation."
+    },
+    {
+      "requirement_id": "REQ-010",
+      "static_evidence_state": "STATICALLY VERIFIED",
+      "static_evidence_scope": "contract/structure/reference-packaging/routing-declaration as applicable",
+      "runtime_evidence_state": "NOT VERIFIED",
+      "note": "Static verification proves implementation contract presence, package structure, reference packaging, and/or routing declarations only. It does not prove runtime execution or consultation."
+    },
+    {
+      "requirement_id": "REQ-011",
+      "static_evidence_state": "STATICALLY VERIFIED",
+      "static_evidence_scope": "contract/structure/reference-packaging/routing-declaration as applicable",
+      "runtime_evidence_state": "NOT VERIFIED",
+      "note": "Static verification proves implementation contract presence, package structure, reference packaging, and/or routing declarations only. It does not prove runtime execution or consultation."
+    },
+    {
+      "requirement_id": "REQ-012",
+      "static_evidence_state": "STATICALLY VERIFIED",
+      "static_evidence_scope": "contract/structure/reference-packaging/routing-declaration as applicable",
+      "runtime_evidence_state": "NOT VERIFIED",
+      "note": "Static verification proves implementation contract presence, package structure, reference packaging, and/or routing declarations only. It does not prove runtime execution or consultation."
+    },
+    {
+      "requirement_id": "REQ-013",
+      "static_evidence_state": "STATICALLY VERIFIED",
+      "static_evidence_scope": "contract/structure/reference-packaging/routing-declaration as applicable",
+      "runtime_evidence_state": "NOT VERIFIED",
+      "note": "Static verification proves implementation contract presence, package structure, reference packaging, and/or routing declarations only. It does not prove runtime execution or consultation."
+    },
+    {
+      "requirement_id": "REQ-014",
+      "static_evidence_state": "STATICALLY VERIFIED",
+      "static_evidence_scope": "contract/structure/reference-packaging/routing-declaration as applicable",
+      "runtime_evidence_state": "NOT VERIFIED",
+      "note": "Static verification proves implementation contract presence, package structure, reference packaging, and/or routing declarations only. It does not prove runtime execution or consultation."
+    },
+    {
+      "requirement_id": "REQ-015",
+      "static_evidence_state": "STATICALLY VERIFIED",
+      "static_evidence_scope": "contract/structure/reference-packaging/routing-declaration as applicable",
+      "runtime_evidence_state": "NOT APPLICABLE",
+      "note": "Static verification proves implementation contract presence, package structure, reference packaging, and/or routing declarations only. It does not prove runtime execution or consultation."
+    },
+    {
+      "requirement_id": "REQ-016",
+      "static_evidence_state": "STATICALLY VERIFIED",
+      "static_evidence_scope": "contract/structure/reference-packaging/routing-declaration as applicable",
+      "runtime_evidence_state": "NOT VERIFIED",
+      "note": "Static verification proves implementation contract presence, package structure, reference packaging, and/or routing declarations only. It does not prove runtime execution or consultation."
+    },
+    {
+      "requirement_id": "REQ-017",
+      "static_evidence_state": "STATICALLY VERIFIED",
+      "static_evidence_scope": "contract/structure/reference-packaging/routing-declaration as applicable",
+      "runtime_evidence_state": "NOT VERIFIED",
+      "note": "Static verification proves implementation contract presence, package structure, reference packaging, and/or routing declarations only. It does not prove runtime execution or consultation."
+    },
+    {
+      "requirement_id": "REQ-018",
+      "static_evidence_state": "STATICALLY VERIFIED",
+      "static_evidence_scope": "contract/structure/reference-packaging/routing-declaration as applicable",
+      "runtime_evidence_state": "NOT VERIFIED",
+      "note": "Static verification proves implementation contract presence, package structure, reference packaging, and/or routing declarations only. It does not prove runtime execution or consultation."
+    },
+    {
+      "requirement_id": "REQ-019",
+      "static_evidence_state": "STATICALLY VERIFIED",
+      "static_evidence_scope": "contract/structure/reference-packaging/routing-declaration as applicable",
+      "runtime_evidence_state": "NOT VERIFIED",
+      "note": "Static verification proves implementation contract presence, package structure, reference packaging, and/or routing declarations only. It does not prove runtime execution or consultation."
+    },
+    {
+      "requirement_id": "REQ-020",
+      "static_evidence_state": "STATICALLY VERIFIED",
+      "static_evidence_scope": "contract/structure/reference-packaging/routing-declaration as applicable",
+      "runtime_evidence_state": "NOT VERIFIED",
+      "note": "Static verification proves implementation contract presence, package structure, reference packaging, and/or routing declarations only. It does not prove runtime execution or consultation."
+    }
+  ]
+}

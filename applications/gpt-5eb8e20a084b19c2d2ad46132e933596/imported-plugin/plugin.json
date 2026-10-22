@@ -1,0 +1,30 @@
+{
+  "name": "gpt-5eb8e20a084b19c2d2ad46132e933596",
+  "version": "1.0.1",
+  "description": "一位專業的課程設計助教，協助教師設計可教的課程內容，並在課程中加入以人類判斷為核心、實用且有創意的應用實踐與受控的 AI 練習。",
+  "author": {
+    "name": "Shen-Chang Chao"
+  },
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "extensions": {
+    "com.openai": {
+      "interface": {
+        "capabilities": [
+          "skills"
+        ],
+        "category": "Education & Research",
+        "composerIcon": "./assets/gpt-icon.png",
+        "defaultPrompt": [
+          "我想設計一門 AI 課程，你能依學生族群與課程目標，使用模板幫我產生完整課綱嗎？",
+          "我會上傳課程大綱或課程模組說明，請你協助我萃取知識點，並生成可教的教材內容草稿。",
+          "我會上傳課程介紹或課程大綱，請你協助我設計合適的 Application Practice（課程應用實踐），並根據課程性質（AI 訓練課程或一般主題課程）加入對應的 AI 練習活動。"
+        ],
+        "developerName": "Shen-Chang Chao",
+        "displayName": "酷 AI 課程設計助教  Thinking-First AI Pedagogy Assistant",
+        "logo": "./assets/gpt-icon.png",
+        "longDescription": "一位專業的課程設計助教，協助教師設計可教的課程內容，並在課程中加入以人類判斷為核心、實用且有創意的應用實踐與受控的 AI 練習。",
+        "shortDescription": "思考先行，協助教師設計課程與 AI 練習"
+      }
+    }
+  }
+}

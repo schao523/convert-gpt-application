@@ -1,0 +1,58 @@
+{
+  "application_id": "gpt-5eb8e20a084b19c2d2ad46132e933596",
+  "coverage_matrix": "docs/application-invariants.md",
+  "distribution_contract": "openclaw/distribution.json",
+  "marketplace_repository": "schao523/obvious-one-plugins",
+  "plugin_id": "gpt-5eb8e20a084b19c2d2ad46132e933596",
+  "provenance": {
+    "incorporated_branches": [],
+    "inventory_rules": [
+      {
+        "classification": "approved-plugin",
+        "include": [
+          "**/*"
+        ],
+        "root": "imported-plugin"
+      }
+    ],
+    "source_repository": "plugin-builder-reviewed-package"
+  },
+  "schema_version": 2,
+  "source_inventory": "docs/imported-package-inventory.json",
+  "source_location": "conversion.local.json",
+  "verification": {
+    "codex_build": {
+      "argv": [
+        "{python}",
+        "-B",
+        "{application_root}/scripts/build_marketplace_release.py",
+        "--source",
+        "{application_root}",
+        "--destination",
+        "{diagnostics}/codex-marketplace",
+        "--version",
+        "{version}"
+      ],
+      "artifact_path": "plugins/{plugin_id}"
+    },
+    "commands": [
+      {
+        "argv": [
+          "{python}",
+          "-B",
+          "{application_root}/tests/test_imported_package.py"
+        ],
+        "id": "imported-package"
+      },
+      {
+        "argv": [
+          "{python}",
+          "-B",
+          "{application_root}/tests/test_marketplace_release.py"
+        ],
+        "id": "marketplace-release"
+      }
+    ],
+    "test_directory": "tests"
+  }
+}

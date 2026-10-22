@@ -433,6 +433,7 @@ def render_application_files(
     portable = imported["plugin.json"]
     compatibility = imported[".codex-plugin/plugin.json"]
     return {
+        ".gitattributes": b"imported-plugin/** -text -whitespace\n",
         "conversion.json": canonical_json_bytes(conversion),
         "plugin.json": portable,
         ".codex-plugin/plugin.json": compatibility,

@@ -18,13 +18,15 @@ from .contract import (
     LegacyPluginBuilderAdoption,
     OnboardingError,
     PackageMetadata,
+    PortableContentManifestAdoption,
     WorkbenchRepairMetadata,
-    load_legacy_plugin_builder_adoption,
+    load_plugin_builder_adoption,
     load_onboarding_metadata,
     load_publication_decisions,
 )
 from .inspection import (
     inspect_legacy_plugin_builder_package,
+    inspect_portable_content_manifest_package,
     inspect_plugin_builder_package,
     inspect_workbench_repaired_package,
 )
@@ -175,11 +177,16 @@ def prepare_plugin_zip_marketplace(
     _preflight_output(destination)
     decisions = load_publication_decisions(decisions_path)
     metadata: PackageMetadata | WorkbenchRepairMetadata | None
-    adoption: LegacyPluginBuilderAdoption | None
+    adoption: LegacyPluginBuilderAdoption | PortableContentManifestAdoption | None
     if adoption_path is not None:
         metadata = None
-        adoption = load_legacy_plugin_builder_adoption(adoption_path)
-        inspection = inspect_legacy_plugin_builder_package(archive_path, adoption)
+        adoption = load_plugin_builder_adoption(adoption_path)
+        if isinstance(adoption, PortableContentManifestAdoption):
+            inspection = inspect_portable_content_manifest_package(
+                archive_path, adoption
+            )
+        else:
+            inspection = inspect_legacy_plugin_builder_package(archive_path, adoption)
     else:
         adoption = None
         assert metadata_path is not None
@@ -209,6 +216,7 @@ def prepare_plugin_zip_marketplace(
         expected_profile = (
             "PORTABLE_SINGLE_DIRECTORY"
             if isinstance(metadata, PackageMetadata)
+            or isinstance(adoption, PortableContentManifestAdoption)
             else "LEGACY_FLAT"
         )
         if located.profile != expected_profile:

@@ -183,7 +183,10 @@ def _audit_declared_content(inspection: OnboardingInspection) -> None:
         dependencies_declared = dependencies_declared or bool(dependencies)
         mcp_declared = mcp_declared or contract.get("implementation_kind") == "MCP_ADAPTER"
     declared_files.update(inspection.offline_validator_files)
-    if inspection.input_profile == "PLUGIN_BUILDER_DETERMINISTIC_CONTENT_V2":
+    if inspection.input_profile in {
+        "PLUGIN_BUILDER_DETERMINISTIC_CONTENT_V2",
+        "PLUGIN_BUILDER_PORTABLE_CONTENT_MANIFEST_V1",
+    }:
         declared_files.update(inspection.approved_executable_files)
         dependencies_declared = dependencies_declared or bool(
             inspection.approved_dependency_files

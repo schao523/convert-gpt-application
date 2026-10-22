@@ -29,12 +29,16 @@ _COMMON_KEYS = (
 _INTERFACE_KEYS = (
     "capabilities",
     "category",
+    "composerIcon",
+    "composerIconDark",
     "defaultPrompt",
     "developerName",
     "displayName",
     "iconLarge",
     "iconSmall",
     "longDescription",
+    "logo",
+    "logoDark",
     "shortDescription",
 )
 _OVERLAY_KEYS = set(_COMMON_KEYS) | {"interface", "skills"}

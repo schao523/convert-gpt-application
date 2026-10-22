@@ -1,0 +1,104 @@
+"""Build the reviewed Codex plugin from immutable imported bytes."""
+from __future__ import annotations
+
+import argparse
+from hashlib import sha256
+import json
+import os
+from pathlib import Path
+import shutil
+import stat
+import tempfile
+
+
+PLUGIN_ID = 'gpt-5eb8e20a084b19c2d2ad46132e933596'
+VERSION = '1.0.1'
+EXPECTED_MEMBERS = [{'path': '.codex-plugin/plugin.json', 'size': 1466, 'sha256': '2d163b0f638e452f8cd1c362f0d52ca8d1cd0b74e12be5dee1bd56e91acfbd96'}, {'path': 'assets/gpt-icon.png', 'size': 319484, 'sha256': '46e6e39da6f2068f3c1650e73a4395c0d057e0cde980b081c7a35bd97394658b'}, {'path': 'content-manifest.json', 'size': 11504, 'sha256': 'bfe55fc4a0c7c78d92c8fab80b13a7234148b03dae5608938be00ead5cfa9232'}, {'path': 'docs/implementation-map.md', 'size': 1865, 'sha256': 'fabefd09452eac185becd1979909927bb00e5216aa98269f74efcdaf0dc57e17'}, {'path': 'docs/requirement-coverage.json', 'size': 9466, 'sha256': '0e31e1643b1afe45aafdd7efb40dc68b203c6017d238a854b6cc769cf06d1b80'}, {'path': 'docs/runtime-validation.md', 'size': 1622, 'sha256': '88dd646bcebb23ea5b6d2d34e05d2e274ee6ea4ba839f00287931d40023ca613'}, {'path': 'plugin.json', 'size': 1632, 'sha256': 'ded9a0ae07a16dbe67c79c5bf5f895042d7eb65cdd1901a345f84834c70a62a7'}, {'path': 'skills/ai-practice-design/SKILL.md', 'size': 1746, 'sha256': '9089e9550b9022ea8f755ac7463d2d8fad2236793a1660ab1f729121d0cf36e2'}, {'path': 'skills/ai-practice-design/references/AI Pedagogy Rulebook.md', 'size': 3335, 'sha256': '523064bf1575eb213f9e032b9441b73c0610f1b9fc1060b5e1a88da2ba24c343'}, {'path': 'skills/ai-practice-design/references/Teaching-Prompt-Design-Checklist.md', 'size': 2956, 'sha256': '2c2ef08baeb98113685b08f042261c5b8bc0a93d7ec6d3a70f6785dfda461828'}, {'path': 'skills/ai-practice-design/references/提示分隔符簡介.pdf', 'size': 700166, 'sha256': 'cf0ed6eafaaa41b67ffa5251da778813f9ab51a0cef3c3f7bc62f6a0fc9e805c'}, {'path': 'skills/ai-practice-design/references/提示設計規則簡介.pdf', 'size': 1150214, 'sha256': '2de83c8144a5eb1791b83fe7646c4bb85576370ac54c36c087bbb6ef23f193bd'}, {'path': 'skills/application-practice-design/SKILL.md', 'size': 1459, 'sha256': '0fa23c25c2b171581cd0fb276b7b2168f38f7fd5084f225d89038ed395185057'}, {'path': 'skills/application-practice-design/references/AI Pedagogy Rulebook.md', 'size': 3335, 'sha256': '523064bf1575eb213f9e032b9441b73c0610f1b9fc1060b5e1a88da2ba24c343'}, {'path': 'skills/application-practice-design/references/Teaching-Prompt-Design-Checklist.md', 'size': 2956, 'sha256': '2c2ef08baeb98113685b08f042261c5b8bc0a93d7ec6d3a70f6785dfda461828'}, {'path': 'skills/application-practice-design/references/application_based_assessment_lens.md', 'size': 2484, 'sha256': '603504e27fddd4b1a20f46c5e465a1e065e63608022f39d8fb60989cf16f7dbb'}, {'path': 'skills/application-practice-design/references/application_practice_design_authority.md', 'size': 1970, 'sha256': 'b55cb8b773823d66efe049b4049a0bf4fb8e9882a745fdde49eef72d324bcc65'}, {'path': 'skills/application-practice-design/references/application_practice_support_logic.md', 'size': 1687, 'sha256': '288f594420f100c4581a800a3dd16e669bce3d941bc06d9b90fe334fcb909b5a'}, {'path': 'skills/application-practice-design/references/application_topic_selection_template.md', 'size': 1702, 'sha256': '70b04efa6cec9660f7d8cea53bbac644167d65a3a4935d02270694a9829af228'}, {'path': 'skills/application-practice-design/references/提示分隔符簡介.pdf', 'size': 700166, 'sha256': 'cf0ed6eafaaa41b67ffa5251da778813f9ab51a0cef3c3f7bc62f6a0fc9e805c'}, {'path': 'skills/application-practice-design/references/提示設計規則簡介.pdf', 'size': 1150214, 'sha256': '2de83c8144a5eb1791b83fe7646c4bb85576370ac54c36c087bbb6ef23f193bd'}, {'path': 'skills/course-content-generation/SKILL.md', 'size': 1378, 'sha256': '15728aef9b46f4fd07c2e284ebc319aaccf124c2a67d84df59fcf60751972f19'}, {'path': 'skills/course-content-generation/references/AI Pedagogy Rulebook.md', 'size': 3335, 'sha256': '523064bf1575eb213f9e032b9441b73c0610f1b9fc1060b5e1a88da2ba24c343'}, {'path': 'skills/course-content-generation/references/Course-Content-Generation-Logic.md', 'size': 4871, 'sha256': '863a28dd0fc608f6c59e075cca45be8461bfd053785bd6cc08cdb53e16db601b'}, {'path': 'skills/course-content-generation/references/Teaching-Prompt-Design-Checklist.md', 'size': 2956, 'sha256': '2c2ef08baeb98113685b08f042261c5b8bc0a93d7ec6d3a70f6785dfda461828'}, {'path': 'skills/course-content-generation/references/提示分隔符簡介.pdf', 'size': 700166, 'sha256': 'cf0ed6eafaaa41b67ffa5251da778813f9ab51a0cef3c3f7bc62f6a0fc9e805c'}, {'path': 'skills/course-content-generation/references/提示設計規則簡介.pdf', 'size': 1150214, 'sha256': '2de83c8144a5eb1791b83fe7646c4bb85576370ac54c36c087bbb6ef23f193bd'}, {'path': 'skills/course-design/SKILL.md', 'size': 1993, 'sha256': 'd796e96431998ddfb50c12bc6cb8f82e86a29aa16734c9d6273a323216d047f1'}, {'path': 'skills/course-design/references/AI Pedagogy Rulebook.md', 'size': 3335, 'sha256': '523064bf1575eb213f9e032b9441b73c0610f1b9fc1060b5e1a88da2ba24c343'}, {'path': 'skills/course-design/references/AI-Course-Design-Principles.md', 'size': 3686, 'sha256': 'be40079c219c122a82afa88c0f7439af4f43fcb3aa5e0d4e188cb97a34dfab91'}, {'path': 'skills/course-design/references/AI-course-syllabus-template.md', 'size': 4167, 'sha256': 'a4b38aa0682be6ffb212daba1335f6762cecd98e424498cb42b604420706f120'}, {'path': 'skills/pedagogy-orchestrator/SKILL.md', 'size': 2920, 'sha256': '69f7f878a1fc84118e5312e26eb2abe939995ee4eb0f36ddb8ddfb9e4c9b1f16'}, {'path': 'skills/pedagogy-orchestrator/agents/openai.yaml', 'size': 432, 'sha256': 'fa81739ebb81c4403bfaa35e0315b8be3a119e43755a5a98031647f1a7c2d762'}, {'path': 'skills/pedagogy-orchestrator/lookup/knowledge-index.json', 'size': 6092, 'sha256': '48846ea659433ba8a9f179503830ec1410ec28564b179d97e44f6582972872e2'}, {'path': 'skills/pedagogy-orchestrator/references/AI Pedagogy Rulebook.md', 'size': 3335, 'sha256': '523064bf1575eb213f9e032b9441b73c0610f1b9fc1060b5e1a88da2ba24c343'}, {'path': 'skills/teaching-prompt-design/SKILL.md', 'size': 1101, 'sha256': 'ef1b2d290a4e7999ef423677621120cd3c92677a386e68bd622b2c71c41438da'}, {'path': 'skills/teaching-prompt-design/references/AI Pedagogy Rulebook.md', 'size': 3335, 'sha256': '523064bf1575eb213f9e032b9441b73c0610f1b9fc1060b5e1a88da2ba24c343'}, {'path': 'skills/teaching-prompt-design/references/Teaching-Prompt-Design-Checklist.md', 'size': 2956, 'sha256': '2c2ef08baeb98113685b08f042261c5b8bc0a93d7ec6d3a70f6785dfda461828'}, {'path': 'skills/teaching-prompt-design/references/提示分隔符簡介.pdf', 'size': 700166, 'sha256': 'cf0ed6eafaaa41b67ffa5251da778813f9ab51a0cef3c3f7bc62f6a0fc9e805c'}, {'path': 'skills/teaching-prompt-design/references/提示設計規則簡介.pdf', 'size': 1150214, 'sha256': '2de83c8144a5eb1791b83fe7646c4bb85576370ac54c36c087bbb6ef23f193bd'}, {'path': 'skills/thinking-first-reference-integrity/SKILL.md', 'size': 3368, 'sha256': 'ccca13c06a67d3256118def79f81bd2cce33ead27c87b71111881c7e39a136fc'}, {'path': 'skills/thinking-first-reference-integrity/lookup/knowledge-index.json', 'size': 6092, 'sha256': '48846ea659433ba8a9f179503830ec1410ec28564b179d97e44f6582972872e2'}, {'path': 'skills/thinking-first-reference-integrity/provenance/AI-tools-list.md', 'size': 5168, 'sha256': '35b3e769912c7ad73e620147c35e3c4bf09136568c3bed18325085654548cdcc'}, {'path': 'skills/thinking-first-reference-integrity/references/AI Pedagogy Rulebook.md', 'size': 3335, 'sha256': '523064bf1575eb213f9e032b9441b73c0610f1b9fc1060b5e1a88da2ba24c343'}, {'path': 'skills/thinking-first-reference-integrity/references/AI-Application-Routing-Authority.md', 'size': 12746, 'sha256': 'ddbabc683a3fc502603a196ded762089be0f60d8139af3c72f6fb8c3856f0b1f'}, {'path': 'skills/thinking-first-reference-integrity/references/AI-Course-Design-Principles.md', 'size': 3686, 'sha256': 'be40079c219c122a82afa88c0f7439af4f43fcb3aa5e0d4e188cb97a34dfab91'}, {'path': 'skills/thinking-first-reference-integrity/references/AI-course-syllabus-template.md', 'size': 4167, 'sha256': 'a4b38aa0682be6ffb212daba1335f6762cecd98e424498cb42b604420706f120'}, {'path': 'skills/thinking-first-reference-integrity/references/Course-Content-Generation-Logic.md', 'size': 4871, 'sha256': '863a28dd0fc608f6c59e075cca45be8461bfd053785bd6cc08cdb53e16db601b'}, {'path': 'skills/thinking-first-reference-integrity/references/Teaching-Prompt-Design-Checklist.md', 'size': 2956, 'sha256': '2c2ef08baeb98113685b08f042261c5b8bc0a93d7ec6d3a70f6785dfda461828'}, {'path': 'skills/thinking-first-reference-integrity/references/application_based_assessment_lens.md', 'size': 2484, 'sha256': '603504e27fddd4b1a20f46c5e465a1e065e63608022f39d8fb60989cf16f7dbb'}, {'path': 'skills/thinking-first-reference-integrity/references/application_practice_design_authority.md', 'size': 1970, 'sha256': 'b55cb8b773823d66efe049b4049a0bf4fb8e9882a745fdde49eef72d324bcc65'}, {'path': 'skills/thinking-first-reference-integrity/references/application_practice_support_logic.md', 'size': 1687, 'sha256': '288f594420f100c4581a800a3dd16e669bce3d941bc06d9b90fe334fcb909b5a'}, {'path': 'skills/thinking-first-reference-integrity/references/application_topic_selection_template.md', 'size': 1702, 'sha256': '70b04efa6cec9660f7d8cea53bbac644167d65a3a4935d02270694a9829af228'}, {'path': 'skills/thinking-first-reference-integrity/references/c8d1ccc4-7a3f-476f-9309-00ffa9205c17.png', 'size': 346132, 'sha256': '2285dee0b2e2fd1f097eb273383451e592065dd9600c3541f5e18840b6963b66'}, {'path': 'skills/thinking-first-reference-integrity/references/提示分隔符簡介.pdf', 'size': 700166, 'sha256': 'cf0ed6eafaaa41b67ffa5251da778813f9ab51a0cef3c3f7bc62f6a0fc9e805c'}, {'path': 'skills/thinking-first-reference-integrity/references/提示設計規則簡介.pdf', 'size': 1150214, 'sha256': '2de83c8144a5eb1791b83fe7646c4bb85576370ac54c36c087bbb6ef23f193bd'}]
+EXPECTED_TREE_SHA256 = '0bc3f3e735a24406e3a560cfa1eadee779bc925dd3c916212364ba47010ee5a3'
+
+
+def _tree_manifest(root: Path) -> list[dict[str, object]]:
+    members = []
+    for directory, names, files in os.walk(root, topdown=True, followlinks=False):
+        directory_path = Path(directory)
+        for name in sorted(names):
+            child = directory_path / name
+            attributes = getattr(child.lstat(), "st_file_attributes", 0)
+            if child.is_symlink() or attributes & getattr(stat, "FILE_ATTRIBUTE_REPARSE_POINT", 0):
+                raise ValueError("imported_plugin_tree_mismatch")
+        for name in sorted(files):
+            child = directory_path / name
+            attributes = getattr(child.lstat(), "st_file_attributes", 0)
+            if child.is_symlink() or attributes & getattr(stat, "FILE_ATTRIBUTE_REPARSE_POINT", 0):
+                raise ValueError("imported_plugin_tree_mismatch")
+            content = child.read_bytes()
+            members.append({
+                "path": child.relative_to(root).as_posix(),
+                "size": len(content),
+                "sha256": sha256(content).hexdigest(),
+            })
+    return sorted(members, key=lambda item: item["path"])
+
+
+def _tree_identity(root: Path) -> None:
+    members = _tree_manifest(root)
+    encoded = json.dumps(
+        members, ensure_ascii=True, sort_keys=True, separators=(",", ":")
+    ).encode("ascii")
+    if members != EXPECTED_MEMBERS or sha256(encoded).hexdigest() != EXPECTED_TREE_SHA256:
+        raise ValueError("imported_plugin_tree_mismatch")
+
+
+def _identity(root: Path) -> tuple[str, str]:
+    identities = []
+    for relative in ("plugin.json", ".codex-plugin/plugin.json"):
+        payload = json.loads((root / relative).read_text(encoding="utf-8"))
+        author = payload.get("author")
+        if isinstance(author, dict):
+            author = author.get("name")
+        identities.append((payload.get("name"), payload.get("version"), author))
+    if identities[0] != identities[1] or identities[0][:2] != (PLUGIN_ID, VERSION):
+        raise ValueError("imported_plugin_identity_mismatch")
+    return PLUGIN_ID, VERSION
+
+
+def build(source: Path, destination: Path) -> Path:
+    source = source.resolve()
+    imported = source / "imported-plugin"
+    license_path = source / "LICENSE"
+    if not license_path.is_file():
+        raise ValueError("license_missing")
+    _identity(imported)
+    _tree_identity(imported)
+    target = destination.resolve() / "plugins" / PLUGIN_ID
+    target.parent.mkdir(parents=True, exist_ok=True)
+    temporary_root = Path(tempfile.mkdtemp(prefix=f".{PLUGIN_ID}-", dir=target.parent))
+    staged = temporary_root / PLUGIN_ID
+    try:
+        shutil.copytree(imported, staged, copy_function=shutil.copy2)
+        _identity(staged)
+        _tree_identity(staged)
+        shutil.copy2(license_path, staged / "LICENSE")
+        if target.exists():
+            shutil.rmtree(target)
+        os.replace(staged, target)
+    finally:
+        if temporary_root.exists():
+            shutil.rmtree(temporary_root)
+    return target
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--source", type=Path, required=True)
+    parser.add_argument("--destination", type=Path, required=True)
+    parser.add_argument("--version", required=True)
+    args = parser.parse_args()
+    if args.version != VERSION:
+        raise ValueError("version_mismatch")
+    build(args.source, args.destination)
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
