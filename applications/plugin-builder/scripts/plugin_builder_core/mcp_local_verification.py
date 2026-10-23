@@ -17,9 +17,6 @@ from .implementation_plan import canonical_bytes
 from .runtime_commands import resolve_direct_argv
 
 
-_TRACE_MARKERS = frozenset({"server_started", "listener_ready", "request_received", "request_read", "response_written"})
-
-
 def _digest(value: object) -> str:
     return sha256(canonical_bytes(value)).hexdigest()
 
@@ -105,17 +102,6 @@ def _base(tool: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def _trace_diagnostics(path: Path) -> list[str]:
-    try:
-        markers = {
-            line.strip() for line in path.read_text(encoding="ascii").splitlines()
-            if line.strip() in _TRACE_MARKERS
-        }
-    except (OSError, UnicodeError):
-        return []
-    return [f"mcp_local.trace:{marker}" for marker in sorted(markers)]
-
-
 def _preflight(tool: dict[str, Any], candidate: Path, allow_loopback: bool) -> tuple[list[str] | None, list[str]]:
     if not allow_loopback:
         return None, ["mcp_local.loopback_not_authorized"]
@@ -170,10 +156,8 @@ def verify_local_mcp_realization(tool: dict[str, Any], candidate: Path, *, allow
     process: subprocess.Popen[bytes] | None = None
     try:
         with tempfile.TemporaryDirectory() as scratch:
-            trace_path = Path(scratch) / "mcp-server-trace.txt"
             environment["TEMP"] = scratch
             environment["TMP"] = scratch
-            environment["PLUGIN_BUILDER_MCP_TRACE"] = str(trace_path)
             process = subprocess.Popen(
                 command, cwd=Path(candidate), env=environment, shell=False,
                 stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
@@ -217,10 +201,7 @@ def verify_local_mcp_realization(tool: dict[str, Any], candidate: Path, *, allow
                         "mcp_local.startup_failed" if process.returncode else "mcp_local.premature_exit"
                     ]
                 else:
-                    evidence["diagnostics"] = [
-                        "mcp_local.request_timeout", last_connection_error,
-                        *_trace_diagnostics(trace_path),
-                    ]
+                    evidence["diagnostics"] = ["mcp_local.request_timeout", last_connection_error]
                 evidence["state"] = "FAIL"
                 return evidence
             evidence["network_contacted"] = True
