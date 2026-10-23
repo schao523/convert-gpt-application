@@ -24,6 +24,8 @@ class PublicationTemplateTests(unittest.TestCase):
         self.assertIn("Display aggregate verification report on failure", content)
         self.assertIn("if: failure()", content)
         self.assertIn("report.json", content)
+        self.assertIn("ConvertFrom-Json", content)
+        self.assertIn("$gate.state -eq 'FAIL'", content)
 
     def test_python_311_sources_do_not_use_rmtree_onexc(self) -> None:
         offenders = []

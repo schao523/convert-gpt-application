@@ -38,7 +38,21 @@ jobs:
             Sort-Object LastWriteTimeUtc -Descending |
             Select-Object -First 1
           if ($null -ne $report) {
-            Get-Content -LiteralPath $report.FullName -Raw
+            $reportText = Get-Content -LiteralPath $report.FullName -Raw
+            $payload = $reportText | ConvertFrom-Json
+            $reportText
+            $gates = @($payload.shared_gates) + @(
+              $payload.applications | ForEach-Object { $_.gates }
+            )
+            foreach ($gate in $gates) {
+              if ($gate.state -eq 'FAIL' -and $null -ne $gate.log) {
+                $logPath = Join-Path $env:GITHUB_WORKSPACE $gate.log
+                if (Test-Path -LiteralPath $logPath -PathType Leaf) {
+                  "FAILED GATE LOG: $($gate.id) [$($gate.log)]"
+                  Get-Content -LiteralPath $logPath -Raw
+                }
+              }
+            }
           }
       - name: Verify published Growing With Children artifact
         shell: pwsh
