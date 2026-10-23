@@ -370,6 +370,17 @@ target runtime, the `obvious-one` marketplace, and
 identity mismatches, unsafe archives, undeclared executable or dependency
 content, and stale evidence fail closed.
 
+For an owner-approved, exact v3 archive whose only structural findings are
+known `path_binding_missing` references to shared plugin-root files, add
+`--compatibility-profile <record.json>` alongside `--package-metadata`.
+The `workbench-exact-structural-compatibility-v1` record requires the exact
+archive SHA-256, sidecar SHA-256, plugin ID and version, SHA-256 and count of
+the complete sorted finding records, an explicit approval, owner identity,
+and timezone-aware decision time. Any changed bytes or finding, or any other
+finding code, fails closed. The proposal and imported inventory retain all
+observed findings. This exception does not change imported bytes, waive
+content/security checks, or promote installed-runtime evidence.
+
 For an exact historical Plugin Builder ZIP, use a narrowly matched adoption
 record as explicit owner authority instead of package metadata. Supported
 profiles are:

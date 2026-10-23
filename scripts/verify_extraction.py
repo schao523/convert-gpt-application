@@ -331,6 +331,7 @@ def _validate_onboarding_inventory(
         "candidate_sha256",
         "content_tree_sha256",
         "members",
+        "structural_compatibility",
     }
     if set(payload) - allowed or payload.get("plugin_id") != config.plugin_id:
         raise ProvenanceError("onboarding_inventory_identity_mismatch")
@@ -366,6 +367,37 @@ def _validate_onboarding_inventory(
             raise ProvenanceError("invalid_onboarding_inventory_member")
         expected.append({"path": path_value, "size": size, "sha256": digest})
     imported = config.root / "imported-plugin"
+    compatibility = payload.get("structural_compatibility")
+    if compatibility is not None:
+        required = {
+            "schema", "archive_sha256", "metadata_sha256", "findings_sha256",
+            "findings_count", "findings", "confirmed_by", "decision_recorded_at",
+        }
+        if not isinstance(compatibility, dict) or set(compatibility) != required:
+            raise ProvenanceError("onboarding_structural_compatibility_invalid")
+        if (compatibility["schema"] != "workbench-exact-structural-compatibility-v1"
+            or compatibility["archive_sha256"] != payload["archive_sha256"]
+            or not isinstance(compatibility["findings_count"], int)
+            or isinstance(compatibility["findings_count"], bool)
+            or compatibility["findings_count"] < 1
+            or not isinstance(compatibility["confirmed_by"], str)
+            or not compatibility["confirmed_by"]
+            or not isinstance(compatibility["decision_recorded_at"], str)):
+            raise ProvenanceError("onboarding_structural_compatibility_invalid")
+        for field in ("metadata_sha256", "findings_sha256"):
+            if not isinstance(compatibility[field], str) or re.fullmatch(r"[0-9a-f]{64}", compatibility[field]) is None:
+                raise ProvenanceError("onboarding_structural_compatibility_invalid")
+        findings = compatibility["findings"]
+        observed_findings = [
+            {"code": issue.code, "path": issue.path, "detail": issue.detail}
+            for issue in plugin_authoring.validate_plugin_tree(imported)
+        ]
+        if (not isinstance(findings, list)
+            or len(findings) != compatibility["findings_count"]
+            or findings != observed_findings
+            or any(item["code"] != "path_binding_missing" for item in observed_findings)
+            or sha256((json.dumps(findings, ensure_ascii=True, indent=2, sort_keys=True) + "\n").encode("ascii")).hexdigest() != compatibility["findings_sha256"]):
+            raise ProvenanceError("onboarding_structural_compatibility_mismatch")
     observed = [
         {"path": item.path, "size": item.size, "sha256": item.sha256}
         for item in plugin_authoring.tree_manifest(imported)

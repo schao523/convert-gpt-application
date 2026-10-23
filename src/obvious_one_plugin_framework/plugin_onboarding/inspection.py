@@ -15,6 +15,7 @@ import zipfile
 from .. import plugin_authoring
 from ..package_builder import FORBIDDEN_NAMES, SECRET_FRAGMENTS
 from .contract import (
+    ExactStructuralCompatibility,
     LegacyPluginBuilderAdoption,
     OnboardingError,
     PackageMember,
@@ -87,7 +88,7 @@ class OnboardingInspection:
     member_manifest_sha256: str
     members: tuple[PackageMember, ...]
     candidate_members: tuple[object, ...]
-    manifest_profile: str
+    manifest_profile: str | Mapping[str, object]
     manifest_identity: Mapping[str, object]
     preflight_evidence: Mapping[str, object]
     preflight_evidence_sha256: str
@@ -116,6 +117,7 @@ class OnboardingInspection:
     approved_dependency_files: tuple[str, ...] = ()
     adoption_identity_sha256: str | None = None
     diagnostics: tuple[str, ...] = ()
+    structural_compatibility: Mapping[str, object] | None = None
 
 
 def _fail(code: str, detail: str = "") -> OnboardingError:
@@ -165,15 +167,26 @@ def _validate_metadata_closure(
         raise _fail("manifest_profile_mismatch")
 
 
-def _manifest_identity(root: Path, metadata: PackageMetadata) -> tuple[dict[str, object], str, tuple[Mapping[str, object], ...]]:
+def _structural_findings(root: Path, profile: ExactStructuralCompatibility | None) -> tuple[dict[str, str], ...]:
+    issues = plugin_authoring.validate_plugin_tree(root)
+    if profile is None:
+        if issues:
+            raise _fail("plugin_tree_invalid", f"{issues[0].code}:{issues[0].path}")
+        return ()
+    findings = tuple({"code": issue.code, "path": issue.path, "detail": issue.detail} for issue in issues)
+    if (len(findings) != profile.findings_count
+        or any(item["code"] != "path_binding_missing" for item in findings)
+        or sha256(_canonical_bytes(findings)).hexdigest() != profile.findings_sha256):
+        raise _fail("structural_compatibility_mismatch")
+    return findings
+
+
+def _manifest_identity(root: Path, metadata: PackageMetadata, profile: ExactStructuralCompatibility | None = None) -> tuple[dict[str, object], str, tuple[Mapping[str, object], ...], tuple[dict[str, str], ...]]:
     portable = _load_json(root / "plugin.json", "portable_manifest_invalid")
     compatibility = _load_json(
         root / ".codex-plugin" / "plugin.json", "compatibility_manifest_invalid"
     )
-    issues = plugin_authoring.validate_plugin_tree(root)
-    if issues:
-        issue = issues[0]
-        raise _fail("plugin_tree_invalid", f"{issue.code}:{issue.path}")
+    findings = _structural_findings(root, profile)
     if portable.get("name") != metadata.plugin_id:
         raise _fail("plugin_identity_mismatch")
     extensions = portable.get("extensions")
@@ -232,7 +245,7 @@ def _manifest_identity(root: Path, metadata: PackageMetadata) -> tuple[dict[str,
         if validated.errors or validated.blockers:
             raise _fail("tool_contract_invalid", validated.id)
         validated_contracts.append(MappingProxyType(dict(contract)))
-    return identity, str(candidate_manifest.get("plan_sha256", "")), tuple(validated_contracts)
+    return identity, str(candidate_manifest.get("plan_sha256", "")), tuple(validated_contracts), findings
 
 
 def _scan_public_content(root: Path) -> tuple[tuple[str, ...], tuple[str, ...], tuple[str, ...]]:
@@ -364,6 +377,7 @@ def inspect_plugin_builder_package(
     metadata: PackageMetadata,
     *,
     evidence: Path | None = None,
+    compatibility: ExactStructuralCompatibility | None = None,
 ) -> OnboardingInspection:
     """Inspect a Plugin Builder package without executing imported content."""
 
@@ -372,6 +386,12 @@ def inspect_plugin_builder_package(
     except plugin_authoring.PluginAuthoringError as exc:
         raise _fail(exc.code, exc.detail) from exc
     _validate_metadata_closure(inventory, metadata)
+    if compatibility is not None and (
+        metadata.schema != "plugin-builder-package-v3"
+        or compatibility.archive_sha256 != metadata.archive_sha256
+        or compatibility.plugin_id != metadata.plugin_id
+    ):
+        raise _fail("structural_compatibility_identity_mismatch")
     with tempfile.TemporaryDirectory(prefix="plugin-onboarding-") as name:
         extracted = Path(name) / "archive"
         try:
@@ -388,7 +408,9 @@ def inspect_plugin_builder_package(
             raise _fail("candidate_members_mismatch")
         if plugin_authoring.tree_sha256(located.path) != metadata.candidate_sha256:
             raise _fail("candidate_sha256_mismatch")
-        identity, plan_sha, tool_contracts = _manifest_identity(located.path, metadata)
+        identity, plan_sha, tool_contracts, findings = _manifest_identity(located.path, metadata, compatibility)
+        if compatibility is not None and compatibility.version != identity["version"]:
+            raise _fail("structural_compatibility_identity_mismatch")
         mcp_files, dependency_files, executable_files = _scan_public_content(located.path)
         if evidence is None:
             evidence_state = "NOT VERIFIED"
@@ -438,6 +460,18 @@ def inspect_plugin_builder_package(
             evidence_bundle_state=evidence_state,
             input_profile=metadata.schema.upper().replace("-", "_"),
             producer_claims=MappingProxyType({"schema": metadata.schema}),
+            structural_compatibility=(
+                MappingProxyType({
+                    "schema": "workbench-exact-structural-compatibility-v1",
+                    "archive_sha256": compatibility.archive_sha256,
+                    "metadata_sha256": compatibility.metadata_sha256,
+                    "findings_sha256": compatibility.findings_sha256,
+                    "findings_count": compatibility.findings_count,
+                    "findings": findings,
+                    "confirmed_by": compatibility.confirmed_by,
+                    "decision_recorded_at": compatibility.decision_recorded_at,
+                }) if compatibility is not None else None
+            ),
         )
 
 

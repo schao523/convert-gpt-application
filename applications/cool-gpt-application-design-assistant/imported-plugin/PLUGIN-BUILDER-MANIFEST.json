@@ -1,0 +1,999 @@
+{
+  "adapter_registry_sha256": "3b5fb420381737aa90fe77afc140adc6cbe6e8747fc29b3301c4a8457ae336f6",
+  "capabilities": [
+    {
+      "evidence_targets": [
+        "STRUCTURE",
+        "BEHAVIOR"
+      ],
+      "id": "adapting-platforms-and-delivering-packages",
+      "realization_need": "SKILL_ONLY",
+      "requirement_ids": [
+        "R05",
+        "R17",
+        "R24",
+        "R26",
+        "R27",
+        "R28",
+        "R29"
+      ],
+      "runtime_targets": [
+        "ChatGPT Work Local/Desktop",
+        "Codex"
+      ],
+      "schema": "plugin-builder-capability-v1",
+      "skill_bindings": [
+        "adapting-platforms-and-delivering-packages"
+      ],
+      "tool_id": null
+    },
+    {
+      "evidence_targets": [
+        "STRUCTURE",
+        "OPERATION",
+        "INSTALLED_REALIZATION",
+        "BEHAVIOR"
+      ],
+      "id": "check-design-links",
+      "realization_need": "TOOL_REQUIRED",
+      "requirement_ids": [
+        "R26"
+      ],
+      "runtime_targets": [
+        "ChatGPT Work Local/Desktop",
+        "Codex"
+      ],
+      "schema": "plugin-builder-capability-v1",
+      "skill_bindings": [
+        "adapting-platforms-and-delivering-packages"
+      ],
+      "tool_id": "design-integrity"
+    },
+    {
+      "evidence_targets": [
+        "STRUCTURE",
+        "BEHAVIOR"
+      ],
+      "id": "consulting-design-references",
+      "realization_need": "SKILL_ONLY",
+      "requirement_ids": [
+        "R19",
+        "R20"
+      ],
+      "runtime_targets": [
+        "ChatGPT Work Local/Desktop",
+        "Codex"
+      ],
+      "schema": "plugin-builder-capability-v1",
+      "skill_bindings": [
+        "consulting-design-references"
+      ],
+      "tool_id": null
+    },
+    {
+      "evidence_targets": [
+        "STRUCTURE",
+        "BEHAVIOR"
+      ],
+      "id": "designing-and-reviewing-interactions",
+      "realization_need": "SKILL_ONLY",
+      "requirement_ids": [
+        "R09",
+        "R10",
+        "R11"
+      ],
+      "runtime_targets": [
+        "ChatGPT Work Local/Desktop",
+        "Codex"
+      ],
+      "schema": "plugin-builder-capability-v1",
+      "skill_bindings": [
+        "designing-and-reviewing-interactions"
+      ],
+      "tool_id": null
+    },
+    {
+      "evidence_targets": [
+        "STRUCTURE",
+        "BEHAVIOR"
+      ],
+      "id": "designing-custom-instructions",
+      "realization_need": "SKILL_ONLY",
+      "requirement_ids": [
+        "R03",
+        "R04",
+        "R06"
+      ],
+      "runtime_targets": [
+        "ChatGPT Work Local/Desktop",
+        "Codex"
+      ],
+      "schema": "plugin-builder-capability-v1",
+      "skill_bindings": [
+        "designing-custom-instructions"
+      ],
+      "tool_id": null
+    },
+    {
+      "evidence_targets": [
+        "STRUCTURE",
+        "OPERATION",
+        "INSTALLED_REALIZATION",
+        "BEHAVIOR"
+      ],
+      "id": "digest-approved-files",
+      "realization_need": "TOOL_REQUIRED",
+      "requirement_ids": [
+        "R25"
+      ],
+      "runtime_targets": [
+        "ChatGPT Work Local/Desktop",
+        "Codex"
+      ],
+      "schema": "plugin-builder-capability-v1",
+      "skill_bindings": [
+        "adapting-platforms-and-delivering-packages"
+      ],
+      "tool_id": "design-integrity"
+    },
+    {
+      "evidence_targets": [
+        "STRUCTURE",
+        "BEHAVIOR"
+      ],
+      "id": "evaluating-and-binding-resources",
+      "realization_need": "SKILL_ONLY",
+      "requirement_ids": [
+        "R07",
+        "R08",
+        "R25"
+      ],
+      "runtime_targets": [
+        "ChatGPT Work Local/Desktop",
+        "Codex"
+      ],
+      "schema": "plugin-builder-capability-v1",
+      "skill_bindings": [
+        "evaluating-and-binding-resources"
+      ],
+      "tool_id": null
+    },
+    {
+      "evidence_targets": [
+        "STRUCTURE",
+        "OPERATION",
+        "INSTALLED_REALIZATION",
+        "BEHAVIOR"
+      ],
+      "id": "guard-version-confirmation",
+      "realization_need": "TOOL_REQUIRED",
+      "requirement_ids": [
+        "R21"
+      ],
+      "runtime_targets": [
+        "ChatGPT Work Local/Desktop",
+        "Codex"
+      ],
+      "schema": "plugin-builder-capability-v1",
+      "skill_bindings": [
+        "guiding-application-design-sessions"
+      ],
+      "tool_id": "design-integrity"
+    },
+    {
+      "evidence_targets": [
+        "STRUCTURE",
+        "BEHAVIOR"
+      ],
+      "id": "guiding-application-design-sessions",
+      "realization_need": "SKILL_ONLY",
+      "requirement_ids": [
+        "R01",
+        "R02",
+        "R14",
+        "R15",
+        "R16",
+        "R18",
+        "R21"
+      ],
+      "runtime_targets": [
+        "ChatGPT Work Local/Desktop",
+        "Codex"
+      ],
+      "schema": "plugin-builder-capability-v1",
+      "skill_bindings": [
+        "guiding-application-design-sessions"
+      ],
+      "tool_id": null
+    },
+    {
+      "evidence_targets": [
+        "STRUCTURE",
+        "OPERATION",
+        "INSTALLED_REALIZATION",
+        "BEHAVIOR"
+      ],
+      "id": "resolve-resource-alias",
+      "realization_need": "TOOL_REQUIRED",
+      "requirement_ids": [
+        "R20"
+      ],
+      "runtime_targets": [
+        "ChatGPT Work Local/Desktop",
+        "Codex"
+      ],
+      "schema": "plugin-builder-capability-v1",
+      "skill_bindings": [
+        "consulting-design-references"
+      ],
+      "tool_id": "design-integrity"
+    },
+    {
+      "evidence_targets": [
+        "STRUCTURE",
+        "BEHAVIOR"
+      ],
+      "id": "testing-and-improving-instructions",
+      "realization_need": "SKILL_ONLY",
+      "requirement_ids": [
+        "R12",
+        "R13",
+        "R22",
+        "R23"
+      ],
+      "runtime_targets": [
+        "ChatGPT Work Local/Desktop",
+        "Codex"
+      ],
+      "schema": "plugin-builder-capability-v1",
+      "skill_bindings": [
+        "testing-and-improving-instructions"
+      ],
+      "tool_id": null
+    }
+  ],
+  "capabilities_sha256": "b1ebd818f8f2c0ba4e76a0216672640731fa51cb40283249fb59c2bb8e1ca033",
+  "content_tree_sha256": "bcbacd10fa5a5ed29b7ad76356cfa025a05e6c0465eeb068822ed0de81998ca7",
+  "dependencies_sha256": "b19d9b5fea90d88b1435fe3ef37408708458117cb69d1cc270b7229fe23021b4",
+  "expected_members": [
+    ".codex-plugin/plugin.json",
+    "PLUGIN-BUILDER-MANIFEST.json",
+    "README.md",
+    "THIRD_PARTY_CONTENT.md",
+    "docs/runtime-boundaries.md",
+    "plugin.json",
+    "skills/adapting-platforms-and-delivering-packages/SKILL.md",
+    "skills/adapting-platforms-and-delivering-packages/agents/openai.yaml",
+    "skills/adapting-platforms-and-delivering-packages/references/module-contracts.json",
+    "skills/consulting-design-references/SKILL.md",
+    "skills/consulting-design-references/agents/openai.yaml",
+    "skills/consulting-design-references/references/Human-in-the-Loop_Guide.md",
+    "skills/consulting-design-references/references/Platform_Target_Adaptation_Requirements.md",
+    "skills/consulting-design-references/references/Reference_Evaluation_and_Usage_Map.md",
+    "skills/consulting-design-references/references/builder_guide.md",
+    "skills/consulting-design-references/references/interaction_patterns_guide.md",
+    "skills/consulting-design-references/references/knowledge-index.json",
+    "skills/consulting-design-references/references/knowledge_module_template.md",
+    "skills/consulting-design-references/references/modular_design_guide.md",
+    "skills/consulting-design-references/references/module-contracts.json",
+    "skills/consulting-design-references/references/original-instructions.docx",
+    "skills/consulting-design-references/references/prompt_refactoring_patterns.md",
+    "skills/consulting-design-references/references/resource_binding_patterns.md",
+    "skills/consulting-design-references/references/resource_evaluation_guide.md",
+    "skills/consulting-design-references/references/resource_types_guide.md",
+    "skills/consulting-design-references/references/source-inventory.json",
+    "skills/consulting-design-references/references/testing_guide.md",
+    "skills/consulting-design-references/references/use_case_brainstorm_guide.md",
+    "skills/designing-and-reviewing-interactions/SKILL.md",
+    "skills/designing-and-reviewing-interactions/agents/openai.yaml",
+    "skills/designing-and-reviewing-interactions/references/module-contracts.json",
+    "skills/designing-custom-instructions/SKILL.md",
+    "skills/designing-custom-instructions/agents/openai.yaml",
+    "skills/designing-custom-instructions/references/module-contracts.json",
+    "skills/evaluating-and-binding-resources/SKILL.md",
+    "skills/evaluating-and-binding-resources/agents/openai.yaml",
+    "skills/evaluating-and-binding-resources/references/module-contracts.json",
+    "skills/guiding-application-design-sessions/SKILL.md",
+    "skills/guiding-application-design-sessions/agents/openai.yaml",
+    "skills/guiding-application-design-sessions/references/module-contracts.json",
+    "skills/testing-and-improving-instructions/SKILL.md",
+    "skills/testing-and-improving-instructions/agents/openai.yaml",
+    "skills/testing-and-improving-instructions/references/module-contracts.json",
+    "tools/contracts/application-policy.md",
+    "tools/contracts/artifact-contracts.md",
+    "tools/contracts/interaction-protocols.json",
+    "tools/contracts/requirements.json",
+    "tools/contracts/workflows.json",
+    "tools/design-integrity-contract.json",
+    "tools/design_integrity.py",
+    "tools/operation-guide.md",
+    "verification/representative-tests.json"
+  ],
+  "file_roles": {
+    ".codex-plugin/plugin.json": "GENERATED_METADATA",
+    "README.md": "OTHER",
+    "THIRD_PARTY_CONTENT.md": "OTHER",
+    "docs/runtime-boundaries.md": "OTHER",
+    "plugin.json": "PLUGIN_MANIFEST",
+    "skills/adapting-platforms-and-delivering-packages/SKILL.md": "SKILL_ENTRYPOINT",
+    "skills/adapting-platforms-and-delivering-packages/agents/openai.yaml": "GENERATED_METADATA",
+    "skills/adapting-platforms-and-delivering-packages/references/module-contracts.json": "OTHER",
+    "skills/consulting-design-references/SKILL.md": "SKILL_ENTRYPOINT",
+    "skills/consulting-design-references/agents/openai.yaml": "GENERATED_METADATA",
+    "skills/consulting-design-references/references/Human-in-the-Loop_Guide.md": "GENERAL_KNOWLEDGE",
+    "skills/consulting-design-references/references/Platform_Target_Adaptation_Requirements.md": "GENERAL_KNOWLEDGE",
+    "skills/consulting-design-references/references/Reference_Evaluation_and_Usage_Map.md": "GENERAL_KNOWLEDGE",
+    "skills/consulting-design-references/references/builder_guide.md": "GENERAL_KNOWLEDGE",
+    "skills/consulting-design-references/references/interaction_patterns_guide.md": "GENERAL_KNOWLEDGE",
+    "skills/consulting-design-references/references/knowledge-index.json": "GENERAL_KNOWLEDGE",
+    "skills/consulting-design-references/references/knowledge_module_template.md": "GENERAL_KNOWLEDGE",
+    "skills/consulting-design-references/references/modular_design_guide.md": "GENERAL_KNOWLEDGE",
+    "skills/consulting-design-references/references/module-contracts.json": "OTHER",
+    "skills/consulting-design-references/references/original-instructions.docx": "GENERAL_KNOWLEDGE",
+    "skills/consulting-design-references/references/prompt_refactoring_patterns.md": "GENERAL_KNOWLEDGE",
+    "skills/consulting-design-references/references/resource_binding_patterns.md": "GENERAL_KNOWLEDGE",
+    "skills/consulting-design-references/references/resource_evaluation_guide.md": "GENERAL_KNOWLEDGE",
+    "skills/consulting-design-references/references/resource_types_guide.md": "GENERAL_KNOWLEDGE",
+    "skills/consulting-design-references/references/source-inventory.json": "GENERAL_KNOWLEDGE",
+    "skills/consulting-design-references/references/testing_guide.md": "GENERAL_KNOWLEDGE",
+    "skills/consulting-design-references/references/use_case_brainstorm_guide.md": "GENERAL_KNOWLEDGE",
+    "skills/designing-and-reviewing-interactions/SKILL.md": "SKILL_ENTRYPOINT",
+    "skills/designing-and-reviewing-interactions/agents/openai.yaml": "GENERATED_METADATA",
+    "skills/designing-and-reviewing-interactions/references/module-contracts.json": "OTHER",
+    "skills/designing-custom-instructions/SKILL.md": "SKILL_ENTRYPOINT",
+    "skills/designing-custom-instructions/agents/openai.yaml": "GENERATED_METADATA",
+    "skills/designing-custom-instructions/references/module-contracts.json": "OTHER",
+    "skills/evaluating-and-binding-resources/SKILL.md": "SKILL_ENTRYPOINT",
+    "skills/evaluating-and-binding-resources/agents/openai.yaml": "GENERATED_METADATA",
+    "skills/evaluating-and-binding-resources/references/module-contracts.json": "OTHER",
+    "skills/guiding-application-design-sessions/SKILL.md": "SKILL_ENTRYPOINT",
+    "skills/guiding-application-design-sessions/agents/openai.yaml": "GENERATED_METADATA",
+    "skills/guiding-application-design-sessions/references/module-contracts.json": "OTHER",
+    "skills/testing-and-improving-instructions/SKILL.md": "SKILL_ENTRYPOINT",
+    "skills/testing-and-improving-instructions/agents/openai.yaml": "GENERATED_METADATA",
+    "skills/testing-and-improving-instructions/references/module-contracts.json": "OTHER",
+    "tools/contracts/application-policy.md": "OTHER",
+    "tools/contracts/artifact-contracts.md": "OTHER",
+    "tools/contracts/interaction-protocols.json": "OTHER",
+    "tools/contracts/requirements.json": "GENERATED_METADATA",
+    "tools/contracts/workflows.json": "OTHER",
+    "tools/design-integrity-contract.json": "GENERATED_METADATA",
+    "tools/design_integrity.py": "EXECUTABLE_TOOL",
+    "tools/operation-guide.md": "OTHER",
+    "verification/representative-tests.json": "GENERATED_METADATA"
+  },
+  "generated_runtime_configuration": [],
+  "generated_runtime_configuration_sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+  "manifest_profile": {
+    "listing_status": {
+      "brand_colors": "UNRESOLVED",
+      "homepage": "UNRESOLVED",
+      "icons": "UNRESOLVED",
+      "keywords": "UNRESOLVED",
+      "license": "UNRESOLVED",
+      "repository": "UNRESOLVED"
+    },
+    "mcp_configuration": "NOT_APPLICABLE",
+    "profile": "PRIVATE_LOCAL",
+    "schema": "plugin-builder-manifest-profile-v1",
+    "target": "OPENAI_DESKTOP",
+    "vocabulary_version": "obvious-one-openai-interface-v1"
+  },
+  "manifest_profile_sha256": "e5d5126fafa9fe171aaf6d069b0d55b4f328049ed71f3f77a2c32d382603bc79",
+  "members": [
+    {
+      "path": ".codex-plugin/plugin.json",
+      "sha256": "10ced057ff1e89c4b0bc3fe82d7c978af980e38c8da441a28d3d92a110f6482e",
+      "size": 901
+    },
+    {
+      "path": "README.md",
+      "sha256": "94a0175573e51aa6874bd7b16e746585af536a81a9c9aadd303a5061ba8d4303",
+      "size": 860
+    },
+    {
+      "path": "THIRD_PARTY_CONTENT.md",
+      "sha256": "9b23f3ac8ab1b523fd2a68db9689cc8995bf03e12c2f419000e902231970a029",
+      "size": 514
+    },
+    {
+      "path": "docs/runtime-boundaries.md",
+      "sha256": "5a0f6b719a74f5fc990a3ca74112a55ea2fb567893930927d702f4bbd80a566e",
+      "size": 1409
+    },
+    {
+      "path": "plugin.json",
+      "sha256": "81e3b37ec289f4adc6cb9cdc011348954e81933a2253a36125aa0bd757a1763e",
+      "size": 1047
+    },
+    {
+      "path": "skills/adapting-platforms-and-delivering-packages/SKILL.md",
+      "sha256": "c12877dd597b4f3f519211cda84d1293b808cc11c9ce7ecea818a3edd415cad0",
+      "size": 3122
+    },
+    {
+      "path": "skills/adapting-platforms-and-delivering-packages/agents/openai.yaml",
+      "sha256": "0960659b6fa890f26eee3380489d8586f6caf5b60debaa20615909e768b18518",
+      "size": 173
+    },
+    {
+      "path": "skills/adapting-platforms-and-delivering-packages/references/module-contracts.json",
+      "sha256": "c075ba2f0413a376b23aa9cf8ddc4c8bb2a5986fd2f4254eae4f2916b00a1f45",
+      "size": 6192
+    },
+    {
+      "path": "skills/consulting-design-references/SKILL.md",
+      "sha256": "895c4f8b2e1867738adb21584a61d7ece5e43eb5dc8752d0fc32be6e4e8f6f64",
+      "size": 3736
+    },
+    {
+      "path": "skills/consulting-design-references/agents/openai.yaml",
+      "sha256": "5c576a4e876370928c81ee8854a0e954bf26faa48afd457c671fd88f7658ff15",
+      "size": 140
+    },
+    {
+      "path": "skills/consulting-design-references/references/Human-in-the-Loop_Guide.md",
+      "sha256": "490e19be70b1a6886afb4765bae1d1305c0af9a4e3caf7b1e672b6680c8e40a8",
+      "size": 885
+    },
+    {
+      "path": "skills/consulting-design-references/references/Platform_Target_Adaptation_Requirements.md",
+      "sha256": "a50df5428f5a378847e0d81e6c32981a8331e282373e06d7c794b222dfd97e57",
+      "size": 6393
+    },
+    {
+      "path": "skills/consulting-design-references/references/Reference_Evaluation_and_Usage_Map.md",
+      "sha256": "fd1c9f214c6c633790347f6feb84d9f02affc51a4c283fe64e6608b0962bcd73",
+      "size": 12439
+    },
+    {
+      "path": "skills/consulting-design-references/references/builder_guide.md",
+      "sha256": "006d1fb1a7981e7d72aadb158620da8c9d6b74e8b6d83d493b51a1ac014690f5",
+      "size": 4475
+    },
+    {
+      "path": "skills/consulting-design-references/references/interaction_patterns_guide.md",
+      "sha256": "fc77d59ecb8cafb7a08f86993050f084daf462630bf7dec97fe86d32e3d8c605",
+      "size": 2032
+    },
+    {
+      "path": "skills/consulting-design-references/references/knowledge-index.json",
+      "sha256": "1ce7521e23ae5e0071bbe0e81b8bbde6f563340b0ab38dedefa55bd1e59ff007",
+      "size": 4290
+    },
+    {
+      "path": "skills/consulting-design-references/references/knowledge_module_template.md",
+      "sha256": "dd71beed2b1395c2198903943c0389ed66bf2861753765a678e3815538e58cea",
+      "size": 794
+    },
+    {
+      "path": "skills/consulting-design-references/references/modular_design_guide.md",
+      "sha256": "bb9ef68d14da09a8a5c9fb5b323736747c6f8f136dafc58fe206274cdac44579",
+      "size": 4517
+    },
+    {
+      "path": "skills/consulting-design-references/references/module-contracts.json",
+      "sha256": "ee82dbd381d366008935b1a2bab4933ea9a26fb758505feb0ea3415cce0d245e",
+      "size": 2665
+    },
+    {
+      "path": "skills/consulting-design-references/references/original-instructions.docx",
+      "sha256": "a64f379d4061b0566939cb3feff3587bd69ba4ecb69b8c61be46292f5f3430c8",
+      "size": 30446
+    },
+    {
+      "path": "skills/consulting-design-references/references/prompt_refactoring_patterns.md",
+      "sha256": "eb2fabc97397998366dc76325a54a85230a04ac1e861342ab0f33baea1f63bb7",
+      "size": 1461
+    },
+    {
+      "path": "skills/consulting-design-references/references/resource_binding_patterns.md",
+      "sha256": "8e39935ca412fae6369400974a03f9640dbeaa93ba299435015b5a4f8bdd5b4c",
+      "size": 1659
+    },
+    {
+      "path": "skills/consulting-design-references/references/resource_evaluation_guide.md",
+      "sha256": "6a75667d514b9a1530f98bd2c654174fc9d333df8ebd4dd0c593b40b063fc8ed",
+      "size": 1252
+    },
+    {
+      "path": "skills/consulting-design-references/references/resource_types_guide.md",
+      "sha256": "6e7f9056e194b36f7be5033740d6249699e9ead71458c2847d949f079423af19",
+      "size": 1385
+    },
+    {
+      "path": "skills/consulting-design-references/references/source-inventory.json",
+      "sha256": "75d96ac4e80269a785d8bc4554c0a6d9410fdc5216af376ab072b5e34d44bba9",
+      "size": 19217
+    },
+    {
+      "path": "skills/consulting-design-references/references/testing_guide.md",
+      "sha256": "130d692779c127207d45037748280358e90b637cd2655d5fbc2cc9903982fe45",
+      "size": 2725
+    },
+    {
+      "path": "skills/consulting-design-references/references/use_case_brainstorm_guide.md",
+      "sha256": "022854c3dc0b46ab276d6d3c1c7d9af27a03f37c4eda8508a1819557dc1618c7",
+      "size": 1310
+    },
+    {
+      "path": "skills/designing-and-reviewing-interactions/SKILL.md",
+      "sha256": "dd7582bc53da70013c0c8396ad6b9981b1a5c65299971710954764322a8724e3",
+      "size": 2767
+    },
+    {
+      "path": "skills/designing-and-reviewing-interactions/agents/openai.yaml",
+      "sha256": "8ede8db3f42258f095faba4ec645c2ee722dead1c29ab7ba35a9b85c334c7ff9",
+      "size": 162
+    },
+    {
+      "path": "skills/designing-and-reviewing-interactions/references/module-contracts.json",
+      "sha256": "368d07a454850d9ce5406dce5dd0ca42920cf06386cc8378d406fb57df85d84c",
+      "size": 7353
+    },
+    {
+      "path": "skills/designing-custom-instructions/SKILL.md",
+      "sha256": "d8704f643038249160454c51a2f1094e260fbdfc28d7acbc4e8c9010a1782e8c",
+      "size": 2671
+    },
+    {
+      "path": "skills/designing-custom-instructions/agents/openai.yaml",
+      "sha256": "97723e5059f084c64ef2f42598b9290369ad25b6f50960d8572cb8ef4d18cb7f",
+      "size": 152
+    },
+    {
+      "path": "skills/designing-custom-instructions/references/module-contracts.json",
+      "sha256": "2b6605958abc40df47840843dbbb50b567c4b5edb5ab58352078a50b37f97576",
+      "size": 7120
+    },
+    {
+      "path": "skills/evaluating-and-binding-resources/SKILL.md",
+      "sha256": "6f9d3391662cd7b9d5904122380423577a66af2ca8654b1a30918150f7424d8e",
+      "size": 2343
+    },
+    {
+      "path": "skills/evaluating-and-binding-resources/agents/openai.yaml",
+      "sha256": "89040521e8bab7880daee3eed5ab281b60c1d646c2f23f8119862375074b6169",
+      "size": 156
+    },
+    {
+      "path": "skills/evaluating-and-binding-resources/references/module-contracts.json",
+      "sha256": "2182ecf1b39ec046657cd8b8cef47db89a417ce1da72a6f2d12fc5a9b7f2e06f",
+      "size": 4727
+    },
+    {
+      "path": "skills/guiding-application-design-sessions/SKILL.md",
+      "sha256": "3cf059ea15b166e3fc709546b44dbadf48126f55c13775b7c5aa2be1408ee879",
+      "size": 2281
+    },
+    {
+      "path": "skills/guiding-application-design-sessions/agents/openai.yaml",
+      "sha256": "b3d8c01b358d919045c7898ecf07fe826b5ad01bd8125eebddc302abda515966",
+      "size": 143
+    },
+    {
+      "path": "skills/guiding-application-design-sessions/references/module-contracts.json",
+      "sha256": "d8844a7b971d96f34c8a4e4e071cabf27954b552416792883f1c1e890a26aa1d",
+      "size": 4967
+    },
+    {
+      "path": "skills/testing-and-improving-instructions/SKILL.md",
+      "sha256": "b22259240f848fb5610da4d56e7ff57754ef93a19b880218ebd248d60b713862",
+      "size": 2930
+    },
+    {
+      "path": "skills/testing-and-improving-instructions/agents/openai.yaml",
+      "sha256": "dd82b4703a2596fc01c84f9efaa70e6f500ed8ef4da8f71a5bd393e66d944699",
+      "size": 157
+    },
+    {
+      "path": "skills/testing-and-improving-instructions/references/module-contracts.json",
+      "sha256": "07d0bbd6e85807c6a50bda3db1af3132088f708323bc9089b8f89a47ba0957da",
+      "size": 5335
+    },
+    {
+      "path": "tools/contracts/application-policy.md",
+      "sha256": "da2bf9a1bcb29986379dd6e87fb8f9a6a6a88202d69c654beb4d4366d17f37bd",
+      "size": 3389
+    },
+    {
+      "path": "tools/contracts/artifact-contracts.md",
+      "sha256": "5ccfa7796a25297a5b40ac1940aedf40ebf9febbe12906c42ff5fbef1386b025",
+      "size": 5027
+    },
+    {
+      "path": "tools/contracts/interaction-protocols.json",
+      "sha256": "e64b97ca55b45b53755c57a0c7da917afd5c876ed2d021aebd91ac699fef64ec",
+      "size": 10961
+    },
+    {
+      "path": "tools/contracts/requirements.json",
+      "sha256": "ab4ab46f1468061ed7b7eb923218e3cbd904e5843772750ff5f612a2bc5259f6",
+      "size": 16212
+    },
+    {
+      "path": "tools/contracts/workflows.json",
+      "sha256": "da08e4551a2b83544ca81cfc8b85aa9497bfdee218b5b9078570497c49860442",
+      "size": 41947
+    },
+    {
+      "path": "tools/design-integrity-contract.json",
+      "sha256": "12d74409b34d95c243e5f0a52ee11b6c857cabe81c90203ece1a636de7a1e079",
+      "size": 6472
+    },
+    {
+      "path": "tools/design_integrity.py",
+      "sha256": "c8ac985ec5485f988647a329362ee9a651a23cadb03dea0539de22bb45c84f1d",
+      "size": 9975
+    },
+    {
+      "path": "tools/operation-guide.md",
+      "sha256": "1eab9af571ff523996b526dd48f85f7c8da219db61de6099e1709a86fca58b37",
+      "size": 2129
+    },
+    {
+      "path": "verification/representative-tests.json",
+      "sha256": "51c24d92d7a4ebb476472e265c81007def87336fb950e1fde5993d862c8b80e3",
+      "size": 35036
+    }
+  ],
+  "operation": "create",
+  "permissions_sha256": "57e31aab9a7d4e22fdc21c9533ea71cf5b4a9b5ee0be0d1baf50e97a7cf7ffc6",
+  "plan_sha256": "dcf2cc145644fda535205f0fe144bdeb7ff12e0204f268ae95e5bde80ee73bf2",
+  "preflight_evidence_sha256": "159a3c9ae4ba88cc2c53aa3589e8bf8a8cb6532141aa2487cdced9ae462f361e",
+  "realizations": [
+    {
+      "adapter_id": "direct-local",
+      "adapter_version": "2",
+      "dependency_ids": [
+        "python"
+      ],
+      "evidence_policy": "DEFERRED_ALLOWED",
+      "execution_location": "USER_DEVICE",
+      "exposed_capability": "design-integrity",
+      "feasibility_state": "FEASIBLE_WITH_SETUP",
+      "mechanism": "DIRECT_LOCAL",
+      "operation_id": "design-integrity",
+      "permission_ids": [
+        "workspace:read"
+      ],
+      "setup_owner": "OWNER",
+      "setup_requirements": [
+        "Host/owner exposes installed plugin files and Python 3.10+ with direct argv execution; validate actual execution surface.",
+        "Resolve bundled script from plugin root; send JSON stdin and return parsed JSON stdout to the invoking Skill.",
+        "D04 runs within the approved export workspace and may read only listed approved regular files; no network or write permission.",
+        "If setup is unavailable, stop dependent deterministic output; never claim installed success from local verification."
+      ],
+      "target_runtime": "ChatGPT Work Local/Desktop",
+      "tool_id": "design-integrity",
+      "transport": "DIRECT_ARGV"
+    },
+    {
+      "adapter_id": "direct-local",
+      "adapter_version": "2",
+      "dependency_ids": [
+        "python"
+      ],
+      "evidence_policy": "DEFERRED_ALLOWED",
+      "execution_location": "USER_DEVICE",
+      "exposed_capability": "design-integrity",
+      "feasibility_state": "FEASIBLE_WITH_SETUP",
+      "mechanism": "DIRECT_LOCAL",
+      "operation_id": "design-integrity",
+      "permission_ids": [
+        "workspace:read"
+      ],
+      "setup_owner": "OWNER",
+      "setup_requirements": [
+        "Host/owner exposes installed plugin files and Python 3.10+ with direct argv execution; validate actual execution surface.",
+        "Resolve bundled script from plugin root; send JSON stdin and return parsed JSON stdout to the invoking Skill.",
+        "D04 runs within the approved export workspace and may read only listed approved regular files; no network or write permission.",
+        "If setup is unavailable, stop dependent deterministic output; never claim installed success from local verification."
+      ],
+      "target_runtime": "Codex",
+      "tool_id": "design-integrity",
+      "transport": "DIRECT_ARGV"
+    }
+  ],
+  "realizations_sha256": "0e49396ed5e9213a85ce454b55f8cad3b640211fe888fff01336d4d208646622",
+  "schema": "plugin-builder-candidate-manifest-v3",
+  "tool_bindings": [
+    {
+      "contract_sha256": "12d74409b34d95c243e5f0a52ee11b6c857cabe81c90203ece1a636de7a1e079",
+      "dependencies": [
+        {
+          "absence_policy": "BLOCK",
+          "id": "python",
+          "provider": "OWNER_CONFIGURED",
+          "required": true,
+          "runtime_targets": [
+            "ChatGPT Work Local/Desktop",
+            "Codex"
+          ],
+          "setup_owner": "OWNER",
+          "sha256": null,
+          "type": "EXECUTABLE",
+          "version": "3.10+"
+        }
+      ],
+      "files": [
+        "tools/design_integrity.py",
+        "tools/design-integrity-contract.json",
+        "tools/operation-guide.md"
+      ],
+      "implementation_kind": "BUNDLED_LOCAL",
+      "permissions": [
+        {
+          "grant_source": "OWNER",
+          "id": "workspace:read",
+          "purpose": "Read bundled scripts and explicitly approved export files within the selected workspace.",
+          "required": true,
+          "target_runtime": "ChatGPT Work Local/Desktop",
+          "verification": "Observe installed Skill invocation, JSON input/output and result delivery."
+        },
+        {
+          "grant_source": "OWNER",
+          "id": "workspace:read",
+          "purpose": "Read bundled scripts and explicitly approved export files within the selected workspace.",
+          "required": true,
+          "target_runtime": "Codex",
+          "verification": "Observe installed Skill invocation, JSON input/output and result delivery."
+        }
+      ],
+      "requirements": [
+        "R20",
+        "R21",
+        "R25",
+        "R26"
+      ],
+      "runtime_targets": [
+        "ChatGPT Work Local/Desktop",
+        "Codex"
+      ],
+      "skills": [
+        "guiding-application-design-sessions",
+        "evaluating-and-binding-resources",
+        "adapting-platforms-and-delivering-packages",
+        "consulting-design-references"
+      ],
+      "tool_id": "design-integrity"
+    }
+  ],
+  "tool_contracts": [
+    {
+      "adapter": null,
+      "capability_ids": [
+        "resolve-resource-alias",
+        "check-design-links",
+        "guard-version-confirmation",
+        "digest-approved-files"
+      ],
+      "configuration": {
+        "authentication": "NOT_REQUIRED",
+        "setup": "BUNDLED"
+      },
+      "dependencies": [
+        {
+          "absence_policy": "BLOCK",
+          "id": "python",
+          "provider": "OWNER_CONFIGURED",
+          "required": true,
+          "runtime_targets": [
+            "ChatGPT Work Local/Desktop",
+            "Codex"
+          ],
+          "setup_owner": "OWNER",
+          "sha256": null,
+          "type": "EXECUTABLE",
+          "version": "3.10+"
+        }
+      ],
+      "execution": {
+        "argv": [
+          "{python}",
+          "-B",
+          "tools/design_integrity.py"
+        ],
+        "clean_environment": true,
+        "timeout_seconds": 30
+      },
+      "fallback": {
+        "alternative_operation_id": null,
+        "degraded_requirement_ids": [
+          "R20",
+          "R21",
+          "R25",
+          "R26"
+        ],
+        "policy": "BLOCK",
+        "preserved_requirement_ids": [],
+        "trigger_conditions": [
+          "Python, script access or execution unavailable",
+          "Invalid input, ambiguous alias, unsafe file, missing rights or failed integrity"
+        ]
+      },
+      "files": [
+        "tools/design_integrity.py",
+        "tools/design-integrity-contract.json",
+        "tools/operation-guide.md"
+      ],
+      "fixtures": {
+        "input": {
+          "input": {
+            "inventory": [],
+            "name": "x"
+          },
+          "operation": "D01"
+        },
+        "output": {
+          "checks": 22,
+          "self_test": "PASS"
+        }
+      },
+      "id": "design-integrity",
+      "implementation_kind": "BUNDLED_LOCAL",
+      "input_schema": {
+        "additionalProperties": false,
+        "properties": {
+          "input": {
+            "type": "object"
+          },
+          "operation": {
+            "enum": [
+              "D01",
+              "D02",
+              "D03",
+              "D04"
+            ]
+          }
+        },
+        "required": [
+          "operation",
+          "input"
+        ],
+        "type": "object"
+      },
+      "mcp": null,
+      "operation": {
+        "capability_ids": [
+          "resolve-resource-alias",
+          "check-design-links",
+          "guard-version-confirmation",
+          "digest-approved-files"
+        ],
+        "id": "design-integrity",
+        "idempotent": true,
+        "input_schema_sha256": "89041dfa785a7ea5d6e66a2095241b5ca2c18a3d1f91ce92823a3491acfe5a8f",
+        "output_schema_sha256": "0fcb35dce885169f2fbba25c86d95e85bd111667adc1091de61397898571c34f",
+        "protocol": "JSON_STDIN_STDOUT",
+        "side_effect_class": "NONE"
+      },
+      "output_schema": {
+        "additionalProperties": false,
+        "properties": {
+          "operation": {
+            "enum": [
+              "D01",
+              "D02",
+              "D03",
+              "D04"
+            ]
+          },
+          "result": {
+            "type": "object"
+          }
+        },
+        "required": [
+          "operation",
+          "result"
+        ],
+        "type": "object"
+      },
+      "permissions": [
+        {
+          "grant_source": "OWNER",
+          "id": "workspace:read",
+          "purpose": "Read bundled scripts and explicitly approved export files within the selected workspace.",
+          "required": true,
+          "target_runtime": "ChatGPT Work Local/Desktop",
+          "verification": "Observe installed Skill invocation, JSON input/output and result delivery."
+        },
+        {
+          "grant_source": "OWNER",
+          "id": "workspace:read",
+          "purpose": "Read bundled scripts and explicitly approved export files within the selected workspace.",
+          "required": true,
+          "target_runtime": "Codex",
+          "verification": "Observe installed Skill invocation, JSON input/output and result delivery."
+        }
+      ],
+      "realizations": [
+        {
+          "adapter_id": "direct-local",
+          "adapter_version": "2",
+          "dependency_ids": [
+            "python"
+          ],
+          "evidence_policy": "DEFERRED_ALLOWED",
+          "execution_location": "USER_DEVICE",
+          "exposed_capability": "design-integrity",
+          "feasibility_state": "FEASIBLE_WITH_SETUP",
+          "mechanism": "DIRECT_LOCAL",
+          "operation_id": "design-integrity",
+          "permission_ids": [
+            "workspace:read"
+          ],
+          "setup_owner": "OWNER",
+          "setup_requirements": [
+            "Host/owner exposes installed plugin files and Python 3.10+ with direct argv execution; validate actual execution surface.",
+            "Resolve bundled script from plugin root; send JSON stdin and return parsed JSON stdout to the invoking Skill.",
+            "D04 runs within the approved export workspace and may read only listed approved regular files; no network or write permission.",
+            "If setup is unavailable, stop dependent deterministic output; never claim installed success from local verification."
+          ],
+          "target_runtime": "ChatGPT Work Local/Desktop",
+          "transport": "DIRECT_ARGV"
+        },
+        {
+          "adapter_id": "direct-local",
+          "adapter_version": "2",
+          "dependency_ids": [
+            "python"
+          ],
+          "evidence_policy": "DEFERRED_ALLOWED",
+          "execution_location": "USER_DEVICE",
+          "exposed_capability": "design-integrity",
+          "feasibility_state": "FEASIBLE_WITH_SETUP",
+          "mechanism": "DIRECT_LOCAL",
+          "operation_id": "design-integrity",
+          "permission_ids": [
+            "workspace:read"
+          ],
+          "setup_owner": "OWNER",
+          "setup_requirements": [
+            "Host/owner exposes installed plugin files and Python 3.10+ with direct argv execution; validate actual execution surface.",
+            "Resolve bundled script from plugin root; send JSON stdin and return parsed JSON stdout to the invoking Skill.",
+            "D04 runs within the approved export workspace and may read only listed approved regular files; no network or write permission.",
+            "If setup is unavailable, stop dependent deterministic output; never claim installed success from local verification."
+          ],
+          "target_runtime": "Codex",
+          "transport": "DIRECT_ARGV"
+        }
+      ],
+      "redistribution": {
+        "evidence": "generated for this plugin",
+        "state": "APPROVED"
+      },
+      "required": true,
+      "requirement_ids": [
+        "R20",
+        "R21",
+        "R25",
+        "R26"
+      ],
+      "runtime_capability": null,
+      "runtime_targets": [
+        "ChatGPT Work Local/Desktop",
+        "Codex"
+      ],
+      "schema": "plugin-builder-application-tool-v2",
+      "side_effects": [],
+      "skill_bindings": [
+        "guiding-application-design-sessions",
+        "evaluating-and-binding-resources",
+        "adapting-platforms-and-delivering-packages",
+        "consulting-design-references"
+      ],
+      "verification": {
+        "argv": [
+          "{python}",
+          "-B",
+          "tools/design_integrity.py",
+          "--self-test"
+        ],
+        "kind": "PYTHON_ARGV",
+        "network": false
+      }
+    }
+  ],
+  "tools_sha256": "c9c4b3fac43f80c305e34f6b994db6c31a3accaab6b2875338e770b769b8346b"
+}

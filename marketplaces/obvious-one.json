@@ -75,6 +75,19 @@
           "mode": "not_applicable"
         }
       }
+    },
+    {
+      "application_config": "applications/cool-gpt-application-design-assistant/conversion.json",
+      "distribution_contract": "applications/cool-gpt-application-design-assistant/openclaw/distribution.json",
+      "targets": {
+        "codex": {
+          "destination": "plugins/cool-gpt-application-design-assistant",
+          "mode": "build"
+        },
+        "openclaw": {
+          "mode": "not_applicable"
+        }
+      }
     }
   ]
 }
