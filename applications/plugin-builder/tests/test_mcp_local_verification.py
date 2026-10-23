@@ -91,6 +91,14 @@ class McpLocalVerificationTests(unittest.TestCase):
             self.assertEqual(realization["layers"]["result_delivery"], "NOT VERIFIED")
             self.assertEqual(realization["layers"]["skill_behavior"], "NOT VERIFIED")
 
+    def test_initialize_response_may_use_the_remaining_bounded_startup_time(self) -> None:
+        result = verify_local_mcp_realization(
+            tool("slow-initialize"), self.root, allow_loopback=True
+        )
+
+        self.assertEqual(result["state"], "PASS", result)
+        self.assertEqual(result["process_cleanup"], "PASS")
+
     def test_loopback_authorization_host_file_and_dependency_fail_closed(self) -> None:
         self.assertEqual(
             verify_local_mcp_realization(tool(), self.root)["diagnostics"],

@@ -29,6 +29,8 @@ class Handler(BaseHTTPRequestHandler):
         else:
             method = request.get("method")
             if method == "initialize":
+                if mode == "slow-initialize":
+                    time.sleep(0.35)
                 payload = result(request.get("id"), {
                     "protocolVersion": "2025-06-18",
                     "capabilities": {"tools": {}},

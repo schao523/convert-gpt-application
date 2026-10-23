@@ -159,10 +159,11 @@ def verify_local_mcp_realization(tool: dict[str, Any], candidate: Path, *, allow
                     evidence["state"] = "FAIL"
                     return evidence
                 try:
+                    request_timeout = max(0.001, deadline - time.monotonic())
                     initialized = _request(port, "initialize", {
                         "protocolVersion": "2025-06-18", "capabilities": {},
                         "clientInfo": {"name": "plugin-builder-local-test", "version": "1"},
-                    }, 1, 0.25)
+                    }, 1, request_timeout)
                     break
                 except (ConnectionError, OSError, TimeoutError) as error:
                     last_connection_error = type(error).__name__
@@ -172,7 +173,12 @@ def verify_local_mcp_realization(tool: dict[str, Any], candidate: Path, *, allow
                     evidence["state"] = "FAIL"
                     return evidence
             if initialized is None:
-                evidence["diagnostics"] = ["mcp_local.request_timeout", last_connection_error]
+                if process.poll() is not None:
+                    evidence["diagnostics"] = [
+                        "mcp_local.startup_failed" if process.returncode else "mcp_local.premature_exit"
+                    ]
+                else:
+                    evidence["diagnostics"] = ["mcp_local.request_timeout", last_connection_error]
                 evidence["state"] = "FAIL"
                 return evidence
             evidence["network_contacted"] = True
