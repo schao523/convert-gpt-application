@@ -19,6 +19,7 @@ from .contract import (
     OnboardingError,
     PackageMember,
     PackageMetadata,
+    PortableContentManifestAdoption,
     WorkbenchRepairMetadata,
 )
 
@@ -768,6 +769,213 @@ def inspect_legacy_plugin_builder_package(
             evidence_bundle_state="NOT VERIFIED",
             input_profile="PLUGIN_BUILDER_DETERMINISTIC_CONTENT_V2",
             producer_claims=MappingProxyType(producer_claims),
+            approved_executable_files=adoption.executable_files,
+            approved_dependency_files=adoption.dependency_files,
+            adoption_identity_sha256=sha256(
+                _canonical_bytes(adoption.identity_payload())
+            ).hexdigest(),
+        )
+
+
+def inspect_portable_content_manifest_package(
+    archive: Path,
+    adoption: PortableContentManifestAdoption,
+) -> OnboardingInspection:
+    """Close one approved wrapped package with an exact lowercase manifest."""
+
+    try:
+        inventory = plugin_authoring.inventory_archive(Path(archive))
+    except plugin_authoring.PluginAuthoringError as exc:
+        raise _fail(exc.code, exc.detail) from exc
+    if inventory.archive_sha256 != adoption.archive_sha256:
+        raise _fail("archive_sha256_mismatch")
+    if (
+        sha256(_canonical_bytes([asdict(member) for member in adoption.members])).hexdigest()
+        != adoption.member_manifest_sha256
+    ):
+        raise _fail("member_manifest_sha256_mismatch")
+    if tuple(map(_member_tuple, inventory.members)) != tuple(
+        map(_member_tuple, adoption.members)
+    ):
+        raise _fail("archive_members_mismatch")
+
+    with tempfile.TemporaryDirectory(prefix="plugin-onboarding-portable-content-") as name:
+        extracted = Path(name) / "archive"
+        try:
+            plugin_authoring.extract_archive(Path(archive), extracted)
+            located = plugin_authoring.locate_plugin_archive_root(extracted)
+        except plugin_authoring.PluginAuthoringError as exc:
+            raise _fail(exc.code, exc.detail) from exc
+        if located.profile != "PORTABLE_SINGLE_DIRECTORY":
+            raise _fail("envelope_profile_mismatch")
+        root = located.path
+        if root.name != adoption.plugin_id:
+            raise _fail("plugin_identity_mismatch")
+        if plugin_authoring.tree_sha256(root) != adoption.content_tree_sha256:
+            raise _fail("content_tree_sha256_mismatch")
+
+        logical_paths = {
+            member.path.removeprefix(f"{adoption.plugin_id}/")
+            for member in inventory.members
+        }
+        required = {
+            "plugin.json",
+            ".codex-plugin/plugin.json",
+            adoption.content_manifest_path,
+        }
+        if not required.issubset(logical_paths):
+            raise _fail("authority_unknown")
+        competing = {
+            "CONTENT-MANIFEST.json",
+            "PLUGIN-BUILDER-MANIFEST.json",
+            "WORKBENCH-REPAIR-MANIFEST.json",
+            "docs/candidate-content-manifest.json",
+            "docs/verification-report.json",
+        } & logical_paths
+        if competing:
+            raise _fail("authority_ambiguous")
+
+        manifest_member = next(
+            (
+                member
+                for member in inventory.members
+                if member.path
+                == f"{adoption.plugin_id}/{adoption.content_manifest_path}"
+            ),
+            None,
+        )
+        if (
+            manifest_member is None
+            or manifest_member.sha256 != adoption.content_manifest_sha256
+        ):
+            raise _fail("content_manifest_sha256_mismatch")
+        content = _load_json(
+            root / adoption.content_manifest_path, "content_manifest_invalid"
+        )
+        if set(content) != {
+            "plugin_id",
+            "version",
+            "source_handoff_contract",
+            "approved_spec",
+            "applied_delta",
+            "skills",
+            "files",
+        }:
+            raise _fail("content_manifest_invalid")
+        if (
+            content.get("plugin_id") != adoption.plugin_id
+            or content.get("version") != adoption.version
+            or not all(
+                isinstance(content.get(field), str) and content.get(field)
+                for field in (
+                    "source_handoff_contract",
+                    "approved_spec",
+                    "applied_delta",
+                )
+            )
+        ):
+            raise _fail("content_manifest_invalid")
+        skills = content.get("skills")
+        if (
+            not isinstance(skills, list)
+            or not skills
+            or any(not isinstance(item, str) or not item for item in skills)
+            or len(set(skills)) != len(skills)
+        ):
+            raise _fail("content_manifest_invalid")
+        content_members = _legacy_manifest_members(
+            content.get("files"), "content_manifest_invalid"
+        )
+        expected_content_members = tuple(
+            member
+            for member in plugin_authoring.tree_manifest(root)
+            if member.path != adoption.content_manifest_path
+        )
+        if tuple(map(_member_tuple, content_members)) != tuple(
+            map(_member_tuple, expected_content_members)
+        ):
+            raise _fail("content_manifest_members_mismatch")
+
+        issues = plugin_authoring.validate_plugin_tree(root)
+        historical_omissions = {
+            "professional_reference_unlinked",
+            "path_binding_missing",
+        }
+        fatal_issues = tuple(
+            issue for issue in issues if issue.code not in historical_omissions
+        )
+        if fatal_issues:
+            issue = fatal_issues[0]
+            raise _fail("plugin_tree_invalid", f"{issue.code}:{issue.path}")
+        identity = _legacy_manifest_identity(root)
+        if (
+            identity["plugin_id"] != adoption.plugin_id
+            or identity["version"] != adoption.version
+        ):
+            raise _fail("plugin_identity_mismatch")
+        mcp_files, dependency_files, executable_files = _scan_public_content(root)
+        if tuple(sorted(adoption.executable_files)) != executable_files:
+            raise _fail("executable_files_mismatch")
+        if tuple(sorted(adoption.dependency_files)) != dependency_files:
+            raise _fail("dependency_files_mismatch")
+
+        evidence_states = MappingProxyType(
+            {layer: "NOT VERIFIED" for layer in _EVIDENCE_LAYERS}
+        )
+        producer_claims = MappingProxyType(
+            {
+                "content_manifest_path": adoption.content_manifest_path,
+                "source_handoff_contract": content["source_handoff_contract"],
+                "approved_spec": content["approved_spec"],
+                "applied_delta": content["applied_delta"],
+                "skills": tuple(skills),
+                "structural_validation_issues": tuple(
+                    {
+                        "code": issue.code,
+                        "path": issue.path,
+                        "detail": issue.detail,
+                    }
+                    for issue in issues
+                ),
+            }
+        )
+        return OnboardingInspection(
+            schema="plugin-onboarding-inspection-v1",
+            plugin_id=adoption.plugin_id,
+            version=adoption.version,
+            package_state="STATICALLY VERIFIED",
+            archive_sha256=adoption.archive_sha256,
+            candidate_sha256=None,
+            verification_sha256=None,
+            content_tree_sha256=adoption.content_tree_sha256,
+            member_manifest_sha256=adoption.member_manifest_sha256,
+            members=adoption.members,
+            candidate_members=plugin_authoring.tree_manifest(root),
+            manifest_profile="PORTABLE_WITH_OPENAI_COMPATIBILITY",
+            manifest_identity=MappingProxyType(identity),
+            preflight_evidence=MappingProxyType({}),
+            preflight_evidence_sha256=sha256(_canonical_bytes({})).hexdigest(),
+            command_evidence=(),
+            fallback_activations=(),
+            producer_evidence_states=MappingProxyType({}),
+            tool_bindings=(),
+            tool_contracts_sha256=sha256(_canonical_bytes([])).hexdigest(),
+            tool_contracts=(),
+            offline_validator_files=(),
+            mcp_files=mcp_files,
+            dependency_files=dependency_files,
+            executable_files=executable_files,
+            executed_files=(),
+            runtime_realization_state="NOT VERIFIED",
+            capabilities_sha256=None,
+            realizations_sha256=None,
+            adapter_registry_sha256=None,
+            generated_runtime_configuration_sha256=None,
+            runtime_realizations=(),
+            evidence_states=evidence_states,
+            evidence_bundle_state="NOT VERIFIED",
+            input_profile="PLUGIN_BUILDER_PORTABLE_CONTENT_MANIFEST_V1",
+            producer_claims=producer_claims,
             approved_executable_files=adoption.executable_files,
             approved_dependency_files=adoption.dependency_files,
             adoption_identity_sha256=sha256(

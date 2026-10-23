@@ -222,11 +222,15 @@ exact Git evidence as one trust boundary. `prepare-marketplace` must stage a
 separate tree without mutating the baseline marketplace, and publication is a
 later, separately approved action.
 
-Historical deterministic-content-v2 Plugin Builder ZIPs may enter the bounded
-Codex-only onboarding path only through an approved
-`workbench-legacy-plugin-builder-adoption-v1` record supplied with
-`--legacy-adoption`. Treat that record as explicit owner authority for the
-exact archive, manifests, executable/dependency inventory, and immutable imported bytes.
+Historical Plugin Builder ZIPs may enter the bounded Codex-only onboarding
+path only through an approved profile-specific record: either
+`workbench-legacy-plugin-builder-adoption-v1` for flat
+deterministic-content-v2 packages, or
+`workbench-portable-content-manifest-adoption-v1` for wrapped lowercase
+`content-manifest.json` packages. Supply either with
+`--compatibility-adoption` (`--legacy-adoption` is retained as an alias).
+Treat that record as explicit owner authority for the exact archive,
+manifests, executable/dependency inventory, and immutable imported bytes.
 It is not Plugin Builder v2/v3 evidence and does not grant
 licensing, redistribution, third-party-content, or publication authority.
 Reject mixed or unknown authorities, changed bytes, and unsupported legacy runtime evidence.

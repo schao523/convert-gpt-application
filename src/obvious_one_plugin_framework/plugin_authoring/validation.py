@@ -33,12 +33,16 @@ _PORTABLE_FORBIDDEN_KEYS = {"apps", "interface", "mcpServers", "skills"}
 _INTERFACE_KEYS = {
     "capabilities",
     "category",
+    "composerIcon",
+    "composerIconDark",
     "defaultPrompt",
     "developerName",
     "displayName",
     "iconLarge",
     "iconSmall",
     "longDescription",
+    "logo",
+    "logoDark",
     "shortDescription",
 }
 _REQUIRED_INTERFACE_KEYS = {

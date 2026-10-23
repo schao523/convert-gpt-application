@@ -63,9 +63,17 @@ def _request(port: int, method: str, params: dict[str, Any], identifier: int, ti
                 raise ValueError("content_length_invalid")
             body = response.read(int(length))
         elif response.chunked:
-            body = response.read(1024 * 1024 + 1)
-            if len(body) > 1024 * 1024:
-                raise ValueError("response_too_large")
+            chunks: list[bytes] = []
+            total = 0
+            while True:
+                chunk = response.read1(min(64 * 1024, 1024 * 1024 + 1 - total))
+                if not chunk:
+                    break
+                chunks.append(chunk)
+                total += len(chunk)
+                if total > 1024 * 1024:
+                    raise ValueError("response_too_large")
+            body = b"".join(chunks)
         else:
             raise ValueError("response_framing_invalid")
         payload = json.loads(body.decode("utf-8"))
@@ -126,6 +134,11 @@ def _preflight(tool: dict[str, Any], candidate: Path, allow_loopback: bool) -> t
 def verify_local_mcp_realization(tool: dict[str, Any], candidate: Path, *, allow_loopback: bool = False) -> dict[str, Any]:
     """Exercise only the declared local operation; never claim installed use."""
     evidence = _base(tool)
+    execution = tool.get("execution")
+    timeout_seconds = execution.get("timeout_seconds") if isinstance(execution, dict) else None
+    if type(timeout_seconds) is not int or timeout_seconds <= 0 or timeout_seconds > 300:
+        evidence["diagnostics"] = ["mcp_local.timeout_invalid"]
+        return evidence
     command, errors = _preflight(tool, Path(candidate), allow_loopback)
     if errors:
         evidence["diagnostics"] = errors
@@ -150,29 +163,45 @@ def verify_local_mcp_realization(tool: dict[str, Any], candidate: Path, *, allow
                 stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
                 creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
             )
-            deadline = time.monotonic() + 2.0
+            deadline = time.monotonic() + timeout_seconds
             initialized: dict[str, Any] | None = None
             last_connection_error = ""
+            listener_ready = False
             while time.monotonic() < deadline:
                 if process.poll() is not None:
                     evidence["diagnostics"] = ["mcp_local.startup_failed" if process.returncode else "mcp_local.premature_exit"]
                     evidence["state"] = "FAIL"
                     return evidence
                 try:
-                    initialized = _request(port, "initialize", {
-                        "protocolVersion": "2025-06-18", "capabilities": {},
-                        "clientInfo": {"name": "plugin-builder-local-test", "version": "1"},
-                    }, 1, 0.25)
+                    remaining = max(0.001, deadline - time.monotonic())
+                    with socket.create_connection(
+                        ("127.0.0.1", port), timeout=min(0.05, remaining)
+                    ):
+                        listener_ready = True
                     break
                 except (ConnectionError, OSError, TimeoutError) as error:
                     last_connection_error = type(error).__name__
                     time.sleep(0.025)
+            if listener_ready:
+                try:
+                    request_timeout = max(0.001, deadline - time.monotonic())
+                    initialized = _request(port, "initialize", {
+                        "protocolVersion": "2025-06-18", "capabilities": {},
+                        "clientInfo": {"name": "plugin-builder-local-test", "version": "1"},
+                    }, 1, request_timeout)
+                except (ConnectionError, OSError, TimeoutError) as error:
+                    last_connection_error = type(error).__name__
                 except (ValueError, UnicodeError, json.JSONDecodeError) as error:
                     evidence["diagnostics"] = ["mcp_local.response_invalid", str(error)]
                     evidence["state"] = "FAIL"
                     return evidence
             if initialized is None:
-                evidence["diagnostics"] = ["mcp_local.request_timeout", last_connection_error]
+                if process.poll() is not None:
+                    evidence["diagnostics"] = [
+                        "mcp_local.startup_failed" if process.returncode else "mcp_local.premature_exit"
+                    ]
+                else:
+                    evidence["diagnostics"] = ["mcp_local.request_timeout", last_connection_error]
                 evidence["state"] = "FAIL"
                 return evidence
             evidence["network_contacted"] = True

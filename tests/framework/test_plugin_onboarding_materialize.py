@@ -80,6 +80,7 @@ class PluginOnboardingMaterializeTests(unittest.TestCase):
             "onboarding-result.json",
             "onboarding-proposal.json",
             "catalog-entry.json",
+            "application/.gitattributes",
             "application/conversion.json",
             "application/plugin.json",
             "application/.codex-plugin/plugin.json",
@@ -111,6 +112,10 @@ class PluginOnboardingMaterializeTests(unittest.TestCase):
             if path.is_file()
         }
         self.assertEqual(actual, expected | imported)
+        self.assertEqual(
+            (output / "application" / ".gitattributes").read_bytes(),
+            b"imported-plugin/** -text -whitespace\n",
+        )
         self.assertEqual(result.status, "PASS")
         self.assertTrue(all(not Path(item.path).is_absolute() for item in result.artifacts))
         self.assertTrue(all(not Path(item.path).is_absolute() for item in result.mutations))

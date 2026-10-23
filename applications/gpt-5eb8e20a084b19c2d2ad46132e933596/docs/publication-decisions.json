@@ -1,0 +1,17 @@
+{
+  "author": "Shen-Chang Chao",
+  "codex_destination": "plugins/gpt-5eb8e20a084b19c2d2ad46132e933596",
+  "confirmed_by": "Plugin Owner",
+  "copyright_year": 2026,
+  "decision_recorded_at": "2026-10-22T21:29:40+08:00",
+  "license": "MIT",
+  "marketplace_id": "obvious-one",
+  "plugin_id": "gpt-5eb8e20a084b19c2d2ad46132e933596",
+  "public_marketplace_approved": true,
+  "redistribution_approved": true,
+  "schema": "plugin-publication-decisions-v1",
+  "target_runtime": "CODEX",
+  "third_party_content": "NONE",
+  "third_party_content_reviewed": true,
+  "version": "1.0.1"
+}

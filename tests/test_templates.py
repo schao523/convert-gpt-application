@@ -18,6 +18,15 @@ class PublicationTemplateTests(unittest.TestCase):
             content,
         )
 
+    def test_repository_ci_surfaces_aggregate_verifier_report_on_failure(self) -> None:
+        content = (ROOT / ".github/workflows/ci.yml").read_text(encoding="utf-8")
+
+        self.assertIn("Display aggregate verification report on failure", content)
+        self.assertIn("if: failure()", content)
+        self.assertIn("report.json", content)
+        self.assertIn("ConvertFrom-Json", content)
+        self.assertIn("$gate.state -eq 'FAIL'", content)
+
     def test_python_311_sources_do_not_use_rmtree_onexc(self) -> None:
         offenders = []
         for path in ROOT.rglob("*.py"):

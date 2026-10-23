@@ -4,6 +4,7 @@ import argparse
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import json
 import os
+from socketserver import TCPServer
 import time
 
 
@@ -29,6 +30,8 @@ class Handler(BaseHTTPRequestHandler):
         else:
             method = request.get("method")
             if method == "initialize":
+                if mode == "slow-initialize":
+                    time.sleep(0.35)
                 payload = result(request.get("id"), {
                     "protocolVersion": "2025-06-18",
                     "capabilities": {"tools": {}},
@@ -68,6 +71,16 @@ class Handler(BaseHTTPRequestHandler):
         self.wfile.write(f"{len(body):x}\r\n".encode("ascii") + body + b"\r\n0\r\n\r\n")
 
 
+class LoopbackThreadingHTTPServer(ThreadingHTTPServer):
+    """Bind the test listener without a platform-dependent reverse DNS lookup."""
+
+    def server_bind(self):
+        TCPServer.server_bind(self)
+        host, port = self.server_address[:2]
+        self.server_name = host
+        self.server_port = port
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--host", required=True)
@@ -82,7 +95,9 @@ def main():
         raise SystemExit(11)
     if os.environ.get("MCP_TEST_LEAK") is not None:
         raise SystemExit(12)
-    server = ThreadingHTTPServer((args.host, args.port), Handler)
+    if args.mode == "delayed-listen":
+        time.sleep(0.35)
+    server = LoopbackThreadingHTTPServer((args.host, args.port), Handler)
     server.mode = args.mode
     server.serve_forever()
 

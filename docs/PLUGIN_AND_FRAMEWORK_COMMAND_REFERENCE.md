@@ -370,27 +370,34 @@ target runtime, the `obvious-one` marketplace, and
 identity mismatches, unsafe archives, undeclared executable or dependency
 content, and stale evidence fail closed.
 
-For an exact historical deterministic-content-v2 Plugin Builder ZIP, use the
-separate `workbench-legacy-plugin-builder-adoption-v1` record as explicit owner authority
-instead of package metadata:
+For an exact historical Plugin Builder ZIP, use a narrowly matched adoption
+record as explicit owner authority instead of package metadata. Supported
+profiles are:
+
+- `workbench-legacy-plugin-builder-adoption-v1` for a flat
+  `deterministic-content-manifest-v2` package; and
+- `workbench-portable-content-manifest-adoption-v1` for a wrapped package with
+  lowercase `content-manifest.json`, exact path/size/SHA-256 closure, and input
+  profile `PLUGIN_BUILDER_PORTABLE_CONTENT_MANIFEST_V1`.
 
 ```powershell
 python -B -m obvious_one_plugin_framework.cli prepare-plugin-zip-marketplace `
   --archive .\path\<plugin-id>.zip `
-  --legacy-adoption .\path\legacy-adoption.json `
+  --compatibility-adoption .\path\compatibility-adoption.json `
   --publication-decisions .\path\publication-decisions.json `
   --repository D:\GitHub\convert-gpt-application `
   --output .\.tmp\plugin-onboarding\<plugin-id> `
   --json
 ```
 
-The `--package-metadata` and `--legacy-adoption` options are mutually
-exclusive and exactly one is required. The adoption record must close the
+`--legacy-adoption` remains an alias for `--compatibility-adoption`. The
+`--package-metadata` and adoption options are mutually exclusive and exactly
+one is required. The adoption record must close the
 archive inventory, internal manifests, plugin identity, approved executable
 and dependency paths, and immutable imported bytes. It is not Plugin Builder v2/v3 evidence,
 does not authenticate the historical producer, and cannot be
 inferred from an inspection report. Legacy runtime evidence is unsupported:
-do not combine `--legacy-adoption` with `--evidence`. Successful adoption is
+do not combine an adoption option with `--evidence`. Successful adoption is
 only `STATICALLY VERIFIED`; installed-runtime layers remain `NOT VERIFIED`.
 Arbitrary legacy ZIPs, mixed authorities, changed bytes, stale approvals, and
 undeclared content fail closed.

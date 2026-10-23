@@ -62,6 +62,19 @@
           "mode": "not_applicable"
         }
       }
+    },
+    {
+      "application_config": "applications/gpt-5eb8e20a084b19c2d2ad46132e933596/conversion.json",
+      "distribution_contract": "applications/gpt-5eb8e20a084b19c2d2ad46132e933596/openclaw/distribution.json",
+      "targets": {
+        "codex": {
+          "destination": "plugins/gpt-5eb8e20a084b19c2d2ad46132e933596",
+          "mode": "verify_existing"
+        },
+        "openclaw": {
+          "mode": "not_applicable"
+        }
+      }
     }
   ]
 }
