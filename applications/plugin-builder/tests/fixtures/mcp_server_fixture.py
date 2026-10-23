@@ -68,7 +68,6 @@ class Handler(BaseHTTPRequestHandler):
         self.send_header("transfer-encoding", "chunked")
         self.end_headers()
         self.wfile.write(f"{len(body):x}\r\n".encode("ascii") + body + b"\r\n0\r\n\r\n")
-        self.wfile.flush()
 
 
 def main():

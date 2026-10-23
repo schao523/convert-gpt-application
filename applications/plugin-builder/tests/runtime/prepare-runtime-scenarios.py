@@ -76,7 +76,7 @@ def derive(base: dict, output: Path, baseline: Path | None = None) -> dict[str, 
     mcp_tool.update({
         "implementation_kind": "MCP_ADAPTER", "files": ["tools/server.py"],
         "verification": {"kind": "MCP_CONTRACT", "argv": ["{python}", "tools/server.py", "--host", "127.0.0.1", "--port", "{port}"], "network": True},
-        "execution": {"timeout_seconds": 2},
+        "execution": {"timeout_seconds": 10},
         "dependencies": [*mcp_tool["dependencies"], {"id": "python-runtime", "type": "EXECUTABLE", "provider": "RUNTIME_PROVIDED", "version": None, "sha256": None, "runtime_targets": mcp_tool["runtime_targets"], "setup_owner": "RUNTIME", "required": True, "absence_policy": "BLOCK"}],
     })
     write_plan(output / "t8-local-mcp-plan.json", t8)

@@ -41,7 +41,7 @@ def tool(mode: str = "normal") -> dict:
         "operation": {"id": "normalize-input"},
         "input_schema": {"type": "object", "properties": {"text": {"type": "string"}}, "required": ["text"]},
         "verification": {"kind": "MCP_CONTRACT", "argv": argv, "network": True},
-        "execution": {"timeout_seconds": 2},
+        "execution": {"timeout_seconds": 2 if mode in {"hang", "startup-fail", "premature-exit"} else 10},
         "fixtures": {"input": {"text": " A "}, "output": {"normalized": "A"}},
         "realizations": [{
             "target_runtime": target, "adapter_id": "mcp-streamable-http",
@@ -129,6 +129,12 @@ class McpLocalVerificationTests(unittest.TestCase):
         self.assertIn(
             "mcp_local.dependency_undeclared",
             verify_local_mcp_realization(dependency, self.root, allow_loopback=True)["diagnostics"],
+        )
+        timeout = tool()
+        timeout["execution"] = {"timeout_seconds": 0}
+        self.assertEqual(
+            verify_local_mcp_realization(timeout, self.root, allow_loopback=True)["diagnostics"],
+            ["mcp_local.timeout_invalid"],
         )
 
     def test_protocol_and_lifecycle_failures_are_bounded_and_cleaned_up(self) -> None:

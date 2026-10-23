@@ -126,6 +126,11 @@ def _preflight(tool: dict[str, Any], candidate: Path, allow_loopback: bool) -> t
 def verify_local_mcp_realization(tool: dict[str, Any], candidate: Path, *, allow_loopback: bool = False) -> dict[str, Any]:
     """Exercise only the declared local operation; never claim installed use."""
     evidence = _base(tool)
+    execution = tool.get("execution")
+    timeout_seconds = execution.get("timeout_seconds") if isinstance(execution, dict) else None
+    if type(timeout_seconds) is not int or timeout_seconds <= 0 or timeout_seconds > 300:
+        evidence["diagnostics"] = ["mcp_local.timeout_invalid"]
+        return evidence
     command, errors = _preflight(tool, Path(candidate), allow_loopback)
     if errors:
         evidence["diagnostics"] = errors
@@ -150,7 +155,7 @@ def verify_local_mcp_realization(tool: dict[str, Any], candidate: Path, *, allow
                 stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
                 creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
             )
-            deadline = time.monotonic() + 2.0
+            deadline = time.monotonic() + timeout_seconds
             initialized: dict[str, Any] | None = None
             last_connection_error = ""
             listener_ready = False
