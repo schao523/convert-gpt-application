@@ -63,9 +63,17 @@ def _request(port: int, method: str, params: dict[str, Any], identifier: int, ti
                 raise ValueError("content_length_invalid")
             body = response.read(int(length))
         elif response.chunked:
-            body = response.read(1024 * 1024 + 1)
-            if len(body) > 1024 * 1024:
-                raise ValueError("response_too_large")
+            chunks: list[bytes] = []
+            total = 0
+            while True:
+                chunk = response.read1(min(64 * 1024, 1024 * 1024 + 1 - total))
+                if not chunk:
+                    break
+                chunks.append(chunk)
+                total += len(chunk)
+                if total > 1024 * 1024:
+                    raise ValueError("response_too_large")
+            body = b"".join(chunks)
         else:
             raise ValueError("response_framing_invalid")
         payload = json.loads(body.decode("utf-8"))
