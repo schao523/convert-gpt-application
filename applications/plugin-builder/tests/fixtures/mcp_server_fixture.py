@@ -7,6 +7,13 @@ import os
 import time
 
 
+def trace(marker):
+    path = os.environ.get("PLUGIN_BUILDER_MCP_TRACE")
+    if path:
+        with open(path, "a", encoding="ascii", newline="\n") as handle:
+            handle.write(marker + "\n")
+
+
 def result(identifier, payload):
     return {"jsonrpc": "2.0", "id": identifier, "result": payload}
 
@@ -18,8 +25,10 @@ class Handler(BaseHTTPRequestHandler):
         return
 
     def do_POST(self):
+        trace("request_received")
         length = int(self.headers.get("content-length", "0"))
         request = json.loads(self.rfile.read(length).decode("utf-8"))
+        trace("request_read")
         mode = self.server.mode
         if mode == "hang":
             time.sleep(10)
@@ -68,6 +77,7 @@ class Handler(BaseHTTPRequestHandler):
         self.send_header("transfer-encoding", "chunked")
         self.end_headers()
         self.wfile.write(f"{len(body):x}\r\n".encode("ascii") + body + b"\r\n0\r\n\r\n")
+        trace("response_written")
 
 
 def main():
@@ -86,7 +96,9 @@ def main():
         raise SystemExit(12)
     if args.mode == "delayed-listen":
         time.sleep(0.35)
+    trace("server_started")
     server = ThreadingHTTPServer((args.host, args.port), Handler)
+    trace("listener_ready")
     server.mode = args.mode
     server.serve_forever()
 
