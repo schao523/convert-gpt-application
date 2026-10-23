@@ -30,6 +30,16 @@ jobs:
         run: python -B -m unittest discover -s applications/vibe-coding-designer/tests -v
       - name: Run every application verification profile
         run: python -B scripts/verify_extraction.py --all
+      - name: Display aggregate verification report on failure
+        if: failure()
+        shell: pwsh
+        run: |
+          $report = Get-ChildItem -Path .tmp/verification -Recurse -Filter report.json |
+            Sort-Object LastWriteTimeUtc -Descending |
+            Select-Object -First 1
+          if ($null -ne $report) {
+            Get-Content -LiteralPath $report.FullName -Raw
+          }
       - name: Verify published Growing With Children artifact
         shell: pwsh
         run: |
