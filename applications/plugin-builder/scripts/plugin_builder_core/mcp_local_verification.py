@@ -153,21 +153,31 @@ def verify_local_mcp_realization(tool: dict[str, Any], candidate: Path, *, allow
             deadline = time.monotonic() + 2.0
             initialized: dict[str, Any] | None = None
             last_connection_error = ""
+            listener_ready = False
             while time.monotonic() < deadline:
                 if process.poll() is not None:
                     evidence["diagnostics"] = ["mcp_local.startup_failed" if process.returncode else "mcp_local.premature_exit"]
                     evidence["state"] = "FAIL"
                     return evidence
                 try:
+                    remaining = max(0.001, deadline - time.monotonic())
+                    with socket.create_connection(
+                        ("127.0.0.1", port), timeout=min(0.05, remaining)
+                    ):
+                        listener_ready = True
+                    break
+                except (ConnectionError, OSError, TimeoutError) as error:
+                    last_connection_error = type(error).__name__
+                    time.sleep(0.025)
+            if listener_ready:
+                try:
                     request_timeout = max(0.001, deadline - time.monotonic())
                     initialized = _request(port, "initialize", {
                         "protocolVersion": "2025-06-18", "capabilities": {},
                         "clientInfo": {"name": "plugin-builder-local-test", "version": "1"},
                     }, 1, request_timeout)
-                    break
                 except (ConnectionError, OSError, TimeoutError) as error:
                     last_connection_error = type(error).__name__
-                    time.sleep(0.025)
                 except (ValueError, UnicodeError, json.JSONDecodeError) as error:
                     evidence["diagnostics"] = ["mcp_local.response_invalid", str(error)]
                     evidence["state"] = "FAIL"

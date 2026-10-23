@@ -84,6 +84,8 @@ def main():
         raise SystemExit(11)
     if os.environ.get("MCP_TEST_LEAK") is not None:
         raise SystemExit(12)
+    if args.mode == "delayed-listen":
+        time.sleep(0.35)
     server = ThreadingHTTPServer((args.host, args.port), Handler)
     server.mode = args.mode
     server.serve_forever()

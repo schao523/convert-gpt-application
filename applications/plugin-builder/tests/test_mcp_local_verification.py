@@ -99,6 +99,14 @@ class McpLocalVerificationTests(unittest.TestCase):
         self.assertEqual(result["state"], "PASS", result)
         self.assertEqual(result["process_cleanup"], "PASS")
 
+    def test_initialize_waits_for_the_loopback_listener_within_the_same_deadline(self) -> None:
+        result = verify_local_mcp_realization(
+            tool("delayed-listen"), self.root, allow_loopback=True
+        )
+
+        self.assertEqual(result["state"], "PASS", result)
+        self.assertEqual(result["process_cleanup"], "PASS")
+
     def test_loopback_authorization_host_file_and_dependency_fail_closed(self) -> None:
         self.assertEqual(
             verify_local_mcp_realization(tool(), self.root)["diagnostics"],
