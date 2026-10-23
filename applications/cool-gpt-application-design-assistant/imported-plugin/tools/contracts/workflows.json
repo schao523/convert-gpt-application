@@ -1,0 +1,1207 @@
+[
+  {
+    "actors": [
+      "\u4f7f\u7528\u8005",
+      "\u8a2d\u8a08\u52a9\u7406"
+    ],
+    "completion_criteria": [
+      "\u5fc5\u8981\u8f38\u5165\u53ca\u4f86\u6e90\u53ef\u6838\u5be6",
+      "\u6bcf\u500b\u9069\u7528\u7b49\u5f85\u7bc0\u9ede\u5df2\u53d6\u5f97\u6307\u5b9a\u7248\u672c\u7684\u660e\u78ba\u78ba\u8a8d",
+      "\u6210\u679c\u8207\u9650\u5236\u5b8c\u6574\u4ea4\u4ed8",
+      "\u5e73\u53f0\u7248\u9808\u6709 target capability evidence\uff1b\u4e2d\u7acb\u8349\u7a3f\u53ea\u5b8c\u6210\u53ef\u651c\u8a2d\u8a08\uff0c\u5e73\u53f0\u8a2d\u5b9a\u8207 Runtime \u5c1a\u672a\u9a57\u8b49\u3002"
+    ],
+    "hitl_checkpoints": [
+      "TARGET",
+      "SCENARIO",
+      "ROLE_GOAL",
+      "STYLE",
+      "DESIGN",
+      "ARCHITECTURE",
+      "RESOURCE",
+      "INTERACTION",
+      "CONFIG",
+      "TEST_DELIVERY"
+    ],
+    "inputs": {
+      "optional": [
+        "\u65e2\u6709\u6210\u679c\u53ca\u4f86\u6e90\uff0f\u56de\u8986\u8b49\u64da"
+      ],
+      "required": [
+        "\u60f3\u6cd5\u3001\u5834\u666f\u6216\u65e2\u6709\u8a2d\u8a08\u8cc7\u6599"
+      ]
+    },
+    "mission_outcome": "\u8de8\u5e73\u53f0\u81ea\u8a02\u6307\u4ee4\u8a2d\u8a08\u8207\u6307\u5b9a\u7bc4\u570d\u6e2c\u8a66\u8a08\u756b\u4ea4\u4ed8\uff1b\u4e2d\u7acb\u8349\u7a3f\u4ea4\u4ed8\u9808\u660e\u793a\u5e73\u53f0\u7248\u5f85\u5b9a",
+    "start": "START",
+    "state_modules": {
+      "ADAPT": "IM15,IM11",
+      "ARCHITECTURE": "IM03\uff1a\u6a21\u7d44\u8207\u6d41\u7a0b\u78ba\u8a8d",
+      "CONFIG": "IM11\uff1a\u5b8c\u6574\u914d\u7f6e\u5305\u78ba\u8a8d",
+      "DESIGN": "IM02\uff1a\u78ba\u8a8d\u8a2d\u8a08\u8072\u660e\u7248\u672c",
+      "INTERACTION": "IM06\uff1a\u5019\u9078\u4e92\u52d5\u8207\u9078\u5b9a\u85cd\u5716\u78ba\u8a8d",
+      "PRECHECK": "IM01\uff0fIM12\uff1a\u91cd\u7528\u5df2\u4f9b\u8cc7\u8a0a\uff0c\u627e\u7f3a\u6f0f",
+      "RESOURCE": "IM04\uff0fIM05\uff1a\u8cc7\u6e90\u8a55\u4f30\u3001\u5c0d\u61c9\u8207\u53d6\u6368\u78ba\u8a8d\uff1b\u660e\u78ba\u7121\u8cc7\u6e90\u4e5f\u7b97\u6c7a\u7b56",
+      "ROLE_GOAL": "IM02\uff1a\u78ba\u8a8d\u89d2\u8272\u8207\u76ee\u6a19",
+      "SCENARIO": "IM01\uff1a\u91d0\u6e05\u4e94\u8981\u7d20\u4e26\u78ba\u8a8d\u5834\u666f",
+      "STYLE": "IM02\uff1a\u8a9e\u6c23\u6bd4\u8f03\u8207\u9078\u64c7",
+      "TARGET": "IM15",
+      "TEST_DELIVERY": "IM09\uff1a\u78ba\u8a8d\u6e2c\u8a66\u8a08\u756b\u4e26\u63d0\u9192\u5230 \u76ee\u6a19\u5e73\u53f0 \u5be6\u6e2c",
+      "TEST_PRECHECK": "IM09\uff1a\u78ba\u6709\u6307\u4ee4\u3001\u4e92\u52d5\u85cd\u5716\u3001\u76ee\u6a19\u3001\u60c5\u5883\u624d\u7522\u751f\u6e2c\u8a66"
+    },
+    "states": [
+      {
+        "id": "START",
+        "interaction_protocol": "P0",
+        "kind": "start",
+        "transitions": {
+          "begin": "PRECHECK"
+        },
+        "wait": false
+      },
+      {
+        "id": "PRECHECK",
+        "interaction_protocol": "P1",
+        "kind": "action",
+        "state_effect": "IM01\uff0fIM12\uff1a\u91cd\u7528\u5df2\u4f9b\u8cc7\u8a0a\uff0c\u627e\u7f3a\u6f0f",
+        "transitions": {
+          "complete": "TARGET",
+          "failure": "FAILURE",
+          "missing_input": "NEED_INPUT",
+          "pause": "PAUSED",
+          "revise": "PRECHECK",
+          "stop": "STOPPED"
+        },
+        "wait": false
+      },
+      {
+        "id": "TARGET",
+        "interaction_protocol": "P2",
+        "kind": "wait",
+        "state_effect": "IM15\uff1a\u78ba\u8a8d\u76ee\u6a19\u5e73\u53f0\uff0c\u6216\u660e\u78ba\u9078\u64c7\u5148\u505a\u5e73\u53f0\u4e2d\u7acb\u8349\u7a3f\uff1b\u672a\u9078\u5b9a\u5e73\u53f0\u4e0d\u5f97\u6838\u51c6\u5e73\u53f0\u7248\u3002",
+        "transitions": {
+          "confirmed": "SCENARIO",
+          "failure": "FAILURE",
+          "pause": "PAUSED",
+          "revise": "TARGET",
+          "stop": "STOPPED"
+        },
+        "wait": true
+      },
+      {
+        "id": "SCENARIO",
+        "interaction_protocol": "P1",
+        "kind": "wait",
+        "state_effect": "IM01\uff1a\u91d0\u6e05\u4e94\u8981\u7d20\u4e26\u78ba\u8a8d\u5834\u666f",
+        "transitions": {
+          "confirmed": "ROLE_GOAL",
+          "failure": "FAILURE",
+          "pause": "PAUSED",
+          "revise": "SCENARIO",
+          "stop": "STOPPED"
+        },
+        "wait": true
+      },
+      {
+        "id": "ROLE_GOAL",
+        "interaction_protocol": "P1",
+        "kind": "wait",
+        "state_effect": "IM02\uff1a\u78ba\u8a8d\u89d2\u8272\u8207\u76ee\u6a19",
+        "transitions": {
+          "confirmed": "STYLE",
+          "failure": "FAILURE",
+          "pause": "PAUSED",
+          "revise": "ROLE_GOAL",
+          "stop": "STOPPED"
+        },
+        "wait": true
+      },
+      {
+        "id": "STYLE",
+        "interaction_protocol": "P2",
+        "kind": "wait",
+        "state_effect": "IM02\uff1a\u8a9e\u6c23\u6bd4\u8f03\u8207\u9078\u64c7",
+        "transitions": {
+          "confirmed": "DESIGN",
+          "failure": "FAILURE",
+          "pause": "PAUSED",
+          "revise": "STYLE",
+          "stop": "STOPPED"
+        },
+        "wait": true
+      },
+      {
+        "id": "DESIGN",
+        "interaction_protocol": "P2",
+        "kind": "wait",
+        "state_effect": "IM02\uff1a\u78ba\u8a8d\u8a2d\u8a08\u8072\u660e\u7248\u672c",
+        "transitions": {
+          "confirmed": "ARCHITECTURE",
+          "failure": "FAILURE",
+          "pause": "PAUSED",
+          "revise": "DESIGN",
+          "stop": "STOPPED"
+        },
+        "wait": true
+      },
+      {
+        "id": "ARCHITECTURE",
+        "interaction_protocol": "P2",
+        "kind": "wait",
+        "state_effect": "IM03\uff1a\u6a21\u7d44\u8207\u6d41\u7a0b\u78ba\u8a8d",
+        "transitions": {
+          "confirmed": "RESOURCE",
+          "failure": "FAILURE",
+          "pause": "PAUSED",
+          "revise": "ARCHITECTURE",
+          "stop": "STOPPED"
+        },
+        "wait": true
+      },
+      {
+        "id": "RESOURCE",
+        "interaction_protocol": "P3",
+        "kind": "wait",
+        "state_effect": "IM04\uff0fIM05\uff1a\u8cc7\u6e90\u8a55\u4f30\u3001\u5c0d\u61c9\u8207\u53d6\u6368\u78ba\u8a8d\uff1b\u660e\u78ba\u7121\u8cc7\u6e90\u4e5f\u7b97\u6c7a\u7b56",
+        "transitions": {
+          "confirmed": "INTERACTION",
+          "failure": "FAILURE",
+          "pause": "PAUSED",
+          "revise": "RESOURCE",
+          "stop": "STOPPED"
+        },
+        "wait": true
+      },
+      {
+        "id": "INTERACTION",
+        "interaction_protocol": "P2",
+        "kind": "wait",
+        "state_effect": "IM06\uff1a\u5019\u9078\u4e92\u52d5\u8207\u9078\u5b9a\u85cd\u5716\u78ba\u8a8d",
+        "transitions": {
+          "confirmed": "ADAPT",
+          "failure": "FAILURE",
+          "pause": "PAUSED",
+          "revise": "INTERACTION",
+          "stop": "STOPPED"
+        },
+        "wait": true
+      },
+      {
+        "id": "ADAPT",
+        "interaction_protocol": "P2",
+        "kind": "action",
+        "state_effect": "IM15\uff0fIM11\uff1a\u67e5\u6838\u80fd\u529b\u4e26\u7522\u751f\u9078\u5b9a\u5e73\u53f0\u7248\uff1b\u82e5\u76ee\u524d\u53ea\u505a\u53ef\u651c\u8349\u7a3f\uff0cCONFIG \u50c5\u78ba\u8a8d\u4e2d\u7acb\u8a2d\u8a08\uff0c\u72c0\u614b\u9700\u4fdd\u7559 pending-target\uff0c\u4e0d\u80fd\u8072\u7a31\u5e73\u53f0\u9069\u914d\u5b8c\u6210\u3002",
+        "transitions": {
+          "complete": "CONFIG",
+          "failure": "FAILURE",
+          "missing_capability": "NEED_INPUT",
+          "pause": "PAUSED",
+          "stop": "STOPPED"
+        },
+        "wait": false
+      },
+      {
+        "id": "CONFIG",
+        "interaction_protocol": "P2",
+        "kind": "wait",
+        "state_effect": "IM11\uff1a\u5b8c\u6574\u914d\u7f6e\u5305\u78ba\u8a8d",
+        "transitions": {
+          "confirmed": "TEST_PRECHECK",
+          "failure": "FAILURE",
+          "pause": "PAUSED",
+          "revise": "CONFIG",
+          "stop": "STOPPED"
+        },
+        "wait": true
+      },
+      {
+        "id": "TEST_PRECHECK",
+        "interaction_protocol": "P4",
+        "kind": "action",
+        "state_effect": "IM09\uff1a\u78ba\u6709\u6307\u4ee4\u3001\u4e92\u52d5\u85cd\u5716\u3001\u76ee\u6a19\u3001\u60c5\u5883\u624d\u7522\u751f\u6e2c\u8a66",
+        "transitions": {
+          "complete": "TEST_DELIVERY",
+          "failure": "FAILURE",
+          "pause": "PAUSED",
+          "revise": "TEST_PRECHECK",
+          "stop": "STOPPED"
+        },
+        "wait": false
+      },
+      {
+        "id": "TEST_DELIVERY",
+        "interaction_protocol": "P4",
+        "kind": "wait",
+        "state_effect": "IM09\uff1a\u78ba\u8a8d\u6e2c\u8a66\u8a08\u756b\u4e26\u63d0\u9192\u5230 \u76ee\u6a19\u5e73\u53f0 \u5be6\u6e2c",
+        "transitions": {
+          "confirmed": "DONE",
+          "failure": "FAILURE",
+          "pause": "PAUSED",
+          "revise": "TEST_DELIVERY",
+          "stop": "STOPPED"
+        },
+        "wait": true
+      },
+      {
+        "id": "NEED_INPUT",
+        "interaction_protocol": "P3",
+        "kind": "wait",
+        "transitions": {
+          "pause": "PAUSED",
+          "stop": "STOPPED",
+          "supplied": "PRECHECK"
+        },
+        "wait": true
+      },
+      {
+        "id": "PAUSED",
+        "interaction_protocol": "P1",
+        "kind": "wait",
+        "transitions": {
+          "resume": "RECAP",
+          "stop": "STOPPED"
+        },
+        "wait": true
+      },
+      {
+        "id": "RECAP",
+        "interaction_protocol": "P1",
+        "kind": "action",
+        "transitions": {
+          "resume_point_valid": "PRECHECK",
+          "state_missing": "NEED_INPUT",
+          "stop": "STOPPED"
+        },
+        "wait": false
+      },
+      {
+        "id": "FAILURE",
+        "interaction_protocol": "P3",
+        "kind": "failure",
+        "transitions": {
+          "pause": "PAUSED",
+          "retry": "PRECHECK",
+          "stop": "FAILED"
+        },
+        "wait": false
+      },
+      {
+        "id": "DONE",
+        "interaction_protocol": "P0",
+        "kind": "end",
+        "transitions": {},
+        "wait": false
+      },
+      {
+        "id": "STOPPED",
+        "interaction_protocol": "P0",
+        "kind": "end",
+        "transitions": {},
+        "wait": false
+      },
+      {
+        "id": "FAILED",
+        "interaction_protocol": "P0",
+        "kind": "end",
+        "transitions": {},
+        "wait": false
+      }
+    ],
+    "successful_terminal_states": [
+      "DONE"
+    ],
+    "terminal_states": [
+      "DONE",
+      "STOPPED",
+      "FAILED"
+    ],
+    "transition_semantics": "confirmed \u53ea\u63a5\u53d7\u7576\u524d\u7248\u672c\u7684\u660e\u78ba\u78ba\u8a8d\uff1brevise \u4fdd\u7559\u7248\u672c\u4e26\u4f5c\u5ee2\u53d7\u5f71\u97ff\u4e0b\u6e38\u78ba\u8a8d\uff1b\u6240\u6709 complete \u90fd\u8981\u5148\u6aa2\u67e5 IM14\u3002\u4efb\u610f\u968e\u6bb5\u5df2\u77e5\u672a\u6eff\u5341\u4e09\u6b72\uff0f\u6709\u5bb3\u610f\u5716\u7acb\u5373\u7d42\u6b62\u81f3 STOPPED\u3002resume_point_valid \u56de\u5230 PRECHECK \u5f8c\uff0c\u4ee5\u4fdd\u7559\u7684\u78ba\u8a8d\uff0f\u7248\u672c\u9010\u7bc0\u6838\u5c0d\uff1b\u672a\u5931\u6548\u4e14\u7248\u672c\u76f8\u540c\u7684\u7b49\u5f85\u78ba\u8a8d\u53ef\u91cd\u7528\uff0c\u7f3a\u4e00\u4e0d\u53ef\u3002\u5931\u6557\u72c0\u614b\u4fdd\u7559\u5df2\u8b80\u8b49\u64da\u3001\u57fa\u6e96\u7248\u672c\u8207\u932f\u8aa4\u7bc4\u570d\u3002",
+    "workflow_id": "WF01"
+  },
+  {
+    "actors": [
+      "\u4f7f\u7528\u8005",
+      "\u8a2d\u8a08\u52a9\u7406"
+    ],
+    "completion_criteria": [
+      "\u5fc5\u8981\u8f38\u5165\u53ca\u4f86\u6e90\u53ef\u6838\u5be6",
+      "\u6bcf\u500b\u9069\u7528\u7b49\u5f85\u7bc0\u9ede\u5df2\u53d6\u5f97\u6307\u5b9a\u7248\u672c\u7684\u660e\u78ba\u78ba\u8a8d",
+      "\u6210\u679c\u8207\u9650\u5236\u5b8c\u6574\u4ea4\u4ed8"
+    ],
+    "hitl_checkpoints": [
+      "APPROVE"
+    ],
+    "inputs": {
+      "optional": [
+        "\u65e2\u6709\u6210\u679c\u53ca\u4f86\u6e90\uff0f\u56de\u8986\u8b49\u64da"
+      ],
+      "required": [
+        "\u76ee\u524d\u6307\u4ee4",
+        "\u555f\u52d5\u7bc4\u4f8b",
+        "\u8cc7\u6e90\uff0f\u5de5\u5177\u8a2d\u5b9a\uff1b\u53ef\u660e\u78ba\u70ba\u7121",
+        "\u76ee\u6a19\u5e73\u53f0\uff1b\u82e5\u53ea\u505a\u5e73\u53f0\u4e2d\u7acb\u975c\u614b\u5be9\u67e5\u5fc5\u9808\u660e\u78ba\u9650\u5b9a\u7bc4\u570d"
+      ]
+    },
+    "mission_outcome": "\u65e2\u6709\u914d\u7f6e\u5be9\u67e5\u8207\u53ef\u5be9\u95b1\u4fee\u8a02",
+    "start": "START",
+    "state_modules": {
+      "APPROVE": "IM12\uff1a\u78ba\u8a8d\u4fee\u8a02\u7bc4\u570d\u8207\u7248\u672c",
+      "PATCH": "IM10\uff1a\u6700\u5c0f\u4fee\u8a02\u8207\u6bd4\u8f03",
+      "PRECHECK": "IM07\uff1a\u6aa2\u67e5\u4e09\u985e\u8f38\u5165",
+      "REVIEW": "IM07\uff1a\u5206\u985e\u554f\u984c\u4e26\u8ffd\u6eaf\u6b63\u6587"
+    },
+    "states": [
+      {
+        "id": "START",
+        "interaction_protocol": "P0",
+        "kind": "start",
+        "transitions": {
+          "begin": "PRECHECK"
+        },
+        "wait": false
+      },
+      {
+        "id": "PRECHECK",
+        "interaction_protocol": "P3",
+        "kind": "action",
+        "state_effect": "IM07\uff1a\u6aa2\u67e5\u4e09\u985e\u8f38\u5165\uff1b\u540c\u6642\u6aa2\u67e5\u76ee\u6a19\u5e73\u53f0\u6216\u660e\u78ba\u975c\u614b\u7bc4\u570d\u3002",
+        "transitions": {
+          "complete": "REVIEW",
+          "failure": "FAILURE",
+          "missing_input": "NEED_INPUT",
+          "pause": "PAUSED",
+          "revise": "PRECHECK",
+          "stop": "STOPPED"
+        },
+        "wait": false
+      },
+      {
+        "id": "REVIEW",
+        "interaction_protocol": "P3",
+        "kind": "action",
+        "state_effect": "IM07\uff1a\u5206\u985e\u554f\u984c\u4e26\u8ffd\u6eaf\u6b63\u6587",
+        "transitions": {
+          "complete": "PATCH",
+          "failure": "FAILURE",
+          "pause": "PAUSED",
+          "revise": "REVIEW",
+          "stop": "STOPPED"
+        },
+        "wait": false
+      },
+      {
+        "id": "PATCH",
+        "interaction_protocol": "P2",
+        "kind": "action",
+        "state_effect": "IM10\uff1a\u6700\u5c0f\u4fee\u8a02\u8207\u6bd4\u8f03",
+        "transitions": {
+          "complete": "APPROVE",
+          "failure": "FAILURE",
+          "pause": "PAUSED",
+          "revise": "PATCH",
+          "stop": "STOPPED"
+        },
+        "wait": false
+      },
+      {
+        "id": "APPROVE",
+        "interaction_protocol": "P2",
+        "kind": "wait",
+        "state_effect": "IM12\uff1a\u78ba\u8a8d\u4fee\u8a02\u7bc4\u570d\u8207\u7248\u672c",
+        "transitions": {
+          "confirmed": "DONE",
+          "failure": "FAILURE",
+          "pause": "PAUSED",
+          "revise": "APPROVE",
+          "stop": "STOPPED"
+        },
+        "wait": true
+      },
+      {
+        "id": "NEED_INPUT",
+        "interaction_protocol": "P3",
+        "kind": "wait",
+        "transitions": {
+          "pause": "PAUSED",
+          "stop": "STOPPED",
+          "supplied": "PRECHECK"
+        },
+        "wait": true
+      },
+      {
+        "id": "PAUSED",
+        "interaction_protocol": "P1",
+        "kind": "wait",
+        "transitions": {
+          "resume": "RECAP",
+          "stop": "STOPPED"
+        },
+        "wait": true
+      },
+      {
+        "id": "RECAP",
+        "interaction_protocol": "P1",
+        "kind": "action",
+        "transitions": {
+          "resume_point_valid": "PRECHECK",
+          "state_missing": "NEED_INPUT",
+          "stop": "STOPPED"
+        },
+        "wait": false
+      },
+      {
+        "id": "FAILURE",
+        "interaction_protocol": "P3",
+        "kind": "failure",
+        "transitions": {
+          "pause": "PAUSED",
+          "retry": "PRECHECK",
+          "stop": "FAILED"
+        },
+        "wait": false
+      },
+      {
+        "id": "DONE",
+        "interaction_protocol": "P0",
+        "kind": "end",
+        "transitions": {},
+        "wait": false
+      },
+      {
+        "id": "STOPPED",
+        "interaction_protocol": "P0",
+        "kind": "end",
+        "transitions": {},
+        "wait": false
+      },
+      {
+        "id": "FAILED",
+        "interaction_protocol": "P0",
+        "kind": "end",
+        "transitions": {},
+        "wait": false
+      }
+    ],
+    "successful_terminal_states": [
+      "DONE"
+    ],
+    "terminal_states": [
+      "DONE",
+      "STOPPED",
+      "FAILED"
+    ],
+    "transition_semantics": "confirmed \u53ea\u63a5\u53d7\u7576\u524d\u7248\u672c\u7684\u660e\u78ba\u78ba\u8a8d\uff1brevise \u4fdd\u7559\u7248\u672c\u4e26\u4f5c\u5ee2\u53d7\u5f71\u97ff\u4e0b\u6e38\u78ba\u8a8d\uff1b\u6240\u6709 complete \u90fd\u8981\u5148\u6aa2\u67e5 IM14\u3002\u4efb\u610f\u968e\u6bb5\u5df2\u77e5\u672a\u6eff\u5341\u4e09\u6b72\uff0f\u6709\u5bb3\u610f\u5716\u7acb\u5373\u7d42\u6b62\u81f3 STOPPED\u3002resume_point_valid \u56de\u5230 PRECHECK \u5f8c\uff0c\u4ee5\u4fdd\u7559\u7684\u78ba\u8a8d\uff0f\u7248\u672c\u9010\u7bc0\u6838\u5c0d\uff1b\u672a\u5931\u6548\u4e14\u7248\u672c\u76f8\u540c\u7684\u7b49\u5f85\u78ba\u8a8d\u53ef\u91cd\u7528\uff0c\u7f3a\u4e00\u4e0d\u53ef\u3002\u5931\u6557\u72c0\u614b\u4fdd\u7559\u5df2\u8b80\u8b49\u64da\u3001\u57fa\u6e96\u7248\u672c\u8207\u932f\u8aa4\u7bc4\u570d\u3002",
+    "workflow_id": "WF02"
+  },
+  {
+    "actors": [
+      "\u4f7f\u7528\u8005",
+      "\u8a2d\u8a08\u52a9\u7406"
+    ],
+    "completion_criteria": [
+      "\u5fc5\u8981\u8f38\u5165\u53ca\u4f86\u6e90\u53ef\u6838\u5be6",
+      "\u6bcf\u500b\u9069\u7528\u7b49\u5f85\u7bc0\u9ede\u5df2\u53d6\u5f97\u6307\u5b9a\u7248\u672c\u7684\u660e\u78ba\u78ba\u8a8d",
+      "\u6210\u679c\u8207\u9650\u5236\u5b8c\u6574\u4ea4\u4ed8"
+    ],
+    "hitl_checkpoints": [
+      "APPROVE"
+    ],
+    "inputs": {
+      "optional": [
+        "\u65e2\u6709\u6210\u679c\u53ca\u4f86\u6e90\uff0f\u56de\u8986\u8b49\u64da"
+      ],
+      "required": [
+        "\u65b0\u8a2d\u8a08\uff1a\u5834\u666f\uff0f\u4efb\u52d9\uff1b\u65e2\u6709\u5be9\u67e5\uff1a\u76ee\u524d\u6307\u4ee4\u6216\u4e92\u52d5\u6d41\u7a0b\u6b63\u6587"
+      ]
+    },
+    "mission_outcome": "\u65b0\u4e92\u52d5\u8a2d\u8a08\u6216\u65e2\u6709\u4e92\u52d5\u908f\u8f2f\u5be9\u67e5",
+    "start": "START",
+    "state_modules": {
+      "APPROVE": "IM12\uff1a\u9078\u64c7\u6216\u78ba\u8a8d\u4e92\u52d5\u7248\u672c",
+      "BLUEPRINT": "IM06\uff0fIM08\uff1a\u65b0\u8a2d\u8a08\u7d66\u5019\u9078\uff1b\u5be9\u67e5\u7d66\u554f\u984c\u8207\u4fee\u8a02\uff1b\u5fc5\u8981\u6642\u793a\u7bc4\u6a21\u64ec",
+      "PRECHECK": "IM06\uff0fIM08\uff1a\u5148\u8fa8\u8b58\u65b0\u8a2d\u8a08\u8207\u65e2\u6709\u5be9\u67e5\uff1b\u5be9\u67e5\u4e0d\u5f97\u4ee5\u81c6\u6e2c\u66ff\u4ee3\u6b63\u6587"
+    },
+    "states": [
+      {
+        "id": "START",
+        "interaction_protocol": "P0",
+        "kind": "start",
+        "transitions": {
+          "begin": "PRECHECK"
+        },
+        "wait": false
+      },
+      {
+        "id": "PRECHECK",
+        "interaction_protocol": "P3",
+        "kind": "action",
+        "state_effect": "IM06\uff0fIM08\uff1a\u5148\u8fa8\u8b58\u65b0\u8a2d\u8a08\u8207\u65e2\u6709\u5be9\u67e5\uff1b\u5be9\u67e5\u4e0d\u5f97\u4ee5\u81c6\u6e2c\u66ff\u4ee3\u6b63\u6587",
+        "transitions": {
+          "complete": "BLUEPRINT",
+          "failure": "FAILURE",
+          "missing_input": "NEED_INPUT",
+          "pause": "PAUSED",
+          "revise": "PRECHECK",
+          "stop": "STOPPED"
+        },
+        "wait": false
+      },
+      {
+        "id": "BLUEPRINT",
+        "interaction_protocol": "P2",
+        "kind": "action",
+        "state_effect": "IM06\uff0fIM08\uff1a\u65b0\u8a2d\u8a08\u7d66\u5019\u9078\uff1b\u5be9\u67e5\u7d66\u554f\u984c\u8207\u4fee\u8a02\uff1b\u5fc5\u8981\u6642\u793a\u7bc4\u6a21\u64ec",
+        "transitions": {
+          "complete": "APPROVE",
+          "failure": "FAILURE",
+          "pause": "PAUSED",
+          "revise": "BLUEPRINT",
+          "stop": "STOPPED"
+        },
+        "wait": false
+      },
+      {
+        "id": "APPROVE",
+        "interaction_protocol": "P2",
+        "kind": "wait",
+        "state_effect": "IM12\uff1a\u9078\u64c7\u6216\u78ba\u8a8d\u4e92\u52d5\u7248\u672c",
+        "transitions": {
+          "confirmed": "DONE",
+          "failure": "FAILURE",
+          "pause": "PAUSED",
+          "revise": "APPROVE",
+          "stop": "STOPPED"
+        },
+        "wait": true
+      },
+      {
+        "id": "NEED_INPUT",
+        "interaction_protocol": "P3",
+        "kind": "wait",
+        "transitions": {
+          "pause": "PAUSED",
+          "stop": "STOPPED",
+          "supplied": "PRECHECK"
+        },
+        "wait": true
+      },
+      {
+        "id": "PAUSED",
+        "interaction_protocol": "P1",
+        "kind": "wait",
+        "transitions": {
+          "resume": "RECAP",
+          "stop": "STOPPED"
+        },
+        "wait": true
+      },
+      {
+        "id": "RECAP",
+        "interaction_protocol": "P1",
+        "kind": "action",
+        "transitions": {
+          "resume_point_valid": "PRECHECK",
+          "state_missing": "NEED_INPUT",
+          "stop": "STOPPED"
+        },
+        "wait": false
+      },
+      {
+        "id": "FAILURE",
+        "interaction_protocol": "P3",
+        "kind": "failure",
+        "transitions": {
+          "pause": "PAUSED",
+          "retry": "PRECHECK",
+          "stop": "FAILED"
+        },
+        "wait": false
+      },
+      {
+        "id": "DONE",
+        "interaction_protocol": "P0",
+        "kind": "end",
+        "transitions": {},
+        "wait": false
+      },
+      {
+        "id": "STOPPED",
+        "interaction_protocol": "P0",
+        "kind": "end",
+        "transitions": {},
+        "wait": false
+      },
+      {
+        "id": "FAILED",
+        "interaction_protocol": "P0",
+        "kind": "end",
+        "transitions": {},
+        "wait": false
+      }
+    ],
+    "successful_terminal_states": [
+      "DONE"
+    ],
+    "terminal_states": [
+      "DONE",
+      "STOPPED",
+      "FAILED"
+    ],
+    "transition_semantics": "confirmed \u53ea\u63a5\u53d7\u7576\u524d\u7248\u672c\u7684\u660e\u78ba\u78ba\u8a8d\uff1brevise \u4fdd\u7559\u7248\u672c\u4e26\u4f5c\u5ee2\u53d7\u5f71\u97ff\u4e0b\u6e38\u78ba\u8a8d\uff1b\u6240\u6709 complete \u90fd\u8981\u5148\u6aa2\u67e5 IM14\u3002\u4efb\u610f\u968e\u6bb5\u5df2\u77e5\u672a\u6eff\u5341\u4e09\u6b72\uff0f\u6709\u5bb3\u610f\u5716\u7acb\u5373\u7d42\u6b62\u81f3 STOPPED\u3002resume_point_valid \u56de\u5230 PRECHECK \u5f8c\uff0c\u4ee5\u4fdd\u7559\u7684\u78ba\u8a8d\uff0f\u7248\u672c\u9010\u7bc0\u6838\u5c0d\uff1b\u672a\u5931\u6548\u4e14\u7248\u672c\u76f8\u540c\u7684\u7b49\u5f85\u78ba\u8a8d\u53ef\u91cd\u7528\uff0c\u7f3a\u4e00\u4e0d\u53ef\u3002\u5931\u6557\u72c0\u614b\u4fdd\u7559\u5df2\u8b80\u8b49\u64da\u3001\u57fa\u6e96\u7248\u672c\u8207\u932f\u8aa4\u7bc4\u570d\u3002",
+    "workflow_id": "WF03"
+  },
+  {
+    "actors": [
+      "\u4f7f\u7528\u8005",
+      "\u8a2d\u8a08\u52a9\u7406"
+    ],
+    "completion_criteria": [
+      "\u5fc5\u8981\u8f38\u5165\u53ca\u4f86\u6e90\u53ef\u6838\u5be6",
+      "\u6bcf\u500b\u9069\u7528\u7b49\u5f85\u7bc0\u9ede\u5df2\u53d6\u5f97\u6307\u5b9a\u7248\u672c\u7684\u660e\u78ba\u78ba\u8a8d",
+      "\u6210\u679c\u8207\u9650\u5236\u5b8c\u6574\u4ea4\u4ed8"
+    ],
+    "hitl_checkpoints": [
+      "APPROVE"
+    ],
+    "inputs": {
+      "optional": [
+        "\u65e2\u6709\u6210\u679c\u53ca\u4f86\u6e90\uff0f\u56de\u8986\u8b49\u64da"
+      ],
+      "required": [
+        "\u76ee\u6a19\u4efb\u52d9",
+        "\u8cc7\u6e90\u6e05\u55ae\uff0f\u8cc7\u6599\uff1b\u9700\u8981\u5c0d\u61c9\u6642\u6709\u6a21\u7d44\u8cac\u4efb"
+      ]
+    },
+    "mission_outcome": "\u8cc7\u6e90\u8a55\u4f30\u3001\u77e5\u8b58\u8349\u7a3f\u6216\u8cc7\u6e90\u5c0d\u61c9\u4ea4\u4ed8",
+    "start": "START",
+    "state_modules": {
+      "APPROVE": "IM12\uff1a\u78ba\u8a8d\u53d6\u6368\u8207\u53ef\u4ea4\u4ed8\u7bc4\u570d",
+      "EVALUATE": "IM04\uff0fIM05\uff1a\u56db\u7dad\u8a55\u4f30\u3001\u689d\u4ef6\u5c0d\u61c9\u8207\u8986\u84cb\uff1b\u6b0a\u5229\u672a\u6c7a\u5247\u53ea\u4ea4\u8a55\u4f30\u53ca\u53d7\u963b\u72c0\u614b",
+      "PRECHECK": "IM04\uff0fIM05\uff1a\u5340\u5206\u6e05\u55ae\u76e4\u9ede\u8207\u6b63\u6587\u8f49\u63db\uff1b\u78ba\u8a8d\u6b0a\u5229"
+    },
+    "states": [
+      {
+        "id": "START",
+        "interaction_protocol": "P0",
+        "kind": "start",
+        "transitions": {
+          "begin": "PRECHECK"
+        },
+        "wait": false
+      },
+      {
+        "id": "PRECHECK",
+        "interaction_protocol": "P3",
+        "kind": "action",
+        "state_effect": "IM04\uff0fIM05\uff1a\u5340\u5206\u6e05\u55ae\u76e4\u9ede\u8207\u6b63\u6587\u8f49\u63db\uff1b\u78ba\u8a8d\u6b0a\u5229",
+        "transitions": {
+          "complete": "EVALUATE",
+          "failure": "FAILURE",
+          "missing_input": "NEED_INPUT",
+          "pause": "PAUSED",
+          "revise": "PRECHECK",
+          "stop": "STOPPED"
+        },
+        "wait": false
+      },
+      {
+        "id": "EVALUATE",
+        "interaction_protocol": "P3",
+        "kind": "action",
+        "state_effect": "IM04\uff0fIM05\uff1a\u56db\u7dad\u8a55\u4f30\u3001\u689d\u4ef6\u5c0d\u61c9\u8207\u8986\u84cb\uff1b\u6b0a\u5229\u672a\u6c7a\u5247\u53ea\u4ea4\u8a55\u4f30\u53ca\u53d7\u963b\u72c0\u614b",
+        "transitions": {
+          "complete": "APPROVE",
+          "failure": "FAILURE",
+          "pause": "PAUSED",
+          "revise": "EVALUATE",
+          "stop": "STOPPED"
+        },
+        "wait": false
+      },
+      {
+        "id": "APPROVE",
+        "interaction_protocol": "P2",
+        "kind": "wait",
+        "state_effect": "IM12\uff1a\u78ba\u8a8d\u53d6\u6368\u8207\u53ef\u4ea4\u4ed8\u7bc4\u570d",
+        "transitions": {
+          "confirmed": "DONE",
+          "failure": "FAILURE",
+          "pause": "PAUSED",
+          "revise": "APPROVE",
+          "stop": "STOPPED"
+        },
+        "wait": true
+      },
+      {
+        "id": "NEED_INPUT",
+        "interaction_protocol": "P3",
+        "kind": "wait",
+        "transitions": {
+          "pause": "PAUSED",
+          "stop": "STOPPED",
+          "supplied": "PRECHECK"
+        },
+        "wait": true
+      },
+      {
+        "id": "PAUSED",
+        "interaction_protocol": "P1",
+        "kind": "wait",
+        "transitions": {
+          "resume": "RECAP",
+          "stop": "STOPPED"
+        },
+        "wait": true
+      },
+      {
+        "id": "RECAP",
+        "interaction_protocol": "P1",
+        "kind": "action",
+        "transitions": {
+          "resume_point_valid": "PRECHECK",
+          "state_missing": "NEED_INPUT",
+          "stop": "STOPPED"
+        },
+        "wait": false
+      },
+      {
+        "id": "FAILURE",
+        "interaction_protocol": "P3",
+        "kind": "failure",
+        "transitions": {
+          "pause": "PAUSED",
+          "retry": "PRECHECK",
+          "stop": "FAILED"
+        },
+        "wait": false
+      },
+      {
+        "id": "DONE",
+        "interaction_protocol": "P0",
+        "kind": "end",
+        "transitions": {},
+        "wait": false
+      },
+      {
+        "id": "STOPPED",
+        "interaction_protocol": "P0",
+        "kind": "end",
+        "transitions": {},
+        "wait": false
+      },
+      {
+        "id": "FAILED",
+        "interaction_protocol": "P0",
+        "kind": "end",
+        "transitions": {},
+        "wait": false
+      }
+    ],
+    "successful_terminal_states": [
+      "DONE"
+    ],
+    "terminal_states": [
+      "DONE",
+      "STOPPED",
+      "FAILED"
+    ],
+    "transition_semantics": "confirmed \u53ea\u63a5\u53d7\u7576\u524d\u7248\u672c\u7684\u660e\u78ba\u78ba\u8a8d\uff1brevise \u4fdd\u7559\u7248\u672c\u4e26\u4f5c\u5ee2\u53d7\u5f71\u97ff\u4e0b\u6e38\u78ba\u8a8d\uff1b\u6240\u6709 complete \u90fd\u8981\u5148\u6aa2\u67e5 IM14\u3002\u4efb\u610f\u968e\u6bb5\u5df2\u77e5\u672a\u6eff\u5341\u4e09\u6b72\uff0f\u6709\u5bb3\u610f\u5716\u7acb\u5373\u7d42\u6b62\u81f3 STOPPED\u3002resume_point_valid \u56de\u5230 PRECHECK \u5f8c\uff0c\u4ee5\u4fdd\u7559\u7684\u78ba\u8a8d\uff0f\u7248\u672c\u9010\u7bc0\u6838\u5c0d\uff1b\u672a\u5931\u6548\u4e14\u7248\u672c\u76f8\u540c\u7684\u7b49\u5f85\u78ba\u8a8d\u53ef\u91cd\u7528\uff0c\u7f3a\u4e00\u4e0d\u53ef\u3002\u5931\u6557\u72c0\u614b\u4fdd\u7559\u5df2\u8b80\u8b49\u64da\u3001\u57fa\u6e96\u7248\u672c\u8207\u932f\u8aa4\u7bc4\u570d\u3002",
+    "workflow_id": "WF04"
+  },
+  {
+    "actors": [
+      "\u4f7f\u7528\u8005",
+      "\u8a2d\u8a08\u52a9\u7406"
+    ],
+    "completion_criteria": [
+      "\u5fc5\u8981\u8f38\u5165\u53ca\u4f86\u6e90\u53ef\u6838\u5be6",
+      "\u6bcf\u500b\u9069\u7528\u7b49\u5f85\u7bc0\u9ede\u5df2\u53d6\u5f97\u6307\u5b9a\u7248\u672c\u7684\u660e\u78ba\u78ba\u8a8d",
+      "\u6210\u679c\u8207\u9650\u5236\u5b8c\u6574\u4ea4\u4ed8",
+      "\u6bcf\u500b\u5e73\u53f0\u7684\u57f7\u884c\u8b49\u64da\u5206\u958b\u4fdd\u5b58\uff1b\u4e0d\u5f97\u628a\u55ae\u4e00\u5e73\u53f0\u7d50\u679c\u8996\u70ba\u5168\u5e73\u53f0\u901a\u904e\u3002"
+    ],
+    "hitl_checkpoints": [
+      "PLAN_APPROVE",
+      "RUNTIME_EVIDENCE",
+      "PATCH_APPROVE",
+      "RETEST_EVIDENCE"
+    ],
+    "inputs": {
+      "optional": [
+        "\u65e2\u6709\u6210\u679c\u53ca\u4f86\u6e90\uff0f\u56de\u8986\u8b49\u64da"
+      ],
+      "required": [
+        "\u76ee\u524d Custom Instructions",
+        "\u4e92\u52d5\u85cd\u5716",
+        "\u76ee\u6a19",
+        "\u4f7f\u7528\u60c5\u5883",
+        "\u76ee\u6a19\u5e73\u53f0\uff1b\u82e5\u53ea\u505a\u5e73\u53f0\u4e2d\u7acb\u975c\u614b\u5be9\u67e5\u5fc5\u9808\u660e\u78ba\u9650\u5b9a\u7bc4\u570d"
+      ]
+    },
+    "mission_outcome": "\u6e2c\u8a66\u8a08\u756b\u3001\u8b49\u64da\u8a55\u4f30\u8207\u7248\u672c\u6539\u5584\u9589\u74b0",
+    "start": "START",
+    "state_modules": {
+      "ASSESS": "IM09\uff1a\u6309\u8b49\u64da\u5224\u8b80\uff1b\u7121\u504f\u5dee\u5c31\u7d66 no-change \u7d50\u8ad6",
+      "PATCH": "IM10\uff1a\u9700\u8981\u6642\u63d0 Patch \u8207\u91cd\u6e2c\uff0c\u7121\u504f\u5dee\u5247\u8a18 no-change",
+      "PATCH_APPROVE": "IM12\uff1a\u78ba\u8a8d\u4fee\u8a02\u6216 no-change \u7d50\u8ad6",
+      "PLAN": "IM09\uff1a\u4f9d\u76ee\u6a19\u7522\u751f\u5361\u8207 rubric",
+      "PLAN_APPROVE": "IM12\uff1a\u78ba\u8a8d\u6e2c\u8a66\u8a08\u756b",
+      "PRECHECK": "IM09\uff1a\u56b4\u683c\u56db\u9805\u8f38\u5165\u6aa2\u67e5",
+      "RETEST_EVIDENCE": "IM09\uff1a\u6709 Patch \u5247\u9808\u4fee\u5f8c\u5be6\u6e2c\uff1bno-change \u660e\u78ba\u78ba\u8a8d\u4e0d\u9700\u91cd\u6e2c\u7406\u7531",
+      "RUNTIME_EVIDENCE": "IM09\uff1a\u7b49\u5f85\u4f7f\u7528\u8005\u5be6\u6e2c\u8207\u53ef\u6838\u5be6\u56de\u8986\uff1b\u672a\u63d0\u4f9b\u4e0d\u5f97\u5230\u4fee\u8a02\u5b8c\u6210"
+    },
+    "states": [
+      {
+        "id": "START",
+        "interaction_protocol": "P0",
+        "kind": "start",
+        "transitions": {
+          "begin": "PRECHECK"
+        },
+        "wait": false
+      },
+      {
+        "id": "PRECHECK",
+        "interaction_protocol": "P4",
+        "kind": "action",
+        "state_effect": "IM09\uff1a\u56b4\u683c\u56db\u9805\u8f38\u5165\u6aa2\u67e5\uff1b\u540c\u6642\u6aa2\u67e5\u76ee\u6a19\u5e73\u53f0\u6216\u660e\u78ba\u975c\u614b\u7bc4\u570d\u3002",
+        "transitions": {
+          "complete": "PLAN",
+          "failure": "FAILURE",
+          "missing_input": "NEED_INPUT",
+          "pause": "PAUSED",
+          "revise": "PRECHECK",
+          "stop": "STOPPED"
+        },
+        "wait": false
+      },
+      {
+        "id": "PLAN",
+        "interaction_protocol": "P4",
+        "kind": "action",
+        "state_effect": "IM09\uff1a\u4f9d\u76ee\u6a19\u7522\u751f\u5361\u8207 rubric",
+        "transitions": {
+          "complete": "PLAN_APPROVE",
+          "failure": "FAILURE",
+          "pause": "PAUSED",
+          "revise": "PLAN",
+          "stop": "STOPPED"
+        },
+        "wait": false
+      },
+      {
+        "id": "PLAN_APPROVE",
+        "interaction_protocol": "P2",
+        "kind": "wait",
+        "state_effect": "IM12\uff1a\u78ba\u8a8d\u6e2c\u8a66\u8a08\u756b",
+        "transitions": {
+          "confirmed": "RUNTIME_EVIDENCE",
+          "failure": "FAILURE",
+          "pause": "PAUSED",
+          "revise": "PLAN_APPROVE",
+          "stop": "STOPPED"
+        },
+        "wait": true
+      },
+      {
+        "id": "RUNTIME_EVIDENCE",
+        "interaction_protocol": "P4",
+        "kind": "wait",
+        "state_effect": "IM09\uff1a\u7b49\u5f85\u4f7f\u7528\u8005\u5be6\u6e2c\u8207\u53ef\u6838\u5be6\u56de\u8986\uff1b\u672a\u63d0\u4f9b\u4e0d\u5f97\u5230\u4fee\u8a02\u5b8c\u6210",
+        "transitions": {
+          "confirmed": "ASSESS",
+          "failure": "FAILURE",
+          "pause": "PAUSED",
+          "revise": "RUNTIME_EVIDENCE",
+          "stop": "STOPPED"
+        },
+        "wait": true
+      },
+      {
+        "id": "ASSESS",
+        "interaction_protocol": "P4",
+        "kind": "action",
+        "state_effect": "IM09\uff1a\u6309\u8b49\u64da\u5224\u8b80\uff1b\u7121\u504f\u5dee\u5c31\u7d66 no-change \u7d50\u8ad6",
+        "transitions": {
+          "complete": "PATCH",
+          "failure": "FAILURE",
+          "pause": "PAUSED",
+          "revise": "ASSESS",
+          "stop": "STOPPED"
+        },
+        "wait": false
+      },
+      {
+        "id": "PATCH",
+        "interaction_protocol": "P2",
+        "kind": "action",
+        "state_effect": "IM10\uff1a\u9700\u8981\u6642\u63d0 Patch \u8207\u91cd\u6e2c\uff0c\u7121\u504f\u5dee\u5247\u8a18 no-change",
+        "transitions": {
+          "complete": "PATCH_APPROVE",
+          "failure": "FAILURE",
+          "pause": "PAUSED",
+          "revise": "PATCH",
+          "stop": "STOPPED"
+        },
+        "wait": false
+      },
+      {
+        "id": "PATCH_APPROVE",
+        "interaction_protocol": "P2",
+        "kind": "wait",
+        "state_effect": "IM12\uff1a\u78ba\u8a8d\u4fee\u8a02\u6216 no-change \u7d50\u8ad6",
+        "transitions": {
+          "confirmed": "RETEST_EVIDENCE",
+          "failure": "FAILURE",
+          "pause": "PAUSED",
+          "revise": "PATCH_APPROVE",
+          "stop": "STOPPED"
+        },
+        "wait": true
+      },
+      {
+        "id": "RETEST_EVIDENCE",
+        "interaction_protocol": "P4",
+        "kind": "wait",
+        "state_effect": "IM09\uff1a\u6709 Patch \u5247\u9808\u4fee\u5f8c\u5be6\u6e2c\uff1bno-change \u660e\u78ba\u78ba\u8a8d\u4e0d\u9700\u91cd\u6e2c\u7406\u7531",
+        "transitions": {
+          "confirmed": "DONE",
+          "failure": "FAILURE",
+          "pause": "PAUSED",
+          "revise": "RETEST_EVIDENCE",
+          "stop": "STOPPED"
+        },
+        "wait": true
+      },
+      {
+        "id": "NEED_INPUT",
+        "interaction_protocol": "P3",
+        "kind": "wait",
+        "transitions": {
+          "pause": "PAUSED",
+          "stop": "STOPPED",
+          "supplied": "PRECHECK"
+        },
+        "wait": true
+      },
+      {
+        "id": "PAUSED",
+        "interaction_protocol": "P1",
+        "kind": "wait",
+        "transitions": {
+          "resume": "RECAP",
+          "stop": "STOPPED"
+        },
+        "wait": true
+      },
+      {
+        "id": "RECAP",
+        "interaction_protocol": "P1",
+        "kind": "action",
+        "transitions": {
+          "resume_point_valid": "PRECHECK",
+          "state_missing": "NEED_INPUT",
+          "stop": "STOPPED"
+        },
+        "wait": false
+      },
+      {
+        "id": "FAILURE",
+        "interaction_protocol": "P3",
+        "kind": "failure",
+        "transitions": {
+          "pause": "PAUSED",
+          "retry": "PRECHECK",
+          "stop": "FAILED"
+        },
+        "wait": false
+      },
+      {
+        "id": "DONE",
+        "interaction_protocol": "P0",
+        "kind": "end",
+        "transitions": {},
+        "wait": false
+      },
+      {
+        "id": "STOPPED",
+        "interaction_protocol": "P0",
+        "kind": "end",
+        "transitions": {},
+        "wait": false
+      },
+      {
+        "id": "FAILED",
+        "interaction_protocol": "P0",
+        "kind": "end",
+        "transitions": {},
+        "wait": false
+      }
+    ],
+    "successful_terminal_states": [
+      "DONE"
+    ],
+    "terminal_states": [
+      "DONE",
+      "STOPPED",
+      "FAILED"
+    ],
+    "transition_semantics": "confirmed \u53ea\u63a5\u53d7\u7576\u524d\u7248\u672c\u7684\u660e\u78ba\u78ba\u8a8d\uff1brevise \u4fdd\u7559\u7248\u672c\u4e26\u4f5c\u5ee2\u53d7\u5f71\u97ff\u4e0b\u6e38\u78ba\u8a8d\uff1b\u6240\u6709 complete \u90fd\u8981\u5148\u6aa2\u67e5 IM14\u3002\u4efb\u610f\u968e\u6bb5\u5df2\u77e5\u672a\u6eff\u5341\u4e09\u6b72\uff0f\u6709\u5bb3\u610f\u5716\u7acb\u5373\u7d42\u6b62\u81f3 STOPPED\u3002resume_point_valid \u56de\u5230 PRECHECK \u5f8c\uff0c\u4ee5\u4fdd\u7559\u7684\u78ba\u8a8d\uff0f\u7248\u672c\u9010\u7bc0\u6838\u5c0d\uff1b\u672a\u5931\u6548\u4e14\u7248\u672c\u76f8\u540c\u7684\u7b49\u5f85\u78ba\u8a8d\u53ef\u91cd\u7528\uff0c\u7f3a\u4e00\u4e0d\u53ef\u3002\u5931\u6557\u72c0\u614b\u4fdd\u7559\u5df2\u8b80\u8b49\u64da\u3001\u57fa\u6e96\u7248\u672c\u8207\u932f\u8aa4\u7bc4\u570d\u3002",
+    "workflow_id": "WF05"
+  },
+  {
+    "actors": [
+      "\u4f7f\u7528\u8005",
+      "\u8a2d\u8a08\u52a9\u7406"
+    ],
+    "completion_criteria": [
+      "\u6838\u5fc3\u8207\u5e73\u53f0\u7248\u9700\u6c42\u5c0d\u61c9\u5b8c\u6574",
+      "\u5e73\u53f0\u80fd\u529b\u8207\u672a\u77e5\uff0f\u4e0d\u652f\u63f4\u53ef\u6838\u5be6",
+      "\u4f7f\u7528\u8005\u78ba\u8a8d\u5e73\u53f0\u7248\u672c\u8207\u5dee\u7570\uff1b\u8a2d\u5b9a\u548c Runtime \u53e6\u5217"
+    ],
+    "hitl_checkpoints": [
+      "APPROVE"
+    ],
+    "inputs": {
+      "optional": [
+        "\u76ee\u524d\u914d\u7f6e\u3001\u5b98\u65b9\u6587\u4ef6\uff0f\u756b\u9762\u3001\u65e2\u6709\u5e73\u53f0\u6e2c\u8a66\u7d50\u679c"
+      ],
+      "required": [
+        "\u5df2\u78ba\u8a8d\u6838\u5fc3\u8a2d\u8a08\u6216\u76ee\u524d\u81ea\u8a02\u6307\u4ee4",
+        "\u76ee\u6a19\u5e73\u53f0"
+      ]
+    },
+    "mission_outcome": "\u5e73\u53f0\u4e2d\u7acb\u8a2d\u8a08\u8f49\u70ba\u6240\u9078\u5e73\u53f0\u81ea\u8a02\u6307\u4ee4\u8207\u8a2d\u5b9a\u5305",
+    "start": "START",
+    "state_modules": {
+      "APPROVE": "IM12,IM15",
+      "BLUEPRINT": "IM15,IM11",
+      "PRECHECK": "IM15"
+    },
+    "states": [
+      {
+        "id": "START",
+        "interaction_protocol": "P0",
+        "kind": "start",
+        "transitions": {
+          "begin": "PRECHECK"
+        },
+        "wait": false
+      },
+      {
+        "id": "PRECHECK",
+        "interaction_protocol": "P3",
+        "kind": "action",
+        "state_effect": "IM15\uff1a\u78ba\u8a8d\u5e73\u53f0\u3001\u4f86\u6e90\u8207\u5fc5\u8981\u80fd\u529b\uff1b\u7f3a\u80fd\u529b\u6642\u7b49\u5f85\uff0c\u672a\u77e5\u4e0d\u7b49\u65bc\u652f\u63f4\u3002",
+        "transitions": {
+          "complete": "BLUEPRINT",
+          "failure": "FAILURE",
+          "missing_input": "NEED_INPUT",
+          "pause": "PAUSED",
+          "revise": "PRECHECK",
+          "stop": "STOPPED"
+        },
+        "wait": false
+      },
+      {
+        "id": "BLUEPRINT",
+        "interaction_protocol": "P2",
+        "kind": "action",
+        "state_effect": "IM15\uff0fIM11\uff1a\u4fdd\u7559\u6838\u5fc3\u8a2d\u8a08\uff0c\u751f\u6210\u5e73\u53f0\u8b8a\u9ad4\u3001\u8a2d\u5b9a\u8aaa\u660e\u3001\u555f\u52d5\u7bc4\u4f8b\u3001\u53c3\u8003\u914d\u7f6e\u3001\u5dee\u7570\u53ca\u6e2c\u8a66\uff1b\u7121\u539f\u751f Starter \u6b04\u4f4d\u5247\u8f38\u51fa\u53ef\u8cbc\u5c0d\u8a71\u63d0\u793a\u3002",
+        "transitions": {
+          "complete": "APPROVE",
+          "failure": "FAILURE",
+          "pause": "PAUSED",
+          "revise": "BLUEPRINT",
+          "stop": "STOPPED"
+        },
+        "wait": false
+      },
+      {
+        "id": "APPROVE",
+        "interaction_protocol": "P2",
+        "kind": "wait",
+        "state_effect": "IM12\uff0fIM15\uff1a\u660e\u78ba\u78ba\u8a8d\u6240\u9078\u5e73\u53f0\u7248\u8207\u9650\u5236\uff1b\u4e0d\u8868\u793a\u5df2\u8a2d\u5b9a\u6216\u5df2\u5be6\u6e2c\u3002",
+        "transitions": {
+          "confirmed": "DONE",
+          "failure": "FAILURE",
+          "pause": "PAUSED",
+          "revise": "APPROVE",
+          "stop": "STOPPED"
+        },
+        "wait": true
+      },
+      {
+        "id": "NEED_INPUT",
+        "interaction_protocol": "P3",
+        "kind": "wait",
+        "transitions": {
+          "pause": "PAUSED",
+          "stop": "STOPPED",
+          "supplied": "PRECHECK"
+        },
+        "wait": true
+      },
+      {
+        "id": "PAUSED",
+        "interaction_protocol": "P1",
+        "kind": "wait",
+        "transitions": {
+          "resume": "RECAP",
+          "stop": "STOPPED"
+        },
+        "wait": true
+      },
+      {
+        "id": "RECAP",
+        "interaction_protocol": "P1",
+        "kind": "action",
+        "transitions": {
+          "resume_point_valid": "PRECHECK",
+          "state_missing": "NEED_INPUT",
+          "stop": "STOPPED"
+        },
+        "wait": false
+      },
+      {
+        "id": "FAILURE",
+        "interaction_protocol": "P3",
+        "kind": "failure",
+        "transitions": {
+          "pause": "PAUSED",
+          "retry": "PRECHECK",
+          "stop": "FAILED"
+        },
+        "wait": false
+      },
+      {
+        "id": "DONE",
+        "interaction_protocol": "P0",
+        "kind": "end",
+        "transitions": {},
+        "wait": false
+      },
+      {
+        "id": "STOPPED",
+        "interaction_protocol": "P0",
+        "kind": "end",
+        "transitions": {},
+        "wait": false
+      },
+      {
+        "id": "FAILED",
+        "interaction_protocol": "P0",
+        "kind": "end",
+        "transitions": {},
+        "wait": false
+      }
+    ],
+    "successful_terminal_states": [
+      "DONE"
+    ],
+    "terminal_states": [
+      "DONE",
+      "STOPPED",
+      "FAILED"
+    ],
+    "transition_semantics": "confirmed \u53ea\u63a5\u53d7\u7576\u524d\u7248\u672c\u7684\u660e\u78ba\u78ba\u8a8d\uff1brevise \u4fdd\u7559\u7248\u672c\u4e26\u4f5c\u5ee2\u53d7\u5f71\u97ff\u4e0b\u6e38\u78ba\u8a8d\uff1b\u6240\u6709 complete \u90fd\u8981\u5148\u6aa2\u67e5 IM14\u3002\u4efb\u610f\u968e\u6bb5\u5df2\u77e5\u672a\u6eff\u5341\u4e09\u6b72\uff0f\u6709\u5bb3\u610f\u5716\u7acb\u5373\u7d42\u6b62\u81f3 STOPPED\u3002resume_point_valid \u56de\u5230 PRECHECK \u5f8c\uff0c\u4ee5\u4fdd\u7559\u7684\u78ba\u8a8d\uff0f\u7248\u672c\u9010\u7bc0\u6838\u5c0d\uff1b\u672a\u5931\u6548\u4e14\u7248\u672c\u76f8\u540c\u7684\u7b49\u5f85\u78ba\u8a8d\u53ef\u91cd\u7528\uff0c\u7f3a\u4e00\u4e0d\u53ef\u3002\u5931\u6557\u72c0\u614b\u4fdd\u7559\u5df2\u8b80\u8b49\u64da\u3001\u57fa\u6e96\u7248\u672c\u8207\u932f\u8aa4\u7bc4\u570d\u3002",
+    "workflow_id": "WF06"
+  }
+]

@@ -336,6 +336,8 @@ def build_onboarding_proposal(
         "runtime_realization_state": inspection.runtime_realization_state,
         "evidence_bundle_state": inspection.evidence_bundle_state,
     }
+    if inspection.structural_compatibility is not None:
+        builder_evidence["structural_compatibility"] = _thaw(inspection.structural_compatibility)
     if inspection.candidate_sha256 is not None:
         builder_evidence["candidate_sha256"] = inspection.candidate_sha256
     if inspection.verification_sha256 is not None:

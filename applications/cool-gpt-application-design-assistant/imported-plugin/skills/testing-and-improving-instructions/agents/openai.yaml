@@ -1,0 +1,3 @@
+interface:
+  display_name: "Testing And Improving Instructions"
+  short_description: "Design tests, assess supplied results and propose reviewable patches."

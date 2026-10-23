@@ -1,0 +1,7 @@
+# Runtime boundaries
+
+Codex and ChatGPT Work Local/Desktop use conditional direct-local adapter v2. The host must expose the installed plugin files and an execution facility, locate Python 3.10+ and deliver JSON stdin/stdout. The USER_DEVICE adapter label is the inherited Builder contract label; it does not establish physical execution locality for every Work deployment. Verify actual execution surface before use and do not silently claim cloud-host execution meets a user-device-only requirement.
+
+No remote MCP service is introduced. Required dependency or execution unavailability blocks the affected deterministic path. The user/host runtime owns setup and workspace read permission. D01-D03 consume JSON; D04 reads only explicitly approved regular export files within the current working directory and never writes or creates a ZIP. D04 must run from the approved export directory, with the bundled script resolved from the installed plugin. Network/write permissions are not required by the tool.
+
+W1 policy: DEFERRED_ALLOWED for exact installed Skill execution evidence. Static preflight and later build-host self-test do not prove installed discovery, Skill invocation, result delivery, source consultation or conversation. Required local failures block W2. Installed evidence remains NOT VERIFIED until observed for the exact artifact; unavailable execution must never be represented as passing.

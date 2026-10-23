@@ -159,6 +159,7 @@ def _parser() -> argparse.ArgumentParser:
     onboarding.add_argument("--repository", required=True, type=Path)
     onboarding.add_argument("--output", required=True, type=Path)
     onboarding.add_argument("--evidence", type=Path)
+    onboarding.add_argument("--compatibility-profile", type=Path)
     onboarding.add_argument("--json", action="store_true")
     inspect_plugin = commands.add_parser("inspect-plugin-zip")
     inspect_plugin.add_argument("--archive", required=True, type=Path)
@@ -273,6 +274,7 @@ def _dispatch(arguments: argparse.Namespace) -> OperationResult:
             arguments.output,
             legacy_adoption=arguments.legacy_adoption,
             evidence=arguments.evidence,
+            compatibility_profile=arguments.compatibility_profile,
         )
     if operation == "validate-knowledge":
         evidence = validate_knowledge_policy(

@@ -156,7 +156,7 @@ class PackageMetadata:
     candidate_members: tuple[CandidateMember, ...]
     envelope_profile: Literal["PORTABLE_SINGLE_DIRECTORY"]
     preflight_evidence: Mapping[str, object]
-    manifest_profile: str
+    manifest_profile: str | Mapping[str, object]
     command_evidence: tuple[Mapping[str, object], ...]
     fallback_activations: tuple[Mapping[str, object], ...]
     evidence_states: Mapping[str, object]
@@ -335,6 +335,56 @@ class PublicationDecisions:
             "codex_destination": self.codex_destination,
             "confirmed_by": self.confirmed_by,
         }
+
+
+@dataclass(frozen=True)
+class ExactStructuralCompatibility:
+    archive_sha256: str
+    metadata_sha256: str
+    plugin_id: str
+    version: str
+    findings_sha256: str
+    findings_count: int
+    confirmed_by: str
+    decision_recorded_at: str
+
+
+def load_exact_structural_compatibility(path: Path) -> ExactStructuralCompatibility:
+    """Load an owner-approved exception bound to one v3 package and finding set."""
+    prefix = "onboarding.compatibility"
+    payload = _load_json(path, prefix)
+    _exact_keys(payload, {
+        "schema", "archive_sha256", "metadata_sha256", "plugin_id", "version",
+        "findings_sha256", "findings_count", "approved", "confirmed_by",
+        "decision_recorded_at",
+    }, prefix)
+    if payload["schema"] != "workbench-exact-structural-compatibility-v1":
+        raise OnboardingError(f"{prefix}.unsupported_schema")
+    if payload["approved"] is not True:
+        raise OnboardingError(f"{prefix}.approval_required", "BLOCKED")
+    plugin_id = _text(payload["plugin_id"], prefix, "plugin_id")
+    version = _text(payload["version"], prefix, "version")
+    if not _PLUGIN_ID.fullmatch(plugin_id) or not _SEMVER.fullmatch(version):
+        raise OnboardingError(f"{prefix}.invalid_identity")
+    count = payload["findings_count"]
+    if not isinstance(count, int) or isinstance(count, bool) or count < 1:
+        raise OnboardingError(f"{prefix}.invalid_findings_count")
+    recorded_at = _text(payload["decision_recorded_at"], prefix, "decision_recorded_at")
+    try:
+        parsed = datetime.fromisoformat(recorded_at)
+    except ValueError as exc:
+        raise OnboardingError(f"{prefix}.invalid_decision_recorded_at") from exc
+    if parsed.tzinfo is None or parsed.utcoffset() is None:
+        raise OnboardingError(f"{prefix}.invalid_decision_recorded_at")
+    return ExactStructuralCompatibility(
+        archive_sha256=_digest(payload["archive_sha256"], prefix, "archive_sha256"),
+        metadata_sha256=_digest(payload["metadata_sha256"], prefix, "metadata_sha256"),
+        plugin_id=plugin_id, version=version,
+        findings_sha256=_digest(payload["findings_sha256"], prefix, "findings_sha256"),
+        findings_count=count,
+        confirmed_by=_text(payload["confirmed_by"], prefix, "confirmed_by"),
+        decision_recorded_at=recorded_at,
+    )
 
 
 def _load_json(path: Path, prefix: str) -> Mapping[str, object]:
@@ -712,7 +762,11 @@ def load_package_metadata(path: Path) -> PackageMetadata:
         candidate_members=cast(tuple[CandidateMember, ...], _members(payload["candidate_members"], prefix, "candidate_members", CandidateMember)),
         envelope_profile="PORTABLE_SINGLE_DIRECTORY",
         preflight_evidence=_mapping(payload["preflight_evidence"], prefix, "preflight_evidence"),
-        manifest_profile=_text(payload["manifest_profile"], prefix, "manifest_profile"),
+        manifest_profile=(
+            _mapping(payload["manifest_profile"], prefix, "manifest_profile")
+            if v3 and isinstance(payload["manifest_profile"], dict)
+            else _text(payload["manifest_profile"], prefix, "manifest_profile")
+        ),
         command_evidence=_mapping_sequence(payload["command_evidence"], prefix, "command_evidence"),
         fallback_activations=_mapping_sequence(payload["fallback_activations"], prefix, "fallback_activations"),
         evidence_states=_mapping(payload["evidence_states"], prefix, "evidence_states"),

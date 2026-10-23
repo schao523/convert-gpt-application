@@ -50,7 +50,10 @@ class ApplicationConfigTests(unittest.TestCase):
             if target.mode == "build"
         }
 
-        self.assertEqual(build_targets, set())
+        self.assertEqual(
+            build_targets,
+            {("cool-gpt-application-design-assistant", "codex")},
+        )
 
     def test_all_cataloged_target_destinations_match_application_identity(self) -> None:
         catalog = load_preparation_catalog(

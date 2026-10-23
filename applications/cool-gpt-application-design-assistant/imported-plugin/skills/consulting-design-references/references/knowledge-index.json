@@ -1,0 +1,118 @@
+{
+  "files": [
+    {
+      "path": "Human-in-the-Loop_Guide.md",
+      "purpose": "RM01; owner-authored methodology; R02 overrides historical platform instructions; SHA-256 490e19be70b1a6886afb4765bae1d1305c0af9a4e3caf7b1e672b6680c8e40a8",
+      "topics": [
+        "RM01"
+      ]
+    },
+    {
+      "path": "builder_guide.md",
+      "purpose": "RM10; owner-authored methodology; R02 overrides historical platform instructions; SHA-256 006d1fb1a7981e7d72aadb158620da8c9d6b74e8b6d83d493b51a1ac014690f5",
+      "topics": [
+        "RM10"
+      ]
+    },
+    {
+      "path": "interaction_patterns_guide.md",
+      "purpose": "RM03; owner-authored methodology; R02 overrides historical platform instructions; SHA-256 fc77d59ecb8cafb7a08f86993050f084daf462630bf7dec97fe86d32e3d8c605",
+      "topics": [
+        "RM03"
+      ]
+    },
+    {
+      "path": "knowledge_module_template.md",
+      "purpose": "RM08; owner-authored methodology; R02 overrides historical platform instructions; SHA-256 dd71beed2b1395c2198903943c0389ed66bf2861753765a678e3815538e58cea",
+      "topics": [
+        "RM08"
+      ]
+    },
+    {
+      "path": "modular_design_guide.md",
+      "purpose": "RM04; owner-authored methodology; R02 overrides historical platform instructions; SHA-256 bb9ef68d14da09a8a5c9fb5b323736747c6f8f136dafc58fe206274cdac44579",
+      "topics": [
+        "RM04"
+      ]
+    },
+    {
+      "path": "prompt_refactoring_patterns.md",
+      "purpose": "RM05; owner-authored methodology; R02 overrides historical platform instructions; SHA-256 eb2fabc97397998366dc76325a54a85230a04ac1e861342ab0f33baea1f63bb7",
+      "topics": [
+        "RM05"
+      ]
+    },
+    {
+      "path": "resource_binding_patterns.md",
+      "purpose": "RM09; owner-authored methodology; R02 overrides historical platform instructions; SHA-256 8e39935ca412fae6369400974a03f9640dbeaa93ba299435015b5a4f8bdd5b4c",
+      "topics": [
+        "RM09"
+      ]
+    },
+    {
+      "path": "resource_evaluation_guide.md",
+      "purpose": "RM07; owner-authored methodology; R02 overrides historical platform instructions; SHA-256 6a75667d514b9a1530f98bd2c654174fc9d333df8ebd4dd0c593b40b063fc8ed",
+      "topics": [
+        "RM07"
+      ]
+    },
+    {
+      "path": "resource_types_guide.md",
+      "purpose": "RM06; owner-authored methodology; R02 overrides historical platform instructions; SHA-256 6e7f9056e194b36f7be5033740d6249699e9ead71458c2847d949f079423af19",
+      "topics": [
+        "RM06"
+      ]
+    },
+    {
+      "path": "testing_guide.md",
+      "purpose": "RM11; owner-authored methodology; R02 overrides historical platform instructions; SHA-256 130d692779c127207d45037748280358e90b637cd2655d5fbc2cc9903982fe45",
+      "topics": [
+        "RM11"
+      ]
+    },
+    {
+      "path": "use_case_brainstorm_guide.md",
+      "purpose": "RM02; owner-authored methodology; R02 overrides historical platform instructions; SHA-256 022854c3dc0b46ab276d6d3c1c7d9af27a03f37c4eda8508a1819557dc1618c7",
+      "topics": [
+        "RM02"
+      ]
+    },
+    {
+      "path": "original-instructions.docx",
+      "purpose": "BASE01; historical owner-authored reference only; not executable control authority; SHA-256 a64f379d4061b0566939cb3feff3587bd69ba4ecb69b8c61be46292f5f3430c8",
+      "topics": [
+        "BASE01"
+      ]
+    },
+    {
+      "path": "Platform_Target_Adaptation_Requirements.md",
+      "purpose": "RM13; R02 project-authored operational reference; dated capability facts need current verification; SHA-256 a50df5428f5a378847e0d81e6c32981a8331e282373e06d7c794b222dfd97e57",
+      "topics": [
+        "RM13"
+      ]
+    },
+    {
+      "path": "Reference_Evaluation_and_Usage_Map.md",
+      "purpose": "RM-USAGE; R02 project-authored operational reference; dated capability facts need current verification; SHA-256 fd1c9f214c6c633790347f6feb84d9f02affc51a4c283fe64e6608b0962bcd73",
+      "topics": [
+        "RM-USAGE"
+      ]
+    },
+    {
+      "path": "source-inventory.json",
+      "purpose": "Historical factual source inventory; index metadata is not body consultation.",
+      "topics": [
+        "RM12",
+        "inventory"
+      ]
+    },
+    {
+      "path": "module-contracts.json",
+      "purpose": "R02 IM13 source-evidence procedure.",
+      "topics": [
+        "IM13"
+      ]
+    }
+  ],
+  "schema_version": 1
+}

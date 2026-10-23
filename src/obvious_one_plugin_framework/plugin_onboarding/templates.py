@@ -419,6 +419,8 @@ def render_application_files(
         "content_tree_sha256": inspection.content_tree_sha256,
         "members": [asdict(member) for member in inspection.candidate_members],
     }
+    if inspection.structural_compatibility is not None:
+        inventory["structural_compatibility"] = _json_value(inspection.structural_compatibility)
     if inspection.candidate_sha256 is not None:
         inventory["candidate_sha256"] = inspection.candidate_sha256
     decision_payload = {

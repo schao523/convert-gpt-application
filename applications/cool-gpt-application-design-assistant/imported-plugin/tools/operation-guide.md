@@ -1,0 +1,10 @@
+# Local operation guide
+
+Use direct argv {python} -B tools/design_integrity.py from the installed plugin root, with operation and input JSON. Return parsed JSON stdout to the owning Skill. For D04 resolve that bundled script and run it with cwd equal to the approved export workspace. Do not substitute raw model-generated results for execution.
+
+- D01: input.name and input.inventory (records with id, path, aliases). Exact case-sensitive aliases only, with original records retained in matches. Return unique/missing/ambiguous. Duplicate record IDs are errors, never silently selected.
+- D02: input.groups has requirements/modules/resources/workflows/tests arrays of IDs. input.links entries use from_kind/from_id/to_kind/to_id. Return dangling endpoints, uncovered nodes with no valid incident link, duplicate nodes and duplicate links. This structural graph check does not decide semantic adequacy; the Skill must also compare each required relationship against the approved mapping.
+- D03: input.artifact_id/version/sha256/scope and input.confirmation with the same fields plus explicit=true. Hash must be SHA-256 of actual current artifact bytes. Confirmation must come from an observable user event for that version/scope; the Skill must not fabricate it. Any changed binding returns needs-reconfirmation. No state is mutated by this guard.
+- D04: input.files is a list of {path, redistribution_approved:true}. The Skill must derive rights from actual owner decisions, not assume the boolean creates permission. Only safe regular nonlinked files under cwd are read. Fixed Unicode path ordering, physical byte hashes and canonical summary hash are returned; no writes, ZIP creation or behavior verification. Missing files, rights, duplicate/colliding paths and path escapes fail closed.
+
+Boundaries: input at most 2 MiB; file at most 16 MiB, aggregate at most 64 MiB. Errors return JSON on stderr and nonzero status. Python standard library only, no network, credentials or persistent daemon. Record command/result evidence without exposing private document bodies. Build-host self-test does not prove installed execution.

@@ -106,8 +106,12 @@ def _validate_stage(
     imported: Path,
     *,
     strict_plugin_tree: bool = True,
+    compatibility: object | None = None,
 ) -> None:
-    if strict_plugin_tree:
+    if compatibility is not None:
+        from .inspection import _structural_findings
+        _structural_findings(imported, compatibility)
+    elif strict_plugin_tree:
         issues = plugin_authoring.validate_plugin_tree(imported)
         if issues:
             raise OnboardingError(
@@ -139,6 +143,7 @@ def prepare_plugin_zip_marketplace(
     *,
     legacy_adoption: Path | None = None,
     evidence: Path | None = None,
+    compatibility_profile: Path | None = None,
 ) -> OperationResult:
     """Create one deterministic, unapproved marketplace-registration proposal."""
 
@@ -148,6 +153,8 @@ def prepare_plugin_zip_marketplace(
         raise OnboardingError(
             "onboarding.legacy_runtime_evidence_unsupported", "FAIL"
         )
+    if compatibility_profile is not None and package_metadata is None:
+        raise OnboardingError("onboarding.compatibility.metadata_required", "FAIL")
     archive_path = Path(archive).resolve()
     metadata_path = (
         Path(package_metadata).resolve() if package_metadata is not None else None
@@ -158,6 +165,7 @@ def prepare_plugin_zip_marketplace(
     decisions_path = Path(publication_decisions).resolve()
     repository_path = Path(repository).resolve()
     evidence_path = Path(evidence).resolve() if evidence is not None else None
+    compatibility_path = Path(compatibility_profile).resolve() if compatibility_profile is not None else None
     destination = Path(output).resolve()
     _validate_output_boundary(
         destination,
@@ -170,12 +178,20 @@ def prepare_plugin_zip_marketplace(
                 adoption_path,
                 decisions_path,
                 evidence_path,
+                compatibility_path,
             )
             if path is not None
         ),
     )
     _preflight_output(destination)
     decisions = load_publication_decisions(decisions_path)
+    compatibility = None
+    if compatibility_path is not None:
+        from .contract import load_exact_structural_compatibility
+        compatibility = load_exact_structural_compatibility(compatibility_path)
+        assert metadata_path is not None
+        if sha256(metadata_path.read_bytes()).hexdigest() != compatibility.metadata_sha256:
+            raise OnboardingError("onboarding.compatibility.metadata_sha256_mismatch", "FAIL")
     metadata: PackageMetadata | WorkbenchRepairMetadata | None
     adoption: LegacyPluginBuilderAdoption | PortableContentManifestAdoption | None
     if adoption_path is not None:
@@ -193,7 +209,7 @@ def prepare_plugin_zip_marketplace(
         metadata = load_onboarding_metadata(metadata_path)
         if isinstance(metadata, PackageMetadata):
             inspection = inspect_plugin_builder_package(
-                archive_path, metadata, evidence=evidence_path
+                archive_path, metadata, evidence=evidence_path, compatibility=compatibility
             )
         else:
             if evidence_path is not None:
@@ -245,11 +261,10 @@ def prepare_plugin_zip_marketplace(
                 }
             )
         )
-        _validate_stage(
-            application,
-            imported,
-            strict_plugin_tree=adoption is None,
-        )
+        validation_options = {"strict_plugin_tree": adoption is None}
+        if compatibility is not None:
+            validation_options["compatibility"] = compatibility
+        _validate_stage(application, imported, **validation_options)
 
         proposal_bytes = (stage / "onboarding-proposal.json").read_bytes()
         result_evidence: dict[str, object] = {

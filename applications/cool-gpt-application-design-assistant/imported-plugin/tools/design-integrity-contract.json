@@ -1,0 +1,234 @@
+{
+  "adapter": null,
+  "capability_ids": [
+    "resolve-resource-alias",
+    "check-design-links",
+    "guard-version-confirmation",
+    "digest-approved-files"
+  ],
+  "configuration": {
+    "authentication": "NOT_REQUIRED",
+    "setup": "BUNDLED"
+  },
+  "dependencies": [
+    {
+      "absence_policy": "BLOCK",
+      "id": "python",
+      "provider": "OWNER_CONFIGURED",
+      "required": true,
+      "runtime_targets": [
+        "ChatGPT Work Local/Desktop",
+        "Codex"
+      ],
+      "setup_owner": "OWNER",
+      "sha256": null,
+      "type": "EXECUTABLE",
+      "version": "3.10+"
+    }
+  ],
+  "execution": {
+    "argv": [
+      "{python}",
+      "-B",
+      "tools/design_integrity.py"
+    ],
+    "clean_environment": true,
+    "timeout_seconds": 30
+  },
+  "fallback": {
+    "alternative_operation_id": null,
+    "degraded_requirement_ids": [
+      "R20",
+      "R21",
+      "R25",
+      "R26"
+    ],
+    "policy": "BLOCK",
+    "preserved_requirement_ids": [],
+    "trigger_conditions": [
+      "Python, script access or execution unavailable",
+      "Invalid input, ambiguous alias, unsafe file, missing rights or failed integrity"
+    ]
+  },
+  "files": [
+    "tools/design_integrity.py",
+    "tools/design-integrity-contract.json",
+    "tools/operation-guide.md"
+  ],
+  "fixtures": {
+    "input": {
+      "input": {
+        "inventory": [],
+        "name": "x"
+      },
+      "operation": "D01"
+    },
+    "output": {
+      "checks": 22,
+      "self_test": "PASS"
+    }
+  },
+  "id": "design-integrity",
+  "implementation_kind": "BUNDLED_LOCAL",
+  "input_schema": {
+    "additionalProperties": false,
+    "properties": {
+      "input": {
+        "type": "object"
+      },
+      "operation": {
+        "enum": [
+          "D01",
+          "D02",
+          "D03",
+          "D04"
+        ]
+      }
+    },
+    "required": [
+      "operation",
+      "input"
+    ],
+    "type": "object"
+  },
+  "mcp": null,
+  "operation": {
+    "capability_ids": [
+      "resolve-resource-alias",
+      "check-design-links",
+      "guard-version-confirmation",
+      "digest-approved-files"
+    ],
+    "id": "design-integrity",
+    "idempotent": true,
+    "input_schema_sha256": "89041dfa785a7ea5d6e66a2095241b5ca2c18a3d1f91ce92823a3491acfe5a8f",
+    "output_schema_sha256": "0fcb35dce885169f2fbba25c86d95e85bd111667adc1091de61397898571c34f",
+    "protocol": "JSON_STDIN_STDOUT",
+    "side_effect_class": "NONE"
+  },
+  "output_schema": {
+    "additionalProperties": false,
+    "properties": {
+      "operation": {
+        "enum": [
+          "D01",
+          "D02",
+          "D03",
+          "D04"
+        ]
+      },
+      "result": {
+        "type": "object"
+      }
+    },
+    "required": [
+      "operation",
+      "result"
+    ],
+    "type": "object"
+  },
+  "permissions": [
+    {
+      "grant_source": "OWNER",
+      "id": "workspace:read",
+      "purpose": "Read bundled scripts and explicitly approved export files within the selected workspace.",
+      "required": true,
+      "target_runtime": "ChatGPT Work Local/Desktop",
+      "verification": "Observe installed Skill invocation, JSON input/output and result delivery."
+    },
+    {
+      "grant_source": "OWNER",
+      "id": "workspace:read",
+      "purpose": "Read bundled scripts and explicitly approved export files within the selected workspace.",
+      "required": true,
+      "target_runtime": "Codex",
+      "verification": "Observe installed Skill invocation, JSON input/output and result delivery."
+    }
+  ],
+  "realizations": [
+    {
+      "adapter_id": "direct-local",
+      "adapter_version": "2",
+      "dependency_ids": [
+        "python"
+      ],
+      "evidence_policy": "DEFERRED_ALLOWED",
+      "execution_location": "USER_DEVICE",
+      "exposed_capability": "design-integrity",
+      "feasibility_state": "FEASIBLE_WITH_SETUP",
+      "mechanism": "DIRECT_LOCAL",
+      "operation_id": "design-integrity",
+      "permission_ids": [
+        "workspace:read"
+      ],
+      "setup_owner": "OWNER",
+      "setup_requirements": [
+        "Host/owner exposes installed plugin files and Python 3.10+ with direct argv execution; validate actual execution surface.",
+        "Resolve bundled script from plugin root; send JSON stdin and return parsed JSON stdout to the invoking Skill.",
+        "D04 runs within the approved export workspace and may read only listed approved regular files; no network or write permission.",
+        "If setup is unavailable, stop dependent deterministic output; never claim installed success from local verification."
+      ],
+      "target_runtime": "ChatGPT Work Local/Desktop",
+      "transport": "DIRECT_ARGV"
+    },
+    {
+      "adapter_id": "direct-local",
+      "adapter_version": "2",
+      "dependency_ids": [
+        "python"
+      ],
+      "evidence_policy": "DEFERRED_ALLOWED",
+      "execution_location": "USER_DEVICE",
+      "exposed_capability": "design-integrity",
+      "feasibility_state": "FEASIBLE_WITH_SETUP",
+      "mechanism": "DIRECT_LOCAL",
+      "operation_id": "design-integrity",
+      "permission_ids": [
+        "workspace:read"
+      ],
+      "setup_owner": "OWNER",
+      "setup_requirements": [
+        "Host/owner exposes installed plugin files and Python 3.10+ with direct argv execution; validate actual execution surface.",
+        "Resolve bundled script from plugin root; send JSON stdin and return parsed JSON stdout to the invoking Skill.",
+        "D04 runs within the approved export workspace and may read only listed approved regular files; no network or write permission.",
+        "If setup is unavailable, stop dependent deterministic output; never claim installed success from local verification."
+      ],
+      "target_runtime": "Codex",
+      "transport": "DIRECT_ARGV"
+    }
+  ],
+  "redistribution": {
+    "evidence": "generated for this plugin",
+    "state": "APPROVED"
+  },
+  "required": true,
+  "requirement_ids": [
+    "R20",
+    "R21",
+    "R25",
+    "R26"
+  ],
+  "runtime_capability": null,
+  "runtime_targets": [
+    "ChatGPT Work Local/Desktop",
+    "Codex"
+  ],
+  "schema": "plugin-builder-application-tool-v2",
+  "side_effects": [],
+  "skill_bindings": [
+    "guiding-application-design-sessions",
+    "evaluating-and-binding-resources",
+    "adapting-platforms-and-delivering-packages",
+    "consulting-design-references"
+  ],
+  "verification": {
+    "argv": [
+      "{python}",
+      "-B",
+      "tools/design_integrity.py",
+      "--self-test"
+    ],
+    "kind": "PYTHON_ARGV",
+    "network": false
+  }
+}
