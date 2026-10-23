@@ -82,7 +82,7 @@
       "targets": {
         "codex": {
           "destination": "plugins/cool-gpt-application-design-assistant",
-          "mode": "build"
+          "mode": "verify_existing"
         },
         "openclaw": {
           "mode": "not_applicable"
