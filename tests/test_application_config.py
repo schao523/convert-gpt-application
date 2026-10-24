@@ -39,7 +39,7 @@ class ApplicationConfigTests(unittest.TestCase):
             "openclaw/cool-plugin-design-assistant",
         )
 
-    def test_published_targets_are_not_left_in_build_mode(self) -> None:
+    def test_only_unpublished_steam_target_is_in_build_mode(self) -> None:
         catalog = load_preparation_catalog(
             ROOT / "marketplaces" / "obvious-one.json", ROOT
         )
@@ -50,7 +50,7 @@ class ApplicationConfigTests(unittest.TestCase):
             if target.mode == "build"
         }
 
-        self.assertEqual(build_targets, set())
+        self.assertEqual(build_targets, {("steam-parent-child-learning", "codex")})
 
     def test_all_cataloged_target_destinations_match_application_identity(self) -> None:
         catalog = load_preparation_catalog(
