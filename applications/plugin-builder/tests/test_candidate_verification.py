@@ -12,7 +12,7 @@ TESTS = Path(__file__).parent
 if str(TESTS) not in sys.path:
     sys.path.insert(0, str(TESTS))
 
-from test_create_candidate import PLAN_FIXTURE, prepared_workspace, read_result, run_cli
+from test_create_candidate import PLAN_FIXTURE, configure_direct_local_v2, prepared_workspace, read_result, run_cli
 import test_update_candidate as update_tests
 from plugin_builder_core.bootstrap import plugin_authoring
 from plugin_builder_core.verification import _effective_tool_states
@@ -94,6 +94,43 @@ class CandidateVerificationTests(unittest.TestCase):
             ["REQUIRED_BEFORE_W2", "DEFERRED_ALLOWED"],
         )
         approved = run_cli("approve-w2", "--session", str(workspace / "session.json"), "--confirmed-by", "owner", "--evidence", "reviewed", "--json")
+        self.assertEqual(approved.returncode, 2, approved.stdout)
+        self.assertFalse((workspace / "dist/sample-plugin.zip").exists())
+
+    def test_direct_local_v2_deferred_keeps_installed_state_unverified(self) -> None:
+        workspace = self._workspace(mutate=configure_direct_local_v2)
+        verified = self._verify(workspace)
+        self.assertEqual(verified.returncode, 0, verified.stdout)
+        report = self._report(workspace)
+        self.assertEqual(report["tools"][0]["operation_execution"]["state"], "PASS")
+        self.assertEqual(
+            {(item["adapter_id"], item["state"]) for item in report["runtime_realizations"]},
+            {("direct-local", "NOT VERIFIED")},
+        )
+        plan = json.loads((workspace / "implementation-plan.json").read_text(encoding="utf-8"))
+        self.assertEqual({item["adapter_version"] for item in plan["tools"][0]["realizations"]}, {"2"})
+        approved = run_cli(
+            "approve-w2", "--session", str(workspace / "session.json"),
+            "--confirmed-by", "owner", "--evidence", "reviewed deferred limitation", "--json",
+        )
+        self.assertEqual(approved.returncode, 0, approved.stdout)
+        packaged = run_cli("package", "--session", str(workspace / "session.json"), "--json")
+        self.assertEqual(packaged.returncode, 0, packaged.stdout)
+        self.assertTrue((workspace / "dist/sample-plugin.zip").is_file())
+
+    def test_direct_local_v2_required_installed_evidence_blocks_w2(self) -> None:
+        workspace = self._workspace(
+            mutate=lambda proposal: configure_direct_local_v2(proposal, evidence_policy="REQUIRED_BEFORE_W2")
+        )
+        verified = self._verify(workspace)
+        self.assertEqual(verified.returncode, 2, verified.stdout)
+        report = self._report(workspace)
+        self.assertEqual(report["tools"][0]["operation_execution"]["state"], "PASS")
+        self.assertEqual({item["state"] for item in report["runtime_realizations"]}, {"NOT VERIFIED"})
+        approved = run_cli(
+            "approve-w2", "--session", str(workspace / "session.json"),
+            "--confirmed-by", "owner", "--evidence", "reviewed", "--json",
+        )
         self.assertEqual(approved.returncode, 2, approved.stdout)
         self.assertFalse((workspace / "dist/sample-plugin.zip").exists())
 
