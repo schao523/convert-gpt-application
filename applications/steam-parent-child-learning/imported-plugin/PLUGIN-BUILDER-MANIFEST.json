@@ -1,0 +1,1797 @@
+{
+  "adapter_registry_sha256": "3b5fb420381737aa90fe77afc140adc6cbe6e8747fc29b3301c4a8457ae336f6",
+  "capabilities": [
+    {
+      "evidence_targets": [
+        "STRUCTURE",
+        "OPERATION",
+        "INSTALLED_REALIZATION",
+        "BEHAVIOR"
+      ],
+      "id": "browser-testing-capability",
+      "realization_need": "TOOL_REQUIRED",
+      "requirement_ids": [
+        "DO05",
+        "AC10",
+        "T14"
+      ],
+      "runtime_targets": [
+        "Codex",
+        "ChatGPT Work Local/Desktop"
+      ],
+      "schema": "plugin-builder-capability-v1",
+      "skill_bindings": [
+        "evaluating-playtests",
+        "creating-game-artifacts"
+      ],
+      "tool_id": "browser-testing"
+    },
+    {
+      "evidence_targets": [
+        "STRUCTURE",
+        "BEHAVIOR"
+      ],
+      "id": "checking-safety-and-age",
+      "realization_need": "SKILL_ONLY",
+      "requirement_ids": [
+        "C04",
+        "P03",
+        "H02",
+        "H05",
+        "F03",
+        "IM05",
+        "AC04",
+        "AC11",
+        "T04",
+        "T13",
+        "T15",
+        "R05"
+      ],
+      "runtime_targets": [
+        "Codex",
+        "ChatGPT Work Local/Desktop"
+      ],
+      "schema": "plugin-builder-capability-v1",
+      "skill_bindings": [
+        "checking-safety-and-age"
+      ],
+      "tool_id": null
+    },
+    {
+      "evidence_targets": [
+        "STRUCTURE",
+        "BEHAVIOR"
+      ],
+      "id": "consulting-source-evidence",
+      "realization_need": "SKILL_ONLY",
+      "requirement_ids": [
+        "C07",
+        "P06",
+        "H06",
+        "DO01",
+        "DO02",
+        "DO03",
+        "DO06",
+        "DO07",
+        "F07",
+        "F08",
+        "IM08",
+        "IM09",
+        "AC07",
+        "AC12",
+        "AC13",
+        "T09",
+        "T12",
+        "T16",
+        "T17",
+        "R11",
+        "R12",
+        "R13",
+        "R14"
+      ],
+      "runtime_targets": [
+        "Codex",
+        "ChatGPT Work Local/Desktop"
+      ],
+      "schema": "plugin-builder-capability-v1",
+      "skill_bindings": [
+        "consulting-source-evidence"
+      ],
+      "tool_id": null
+    },
+    {
+      "evidence_targets": [
+        "STRUCTURE",
+        "BEHAVIOR"
+      ],
+      "id": "creating-game-artifacts",
+      "realization_need": "SKILL_ONLY",
+      "requirement_ids": [
+        "C05",
+        "C06",
+        "P04",
+        "H04",
+        "DO04",
+        "F05",
+        "M3",
+        "IM10",
+        "IM11",
+        "IM12",
+        "AC08",
+        "AC09",
+        "T10",
+        "T11",
+        "R08",
+        "R09"
+      ],
+      "runtime_targets": [
+        "Codex",
+        "ChatGPT Work Local/Desktop"
+      ],
+      "schema": "plugin-builder-capability-v1",
+      "skill_bindings": [
+        "creating-game-artifacts"
+      ],
+      "tool_id": null
+    },
+    {
+      "evidence_targets": [
+        "STRUCTURE",
+        "BEHAVIOR"
+      ],
+      "id": "designing-educational-games",
+      "realization_need": "SKILL_ONLY",
+      "requirement_ids": [
+        "P02",
+        "H03",
+        "M2",
+        "IM07",
+        "AC06",
+        "T07",
+        "T08",
+        "R07",
+        "WF-G"
+      ],
+      "runtime_targets": [
+        "Codex",
+        "ChatGPT Work Local/Desktop"
+      ],
+      "schema": "plugin-builder-capability-v1",
+      "skill_bindings": [
+        "designing-educational-games"
+      ],
+      "tool_id": null
+    },
+    {
+      "evidence_targets": [
+        "STRUCTURE",
+        "BEHAVIOR"
+      ],
+      "id": "evaluating-playtests",
+      "realization_need": "SKILL_ONLY",
+      "requirement_ids": [
+        "C08",
+        "P05",
+        "DO05",
+        "F06",
+        "M4",
+        "IM04",
+        "IM13",
+        "AC10",
+        "T14",
+        "R04",
+        "R10"
+      ],
+      "runtime_targets": [
+        "Codex",
+        "ChatGPT Work Local/Desktop"
+      ],
+      "schema": "plugin-builder-capability-v1",
+      "skill_bindings": [
+        "evaluating-playtests"
+      ],
+      "tool_id": null
+    },
+    {
+      "evidence_targets": [
+        "STRUCTURE",
+        "OPERATION",
+        "INSTALLED_REALIZATION",
+        "BEHAVIOR"
+      ],
+      "id": "game-production-capability",
+      "realization_need": "TOOL_REQUIRED",
+      "requirement_ids": [
+        "C05",
+        "R08",
+        "R09",
+        "T10",
+        "T11"
+      ],
+      "runtime_targets": [
+        "Codex",
+        "ChatGPT Work Local/Desktop"
+      ],
+      "schema": "plugin-builder-capability-v1",
+      "skill_bindings": [
+        "creating-game-artifacts"
+      ],
+      "tool_id": "game-production"
+    },
+    {
+      "evidence_targets": [
+        "STRUCTURE",
+        "BEHAVIOR"
+      ],
+      "id": "guiding-steam-activities",
+      "realization_need": "SKILL_ONLY",
+      "requirement_ids": [
+        "C01",
+        "C02",
+        "C09",
+        "P01",
+        "H01",
+        "F01",
+        "F02",
+        "F09",
+        "M1",
+        "IM01",
+        "IM02",
+        "IM03",
+        "AC01",
+        "AC02",
+        "AC03",
+        "T01",
+        "T02",
+        "T03",
+        "R01",
+        "R02",
+        "R03",
+        "WF-A"
+      ],
+      "runtime_targets": [
+        "Codex",
+        "ChatGPT Work Local/Desktop"
+      ],
+      "schema": "plugin-builder-capability-v1",
+      "skill_bindings": [
+        "guiding-steam-activities"
+      ],
+      "tool_id": null
+    },
+    {
+      "evidence_targets": [
+        "STRUCTURE",
+        "OPERATION",
+        "INSTALLED_REALIZATION",
+        "BEHAVIOR"
+      ],
+      "id": "image-generation-capability",
+      "realization_need": "TOOL_REQUIRED",
+      "requirement_ids": [
+        "C03",
+        "R06",
+        "AC05",
+        "T05",
+        "T06"
+      ],
+      "runtime_targets": [
+        "Codex",
+        "ChatGPT Work Local/Desktop"
+      ],
+      "schema": "plugin-builder-capability-v1",
+      "skill_bindings": [
+        "teaching-with-visuals"
+      ],
+      "tool_id": "image-generation"
+    },
+    {
+      "evidence_targets": [
+        "STRUCTURE",
+        "OPERATION",
+        "INSTALLED_REALIZATION",
+        "BEHAVIOR"
+      ],
+      "id": "steam-contract-checks-capability",
+      "realization_need": "TOOL_REQUIRED",
+      "requirement_ids": [
+        "DO01",
+        "DO02",
+        "DO03",
+        "DO04",
+        "DO05",
+        "DO06",
+        "DO07"
+      ],
+      "runtime_targets": [
+        "Codex",
+        "ChatGPT Work Local/Desktop"
+      ],
+      "schema": "plugin-builder-capability-v1",
+      "skill_bindings": [
+        "consulting-source-evidence"
+      ],
+      "tool_id": "steam-contract-checks"
+    },
+    {
+      "evidence_targets": [
+        "STRUCTURE",
+        "BEHAVIOR"
+      ],
+      "id": "teaching-with-visuals",
+      "realization_need": "SKILL_ONLY",
+      "requirement_ids": [
+        "C03",
+        "F04",
+        "IM06",
+        "AC05",
+        "T05",
+        "T06",
+        "R06"
+      ],
+      "runtime_targets": [
+        "Codex",
+        "ChatGPT Work Local/Desktop"
+      ],
+      "schema": "plugin-builder-capability-v1",
+      "skill_bindings": [
+        "teaching-with-visuals"
+      ],
+      "tool_id": null
+    }
+  ],
+  "capabilities_sha256": "febe26e9c19e14cfd9517e3d734d20c2bdddb689cfec84253b9995ef934e436b",
+  "content_tree_sha256": "4735dd6f5627833f7b3637f0f51bb040d63cb47011ae13a6b4c92f2b8df86cf5",
+  "dependencies_sha256": "bd7cb635850447e56a64e2977a29a01ff689a5b1072e108a4ba721e02665c5ef",
+  "expected_members": [
+    ".codex-plugin/plugin.json",
+    "PLUGIN-BUILDER-MANIFEST.json",
+    "PRIVACY.md",
+    "README.md",
+    "THIRD_PARTY_CONTENT.md",
+    "plugin.json",
+    "skills/checking-safety-and-age/SKILL.md",
+    "skills/checking-safety-and-age/agents/openai.yaml",
+    "skills/checking-safety-and-age/references/RM08_STEAM_Child_Safety_and_Age_Adaptation_Guide.md",
+    "skills/consulting-source-evidence/SKILL.md",
+    "skills/consulting-source-evidence/agents/openai.yaml",
+    "skills/consulting-source-evidence/references/Knowledge_Quality_Acceptance_R02.md",
+    "skills/consulting-source-evidence/references/OWNER_DECISION_CLOSURE_2026-10-23.md",
+    "skills/consulting-source-evidence/references/Original_Source_Inventory.json",
+    "skills/consulting-source-evidence/references/QC04_Framework_Differences.csv",
+    "skills/consulting-source-evidence/references/QC05_Visual_Review.csv",
+    "skills/consulting-source-evidence/references/QC08_Activity_Safety_Audit.csv",
+    "skills/consulting-source-evidence/references/R02_Subsequent_Owner_Approval_and_Provenance.json",
+    "skills/consulting-source-evidence/references/Reference_Material_Usage_Map_R02.csv",
+    "skills/consulting-source-evidence/references/deterministic-operations.md",
+    "skills/consulting-source-evidence/references/steam-tool-contract.json",
+    "skills/creating-game-artifacts/SKILL.md",
+    "skills/creating-game-artifacts/agents/openai.yaml",
+    "skills/creating-game-artifacts/references/RM06_Educational_Game_Creation_Framework.md",
+    "skills/designing-educational-games/SKILL.md",
+    "skills/designing-educational-games/agents/openai.yaml",
+    "skills/designing-educational-games/references/RM02_Game_Design_Innovation_Framework.md",
+    "skills/designing-educational-games/references/RM03_Comprehensive_STEAM_Game_Design.md",
+    "skills/designing-educational-games/references/RM04_\u6578\u5b57\u63a2\u96aa\u7af6\u6280\u5834.md",
+    "skills/evaluating-playtests/SKILL.md",
+    "skills/evaluating-playtests/agents/openai.yaml",
+    "skills/evaluating-playtests/references/RM07_Educational_Game_Playtesting_and_Evaluation_Guide.md",
+    "skills/guiding-steam-activities/SKILL.md",
+    "skills/guiding-steam-activities/agents/openai.yaml",
+    "skills/guiding-steam-activities/references/RM01_STEAM_Template_Library.md",
+    "skills/teaching-with-visuals/SKILL.md",
+    "skills/teaching-with-visuals/agents/openai.yaml",
+    "skills/teaching-with-visuals/references/RM05_STEAM_Visual_Teaching_Guide.md",
+    "tools/steam_contract_checks.py"
+  ],
+  "file_roles": {
+    ".codex-plugin/plugin.json": "GENERATED_METADATA",
+    "PRIVACY.md": "OTHER",
+    "README.md": "OTHER",
+    "THIRD_PARTY_CONTENT.md": "OTHER",
+    "plugin.json": "PLUGIN_MANIFEST",
+    "skills/checking-safety-and-age/SKILL.md": "SKILL_ENTRYPOINT",
+    "skills/checking-safety-and-age/agents/openai.yaml": "GENERATED_METADATA",
+    "skills/checking-safety-and-age/references/RM08_STEAM_Child_Safety_and_Age_Adaptation_Guide.md": "PROFESSIONAL_KNOWLEDGE",
+    "skills/consulting-source-evidence/SKILL.md": "SKILL_ENTRYPOINT",
+    "skills/consulting-source-evidence/agents/openai.yaml": "GENERATED_METADATA",
+    "skills/consulting-source-evidence/references/Knowledge_Quality_Acceptance_R02.md": "OTHER",
+    "skills/consulting-source-evidence/references/OWNER_DECISION_CLOSURE_2026-10-23.md": "OTHER",
+    "skills/consulting-source-evidence/references/Original_Source_Inventory.json": "OTHER",
+    "skills/consulting-source-evidence/references/QC04_Framework_Differences.csv": "OTHER",
+    "skills/consulting-source-evidence/references/QC05_Visual_Review.csv": "OTHER",
+    "skills/consulting-source-evidence/references/QC08_Activity_Safety_Audit.csv": "OTHER",
+    "skills/consulting-source-evidence/references/R02_Subsequent_Owner_Approval_and_Provenance.json": "OTHER",
+    "skills/consulting-source-evidence/references/Reference_Material_Usage_Map_R02.csv": "OTHER",
+    "skills/consulting-source-evidence/references/deterministic-operations.md": "OTHER",
+    "skills/consulting-source-evidence/references/steam-tool-contract.json": "GENERATED_METADATA",
+    "skills/creating-game-artifacts/SKILL.md": "SKILL_ENTRYPOINT",
+    "skills/creating-game-artifacts/agents/openai.yaml": "GENERATED_METADATA",
+    "skills/creating-game-artifacts/references/RM06_Educational_Game_Creation_Framework.md": "PROFESSIONAL_KNOWLEDGE",
+    "skills/designing-educational-games/SKILL.md": "SKILL_ENTRYPOINT",
+    "skills/designing-educational-games/agents/openai.yaml": "GENERATED_METADATA",
+    "skills/designing-educational-games/references/RM02_Game_Design_Innovation_Framework.md": "PROFESSIONAL_KNOWLEDGE",
+    "skills/designing-educational-games/references/RM03_Comprehensive_STEAM_Game_Design.md": "PROFESSIONAL_KNOWLEDGE",
+    "skills/designing-educational-games/references/RM04_\u6578\u5b57\u63a2\u96aa\u7af6\u6280\u5834.md": "PROFESSIONAL_KNOWLEDGE",
+    "skills/evaluating-playtests/SKILL.md": "SKILL_ENTRYPOINT",
+    "skills/evaluating-playtests/agents/openai.yaml": "GENERATED_METADATA",
+    "skills/evaluating-playtests/references/RM07_Educational_Game_Playtesting_and_Evaluation_Guide.md": "PROFESSIONAL_KNOWLEDGE",
+    "skills/guiding-steam-activities/SKILL.md": "SKILL_ENTRYPOINT",
+    "skills/guiding-steam-activities/agents/openai.yaml": "GENERATED_METADATA",
+    "skills/guiding-steam-activities/references/RM01_STEAM_Template_Library.md": "PROFESSIONAL_KNOWLEDGE",
+    "skills/teaching-with-visuals/SKILL.md": "SKILL_ENTRYPOINT",
+    "skills/teaching-with-visuals/agents/openai.yaml": "GENERATED_METADATA",
+    "skills/teaching-with-visuals/references/RM05_STEAM_Visual_Teaching_Guide.md": "PROFESSIONAL_KNOWLEDGE",
+    "tools/steam_contract_checks.py": "EXECUTABLE_TOOL"
+  },
+  "generated_runtime_configuration": [],
+  "generated_runtime_configuration_sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+  "manifest_profile": {
+    "listing_status": {
+      "brand_colors": "UNRESOLVED",
+      "homepage": "UNRESOLVED",
+      "icons": "UNRESOLVED",
+      "keywords": "UNRESOLVED",
+      "license": "UNRESOLVED",
+      "repository": "UNRESOLVED"
+    },
+    "mcp_configuration": "NOT_APPLICABLE",
+    "profile": "PRIVATE_LOCAL",
+    "schema": "plugin-builder-manifest-profile-v1",
+    "target": "OPENAI_DESKTOP",
+    "vocabulary_version": "obvious-one-openai-interface-v1"
+  },
+  "manifest_profile_sha256": "e5d5126fafa9fe171aaf6d069b0d55b4f328049ed71f3f77a2c32d382603bc79",
+  "members": [
+    {
+      "path": ".codex-plugin/plugin.json",
+      "sha256": "897d9836b8b8bd2e6112a11fb8020737cd1c75af542156a1251521d83f0af7e1",
+      "size": 1215
+    },
+    {
+      "path": "PRIVACY.md",
+      "sha256": "3404301b009aed4006fff12bd613f4ad16bde23e7a8fc7c2c60ac12434449523",
+      "size": 326
+    },
+    {
+      "path": "README.md",
+      "sha256": "9cd0b24592b96d5203e26dea509e92400c4cc3884fc37ce0d94b942f3f3877f0",
+      "size": 979
+    },
+    {
+      "path": "THIRD_PARTY_CONTENT.md",
+      "sha256": "764d60060073c71ee64ca2e0970ab6ca8a71a8e0c8495fa0609eae3ab96cf810",
+      "size": 478
+    },
+    {
+      "path": "plugin.json",
+      "sha256": "c13429fbd751d49f77416f1351da2556e5d62d39bd35bb453569b7e544c75064",
+      "size": 1365
+    },
+    {
+      "path": "skills/checking-safety-and-age/SKILL.md",
+      "sha256": "ae9f9a0958ab9cdbb4ca12661e748ec663c45947055a8b767d9f40f3c48b32eb",
+      "size": 3369
+    },
+    {
+      "path": "skills/checking-safety-and-age/agents/openai.yaml",
+      "sha256": "13163f87a3d75927b513e2bd2a7f6498af8455845acb19431db46a5e54d98eb0",
+      "size": 165
+    },
+    {
+      "path": "skills/checking-safety-and-age/references/RM08_STEAM_Child_Safety_and_Age_Adaptation_Guide.md",
+      "sha256": "69e5d94ccadac5502db223cc1f9e94c788914e1fa60f8daa02a098fb1cf35e44",
+      "size": 9174
+    },
+    {
+      "path": "skills/consulting-source-evidence/SKILL.md",
+      "sha256": "e729b0e567caefa779dbb4dd2a82d74bbdddf1a55350daff354324f77e70966e",
+      "size": 5766
+    },
+    {
+      "path": "skills/consulting-source-evidence/agents/openai.yaml",
+      "sha256": "962864010dc931635ebf0ab9471817e7487a478297efd503f2f29bc5f94cc294",
+      "size": 182
+    },
+    {
+      "path": "skills/consulting-source-evidence/references/Knowledge_Quality_Acceptance_R02.md",
+      "sha256": "83aef11c9ffdfebb3468d7f2d118438386c62079480f84ed7d2101adac4189e5",
+      "size": 4150
+    },
+    {
+      "path": "skills/consulting-source-evidence/references/OWNER_DECISION_CLOSURE_2026-10-23.md",
+      "sha256": "6894c305349f04d68a8255506acfd33b16539100713d80d3b34e849b6d46d379",
+      "size": 1046
+    },
+    {
+      "path": "skills/consulting-source-evidence/references/Original_Source_Inventory.json",
+      "sha256": "d4762b77eb9d3ab59a718a010a25cb00980764ca70fc19b3b11688b1334ce9cd",
+      "size": 1009
+    },
+    {
+      "path": "skills/consulting-source-evidence/references/QC04_Framework_Differences.csv",
+      "sha256": "e53c54a49d0c90ad9fdc8daa0156ef6cb1ea39e51cb7db7814235ee0c8d1bd9d",
+      "size": 2934
+    },
+    {
+      "path": "skills/consulting-source-evidence/references/QC05_Visual_Review.csv",
+      "sha256": "cbe7a7af7bbb49984d0571ffe73fc0a57689e499be1af4319dc34b9e9c50ff46",
+      "size": 901
+    },
+    {
+      "path": "skills/consulting-source-evidence/references/QC08_Activity_Safety_Audit.csv",
+      "sha256": "664fe7fdd441242fc8a5ee4ba217e26dcff3cc0db8d81eacc168f9ef16ddc920",
+      "size": 4612
+    },
+    {
+      "path": "skills/consulting-source-evidence/references/R02_Subsequent_Owner_Approval_and_Provenance.json",
+      "sha256": "e9b216cbd3c616a18284917f85afadf072146bd472c4eb96fafdf80af7c54ef6",
+      "size": 2223
+    },
+    {
+      "path": "skills/consulting-source-evidence/references/Reference_Material_Usage_Map_R02.csv",
+      "sha256": "4984187797bacf3a859773e9f6f88b6d678623471876a0901dd35e644e5c023e",
+      "size": 4256
+    },
+    {
+      "path": "skills/consulting-source-evidence/references/deterministic-operations.md",
+      "sha256": "7b8c92f7f4a40dd9c92fa88f4914699789f649ae2ef2f1983bbe6f24f3ea7dd0",
+      "size": 1773
+    },
+    {
+      "path": "skills/consulting-source-evidence/references/steam-tool-contract.json",
+      "sha256": "94c3cd2b75cb85f4351d14f2cec0990d74f2855d80ccdc1f6501bd4a86a06e41",
+      "size": 6106
+    },
+    {
+      "path": "skills/creating-game-artifacts/SKILL.md",
+      "sha256": "5acb49e6f9f4fd74b0245db7cf0bca677039dc420cf873ea61ed0877a1316fdb",
+      "size": 4532
+    },
+    {
+      "path": "skills/creating-game-artifacts/agents/openai.yaml",
+      "sha256": "6bd74e56b5200e7303c3a84c62390fb55643e34b61b9be6639c2d993b43f3e55",
+      "size": 183
+    },
+    {
+      "path": "skills/creating-game-artifacts/references/RM06_Educational_Game_Creation_Framework.md",
+      "sha256": "268e76dc03806c948e9f632ccf29b179f90d7b545b602869925422703e92b093",
+      "size": 3231
+    },
+    {
+      "path": "skills/designing-educational-games/SKILL.md",
+      "sha256": "8a0282ba8657bc79fd790e3fc71921ecefa4facc3cf3b8748830f9afd1047bd6",
+      "size": 3900
+    },
+    {
+      "path": "skills/designing-educational-games/agents/openai.yaml",
+      "sha256": "20c9afccb62a4349aeb08bbfb52e3d26e10e8e247f3c78a6ac4546fc360cfab9",
+      "size": 175
+    },
+    {
+      "path": "skills/designing-educational-games/references/RM02_Game_Design_Innovation_Framework.md",
+      "sha256": "b2a20d1ddaeabca49ef968d7943d450046b8d675af390cb90ba271d1ee562857",
+      "size": 6270
+    },
+    {
+      "path": "skills/designing-educational-games/references/RM03_Comprehensive_STEAM_Game_Design.md",
+      "sha256": "1a577c3b51570131ad1d69c914e7bbd2961937007506b281c5862561290a974f",
+      "size": 35131
+    },
+    {
+      "path": "skills/designing-educational-games/references/RM04_\u6578\u5b57\u63a2\u96aa\u7af6\u6280\u5834.md",
+      "sha256": "68844a85f9031ebf2c3752f0b1868194af7c158b866e6111448e3d8eb602c62c",
+      "size": 5005
+    },
+    {
+      "path": "skills/evaluating-playtests/SKILL.md",
+      "sha256": "18d0b6abe9ebd8a22708af898dc39309211800bb7b555aba74f64de288d27208",
+      "size": 3447
+    },
+    {
+      "path": "skills/evaluating-playtests/agents/openai.yaml",
+      "sha256": "9ae7e8d2e7ce51552f27a2ccd59cb33ab10e01e39117395ec3b748f2b292cf71",
+      "size": 175
+    },
+    {
+      "path": "skills/evaluating-playtests/references/RM07_Educational_Game_Playtesting_and_Evaluation_Guide.md",
+      "sha256": "a0edb0b1d0d8b9771b0a723bebc891c8b0bd305c933186cf732125cc1a80f218",
+      "size": 2010
+    },
+    {
+      "path": "skills/guiding-steam-activities/SKILL.md",
+      "sha256": "6133270b80f04df94bcccbf1a20bae1182396fddd66eae6d57f719e3f4daf075",
+      "size": 3950
+    },
+    {
+      "path": "skills/guiding-steam-activities/agents/openai.yaml",
+      "sha256": "40a3909d50b56c4898e68065d23baad153f41a7e8a47c1d598a6c75e1e368b80",
+      "size": 177
+    },
+    {
+      "path": "skills/guiding-steam-activities/references/RM01_STEAM_Template_Library.md",
+      "sha256": "2acd4e6b8bb4e1d7a38aa488c07ade3bd37496b566e35b956fc6a08a1b2a1580",
+      "size": 7397
+    },
+    {
+      "path": "skills/teaching-with-visuals/SKILL.md",
+      "sha256": "0229f504e49450c409e7d7dde7b3051a6b278fe6255d3e5cf6286a5fe8be33a4",
+      "size": 3379
+    },
+    {
+      "path": "skills/teaching-with-visuals/agents/openai.yaml",
+      "sha256": "0305a3eaf8b8ad15ea8e2d1d2d82965e49b2bbd00f44e699e869f8377d9d9c23",
+      "size": 171
+    },
+    {
+      "path": "skills/teaching-with-visuals/references/RM05_STEAM_Visual_Teaching_Guide.md",
+      "sha256": "79206f22730c76829314382602afd4fb03e4636e9a4e4dce745777ef5b11144e",
+      "size": 2286
+    },
+    {
+      "path": "tools/steam_contract_checks.py",
+      "sha256": "f01e121eef79a204b7863587f8cc5080e04e46efa5010cbe2b8e2e78e80a7e71",
+      "size": 6372
+    }
+  ],
+  "operation": "create",
+  "permissions_sha256": "3adc3779eb0cd643728a521607c9d9700b76fa12f1dcd622ca6455a8fe51239a",
+  "plan_sha256": "2c0b0e9fc660620f8a2ced52a96394c8544c6281167db33dc2176cb29a5dda49",
+  "preflight_evidence_sha256": "0196a2ee8c4df3e2b0a0e660fa810d48c280f1d9ba9a6606c1dfbdcc5e77b591",
+  "realizations": [
+    {
+      "adapter_id": "runtime-native",
+      "adapter_version": "1",
+      "dependency_ids": [
+        "browser-testing-host"
+      ],
+      "evidence_policy": "DEFERRED_ALLOWED",
+      "execution_location": "RUNTIME_HOST",
+      "exposed_capability": "browser-testing",
+      "feasibility_state": "NOT VERIFIED",
+      "mechanism": "RUNTIME_NATIVE",
+      "operation_id": "browser-testing",
+      "permission_ids": [
+        "runtime:native"
+      ],
+      "setup_owner": "RUNTIME",
+      "setup_requirements": [
+        "At use time discover host capability, verify permission and return actual result to owning Skill; otherwise invoke approved fallback."
+      ],
+      "target_runtime": "ChatGPT Work Local/Desktop",
+      "tool_id": "browser-testing",
+      "transport": "RUNTIME_API"
+    },
+    {
+      "adapter_id": "runtime-native",
+      "adapter_version": "1",
+      "dependency_ids": [
+        "browser-testing-host"
+      ],
+      "evidence_policy": "DEFERRED_ALLOWED",
+      "execution_location": "RUNTIME_HOST",
+      "exposed_capability": "browser-testing",
+      "feasibility_state": "NOT VERIFIED",
+      "mechanism": "RUNTIME_NATIVE",
+      "operation_id": "browser-testing",
+      "permission_ids": [
+        "runtime:native"
+      ],
+      "setup_owner": "RUNTIME",
+      "setup_requirements": [
+        "At use time discover host capability, verify permission and return actual result to owning Skill; otherwise invoke approved fallback."
+      ],
+      "target_runtime": "Codex",
+      "tool_id": "browser-testing",
+      "transport": "RUNTIME_API"
+    },
+    {
+      "adapter_id": "runtime-native",
+      "adapter_version": "1",
+      "dependency_ids": [
+        "game-production-host"
+      ],
+      "evidence_policy": "DEFERRED_ALLOWED",
+      "execution_location": "RUNTIME_HOST",
+      "exposed_capability": "game-production",
+      "feasibility_state": "NOT VERIFIED",
+      "mechanism": "RUNTIME_NATIVE",
+      "operation_id": "game-production",
+      "permission_ids": [
+        "runtime:native"
+      ],
+      "setup_owner": "RUNTIME",
+      "setup_requirements": [
+        "At use time discover host capability, verify permission and return actual result to owning Skill; otherwise invoke approved fallback."
+      ],
+      "target_runtime": "ChatGPT Work Local/Desktop",
+      "tool_id": "game-production",
+      "transport": "RUNTIME_API"
+    },
+    {
+      "adapter_id": "runtime-native",
+      "adapter_version": "1",
+      "dependency_ids": [
+        "game-production-host"
+      ],
+      "evidence_policy": "DEFERRED_ALLOWED",
+      "execution_location": "RUNTIME_HOST",
+      "exposed_capability": "game-production",
+      "feasibility_state": "NOT VERIFIED",
+      "mechanism": "RUNTIME_NATIVE",
+      "operation_id": "game-production",
+      "permission_ids": [
+        "runtime:native"
+      ],
+      "setup_owner": "RUNTIME",
+      "setup_requirements": [
+        "At use time discover host capability, verify permission and return actual result to owning Skill; otherwise invoke approved fallback."
+      ],
+      "target_runtime": "Codex",
+      "tool_id": "game-production",
+      "transport": "RUNTIME_API"
+    },
+    {
+      "adapter_id": "runtime-native",
+      "adapter_version": "1",
+      "dependency_ids": [
+        "image-generation-host"
+      ],
+      "evidence_policy": "DEFERRED_ALLOWED",
+      "execution_location": "RUNTIME_HOST",
+      "exposed_capability": "image-generation",
+      "feasibility_state": "NOT VERIFIED",
+      "mechanism": "RUNTIME_NATIVE",
+      "operation_id": "image-generation",
+      "permission_ids": [
+        "runtime:native"
+      ],
+      "setup_owner": "RUNTIME",
+      "setup_requirements": [
+        "At use time discover host capability, verify permission and return actual result to owning Skill; otherwise invoke approved fallback."
+      ],
+      "target_runtime": "ChatGPT Work Local/Desktop",
+      "tool_id": "image-generation",
+      "transport": "RUNTIME_API"
+    },
+    {
+      "adapter_id": "runtime-native",
+      "adapter_version": "1",
+      "dependency_ids": [
+        "image-generation-host"
+      ],
+      "evidence_policy": "DEFERRED_ALLOWED",
+      "execution_location": "RUNTIME_HOST",
+      "exposed_capability": "image-generation",
+      "feasibility_state": "NOT VERIFIED",
+      "mechanism": "RUNTIME_NATIVE",
+      "operation_id": "image-generation",
+      "permission_ids": [
+        "runtime:native"
+      ],
+      "setup_owner": "RUNTIME",
+      "setup_requirements": [
+        "At use time discover host capability, verify permission and return actual result to owning Skill; otherwise invoke approved fallback."
+      ],
+      "target_runtime": "Codex",
+      "tool_id": "image-generation",
+      "transport": "RUNTIME_API"
+    },
+    {
+      "adapter_id": "direct-local",
+      "adapter_version": "2",
+      "dependency_ids": [
+        "python"
+      ],
+      "evidence_policy": "DEFERRED_ALLOWED",
+      "execution_location": "USER_DEVICE",
+      "exposed_capability": "steam-contract-checks",
+      "feasibility_state": "FEASIBLE_WITH_SETUP",
+      "mechanism": "DIRECT_LOCAL",
+      "operation_id": "steam-contract-checks",
+      "permission_ids": [
+        "workspace:read"
+      ],
+      "setup_owner": "OWNER",
+      "setup_requirements": [
+        "Install Python 3; permit bounded direct argv with shell=false from plugin root; return JSON stdout to consulting-source-evidence."
+      ],
+      "target_runtime": "ChatGPT Work Local/Desktop",
+      "tool_id": "steam-contract-checks",
+      "transport": "DIRECT_ARGV"
+    },
+    {
+      "adapter_id": "direct-local",
+      "adapter_version": "2",
+      "dependency_ids": [
+        "python"
+      ],
+      "evidence_policy": "DEFERRED_ALLOWED",
+      "execution_location": "USER_DEVICE",
+      "exposed_capability": "steam-contract-checks",
+      "feasibility_state": "FEASIBLE_WITH_SETUP",
+      "mechanism": "DIRECT_LOCAL",
+      "operation_id": "steam-contract-checks",
+      "permission_ids": [
+        "workspace:read"
+      ],
+      "setup_owner": "OWNER",
+      "setup_requirements": [
+        "Install Python 3; permit bounded direct argv with shell=false from plugin root; return JSON stdout to consulting-source-evidence."
+      ],
+      "target_runtime": "Codex",
+      "tool_id": "steam-contract-checks",
+      "transport": "DIRECT_ARGV"
+    }
+  ],
+  "realizations_sha256": "946c14efabf5d3bb9d35c70039c90706ba679bf111b7c66d69f856466594caa4",
+  "schema": "plugin-builder-candidate-manifest-v3",
+  "tool_bindings": [
+    {
+      "contract_sha256": "931c9d070691d2b0acb5490a158632e4e2cec042373d8ceab27f6efc24e2fbca",
+      "dependencies": [
+        {
+          "absence_policy": "FALLBACK",
+          "id": "browser-testing-host",
+          "provider": "RUNTIME_PROVIDED",
+          "required": false,
+          "runtime_targets": [
+            "Codex",
+            "ChatGPT Work Local/Desktop"
+          ],
+          "setup_owner": "RUNTIME",
+          "sha256": null,
+          "type": "RUNTIME_CAPABILITY",
+          "version": null
+        }
+      ],
+      "files": [],
+      "implementation_kind": "RUNTIME_NATIVE",
+      "permissions": [
+        {
+          "grant_source": "RUNTIME",
+          "id": "runtime:native",
+          "purpose": "Use only exposed and authorized host task tools.",
+          "required": false,
+          "target_runtime": "Codex",
+          "verification": "Observe argv, input/output and return to owning Skill."
+        },
+        {
+          "grant_source": "RUNTIME",
+          "id": "runtime:native",
+          "purpose": "Use only exposed and authorized host task tools.",
+          "required": false,
+          "target_runtime": "ChatGPT Work Local/Desktop",
+          "verification": "Observe argv, input/output and return to owning Skill."
+        }
+      ],
+      "requirements": [
+        "DO05",
+        "AC10",
+        "T14"
+      ],
+      "runtime_targets": [
+        "Codex",
+        "ChatGPT Work Local/Desktop"
+      ],
+      "skills": [
+        "evaluating-playtests",
+        "creating-game-artifacts"
+      ],
+      "tool_id": "browser-testing"
+    },
+    {
+      "contract_sha256": "c963ac3c8967f3dcbb09a25bb6246762cc6cd77046944194dcd64c043423aad6",
+      "dependencies": [
+        {
+          "absence_policy": "FALLBACK",
+          "id": "game-production-host",
+          "provider": "RUNTIME_PROVIDED",
+          "required": false,
+          "runtime_targets": [
+            "Codex",
+            "ChatGPT Work Local/Desktop"
+          ],
+          "setup_owner": "RUNTIME",
+          "sha256": null,
+          "type": "RUNTIME_CAPABILITY",
+          "version": null
+        }
+      ],
+      "files": [],
+      "implementation_kind": "RUNTIME_NATIVE",
+      "permissions": [
+        {
+          "grant_source": "RUNTIME",
+          "id": "runtime:native",
+          "purpose": "Use only exposed and authorized host task tools.",
+          "required": false,
+          "target_runtime": "Codex",
+          "verification": "Observe argv, input/output and return to owning Skill."
+        },
+        {
+          "grant_source": "RUNTIME",
+          "id": "runtime:native",
+          "purpose": "Use only exposed and authorized host task tools.",
+          "required": false,
+          "target_runtime": "ChatGPT Work Local/Desktop",
+          "verification": "Observe argv, input/output and return to owning Skill."
+        }
+      ],
+      "requirements": [
+        "C05",
+        "R08",
+        "R09",
+        "T10",
+        "T11"
+      ],
+      "runtime_targets": [
+        "Codex",
+        "ChatGPT Work Local/Desktop"
+      ],
+      "skills": [
+        "creating-game-artifacts"
+      ],
+      "tool_id": "game-production"
+    },
+    {
+      "contract_sha256": "1bd2e9e75c3c6f2d39f31e595895918a1a0f642c35be40a6f1f9a6a2b523c8a4",
+      "dependencies": [
+        {
+          "absence_policy": "FALLBACK",
+          "id": "image-generation-host",
+          "provider": "RUNTIME_PROVIDED",
+          "required": false,
+          "runtime_targets": [
+            "Codex",
+            "ChatGPT Work Local/Desktop"
+          ],
+          "setup_owner": "RUNTIME",
+          "sha256": null,
+          "type": "RUNTIME_CAPABILITY",
+          "version": null
+        }
+      ],
+      "files": [],
+      "implementation_kind": "RUNTIME_NATIVE",
+      "permissions": [
+        {
+          "grant_source": "RUNTIME",
+          "id": "runtime:native",
+          "purpose": "Use only exposed and authorized host task tools.",
+          "required": false,
+          "target_runtime": "Codex",
+          "verification": "Observe argv, input/output and return to owning Skill."
+        },
+        {
+          "grant_source": "RUNTIME",
+          "id": "runtime:native",
+          "purpose": "Use only exposed and authorized host task tools.",
+          "required": false,
+          "target_runtime": "ChatGPT Work Local/Desktop",
+          "verification": "Observe argv, input/output and return to owning Skill."
+        }
+      ],
+      "requirements": [
+        "C03",
+        "R06",
+        "AC05",
+        "T05",
+        "T06"
+      ],
+      "runtime_targets": [
+        "Codex",
+        "ChatGPT Work Local/Desktop"
+      ],
+      "skills": [
+        "teaching-with-visuals"
+      ],
+      "tool_id": "image-generation"
+    },
+    {
+      "contract_sha256": "94c3cd2b75cb85f4351d14f2cec0990d74f2855d80ccdc1f6501bd4a86a06e41",
+      "dependencies": [
+        {
+          "absence_policy": "BLOCK",
+          "id": "python",
+          "provider": "OWNER_CONFIGURED",
+          "required": true,
+          "runtime_targets": [
+            "Codex",
+            "ChatGPT Work Local/Desktop"
+          ],
+          "setup_owner": "OWNER",
+          "sha256": null,
+          "type": "EXECUTABLE",
+          "version": "3"
+        }
+      ],
+      "files": [
+        "tools/steam_contract_checks.py"
+      ],
+      "implementation_kind": "BUNDLED_LOCAL",
+      "permissions": [
+        {
+          "grant_source": "OWNER",
+          "id": "workspace:read",
+          "purpose": "Read bundled code and supplied record data.",
+          "required": true,
+          "target_runtime": "Codex",
+          "verification": "Observe argv, input/output and return to owning Skill."
+        },
+        {
+          "grant_source": "OWNER",
+          "id": "workspace:read",
+          "purpose": "Read bundled code and supplied record data.",
+          "required": true,
+          "target_runtime": "ChatGPT Work Local/Desktop",
+          "verification": "Observe argv, input/output and return to owning Skill."
+        }
+      ],
+      "requirements": [
+        "DO01",
+        "DO02",
+        "DO03",
+        "DO04",
+        "DO05",
+        "DO06",
+        "DO07"
+      ],
+      "runtime_targets": [
+        "Codex",
+        "ChatGPT Work Local/Desktop"
+      ],
+      "skills": [
+        "consulting-source-evidence"
+      ],
+      "tool_id": "steam-contract-checks"
+    }
+  ],
+  "tool_contracts": [
+    {
+      "adapter": null,
+      "capability_ids": [
+        "browser-testing-capability"
+      ],
+      "configuration": {
+        "authentication": "RUNTIME_MANAGED",
+        "setup": "Use only capabilities actually exposed by the host; approved fallback when absent."
+      },
+      "dependencies": [
+        {
+          "absence_policy": "FALLBACK",
+          "id": "browser-testing-host",
+          "provider": "RUNTIME_PROVIDED",
+          "required": false,
+          "runtime_targets": [
+            "Codex",
+            "ChatGPT Work Local/Desktop"
+          ],
+          "setup_owner": "RUNTIME",
+          "sha256": null,
+          "type": "RUNTIME_CAPABILITY",
+          "version": null
+        }
+      ],
+      "execution": null,
+      "fallback": {
+        "alternative_operation_id": null,
+        "degraded_requirement_ids": [],
+        "policy": "OMIT_OPTIONAL",
+        "preserved_requirement_ids": [
+          "DO05",
+          "AC10",
+          "T14"
+        ],
+        "trigger_conditions": [
+          "Host capability unavailable or unauthorized."
+        ]
+      },
+      "files": [],
+      "fixtures": null,
+      "id": "browser-testing",
+      "implementation_kind": "RUNTIME_NATIVE",
+      "input_schema": {
+        "description": "Approved task specification and observed runtime capability.",
+        "type": "object"
+      },
+      "mcp": null,
+      "operation": {
+        "capability_ids": [
+          "browser-testing-capability"
+        ],
+        "id": "browser-testing",
+        "idempotent": false,
+        "input_schema_sha256": "cb01f4a826afe75be5626c58dc3b7bf7bb6e2c5ed8ab732f303d318a0f65b687",
+        "output_schema_sha256": "7c4fee30e431d36fdd04f27af9ee45db42dfddc05fc68c0f1691cc5e57de192c",
+        "protocol": "RUNTIME_API",
+        "side_effect_class": "WORKSPACE_WRITE"
+      },
+      "output_schema": {
+        "description": "Produced artifacts or observed test/image results, evidence and limitations.",
+        "type": "object"
+      },
+      "permissions": [
+        {
+          "grant_source": "RUNTIME",
+          "id": "runtime:native",
+          "purpose": "Use only exposed and authorized host task tools.",
+          "required": false,
+          "target_runtime": "Codex",
+          "verification": "Observe argv, input/output and return to owning Skill."
+        },
+        {
+          "grant_source": "RUNTIME",
+          "id": "runtime:native",
+          "purpose": "Use only exposed and authorized host task tools.",
+          "required": false,
+          "target_runtime": "ChatGPT Work Local/Desktop",
+          "verification": "Observe argv, input/output and return to owning Skill."
+        }
+      ],
+      "realizations": [
+        {
+          "adapter_id": "runtime-native",
+          "adapter_version": "1",
+          "dependency_ids": [
+            "browser-testing-host"
+          ],
+          "evidence_policy": "DEFERRED_ALLOWED",
+          "execution_location": "RUNTIME_HOST",
+          "exposed_capability": "browser-testing",
+          "feasibility_state": "NOT VERIFIED",
+          "mechanism": "RUNTIME_NATIVE",
+          "operation_id": "browser-testing",
+          "permission_ids": [
+            "runtime:native"
+          ],
+          "setup_owner": "RUNTIME",
+          "setup_requirements": [
+            "At use time discover host capability, verify permission and return actual result to owning Skill; otherwise invoke approved fallback."
+          ],
+          "target_runtime": "Codex",
+          "transport": "RUNTIME_API"
+        },
+        {
+          "adapter_id": "runtime-native",
+          "adapter_version": "1",
+          "dependency_ids": [
+            "browser-testing-host"
+          ],
+          "evidence_policy": "DEFERRED_ALLOWED",
+          "execution_location": "RUNTIME_HOST",
+          "exposed_capability": "browser-testing",
+          "feasibility_state": "NOT VERIFIED",
+          "mechanism": "RUNTIME_NATIVE",
+          "operation_id": "browser-testing",
+          "permission_ids": [
+            "runtime:native"
+          ],
+          "setup_owner": "RUNTIME",
+          "setup_requirements": [
+            "At use time discover host capability, verify permission and return actual result to owning Skill; otherwise invoke approved fallback."
+          ],
+          "target_runtime": "ChatGPT Work Local/Desktop",
+          "transport": "RUNTIME_API"
+        }
+      ],
+      "redistribution": {
+        "evidence": "Generated R02 implementation code/contracts; optional host services are not bundled.",
+        "state": "APPROVED"
+      },
+      "required": false,
+      "requirement_ids": [
+        "DO05",
+        "AC10",
+        "T14"
+      ],
+      "runtime_capability": {
+        "name": "browser-testing",
+        "runtimes": [
+          "Codex",
+          "ChatGPT Work Local/Desktop"
+        ]
+      },
+      "runtime_targets": [
+        "Codex",
+        "ChatGPT Work Local/Desktop"
+      ],
+      "schema": "plugin-builder-application-tool-v2",
+      "side_effects": [
+        "Creates task-local artifacts only after user approval."
+      ],
+      "skill_bindings": [
+        "evaluating-playtests",
+        "creating-game-artifacts"
+      ],
+      "verification": {
+        "argv": [],
+        "kind": "RUNTIME_OBSERVATION",
+        "network": false
+      }
+    },
+    {
+      "adapter": null,
+      "capability_ids": [
+        "game-production-capability"
+      ],
+      "configuration": {
+        "authentication": "RUNTIME_MANAGED",
+        "setup": "Use only capabilities actually exposed by the host; approved fallback when absent."
+      },
+      "dependencies": [
+        {
+          "absence_policy": "FALLBACK",
+          "id": "game-production-host",
+          "provider": "RUNTIME_PROVIDED",
+          "required": false,
+          "runtime_targets": [
+            "Codex",
+            "ChatGPT Work Local/Desktop"
+          ],
+          "setup_owner": "RUNTIME",
+          "sha256": null,
+          "type": "RUNTIME_CAPABILITY",
+          "version": null
+        }
+      ],
+      "execution": null,
+      "fallback": {
+        "alternative_operation_id": null,
+        "degraded_requirement_ids": [],
+        "policy": "OMIT_OPTIONAL",
+        "preserved_requirement_ids": [
+          "C05",
+          "R08",
+          "R09",
+          "T10",
+          "T11"
+        ],
+        "trigger_conditions": [
+          "Host capability unavailable or unauthorized."
+        ]
+      },
+      "files": [],
+      "fixtures": null,
+      "id": "game-production",
+      "implementation_kind": "RUNTIME_NATIVE",
+      "input_schema": {
+        "description": "Approved task specification and observed runtime capability.",
+        "type": "object"
+      },
+      "mcp": null,
+      "operation": {
+        "capability_ids": [
+          "game-production-capability"
+        ],
+        "id": "game-production",
+        "idempotent": false,
+        "input_schema_sha256": "cb01f4a826afe75be5626c58dc3b7bf7bb6e2c5ed8ab732f303d318a0f65b687",
+        "output_schema_sha256": "7c4fee30e431d36fdd04f27af9ee45db42dfddc05fc68c0f1691cc5e57de192c",
+        "protocol": "RUNTIME_API",
+        "side_effect_class": "WORKSPACE_WRITE"
+      },
+      "output_schema": {
+        "description": "Produced artifacts or observed test/image results, evidence and limitations.",
+        "type": "object"
+      },
+      "permissions": [
+        {
+          "grant_source": "RUNTIME",
+          "id": "runtime:native",
+          "purpose": "Use only exposed and authorized host task tools.",
+          "required": false,
+          "target_runtime": "Codex",
+          "verification": "Observe argv, input/output and return to owning Skill."
+        },
+        {
+          "grant_source": "RUNTIME",
+          "id": "runtime:native",
+          "purpose": "Use only exposed and authorized host task tools.",
+          "required": false,
+          "target_runtime": "ChatGPT Work Local/Desktop",
+          "verification": "Observe argv, input/output and return to owning Skill."
+        }
+      ],
+      "realizations": [
+        {
+          "adapter_id": "runtime-native",
+          "adapter_version": "1",
+          "dependency_ids": [
+            "game-production-host"
+          ],
+          "evidence_policy": "DEFERRED_ALLOWED",
+          "execution_location": "RUNTIME_HOST",
+          "exposed_capability": "game-production",
+          "feasibility_state": "NOT VERIFIED",
+          "mechanism": "RUNTIME_NATIVE",
+          "operation_id": "game-production",
+          "permission_ids": [
+            "runtime:native"
+          ],
+          "setup_owner": "RUNTIME",
+          "setup_requirements": [
+            "At use time discover host capability, verify permission and return actual result to owning Skill; otherwise invoke approved fallback."
+          ],
+          "target_runtime": "Codex",
+          "transport": "RUNTIME_API"
+        },
+        {
+          "adapter_id": "runtime-native",
+          "adapter_version": "1",
+          "dependency_ids": [
+            "game-production-host"
+          ],
+          "evidence_policy": "DEFERRED_ALLOWED",
+          "execution_location": "RUNTIME_HOST",
+          "exposed_capability": "game-production",
+          "feasibility_state": "NOT VERIFIED",
+          "mechanism": "RUNTIME_NATIVE",
+          "operation_id": "game-production",
+          "permission_ids": [
+            "runtime:native"
+          ],
+          "setup_owner": "RUNTIME",
+          "setup_requirements": [
+            "At use time discover host capability, verify permission and return actual result to owning Skill; otherwise invoke approved fallback."
+          ],
+          "target_runtime": "ChatGPT Work Local/Desktop",
+          "transport": "RUNTIME_API"
+        }
+      ],
+      "redistribution": {
+        "evidence": "Generated R02 implementation code/contracts; optional host services are not bundled.",
+        "state": "APPROVED"
+      },
+      "required": false,
+      "requirement_ids": [
+        "C05",
+        "R08",
+        "R09",
+        "T10",
+        "T11"
+      ],
+      "runtime_capability": {
+        "name": "game-production",
+        "runtimes": [
+          "Codex",
+          "ChatGPT Work Local/Desktop"
+        ]
+      },
+      "runtime_targets": [
+        "Codex",
+        "ChatGPT Work Local/Desktop"
+      ],
+      "schema": "plugin-builder-application-tool-v2",
+      "side_effects": [
+        "Creates task-local artifacts only after user approval."
+      ],
+      "skill_bindings": [
+        "creating-game-artifacts"
+      ],
+      "verification": {
+        "argv": [],
+        "kind": "RUNTIME_OBSERVATION",
+        "network": false
+      }
+    },
+    {
+      "adapter": null,
+      "capability_ids": [
+        "image-generation-capability"
+      ],
+      "configuration": {
+        "authentication": "RUNTIME_MANAGED",
+        "setup": "Use only capabilities actually exposed by the host; approved fallback when absent."
+      },
+      "dependencies": [
+        {
+          "absence_policy": "FALLBACK",
+          "id": "image-generation-host",
+          "provider": "RUNTIME_PROVIDED",
+          "required": false,
+          "runtime_targets": [
+            "Codex",
+            "ChatGPT Work Local/Desktop"
+          ],
+          "setup_owner": "RUNTIME",
+          "sha256": null,
+          "type": "RUNTIME_CAPABILITY",
+          "version": null
+        }
+      ],
+      "execution": null,
+      "fallback": {
+        "alternative_operation_id": null,
+        "degraded_requirement_ids": [],
+        "policy": "OMIT_OPTIONAL",
+        "preserved_requirement_ids": [
+          "C03",
+          "R06",
+          "AC05",
+          "T05",
+          "T06"
+        ],
+        "trigger_conditions": [
+          "Host capability unavailable or unauthorized."
+        ]
+      },
+      "files": [],
+      "fixtures": null,
+      "id": "image-generation",
+      "implementation_kind": "RUNTIME_NATIVE",
+      "input_schema": {
+        "description": "Approved task specification and observed runtime capability.",
+        "type": "object"
+      },
+      "mcp": null,
+      "operation": {
+        "capability_ids": [
+          "image-generation-capability"
+        ],
+        "id": "image-generation",
+        "idempotent": false,
+        "input_schema_sha256": "cb01f4a826afe75be5626c58dc3b7bf7bb6e2c5ed8ab732f303d318a0f65b687",
+        "output_schema_sha256": "7c4fee30e431d36fdd04f27af9ee45db42dfddc05fc68c0f1691cc5e57de192c",
+        "protocol": "RUNTIME_API",
+        "side_effect_class": "WORKSPACE_WRITE"
+      },
+      "output_schema": {
+        "description": "Produced artifacts or observed test/image results, evidence and limitations.",
+        "type": "object"
+      },
+      "permissions": [
+        {
+          "grant_source": "RUNTIME",
+          "id": "runtime:native",
+          "purpose": "Use only exposed and authorized host task tools.",
+          "required": false,
+          "target_runtime": "Codex",
+          "verification": "Observe argv, input/output and return to owning Skill."
+        },
+        {
+          "grant_source": "RUNTIME",
+          "id": "runtime:native",
+          "purpose": "Use only exposed and authorized host task tools.",
+          "required": false,
+          "target_runtime": "ChatGPT Work Local/Desktop",
+          "verification": "Observe argv, input/output and return to owning Skill."
+        }
+      ],
+      "realizations": [
+        {
+          "adapter_id": "runtime-native",
+          "adapter_version": "1",
+          "dependency_ids": [
+            "image-generation-host"
+          ],
+          "evidence_policy": "DEFERRED_ALLOWED",
+          "execution_location": "RUNTIME_HOST",
+          "exposed_capability": "image-generation",
+          "feasibility_state": "NOT VERIFIED",
+          "mechanism": "RUNTIME_NATIVE",
+          "operation_id": "image-generation",
+          "permission_ids": [
+            "runtime:native"
+          ],
+          "setup_owner": "RUNTIME",
+          "setup_requirements": [
+            "At use time discover host capability, verify permission and return actual result to owning Skill; otherwise invoke approved fallback."
+          ],
+          "target_runtime": "Codex",
+          "transport": "RUNTIME_API"
+        },
+        {
+          "adapter_id": "runtime-native",
+          "adapter_version": "1",
+          "dependency_ids": [
+            "image-generation-host"
+          ],
+          "evidence_policy": "DEFERRED_ALLOWED",
+          "execution_location": "RUNTIME_HOST",
+          "exposed_capability": "image-generation",
+          "feasibility_state": "NOT VERIFIED",
+          "mechanism": "RUNTIME_NATIVE",
+          "operation_id": "image-generation",
+          "permission_ids": [
+            "runtime:native"
+          ],
+          "setup_owner": "RUNTIME",
+          "setup_requirements": [
+            "At use time discover host capability, verify permission and return actual result to owning Skill; otherwise invoke approved fallback."
+          ],
+          "target_runtime": "ChatGPT Work Local/Desktop",
+          "transport": "RUNTIME_API"
+        }
+      ],
+      "redistribution": {
+        "evidence": "Generated R02 implementation code/contracts; optional host services are not bundled.",
+        "state": "APPROVED"
+      },
+      "required": false,
+      "requirement_ids": [
+        "C03",
+        "R06",
+        "AC05",
+        "T05",
+        "T06"
+      ],
+      "runtime_capability": {
+        "name": "image-generation",
+        "runtimes": [
+          "Codex",
+          "ChatGPT Work Local/Desktop"
+        ]
+      },
+      "runtime_targets": [
+        "Codex",
+        "ChatGPT Work Local/Desktop"
+      ],
+      "schema": "plugin-builder-application-tool-v2",
+      "side_effects": [
+        "Creates task-local artifacts only after user approval."
+      ],
+      "skill_bindings": [
+        "teaching-with-visuals"
+      ],
+      "verification": {
+        "argv": [],
+        "kind": "RUNTIME_OBSERVATION",
+        "network": false
+      }
+    },
+    {
+      "adapter": null,
+      "capability_ids": [
+        "steam-contract-checks-capability"
+      ],
+      "configuration": {
+        "authentication": "NOT_REQUIRED",
+        "setup": "Owner configures Python 3 and authorized direct argv; no credentials or network."
+      },
+      "dependencies": [
+        {
+          "absence_policy": "BLOCK",
+          "id": "python",
+          "provider": "OWNER_CONFIGURED",
+          "required": true,
+          "runtime_targets": [
+            "Codex",
+            "ChatGPT Work Local/Desktop"
+          ],
+          "setup_owner": "OWNER",
+          "sha256": null,
+          "type": "EXECUTABLE",
+          "version": "3"
+        }
+      ],
+      "execution": {
+        "argv": [
+          "{python}",
+          "tools/steam_contract_checks.py"
+        ],
+        "clean_environment": true,
+        "timeout_seconds": 30
+      },
+      "fallback": {
+        "alternative_operation_id": null,
+        "degraded_requirement_ids": [
+          "DO01",
+          "DO02",
+          "DO03",
+          "DO04",
+          "DO05",
+          "DO06",
+          "DO07"
+        ],
+        "policy": "BLOCK",
+        "preserved_requirement_ids": [],
+        "trigger_conditions": [
+          "Required interpreter/execution unavailable."
+        ]
+      },
+      "files": [
+        "tools/steam_contract_checks.py"
+      ],
+      "fixtures": {
+        "input": {
+          "executed": false,
+          "operation": "evidence",
+          "produced": false,
+          "tested": false
+        },
+        "output": {
+          "checks": [
+            {
+              "id": "produced-evidence",
+              "pass": true
+            },
+            {
+              "id": "executed-evidence",
+              "pass": true
+            },
+            {
+              "id": "tested-evidence",
+              "pass": true
+            },
+            {
+              "id": "ordered-claims",
+              "pass": true
+            },
+            {
+              "id": "execution-produced",
+              "pass": true
+            },
+            {
+              "id": "learning-separate",
+              "pass": true
+            }
+          ],
+          "limitations": [
+            "Evidence references are supplied records, not independent replay of browser actions."
+          ],
+          "operation": "evidence",
+          "status": "PASS"
+        }
+      },
+      "id": "steam-contract-checks",
+      "implementation_kind": "BUNDLED_LOCAL",
+      "input_schema": {
+        "additionalProperties": true,
+        "properties": {
+          "operation": {
+            "enum": [
+              "inventory",
+              "conversion",
+              "activity",
+              "production",
+              "evidence",
+              "usage",
+              "framework"
+            ]
+          }
+        },
+        "required": [
+          "operation"
+        ],
+        "type": "object"
+      },
+      "mcp": null,
+      "operation": {
+        "capability_ids": [
+          "steam-contract-checks-capability"
+        ],
+        "id": "steam-contract-checks",
+        "idempotent": true,
+        "input_schema_sha256": "d8cf0252bb5dbb110e113c306ebe1b7b954de6d81ad09d9f42c1fb54c08952ac",
+        "output_schema_sha256": "fc8acc6997b901a48f8b245ea62274dd0f7e3f0b029a13355c1aa7223bb11928",
+        "protocol": "JSON_STDIN_STDOUT",
+        "side_effect_class": "NONE"
+      },
+      "output_schema": {
+        "properties": {
+          "checks": {
+            "type": "array"
+          },
+          "limitations": {
+            "type": "array"
+          },
+          "operation": {
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "PASS",
+              "FAIL",
+              "NOT VERIFIED"
+            ]
+          }
+        },
+        "required": [
+          "operation",
+          "status",
+          "checks",
+          "limitations"
+        ],
+        "type": "object"
+      },
+      "permissions": [
+        {
+          "grant_source": "OWNER",
+          "id": "workspace:read",
+          "purpose": "Read bundled code and supplied record data.",
+          "required": true,
+          "target_runtime": "Codex",
+          "verification": "Observe argv, input/output and return to owning Skill."
+        },
+        {
+          "grant_source": "OWNER",
+          "id": "workspace:read",
+          "purpose": "Read bundled code and supplied record data.",
+          "required": true,
+          "target_runtime": "ChatGPT Work Local/Desktop",
+          "verification": "Observe argv, input/output and return to owning Skill."
+        }
+      ],
+      "realizations": [
+        {
+          "adapter_id": "direct-local",
+          "adapter_version": "2",
+          "dependency_ids": [
+            "python"
+          ],
+          "evidence_policy": "DEFERRED_ALLOWED",
+          "execution_location": "USER_DEVICE",
+          "exposed_capability": "steam-contract-checks",
+          "feasibility_state": "FEASIBLE_WITH_SETUP",
+          "mechanism": "DIRECT_LOCAL",
+          "operation_id": "steam-contract-checks",
+          "permission_ids": [
+            "workspace:read"
+          ],
+          "setup_owner": "OWNER",
+          "setup_requirements": [
+            "Install Python 3; permit bounded direct argv with shell=false from plugin root; return JSON stdout to consulting-source-evidence."
+          ],
+          "target_runtime": "Codex",
+          "transport": "DIRECT_ARGV"
+        },
+        {
+          "adapter_id": "direct-local",
+          "adapter_version": "2",
+          "dependency_ids": [
+            "python"
+          ],
+          "evidence_policy": "DEFERRED_ALLOWED",
+          "execution_location": "USER_DEVICE",
+          "exposed_capability": "steam-contract-checks",
+          "feasibility_state": "FEASIBLE_WITH_SETUP",
+          "mechanism": "DIRECT_LOCAL",
+          "operation_id": "steam-contract-checks",
+          "permission_ids": [
+            "workspace:read"
+          ],
+          "setup_owner": "OWNER",
+          "setup_requirements": [
+            "Install Python 3; permit bounded direct argv with shell=false from plugin root; return JSON stdout to consulting-source-evidence."
+          ],
+          "target_runtime": "ChatGPT Work Local/Desktop",
+          "transport": "DIRECT_ARGV"
+        }
+      ],
+      "redistribution": {
+        "evidence": "Generated R02 implementation code/contracts; optional host services are not bundled.",
+        "state": "APPROVED"
+      },
+      "required": true,
+      "requirement_ids": [
+        "DO01",
+        "DO02",
+        "DO03",
+        "DO04",
+        "DO05",
+        "DO06",
+        "DO07"
+      ],
+      "runtime_capability": null,
+      "runtime_targets": [
+        "Codex",
+        "ChatGPT Work Local/Desktop"
+      ],
+      "schema": "plugin-builder-application-tool-v2",
+      "side_effects": [],
+      "skill_bindings": [
+        "consulting-source-evidence"
+      ],
+      "verification": {
+        "argv": [
+          "{python}",
+          "tools/steam_contract_checks.py"
+        ],
+        "kind": "PYTHON_ARGV",
+        "network": false
+      }
+    }
+  ],
+  "tools_sha256": "ce98d6d6964c32c984dbdc3f6465a96e50c4dd528a9247dcb536ca707bbde899"
+}

@@ -88,6 +88,19 @@
           "mode": "not_applicable"
         }
       }
+    },
+    {
+      "application_config": "applications/steam-parent-child-learning/conversion.json",
+      "distribution_contract": "applications/steam-parent-child-learning/openclaw/distribution.json",
+      "targets": {
+        "codex": {
+          "destination": "plugins/steam-parent-child-learning",
+          "mode": "build"
+        },
+        "openclaw": {
+          "mode": "not_applicable"
+        }
+      }
     }
   ]
 }

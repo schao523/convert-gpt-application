@@ -1,0 +1,2 @@
+# Content provenance
+Shen-Chang Chao declares supplied references project/self-authored and no uncleared third-party images in the distribution. This is the owner declaration, not an independent audit. Original citations remain distinguishable from project-authored teaching content. R02 approval and separate closure records govern historical pending headers; remaining QC exceptions remain disclosed. No new external images or copied third-party source documents are bundled.
