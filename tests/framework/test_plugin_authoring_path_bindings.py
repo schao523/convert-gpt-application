@@ -83,6 +83,26 @@ class PluginAuthoringPathBindingTests(unittest.TestCase):
             self.issues(),
         )
 
+    def test_prefixed_plugin_root_paths_in_skill_prose_remain_invalid(self) -> None:
+        tools = self.root / "tools"
+        tools.mkdir()
+        (tools / "run.py").write_text("print('ok')", encoding="utf-8")
+        for token in ("/tools/run.py", "\\tools/run.py"):
+            with self.subTest(token=token):
+                (self.skill / "SKILL.md").write_text(f"Run `{token}`.\n", encoding="utf-8")
+                self.assertIn(
+                    f"path_binding_invalid:skills/example/SKILL.md:{token}",
+                    self.issues(),
+                )
+
+    def test_runtime_document_placeholder_is_not_an_absolute_skill_binding(self) -> None:
+        runtime = self.root / "runtime"
+        runtime.mkdir()
+        (runtime / "scenarios.md").write_text(
+            "Use `<workspace>/t1/session.json` for the test fixture.\n", encoding="utf-8"
+        )
+        self.assertEqual(self.issues(), ())
+
     def test_plugin_root_symlink_escape_is_invalid(self) -> None:
         with tempfile.TemporaryDirectory() as outside_dir:
             outside = Path(outside_dir) / "outside-tool.py"
