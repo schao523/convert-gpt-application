@@ -14,11 +14,15 @@ ROOT = Path(__file__).resolve().parents[1]
 SCRIPTS = ROOT / "scripts"
 DESIGN_FIXTURE = Path(__file__).parent / "fixtures" / "design-package-create"
 PLAN_FIXTURE = Path(__file__).parent / "fixtures" / "plan-create.json"
+TESTS = Path(__file__).parent
 if str(SCRIPTS) not in sys.path:
     sys.path.insert(0, str(SCRIPTS))
+if str(TESTS) not in sys.path:
+    sys.path.insert(0, str(TESTS))
 
 from plugin_builder_core.inspection import inspect_design_package
 from plugin_builder_core.bootstrap import plugin_authoring
+from test_create_candidate import configure_direct_local_v2
 
 
 class PlanningWorkflowTests(unittest.TestCase):
@@ -354,6 +358,30 @@ class PlanningWorkflowTests(unittest.TestCase):
             ["normalize-content", "traceability-review"],
         )
         self.assertEqual(document["plan_sha256"], session["plan"]["sha256"])
+
+    def test_direct_local_v2_setup_and_contract_are_bound_by_w1_hash(self) -> None:
+        payload = self.proposal()
+        configure_direct_local_v2(payload)
+        self.write_proposal(payload)
+        planned, plan = self.plan()
+        tool = plan["tools"][0]
+        self.assertEqual(tool["dependencies"][0]["id"], "python-runtime")
+        self.assertEqual({item["id"] for item in tool["permissions"]}, {"workspace:read", "workspace:write"})
+        self.assertEqual(tool["fallback"]["policy"], "BLOCK")
+        self.assertTrue(all(item["adapter_version"] == "2" for item in tool["realizations"]))
+        self.assertTrue(all(item["setup_requirements"] for item in tool["realizations"]))
+        approved = self.run_cli(
+            "approve-w1", "--session", str(self.session_path),
+            "--confirmed-by", "fixture owner", "--evidence", "reviewed local Python route", "--json",
+        )
+        self.assertEqual(approved.returncode, 0, approved.stdout)
+        session = json.loads(self.session_path.read_text(encoding="utf-8"))
+        self.assertEqual(session["w1"]["plan_sha256"], planned["plan_sha256"])
+        payload["tools"][0]["realizations"][0]["setup_requirements"].append("Confirm result delivery.")
+        self.write_proposal(payload)
+        revised, _ = self.plan()
+        self.assertNotEqual(revised["plan_sha256"], planned["plan_sha256"])
+        self.assertIsNone(json.loads(self.session_path.read_text(encoding="utf-8"))["w1"])
 
     def test_new_legacy_proposal_is_blocked_without_session_or_plan_mutation(self) -> None:
         self.plan()

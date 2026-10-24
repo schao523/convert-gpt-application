@@ -37,6 +37,21 @@ def realization(**changes: object) -> dict[str, object]:
     return payload
 
 
+def direct_local(**changes: object) -> dict[str, object]:
+    return realization(**{
+        "adapter_id": "direct-local",
+        "adapter_version": "2",
+        "mechanism": "DIRECT_LOCAL",
+        "transport": "DIRECT_ARGV",
+        "execution_location": "USER_DEVICE",
+        "dependency_ids": ["python-runtime"],
+        "permission_ids": ["workspace:read", "workspace:write"],
+        "setup_owner": "PLUGIN_USER",
+        "setup_requirements": ["Enable local Python execution and route its result to the Skill."],
+        **changes,
+    })
+
+
 class RuntimeAdapterRegistryTests(unittest.TestCase):
     def test_registry_is_immutable_canonically_ordered_and_digest_stable(self) -> None:
         first = adapter_registry()
@@ -49,6 +64,7 @@ class RuntimeAdapterRegistryTests(unittest.TestCase):
             identities,
             [
                 ("direct-local", "1"),
+                ("direct-local", "2"),
                 ("mcp-streamable-http", "1"),
                 ("runtime-native", "1"),
                 ("unsupported", "1"),
@@ -57,7 +73,7 @@ class RuntimeAdapterRegistryTests(unittest.TestCase):
         digest = adapter_registry_sha256()
         self.assertEqual(digest, adapter_registry_sha256())
         self.assertRegex(digest, re.compile(r"^[0-9a-f]{64}$"))
-        self.assertEqual(digest, "e4e4d98d51fc35b531fe5664c6d95dbb172477daaac8fb52ab697ea431138973")
+        self.assertEqual(digest, "3b5fb420381737aa90fe77afc140adc6cbe6e8747fc29b3301c4a8457ae336f6")
 
     def test_streamable_http_support_is_exactly_target_and_channel_aware(self) -> None:
         definition = next(item for item in adapter_registry() if item.adapter_id == "mcp-streamable-http")
@@ -151,6 +167,55 @@ class RuntimeAdapterRegistryTests(unittest.TestCase):
         )
         self.assertEqual(errors, ("adapter.unknown:mcp-local-process",))
         self.assertEqual(blockers, ())
+
+    def test_direct_local_v2_is_conditional_for_exact_phase_one_targets(self) -> None:
+        for target in ("Codex", "ChatGPT Work Local/Desktop"):
+            for policy in ("DEFERRED_ALLOWED", "REQUIRED_BEFORE_W2"):
+                with self.subTest(target=target, policy=policy):
+                    errors, blockers = validate_realization_against_registry(
+                        direct_local(target_runtime=target, evidence_policy=policy),
+                        installation_channel="OPENAI_PORTABLE_PLUGIN",
+                    )
+                    self.assertEqual((errors, blockers), ((), ()))
+
+    def test_direct_local_v1_stays_test_only(self) -> None:
+        errors, blockers = validate_realization_against_registry(
+            direct_local(adapter_version="1"),
+            installation_channel="OPENAI_PORTABLE_PLUGIN",
+        )
+        self.assertEqual(errors, ())
+        self.assertEqual(blockers, ("adapter.direct-local.channel_unsupported:OPENAI_PORTABLE_PLUGIN",))
+
+    def test_direct_local_v2_rejects_wrong_target_channel_and_transport(self) -> None:
+        cases = (
+            (direct_local(target_runtime="OpenClaw"), "OPENAI_PORTABLE_PLUGIN", "adapter.direct-local.target_unsupported:OpenClaw"),
+            (direct_local(), "OTHER_CHANNEL", "adapter.direct-local.channel_unsupported:OTHER_CHANNEL"),
+            (direct_local(mechanism="MCP_REMOTE_HTTPS"), "OPENAI_PORTABLE_PLUGIN", "adapter.direct-local.mechanism_mismatch"),
+            (direct_local(transport="RUNTIME_API"), "OPENAI_PORTABLE_PLUGIN", "adapter.direct-local.transport_mismatch"),
+            (direct_local(execution_location="REMOTE_SERVICE"), "OPENAI_PORTABLE_PLUGIN", "adapter.direct-local.execution_location_mismatch"),
+        )
+        for payload, channel, diagnostic in cases:
+            with self.subTest(diagnostic=diagnostic):
+                errors, blockers = validate_realization_against_registry(payload, installation_channel=channel)
+                self.assertIn(diagnostic, errors + blockers)
+
+    def test_direct_local_v2_requires_explicit_setup_and_evidence_policy(self) -> None:
+        cases = (
+            ({"feasibility_state": "FEASIBLE"}, "adapter.direct-local.setup_state_required"),
+            ({"setup_owner": " "}, "adapter.direct-local.setup_owner_required"),
+            ({"setup_owner": None}, "adapter.direct-local.setup_owner_required"),
+            ({"setup_requirements": []}, "adapter.direct-local.setup_requirements_required"),
+            ({"setup_requirements": [" "]}, "adapter.direct-local.setup_requirements_required"),
+            ({"setup_requirements": [42]}, "adapter.direct-local.setup_requirements_required"),
+            ({"evidence_policy": None}, "adapter.direct-local.evidence_policy_required"),
+            ({"evidence_policy": "ASSUMED_PASS"}, "adapter.direct-local.evidence_policy_required"),
+        )
+        for changes, diagnostic in cases:
+            with self.subTest(diagnostic=diagnostic, changes=changes):
+                errors, blockers = validate_realization_against_registry(
+                    direct_local(**changes), installation_channel="OPENAI_PORTABLE_PLUGIN"
+                )
+                self.assertIn(diagnostic, errors + blockers)
 
 
 if __name__ == "__main__":

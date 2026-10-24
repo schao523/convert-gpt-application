@@ -43,6 +43,21 @@ _REGISTRY = tuple(sorted((
         endpoint_policy="NOT_APPLICABLE",
     ),
     AdapterDefinition(
+        adapter_id="direct-local",
+        adapter_version="2",
+        mechanism="DIRECT_LOCAL",
+        transport="DIRECT_ARGV",
+        execution_location="USER_DEVICE",
+        runtime_targets=_PHASE_ONE_TARGETS,
+        installation_channels=("OPENAI_PORTABLE_PLUGIN",),
+        verification_channels=("PLUGIN_BUILDER_LOCAL_TEST",),
+        configuration_files=(),
+        dependency_providers=("BUNDLED", "OWNER_CONFIGURED"),
+        permission_ids=("workspace:read", "workspace:write"),
+        evidence_layers=("STRUCTURE", "OPERATION", "INSTALLED_REALIZATION"),
+        endpoint_policy="NOT_APPLICABLE",
+    ),
+    AdapterDefinition(
         adapter_id="mcp-streamable-http",
         adapter_version="1",
         mechanism="MCP_REMOTE_HTTPS",
@@ -139,6 +154,20 @@ def validate_realization_against_registry(
     target = realization.get("target_runtime")
     if target not in definition.runtime_targets:
         errors.append(f"{prefix}.target_unsupported:{target}")
+
+    if adapter_id == "direct-local" and version == "2":
+        if realization.get("feasibility_state") != "FEASIBLE_WITH_SETUP":
+            errors.append(f"{prefix}.setup_state_required")
+        owner = realization.get("setup_owner")
+        if not isinstance(owner, str) or not owner.strip():
+            errors.append(f"{prefix}.setup_owner_required")
+        steps = realization.get("setup_requirements")
+        if not isinstance(steps, list) or not steps or any(
+            not isinstance(step, str) or not step.strip() for step in steps
+        ):
+            errors.append(f"{prefix}.setup_requirements_required")
+        if realization.get("evidence_policy") not in {"DEFERRED_ALLOWED", "REQUIRED_BEFORE_W2"}:
+            errors.append(f"{prefix}.evidence_policy_required")
 
     if installation_channel in definition.verification_channels:
         blockers.append(f"{prefix}.verification_channel_not_installed")
