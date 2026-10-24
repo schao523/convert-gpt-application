@@ -31,7 +31,7 @@ class RuntimeKitBuilderTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
             release = root / "release"
-            release_builder.build_release(ROOT, release, "1.0.1")
+            release_builder.build_release(ROOT, release, "1.0.2")
             plugin_zip = root / "plugin.zip"
             release_builder.write_upload_archive(release, plugin_zip)
             first = root / "kit-a.zip"
@@ -77,7 +77,7 @@ class RuntimeKitBuilderTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
             release = root / "release"
-            release_builder.build_release(ROOT, release, "1.0.1")
+            release_builder.build_release(ROOT, release, "1.0.2")
             plugin_zip = root / "plugin.zip"
             release_builder.write_upload_archive(release, plugin_zip)
             kit = root / "kit.zip"

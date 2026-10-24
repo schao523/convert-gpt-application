@@ -30,7 +30,7 @@
       "application_config": "applications/plugin-builder/conversion.json",
       "distribution_contract": "applications/plugin-builder/openclaw/distribution.json",
       "targets": {
-        "codex": {"mode": "verify_existing", "destination": "plugins/plugin-builder"},
+        "codex": {"mode": "build", "destination": "plugins/plugin-builder"},
         "openclaw": {"mode": "not_applicable"}
       }
     },

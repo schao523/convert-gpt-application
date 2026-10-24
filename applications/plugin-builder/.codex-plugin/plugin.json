@@ -1,6 +1,6 @@
 {
   "name": "plugin-builder",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Build and update local OpenAI plugins from approved design packages.",
   "author": {
     "name": "Obvious One"
