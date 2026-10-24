@@ -436,9 +436,10 @@ def validate_path_bindings(root: Path) -> tuple[ValidationIssue, ...]:
                 issues.append(_issue("path_binding_invalid", relative, token))
                 continue
             if path.name == "SKILL.md":
-                target = path.parent.joinpath(*PurePosixPath(safe).parts)
+                scope = plugin_root if safe.startswith(("tools/", "skills/")) else path.parent
+                target = scope.joinpath(*PurePosixPath(safe).parts)
                 try:
-                    target.resolve(strict=False).relative_to(path.parent.resolve(strict=True))
+                    target.resolve(strict=False).relative_to(scope.resolve(strict=True))
                 except (OSError, ValueError):
                     issues.append(_issue("path_binding_invalid", relative, token))
                 else:
