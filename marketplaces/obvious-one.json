@@ -95,7 +95,7 @@
       "targets": {
         "codex": {
           "destination": "plugins/steam-parent-child-learning",
-          "mode": "build"
+          "mode": "verify_existing"
         },
         "openclaw": {
           "mode": "not_applicable"
