@@ -68,6 +68,10 @@ _PATH_TOKEN = re.compile(
     r"(?:[A-Za-z]:[\\/][^\s`\"'<>]+|(?:\.\.?[\\/])[^\s`\"'<>]+|"
     r"(?:[A-Za-z0-9_.-]+[\\/])+[A-Za-z0-9_.-]+\.(?:md|json|ya?ml|py|txt))"
 )
+_PREFIXED_SKILL_PATH = re.compile(
+    r"(?<![A-Za-z0-9_./:\\>-])[\\/]+"
+    r"(?:[A-Za-z0-9_.-]+[\\/])+[A-Za-z0-9_.-]+\.(?:md|json|ya?ml|py|txt)"
+)
 
 
 @dataclass(frozen=True, order=True)
@@ -428,6 +432,7 @@ def validate_path_bindings(root: Path) -> tuple[ValidationIssue, ...]:
         tokens = _path_tokens(payload)
         if path.name == "SKILL.md":
             tokens.update(_markdown_targets(text))
+            tokens.update(match.group(0) for match in _PREFIXED_SKILL_PATH.finditer(text))
         for token in sorted(tokens):
             if "://" in token:
                 continue
@@ -436,9 +441,10 @@ def validate_path_bindings(root: Path) -> tuple[ValidationIssue, ...]:
                 issues.append(_issue("path_binding_invalid", relative, token))
                 continue
             if path.name == "SKILL.md":
-                target = path.parent.joinpath(*PurePosixPath(safe).parts)
+                scope = plugin_root if safe.startswith(("tools/", "skills/")) else path.parent
+                target = scope.joinpath(*PurePosixPath(safe).parts)
                 try:
-                    target.resolve(strict=False).relative_to(path.parent.resolve(strict=True))
+                    target.resolve(strict=False).relative_to(scope.resolve(strict=True))
                 except (OSError, ValueError):
                     issues.append(_issue("path_binding_invalid", relative, token))
                 else:

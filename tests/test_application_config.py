@@ -39,7 +39,7 @@ class ApplicationConfigTests(unittest.TestCase):
             "openclaw/cool-plugin-design-assistant",
         )
 
-    def test_published_targets_are_not_left_in_build_mode(self) -> None:
+    def test_only_unpublished_plugin_builder_candidate_is_in_build_mode(self) -> None:
         catalog = load_preparation_catalog(
             ROOT / "marketplaces" / "obvious-one.json", ROOT
         )
@@ -50,7 +50,7 @@ class ApplicationConfigTests(unittest.TestCase):
             if target.mode == "build"
         }
 
-        self.assertEqual(build_targets, set())
+        self.assertEqual(build_targets, {("plugin-builder", "codex")})
 
     def test_all_cataloged_target_destinations_match_application_identity(self) -> None:
         catalog = load_preparation_catalog(
@@ -157,7 +157,7 @@ class ApplicationConfigTests(unittest.TestCase):
         configs = {item.plugin_id: item for item in discover_applications(ROOT)}
         builder = configs["plugin-builder"]
 
-        self.assertEqual(builder.version, "1.0.1")
+        self.assertEqual(builder.version, "1.0.2")
         self.assertIsNone(builder.verification.marketplace)
         self.assertEqual(
             {
