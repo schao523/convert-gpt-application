@@ -1,0 +1,17 @@
+{
+  "author": "Shen-Chang Chao",
+  "codex_destination": "plugins/steam-parent-child-learning",
+  "confirmed_by": "Plugin Owner (chat approval)",
+  "copyright_year": 2026,
+  "decision_recorded_at": "2026-10-24T15:28:42.4006381+08:00",
+  "license": "MIT",
+  "marketplace_id": "obvious-one",
+  "plugin_id": "steam-parent-child-learning",
+  "public_marketplace_approved": true,
+  "redistribution_approved": true,
+  "schema": "plugin-publication-decisions-v1",
+  "target_runtime": "CODEX",
+  "third_party_content": "NONE",
+  "third_party_content_reviewed": true,
+  "version": "1.0.0"
+}

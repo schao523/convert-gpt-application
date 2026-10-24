@@ -1,0 +1,3 @@
+interface:
+  display_name: "Evaluating Playtests"
+  short_description: "Guide supervised playtesting, distinguish function from learning, and propose versioned improvements."
