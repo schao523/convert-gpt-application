@@ -125,6 +125,27 @@ class CandidateVerificationTests(unittest.TestCase):
         self.assertEqual(verified.returncode, 2, verified.stdout)
         self.assertIn("verify.tool_bindings_mismatch", verified.stdout)
 
+    def test_skill_path_mention_does_not_replace_stable_tool_routing(self) -> None:
+        workspace = self._workspace()
+        candidate = workspace / "candidate"
+        skill_path = candidate / "skills/answering-structured-requests/SKILL.md"
+        skill_path.write_text(
+            skill_path.read_text(encoding="utf-8").replace("`normalize-input`", "`tools/normalize.py`"),
+            encoding="utf-8",
+        )
+        session_path = workspace / "session.json"
+        session = json.loads(session_path.read_text(encoding="utf-8"))
+        session["candidate"]["sha256"] = plugin_authoring.tree_sha256(candidate)
+        session_path.write_text(json.dumps(session, sort_keys=True), encoding="utf-8")
+        verified = self._verify(workspace)
+        self.assertEqual(verified.returncode, 2, verified.stdout)
+        report = self._report(workspace)
+        binding = next(item for item in report["checks"] if item["kind"] == "TOOL_BINDING")
+        self.assertIn(
+            "tool_skill_unrouted:normalize-input:answering-structured-requests",
+            binding["diagnostics"],
+        )
+
     def test_approved_behavior_preserving_alternative_satisfies_primary_requirement(self) -> None:
         contracts = [
             {"id": "primary", "operation": {"id": "primary-op"}, "requirement_ids": ["RQ1"],

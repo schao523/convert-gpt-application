@@ -50,22 +50,51 @@ class PluginAuthoringPathBindingTests(unittest.TestCase):
         )
         self.assertEqual(self.issues(), ())
 
-    def test_tool_contract_root_binding_is_valid_but_skill_direct_route_is_not(self) -> None:
+    def test_explicit_plugin_root_paths_resolve_without_changing_skill_local_scope(self) -> None:
         tools = self.root / "tools"
         tools.mkdir()
         (tools / "run.py").write_text("print('ok')", encoding="utf-8")
+        other = self.root / "skills/other"
+        other.mkdir()
+        (other / "SKILL.md").write_text("---\nname: other\ndescription: Other.\n---\n", encoding="utf-8")
+        references = self.skill / "references"
+        references.mkdir()
+        (references / "method.md").write_text("method", encoding="utf-8")
         (self.root / "tool.json").write_text(
             json.dumps({"schema": "plugin-builder-application-tool-v1", "files": ["tools/run.py"]}),
             encoding="utf-8",
         )
-        (self.skill / "SKILL.md").write_text("Invoke `normalize-input`.", encoding="utf-8")
+        (self.skill / "SKILL.md").write_text(
+            "Read [method](references/method.md) and [other](skills/other/SKILL.md); see `tools/run.py`.",
+            encoding="utf-8",
+        )
         self.assertEqual(self.issues(), ())
 
-        (self.skill / "SKILL.md").write_text("Run `tools/run.py`.", encoding="utf-8")
+    def test_missing_explicit_plugin_root_paths_are_reported(self) -> None:
+        (self.skill / "SKILL.md").write_text(
+            "See `tools/missing.py` and [other](skills/missing/SKILL.md).", encoding="utf-8"
+        )
         self.assertIn(
-            "path_binding_missing:skills/example/SKILL.md:tools/run.py",
+            "path_binding_missing:skills/example/SKILL.md:tools/missing.py",
             self.issues(),
         )
+        self.assertIn(
+            "path_binding_missing:skills/example/SKILL.md:skills/missing/SKILL.md",
+            self.issues(),
+        )
+
+    def test_plugin_root_symlink_escape_is_invalid(self) -> None:
+        with tempfile.TemporaryDirectory() as outside_dir:
+            outside = Path(outside_dir) / "outside-tool.py"
+            outside.write_text("print('outside')", encoding="utf-8")
+            try:
+                tools = self.root / "tools"
+                tools.mkdir()
+                (tools / "escape.py").symlink_to(outside)
+            except OSError as error:
+                self.skipTest(f"native symlink unavailable: {error}")
+            (self.skill / "SKILL.md").write_text("See `tools/escape.py`.", encoding="utf-8")
+            self.assertIn("path_binding_invalid:skills/example/SKILL.md:tools/escape.py", self.issues())
 
 
 if __name__ == "__main__":
