@@ -1,6 +1,6 @@
 # Plugin Builder 1.0.2 bounded local-Python integration design
 
-Status: **proposed for owner review**. This document authorizes no implementation or publication by itself.
+Status: **approved by owner on 2026-10-24**. Implementation requires the separately reviewed plan; publication remains a separate decision.
 
 ## Intent and boundary
 
