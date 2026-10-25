@@ -257,7 +257,16 @@ def build_release(source: Path, destination: Path, version: str) -> ReleaseRepor
                 raise ValueError(f"shared runtime is unavailable: {package_name}")
             vendor_package = vendor_parent / package_name
             vendor_package.mkdir(parents=True, exist_ok=True)
-            for candidate in sorted(framework_package.glob("*.py"), key=lambda path: path.name):
+            allowed_names = sorted(
+                Path(relative).name
+                for relative in audit.VENDOR_FILES
+                if Path(relative).parent.as_posix()
+                == f"scripts/vendor/obvious_one_plugin_framework/{package_name}"
+            )
+            for name in allowed_names:
+                candidate = framework_package / name
+                if not candidate.is_file():
+                    raise ValueError(f"shared runtime file is unavailable: {package_name}/{name}")
                 shutil.copyfile(candidate, vendor_package / candidate.name)
 
         errors = audit.audit_tree(staged_plugin)
