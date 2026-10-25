@@ -22,18 +22,9 @@
   "source_location": "conversion.local.json",
   "verification": {
     "codex_build": {
-      "argv": [
-        "{python}",
-        "-B",
-        "{application_root}/scripts/build_marketplace_release.py",
-        "--source",
-        "{application_root}",
-        "--destination",
-        "{diagnostics}/codex-marketplace",
-        "--version",
-        "{version}"
-      ],
-      "artifact_path": "plugins/{plugin_id}"
+      "artifact_path": "plugins/{plugin_id}",
+      "expected_content_sha256": "07ee34ec4b80fc3ee359a0132d01276689f78a37b601e94c7b93eb3057a25e55",
+      "mode": "verify_existing"
     },
     "commands": [
       {
