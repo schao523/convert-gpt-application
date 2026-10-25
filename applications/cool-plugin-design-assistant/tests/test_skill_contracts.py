@@ -17,6 +17,17 @@ def read_reference(skill: str, filename: str) -> str:
 
 
 class SkillContractTests(unittest.TestCase):
+    def test_chat_source_handoff_routes_work_continuation(self) -> None:
+        skill = read_skill("creating-application-plugin-design-specifications")
+        guide = read_reference("creating-application-plugin-design-specifications", "source-handoff-guide.md")
+        self.assertIn("source-handoff-guide.md", skill)
+        self.assertIn("SOURCE HANDOFF — PREFLIGHT NOT VERIFIED", skill + guide)
+        self.assertIn("preflight-source-handoff", guide)
+        self.assertIn("normalize-handoff-package", guide)
+        self.assertIn("Assistant A", guide)
+        self.assertIn("Assistant B", guide)
+        self.assertIn("canonical validation", guide.lower())
+
     def test_handoff_packaging_requires_deterministic_digest_bound_normalization(self) -> None:
         skill = read_skill("creating-application-plugin-design-specifications")
         contract = read_reference(

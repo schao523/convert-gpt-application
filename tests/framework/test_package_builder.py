@@ -82,6 +82,20 @@ class PackageBuilderTests(unittest.TestCase):
 
         self.assertFalse((result.output / "vendor").exists())
 
+    def test_declared_framework_packages_are_bundled_and_verified_without_rag(self) -> None:
+        contract = replace(
+            self.contract(), rag=None,
+            framework_packages=("plugin_authoring", "workbench_handoff"),
+        )
+        first = build_package(contract, self.output / "framework-one")
+        second = build_package(contract, self.output / "framework-two")
+        bundled = first.output / "vendor/obvious-one-framework/obvious_one_plugin_framework"
+        self.assertTrue((bundled / "__init__.py").is_file())
+        self.assertTrue((bundled / "workbench_handoff/preflight.py").is_file())
+        self.assertTrue((bundled / "plugin_authoring/archive.py").is_file())
+        self.assertEqual(first.content_sha256, second.content_sha256)
+        self.assertEqual(verify_package(contract, first.output), first)
+
     def test_repeat_build_has_identical_content_identity(self) -> None:
         one = build_package(self.contract(), self.output / "one")
         two = build_package(self.contract(), self.output / "two")

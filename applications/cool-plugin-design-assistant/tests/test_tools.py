@@ -131,6 +131,38 @@ def write_approved_handoff_package(
 
 
 class ToolTests(unittest.TestCase):
+    def test_source_preflight_cli_passes_and_reports_blocked_and_incomplete(self) -> None:
+        with test_temp_directory() as temp:
+            source = Path(temp) / "approved.zip"
+            write_approved_handoff_package(source)
+            result = subprocess.run(
+                [sys.executable, "-B", str(SCRIPT), "preflight-source-handoff", str(source), "--json"],
+                capture_output=True, text=True, check=False,
+            )
+            document = json.loads(result.stdout)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertEqual(document["status"], "PASS", document)
+            self.assertEqual(document["input_profile"], "COOL_DESIGN_ASSISTANT_FULL_V1")
+            self.assertTrue(document["normalization_ready"])
+
+            unknown = Path(temp) / "unknown.zip"
+            with zipfile.ZipFile(unknown, "w") as output:
+                output.writestr("staging.json", "{}")
+            result = subprocess.run(
+                [sys.executable, "-B", str(SCRIPT), "preflight-source-handoff", str(unknown), "--json"],
+                capture_output=True, text=True, check=False,
+            )
+            self.assertEqual(result.returncode, 2)
+            self.assertIn("profile.unrecognized", json.loads(result.stdout)["errors"])
+
+            with mock.patch.object(tool, "_load_workbench_handoff", side_effect=RuntimeError("unavailable")):
+                incomplete = tool.preflight_source_handoff(source)
+            self.assertEqual(incomplete["status"], "INCOMPLETE")
+            self.assertEqual(incomplete["checks"][8]["status"], "INCOMPLETE")
+            with mock.patch.object(tool, "_load_workbench_handoff", side_effect=OSError("temporary storage unavailable")):
+                incomplete = tool.preflight_source_handoff(source)
+            self.assertEqual(incomplete["status"], "INCOMPLETE")
+
     def test_normalization_report_binds_input_output_profiles_and_final_zip_digest(self) -> None:
         with test_temp_directory() as temp:
             root = Path(temp)
@@ -746,7 +778,7 @@ class ToolTests(unittest.TestCase):
         status = tool.status()
         self.assertEqual(status["status"], "PASS")
         self.assertEqual(status["plugin_id"], "cool-plugin-design-assistant")
-        self.assertEqual(status["version"], "1.0.2")
+        self.assertEqual(status["version"], "1.0.3")
         self.assertEqual(len(status["skills"]), 7)
         self.assertEqual(status["rag"], "NOT APPLICABLE")
         self.assertEqual(status["clawhub"], "NOT APPLICABLE")

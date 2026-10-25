@@ -27,6 +27,13 @@ contains exactly one semantic authority; a canonical pair must not be combined
 with `handoff_manifest.json`, `delta_handoff_manifest.json`, or another legacy
 authority. Mixed authorities are ambiguous and remain blocked.
 
+When a Chat Assistant cannot run official normalization, follow the
+[Source Handoff guide](source-handoff-guide.md). Transfer the approved design
+using a supported full/delta source envelope and ask a Work Assistant to run
+`preflight-source-handoff` before normalization. A source ZIP transferred
+without executable preflight remains `PREFLIGHT NOT VERIFIED`; it is not the
+canonical package described below.
+
 The portable package boundary has two distinct machine-readable documents:
 
 - `package-manifest.json` inventories the package, artifact roles, immutable

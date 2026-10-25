@@ -790,6 +790,32 @@ def normalize_handoff_package(
     return report
 
 
+def preflight_source_handoff(source: str | Path) -> dict[str, Any]:
+    """Inspect one source ZIP through the installed shared Workbench contract."""
+    try:
+        runtime = _load_workbench_handoff()
+        return dict(runtime.preflight_handoff_archive(Path(source)).report)
+    except (RuntimeError, ImportError, AttributeError, OSError):
+        code = "preflight.runtime_unavailable"
+        return {
+            "operation": "preflight-source-handoff", "status": "INCOMPLETE",
+            "input_profile": "UNKNOWN", "target_output_profile": "WORKBENCH_HANDOFF_V1_1",
+            "source_archive_sha256": None, "normalization_ready": False,
+            "supported_input_profiles": [],
+            "checks": [
+                {"id": f"PF{number:02d}", "status": "INCOMPLETE" if number == 9 else "NOT VERIFIED", "diagnostics": [code] if number == 9 else []}
+                for number in range(1, 11)
+            ],
+            "diagnostics": [{
+                "check_id": "PF09", "status": "INCOMPLETE", "severity": "ERROR",
+                "location": None, "requirement_id": None, "code": code,
+                "explanation": "Shared Workbench handoff runtime is unavailable.",
+                "corrective_action": "Run preflight in an environment with the installed Workbench runtime.",
+            }],
+            "errors": [code],
+        }
+
+
 def coverage_report(payload: Any) -> dict[str, Any]:
     """Return coverage only when requirements and mappings are explicit."""
 
@@ -846,7 +872,7 @@ def status() -> dict[str, Any]:
     return {
         "status": "PASS",
         "plugin_id": "cool-plugin-design-assistant",
-        "version": "1.0.2",
+        "version": "1.0.3",
         "skills": list(SKILL_NAMES),
         "rag": "NOT APPLICABLE",
         "clawhub": "NOT APPLICABLE",
@@ -905,6 +931,9 @@ def _parser() -> argparse.ArgumentParser:
         default="OPENAI_ONLY_PHASE_ONE",
     )
     add_json(normalize)
+    preflight = commands.add_parser("preflight-source-handoff")
+    preflight.add_argument("source")
+    add_json(preflight)
     audit = commands.add_parser("distribution-audit")
     audit.add_argument("stage", nargs="?", default=str(Path(__file__).resolve().parents[1]))
     add_json(audit)
@@ -971,6 +1000,8 @@ def main(argv: list[str] | None = None) -> int:
             result_status = report.pop("status")
             errors = report.pop("diagnostics")
             document = _document(operation, result_status, errors, **report)
+        elif operation == "preflight-source-handoff":
+            document = preflight_source_handoff(args.source)
         elif operation == "coverage":
             report = coverage_report(_load_json(args.artifact))
             report_status = report.pop("status")
