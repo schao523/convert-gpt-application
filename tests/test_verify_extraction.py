@@ -425,6 +425,30 @@ class VerifierSelectionAndAggregationTests(unittest.TestCase):
             self.assertEqual(gate.gate_id, "provenance")
             self.assertEqual(gate.state, "PASS")
 
+    def test_historical_approved_findings_can_be_cleared_but_not_expanded(self) -> None:
+        configs = {
+            config.plugin_id: config
+            for config in verifier.discover_applications(verifier.ROOT)
+        }
+        for plugin_id in (
+            "cool-gpt-application-design-assistant",
+            "steam-parent-child-learning",
+        ):
+            with self.subTest(plugin_id=plugin_id):
+                config = configs[plugin_id]
+                payload = json.loads(config.source_inventory.read_text(encoding="utf-8"))
+                verifier._validate_onboarding_inventory(payload, config)
+                new_issue = verifier.plugin_authoring.ValidationIssue(
+                    "path_binding_missing", "skills/new/SKILL.md", "tools/new.py"
+                )
+                with patch.object(
+                    verifier.plugin_authoring, "validate_plugin_tree", return_value=(new_issue,)
+                ):
+                    with self.assertRaisesRegex(
+                        verifier.ProvenanceError,
+                        "onboarding_structural_compatibility_mismatch",
+                    ):
+                        verifier._validate_onboarding_inventory(payload, config)
     def test_parser_defaults_to_all_and_supports_explicit_selection(self) -> None:
         default = build_parser().parse_args([])
         self.assertFalse(default.all)

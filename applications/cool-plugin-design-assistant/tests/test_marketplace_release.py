@@ -61,7 +61,7 @@ class MarketplaceReleaseTests(unittest.TestCase):
         }
         self.assertEqual(modes["cool-bible-tutor"], "verify_existing")
         self.assertEqual(modes["vibe-coding-designer"], "verify_existing")
-        self.assertEqual(modes["cool-plugin-design-assistant"], "build")
+        self.assertEqual(modes["cool-plugin-design-assistant"], "verify_existing")
 
     def test_codex_release_is_deterministic_and_allowlisted(self) -> None:
         release = load_script("build_marketplace_release.py")

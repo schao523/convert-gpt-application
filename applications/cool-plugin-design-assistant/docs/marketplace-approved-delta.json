@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
-  "marketplace_commit": "5deedc580acb9afa276f81abeca15e91ce20a56c",
+  "marketplace_commit": "d0f560e4f7b3c6017dfb942844a2d048757b563f",
   "rationale": {
-    "digest_mismatch": "Only the post-publication commit binding and publication-status note may differ from the immutable published artifact.",
+    "digest_mismatch": "Only the post-publication commit binding and runtime/publication evidence note may differ from the immutable published artifact.",
     "missing": "No missing files are approved for the published plugin artifacts.",
     "unexpected": "Marketplace-only control files are not application artifact inputs."
   },
