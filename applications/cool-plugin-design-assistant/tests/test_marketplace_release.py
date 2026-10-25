@@ -47,7 +47,9 @@ class MarketplaceReleaseTests(unittest.TestCase):
                 capture_output=True, text=True, check=False,
             )
             self.assertEqual(result.returncode, 0, result.stderr)
-            self.assertTrue(Path(result.stdout.strip()).is_relative_to(bundled))
+            self.assertTrue(
+                Path(result.stdout.strip()).resolve().is_relative_to(bundled.resolve())
+            )
 
     def test_obvious_one_catalog_preserves_published_applications(self) -> None:
         catalog = load_preparation_catalog(
