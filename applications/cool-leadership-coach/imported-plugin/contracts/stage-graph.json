@@ -1,0 +1,267 @@
+{
+  "method_verified_by_learning": false,
+  "navigation_is_completion": false,
+  "schema": "leadership-stage-graph-v1",
+  "workflows": {
+    "WF-B": {
+      "end": "B-END",
+      "entry": "B0",
+      "non_success_terminals": [
+        "PAUSED",
+        "STOPPED",
+        "DECLINED",
+        "BLOCKED"
+      ],
+      "stages": [
+        {
+          "advance_requires": [
+            "authentic_reply",
+            "learner_confirmation"
+          ],
+          "id": "B1",
+          "interaction": [
+            "ACTION",
+            "WAIT_FOR_USER",
+            "REFLECT/CONFIRM"
+          ],
+          "next": "B2"
+        },
+        {
+          "advance_requires": [
+            "authentic_reply",
+            "learner_confirmation"
+          ],
+          "id": "B2",
+          "interaction": [
+            "ACTION",
+            "WAIT_FOR_USER",
+            "REFLECT/CONFIRM"
+          ],
+          "next": "B3"
+        },
+        {
+          "advance_requires": [
+            "authentic_reply",
+            "learner_confirmation"
+          ],
+          "id": "B3",
+          "interaction": [
+            "ACTION",
+            "WAIT_FOR_USER",
+            "REFLECT/CONFIRM"
+          ],
+          "next": "B4"
+        },
+        {
+          "advance_requires": [
+            "authentic_reply",
+            "learner_confirmation"
+          ],
+          "id": "B4",
+          "interaction": [
+            "ACTION",
+            "WAIT_FOR_USER",
+            "REFLECT/CONFIRM"
+          ],
+          "next": "B5"
+        },
+        {
+          "advance_requires": [
+            "authentic_reply",
+            "learner_confirmation"
+          ],
+          "id": "B5",
+          "interaction": [
+            "ACTION",
+            "WAIT_FOR_USER",
+            "REFLECT/CONFIRM"
+          ],
+          "next": "B6"
+        },
+        {
+          "advance_requires": [
+            "authentic_reply",
+            "learner_confirmation"
+          ],
+          "id": "B6",
+          "interaction": [
+            "ACTION",
+            "WAIT_FOR_USER",
+            "REFLECT/CONFIRM"
+          ],
+          "next": "B7"
+        },
+        {
+          "advance_requires": [
+            "authentic_reply",
+            "learner_confirmation"
+          ],
+          "id": "B7",
+          "interaction": [
+            "ACTION",
+            "WAIT_FOR_USER",
+            "REFLECT/CONFIRM"
+          ],
+          "next": "B8"
+        },
+        {
+          "advance_requires": [
+            "authentic_reply",
+            "learner_confirmation",
+            "cultural_historical_distance_textual_basis",
+            "whole_bible_consistency_textual_basis"
+          ],
+          "id": "B8",
+          "interaction": [
+            "ACTION",
+            "WAIT_FOR_USER",
+            "REFLECT/CONFIRM"
+          ],
+          "next": "B9"
+        },
+        {
+          "advance_requires": [
+            "authentic_reply",
+            "learner_confirmation"
+          ],
+          "id": "B9",
+          "interaction": [
+            "ACTION",
+            "WAIT_FOR_USER",
+            "REFLECT/CONFIRM"
+          ],
+          "next": "B10"
+        },
+        {
+          "advance_requires": [
+            "authentic_reply",
+            "learner_confirmation"
+          ],
+          "id": "B10",
+          "interaction": [
+            "ACTION",
+            "WAIT_FOR_USER",
+            "REFLECT/CONFIRM"
+          ],
+          "next": "B-END"
+        }
+      ]
+    },
+    "WF-L": {
+      "end": "L-END",
+      "entry": "L0",
+      "non_success_terminals": [
+        "PAUSED",
+        "STOPPED",
+        "DECLINED",
+        "BLOCKED"
+      ],
+      "stages": [
+        {
+          "advance_requires": [
+            "authentic_reply",
+            "learner_confirmation"
+          ],
+          "id": "L1",
+          "interaction": [
+            "ACTION",
+            "WAIT_FOR_USER",
+            "REFLECT/CONFIRM"
+          ],
+          "next": "L2"
+        },
+        {
+          "advance_requires": [
+            "authentic_reply",
+            "learner_confirmation"
+          ],
+          "id": "L2",
+          "interaction": [
+            "ACTION",
+            "WAIT_FOR_USER",
+            "REFLECT/CONFIRM"
+          ],
+          "next": "L3"
+        },
+        {
+          "advance_requires": [
+            "authentic_reply",
+            "learner_confirmation"
+          ],
+          "id": "L3",
+          "interaction": [
+            "ACTION",
+            "WAIT_FOR_USER",
+            "REFLECT/CONFIRM"
+          ],
+          "next": "L4"
+        },
+        {
+          "advance_requires": [
+            "authentic_reply",
+            "learner_confirmation"
+          ],
+          "id": "L4",
+          "interaction": [
+            "ACTION",
+            "WAIT_FOR_USER",
+            "REFLECT/CONFIRM"
+          ],
+          "next": "L5"
+        },
+        {
+          "advance_requires": [
+            "authentic_reply",
+            "learner_confirmation"
+          ],
+          "id": "L5",
+          "interaction": [
+            "ACTION",
+            "WAIT_FOR_USER",
+            "REFLECT/CONFIRM"
+          ],
+          "next": "L6"
+        },
+        {
+          "advance_requires": [
+            "authentic_reply",
+            "learner_confirmation"
+          ],
+          "id": "L6",
+          "interaction": [
+            "ACTION",
+            "WAIT_FOR_USER",
+            "REFLECT/CONFIRM"
+          ],
+          "next": "L7"
+        },
+        {
+          "advance_requires": [
+            "authentic_reply",
+            "learner_confirmation"
+          ],
+          "id": "L7",
+          "interaction": [
+            "ACTION",
+            "WAIT_FOR_USER",
+            "REFLECT/CONFIRM"
+          ],
+          "next": "L8"
+        },
+        {
+          "advance_requires": [
+            "authentic_reply",
+            "learner_confirmation"
+          ],
+          "id": "L8",
+          "interaction": [
+            "ACTION",
+            "WAIT_FOR_USER",
+            "REFLECT/CONFIRM"
+          ],
+          "next": "L-END"
+        }
+      ]
+    }
+  }
+}

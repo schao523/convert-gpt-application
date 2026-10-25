@@ -1,0 +1,4 @@
+﻿unit_id,module,proposed_additional_stage,reason,source_core_existing,approval_state,deployed
+IBS-R03,IM-03,B6,總括語句有助總意濃縮，但舊 IM-03 僅綁 B2-B3,YES,PROPOSED_CONTENT_MAPPING_ONLY,NO
+IBS-H02,IM-03,B8,B8 需脈絡檢核，舊 IM-03 僅綁 B5,YES,PROPOSED_CONTENT_MAPPING_ONLY,NO
+IBS-H06,IM-03,B8,B8 需經文互證／整本聖經一致性，舊 IM-03 僅綁 B5,YES,PROPOSED_CONTENT_MAPPING_ONLY,NO

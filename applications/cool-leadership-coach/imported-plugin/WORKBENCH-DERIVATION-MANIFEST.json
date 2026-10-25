@@ -1,0 +1,357 @@
+{
+  "added_paths": [
+    "PRIVACY.md",
+    "README.md",
+    "THIRD_PARTY_CONTENT.md",
+    "THIRD_PARTY_NOTICES.md",
+    "WORKBENCH-DERIVATION-MANIFEST.json"
+  ],
+  "author": "Shen-Chang Chao",
+  "developer_name": "Shen-Chang Chao",
+  "removed_paths": [
+    "PLUGIN-BUILDER-MANIFEST.json"
+  ],
+  "runtime_evidence": "NOT VERIFIED",
+  "schema": "workbench-identity-derivation-v1",
+  "source_archive_sha256": "7603ec8f8d718b776e34ee1d8d69bf8ae19681c37b64b52415a6f19520fc640b",
+  "source_candidate_manifest_sha256": "bb594de6099f09b93ce4ef0e00e7bef4d74c1c442d3ecba24be9eb690cc03395",
+  "source_candidate_schema": "plugin-builder-candidate-manifest-v3",
+  "source_members": [
+    {
+      "path": ".codex-plugin/plugin.json",
+      "sha256": "bf1905cebe40c6d6247c6b822c632f7b8446681068525e6c2eb69a3ba66d4a0e",
+      "size": 1686
+    },
+    {
+      "path": "APPLICATION-INVARIANTS.md",
+      "sha256": "078d4631d042c3acd8baa7182b879df1e77a902d49d858320c2eb9d8da31e23d",
+      "size": 1506
+    },
+    {
+      "path": "RUNTIME-COMPATIBILITY.md",
+      "sha256": "daeb6651dc51de114bf99e8165bbe39059d2738eb484833abfbb6584d1518007",
+      "size": 1508
+    },
+    {
+      "path": "STARTER-PROMPTS.md",
+      "sha256": "8dce743a86585521e54401b00575a683aaaa5e84006ef59e555d6310254dc407",
+      "size": 664
+    },
+    {
+      "path": "contracts/source-evidence.json",
+      "sha256": "5610cbd6502cf2576b4c86be0e2ca18b44e3defed36651a87ef7c75922f7a02b",
+      "size": 825
+    },
+    {
+      "path": "contracts/stage-graph.json",
+      "sha256": "2fc9f1f1ed39d020008d2018b400f858d90fe4f1e0e555c92d850d42a0ab1ad2",
+      "size": 6037
+    },
+    {
+      "path": "plugin.json",
+      "sha256": "9b26250d4b0727fb3aa874644013239a56c117fab82f7212c853005ca003e15d",
+      "size": 1832
+    },
+    {
+      "path": "skills/answering-scripture-questions/SKILL.md",
+      "sha256": "aaaa396161e35e1d1e9192ec013989e7f6355d7b86950d1052f3b2789b8a7871",
+      "size": 2831
+    },
+    {
+      "path": "skills/answering-scripture-questions/agents/openai.yaml",
+      "sha256": "4d0278205b6a083cf7f28e49c011c56d58d6da0e5ea018b988fbeb5a5e156abe",
+      "size": 150
+    },
+    {
+      "path": "skills/coaching-leadership-growth/SKILL.md",
+      "sha256": "ca541dcbc6a39ec28738a966b006a04a4ddf5608f484a0600d663c81fd08c0f8",
+      "size": 3047
+    },
+    {
+      "path": "skills/coaching-leadership-growth/agents/openai.yaml",
+      "sha256": "b34d9b79826680a170d7541307edeceb85164f2046a1c62f5eb70efcc4b772df",
+      "size": 143
+    },
+    {
+      "path": "skills/consulting-leadership-knowledge/SKILL.md",
+      "sha256": "025e8c66090322c0ac86285dfd82d76365fb0ed94bbfea405953deeb88572984",
+      "size": 2207
+    },
+    {
+      "path": "skills/consulting-leadership-knowledge/agents/openai.yaml",
+      "sha256": "9b1d337dde745fb1ea476848f8f0ea902a9035bdaaf1aa6f041cb9a6e63191f4",
+      "size": 153
+    },
+    {
+      "path": "skills/explaining-source-evidence/SKILL.md",
+      "sha256": "d3a8acae1ce8d5a33ffaed3584f0d5c457d0b19160d314efd401eb784763e372",
+      "size": 4222
+    },
+    {
+      "path": "skills/explaining-source-evidence/agents/openai.yaml",
+      "sha256": "62630ea05f73d3668d2dc48dfd9bb73920f23b2a6ef1a3ae8b1a158b1101743f",
+      "size": 145
+    },
+    {
+      "path": "skills/explaining-source-evidence/references/Bible \u65b0\u7d04\u8056\u7d93\u548c\u5408\u672c.pdf",
+      "sha256": "4f0f9ef4c4a78b83f918c74e8f368a7e0eae515c17866c7767c310ca75786490",
+      "size": 1557874
+    },
+    {
+      "path": "skills/explaining-source-evidence/references/Bible \u820a\u7d04\u8056\u7d93\u548c\u5408\u672c.pdf",
+      "sha256": "35d193a647c821f845a2c9db38139209b95dcc5bf9413c4775532503e3fe015e",
+      "size": 4579023
+    },
+    {
+      "path": "skills/explaining-source-evidence/references/auxiliary-candidates.csv",
+      "sha256": "1d94fd9a4668cda163e8d4e501dadecec11e8fa24245f6cd856b1672bf12a2e5",
+      "size": 427
+    },
+    {
+      "path": "skills/explaining-source-evidence/references/fidelity-review.csv",
+      "sha256": "de71fbbfc89a0930a4de0b5d989ec825bd3d48e853ecef0d5da1e78aeca2886e",
+      "size": 40038
+    },
+    {
+      "path": "skills/explaining-source-evidence/references/knowledge-index.json",
+      "sha256": "984c9c4eb01335b4b6d9068bb87fbf33898bdc3af750f04facf420881428a694",
+      "size": 2725
+    },
+    {
+      "path": "skills/explaining-source-evidence/references/professional-cards.json",
+      "sha256": "6a371e433923b0cf9635db7b98b019e4727c2c41b12265808a5027d736fc2ebb",
+      "size": 408034
+    },
+    {
+      "path": "skills/explaining-source-evidence/references/professional-cards.md",
+      "sha256": "434efdf1f8bf4cc993b18b1c952ce6acb147185dedb5d5f2afa939d967732fe9",
+      "size": 134305
+    },
+    {
+      "path": "skills/explaining-source-evidence/references/professional-index.json",
+      "sha256": "750e75676c5c6552a1a09d14ae02066fa60f9948cfa143c5e535609eb6ef60a1",
+      "size": 381846
+    },
+    {
+      "path": "skills/explaining-source-evidence/references/rights-ledger.md",
+      "sha256": "f796a8895c7bff1ec7303a04fdd86de456a863b30cff857da6adc1d28a914e20",
+      "size": 1388
+    },
+    {
+      "path": "skills/explaining-source-evidence/references/source-quality.md",
+      "sha256": "47f453319f7b7b352a62910b072eb4c40b1476d4422fb0ee7cf71f043732cfd6",
+      "size": 1260
+    },
+    {
+      "path": "skills/explaining-source-evidence/references/usage-map.csv",
+      "sha256": "4ffcb7565896bfb357c7d2e8216216860b2091e7c8b69921b70a1b5a2e131798",
+      "size": 170643
+    },
+    {
+      "path": "skills/guiding-inductive-study/SKILL.md",
+      "sha256": "65bcba78e9842bd4aa190b1120651e7116a292f482eee9abeb3e6f09583e26c2",
+      "size": 3701
+    },
+    {
+      "path": "skills/guiding-inductive-study/agents/openai.yaml",
+      "sha256": "4a993eb8db963d527bcfbd3b755a0a9df3318305f50ecccf9fa25d116e2f833d",
+      "size": 142
+    },
+    {
+      "path": "skills/guiding-leadership-sessions/SKILL.md",
+      "sha256": "f2a11e44516377915df019c203528fd2d70f1d603329f5656aefbb514e49acdd",
+      "size": 3738
+    },
+    {
+      "path": "skills/guiding-leadership-sessions/agents/openai.yaml",
+      "sha256": "45b02066c5704c6fcef4671e0c216c7de1010d6e9409008ebe7274e13462a189",
+      "size": 146
+    }
+  ],
+  "source_plugin_id": "gpt-a78425d7a04b61ed25c338d0e4e210de",
+  "source_version": "0.27.0",
+  "target_display_name": "\u9177\u9818\u5c0e\u529b\u6559\u7df4",
+  "target_members_excluding_self": [
+    {
+      "path": ".codex-plugin/plugin.json",
+      "sha256": "5d4569aa5bb9f8824d0f95ff74c046da828e49173c2a00790a9e59bcebd4c77f",
+      "size": 1625
+    },
+    {
+      "path": "APPLICATION-INVARIANTS.md",
+      "sha256": "078d4631d042c3acd8baa7182b879df1e77a902d49d858320c2eb9d8da31e23d",
+      "size": 1506
+    },
+    {
+      "path": "PRIVACY.md",
+      "sha256": "fdfd595f4b12ee2b6b6fe731afd15595673daf4c2a66b851ea337860880901d3",
+      "size": 242
+    },
+    {
+      "path": "README.md",
+      "sha256": "298aba77d96681d0785038befa5856224c51f9b3f636e9e69574d0b5a1fdffdb",
+      "size": 247
+    },
+    {
+      "path": "RUNTIME-COMPATIBILITY.md",
+      "sha256": "dead430682e34e91717402705048b3b6ec6da64fee66f66a6614145d605f815c",
+      "size": 1663
+    },
+    {
+      "path": "STARTER-PROMPTS.md",
+      "sha256": "8dce743a86585521e54401b00575a683aaaa5e84006ef59e555d6310254dc407",
+      "size": 664
+    },
+    {
+      "path": "THIRD_PARTY_CONTENT.md",
+      "sha256": "63c0424bae25be5bc816b768132084412269f5f4850d6086c014d9172a507bc5",
+      "size": 209
+    },
+    {
+      "path": "THIRD_PARTY_NOTICES.md",
+      "sha256": "a81ef6ec1735c7778a30b655919ad23ecfdc791e1c517d237bc4f3791a64ed11",
+      "size": 778
+    },
+    {
+      "path": "contracts/source-evidence.json",
+      "sha256": "5610cbd6502cf2576b4c86be0e2ca18b44e3defed36651a87ef7c75922f7a02b",
+      "size": 825
+    },
+    {
+      "path": "contracts/stage-graph.json",
+      "sha256": "2fc9f1f1ed39d020008d2018b400f858d90fe4f1e0e555c92d850d42a0ab1ad2",
+      "size": 6037
+    },
+    {
+      "path": "plugin.json",
+      "sha256": "8f58814203a764c427fe20d8ed45cc4febcbd705402e8958e0c8c3aea38f2050",
+      "size": 1771
+    },
+    {
+      "path": "skills/answering-scripture-questions/SKILL.md",
+      "sha256": "aaaa396161e35e1d1e9192ec013989e7f6355d7b86950d1052f3b2789b8a7871",
+      "size": 2831
+    },
+    {
+      "path": "skills/answering-scripture-questions/agents/openai.yaml",
+      "sha256": "4d0278205b6a083cf7f28e49c011c56d58d6da0e5ea018b988fbeb5a5e156abe",
+      "size": 150
+    },
+    {
+      "path": "skills/coaching-leadership-growth/SKILL.md",
+      "sha256": "ca541dcbc6a39ec28738a966b006a04a4ddf5608f484a0600d663c81fd08c0f8",
+      "size": 3047
+    },
+    {
+      "path": "skills/coaching-leadership-growth/agents/openai.yaml",
+      "sha256": "b34d9b79826680a170d7541307edeceb85164f2046a1c62f5eb70efcc4b772df",
+      "size": 143
+    },
+    {
+      "path": "skills/consulting-leadership-knowledge/SKILL.md",
+      "sha256": "025e8c66090322c0ac86285dfd82d76365fb0ed94bbfea405953deeb88572984",
+      "size": 2207
+    },
+    {
+      "path": "skills/consulting-leadership-knowledge/agents/openai.yaml",
+      "sha256": "9b1d337dde745fb1ea476848f8f0ea902a9035bdaaf1aa6f041cb9a6e63191f4",
+      "size": 153
+    },
+    {
+      "path": "skills/explaining-source-evidence/SKILL.md",
+      "sha256": "d3a8acae1ce8d5a33ffaed3584f0d5c457d0b19160d314efd401eb784763e372",
+      "size": 4222
+    },
+    {
+      "path": "skills/explaining-source-evidence/agents/openai.yaml",
+      "sha256": "62630ea05f73d3668d2dc48dfd9bb73920f23b2a6ef1a3ae8b1a158b1101743f",
+      "size": 145
+    },
+    {
+      "path": "skills/explaining-source-evidence/references/Bible \u65b0\u7d04\u8056\u7d93\u548c\u5408\u672c.pdf",
+      "sha256": "4f0f9ef4c4a78b83f918c74e8f368a7e0eae515c17866c7767c310ca75786490",
+      "size": 1557874
+    },
+    {
+      "path": "skills/explaining-source-evidence/references/Bible \u820a\u7d04\u8056\u7d93\u548c\u5408\u672c.pdf",
+      "sha256": "35d193a647c821f845a2c9db38139209b95dcc5bf9413c4775532503e3fe015e",
+      "size": 4579023
+    },
+    {
+      "path": "skills/explaining-source-evidence/references/auxiliary-candidates.csv",
+      "sha256": "1d94fd9a4668cda163e8d4e501dadecec11e8fa24245f6cd856b1672bf12a2e5",
+      "size": 427
+    },
+    {
+      "path": "skills/explaining-source-evidence/references/fidelity-review.csv",
+      "sha256": "de71fbbfc89a0930a4de0b5d989ec825bd3d48e853ecef0d5da1e78aeca2886e",
+      "size": 40038
+    },
+    {
+      "path": "skills/explaining-source-evidence/references/knowledge-index.json",
+      "sha256": "a137b0610519da173098e8139ad5b1f4a8e5eb4296c8aed58bed8e2e9571c1f9",
+      "size": 3165
+    },
+    {
+      "path": "skills/explaining-source-evidence/references/professional-cards.json",
+      "sha256": "6a371e433923b0cf9635db7b98b019e4727c2c41b12265808a5027d736fc2ebb",
+      "size": 408034
+    },
+    {
+      "path": "skills/explaining-source-evidence/references/professional-cards.md",
+      "sha256": "434efdf1f8bf4cc993b18b1c952ce6acb147185dedb5d5f2afa939d967732fe9",
+      "size": 134305
+    },
+    {
+      "path": "skills/explaining-source-evidence/references/professional-index.json",
+      "sha256": "385dbf79fba2423dec12f75fb715b27f3159429fa7cdc2c55a93c1aadfbdbef4",
+      "size": 381888
+    },
+    {
+      "path": "skills/explaining-source-evidence/references/rights-ledger.md",
+      "sha256": "9dab16786d58806c96ffddf2eb5205f1ae42791cb6a84f9841dc6833291dfbe8",
+      "size": 1603
+    },
+    {
+      "path": "skills/explaining-source-evidence/references/source-quality.md",
+      "sha256": "221489b9e440e7bee09ea81de31d53eab9c457bd9bd8b3f015101c6a6eea7c95",
+      "size": 1232
+    },
+    {
+      "path": "skills/explaining-source-evidence/references/usage-map.csv",
+      "sha256": "4ffcb7565896bfb357c7d2e8216216860b2091e7c8b69921b70a1b5a2e131798",
+      "size": 170643
+    },
+    {
+      "path": "skills/guiding-inductive-study/SKILL.md",
+      "sha256": "65bcba78e9842bd4aa190b1120651e7116a292f482eee9abeb3e6f09583e26c2",
+      "size": 3701
+    },
+    {
+      "path": "skills/guiding-inductive-study/agents/openai.yaml",
+      "sha256": "4a993eb8db963d527bcfbd3b755a0a9df3318305f50ecccf9fa25d116e2f833d",
+      "size": 142
+    },
+    {
+      "path": "skills/guiding-leadership-sessions/SKILL.md",
+      "sha256": "f2a11e44516377915df019c203528fd2d70f1d603329f5656aefbb514e49acdd",
+      "size": 3738
+    },
+    {
+      "path": "skills/guiding-leadership-sessions/agents/openai.yaml",
+      "sha256": "45b02066c5704c6fcef4671e0c216c7de1010d6e9409008ebe7274e13462a189",
+      "size": 146
+    }
+  ],
+  "target_plugin_id": "cool-leadership-coach",
+  "target_version": "1.0.0",
+  "transformed_paths": [
+    ".codex-plugin/plugin.json",
+    "RUNTIME-COMPATIBILITY.md",
+    "plugin.json",
+    "skills/explaining-source-evidence/references/knowledge-index.json",
+    "skills/explaining-source-evidence/references/professional-index.json",
+    "skills/explaining-source-evidence/references/rights-ledger.md",
+    "skills/explaining-source-evidence/references/source-quality.md"
+  ]
+}
