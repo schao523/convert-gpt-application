@@ -119,10 +119,13 @@ ClawHub publication, or OpenAI universal-directory submission was performed.
 The Source Handoff preflight and Chat-to-Work routing were merged in source PR
 #23 at `2426cdb09e27830ac6451cb8994f6375cb73dbd3` and published for Codex
 and OpenClaw in marketplace PR #15 at
-`ff4fe36679783462136d1fa7af845ae6967d1ebe`. The exact marketplace
-commit and a fresh checkout passed catalog verification for 1,118 files with
-no diagnostic plugins. No GitHub Release, ClawHub publication, or universal
-directory submission was performed.
+`ff4fe36679783462136d1fa7af845ae6967d1ebe`. That release commit and a fresh
+checkout passed catalog verification for 1,118 files. Marketplace PR #16
+corrected the Codex vendored validator and its digest record to match the
+hardened source at `d0f560e4f7b3c6017dfb942844a2d048757b563f`.
+The corrected artifact passed its generated verifier, source equivalence gate,
+and all 32 marketplace CI checks. No GitHub Release, ClawHub publication,
+or universal directory submission was performed.
 
 Codex CLI 0.146.0 installed the staged 1.0.3 package from an isolated local
 marketplace, then installed the published 1.0.3 package from the registered

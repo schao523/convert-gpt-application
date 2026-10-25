@@ -58,7 +58,7 @@ class ConversionContractTests(unittest.TestCase):
         self.assertEqual(distribution["version"], "1.0.3")
         self.assertEqual(
             inventory["marketplace_commit"],
-            "ff4fe36679783462136d1fa7af845ae6967d1ebe",
+            "d0f560e4f7b3c6017dfb942844a2d048757b563f",
         )
         self.assertEqual(len(inventory["source_inventory"]), 16)
         self.assertFalse(
