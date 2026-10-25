@@ -1,0 +1,122 @@
+{
+  "audit_hook": "scripts/distribution_audit.py:audit_distribution",
+  "content_rules": [
+    {
+      "classification": "text",
+      "id": "imported-plugin-text",
+      "paths": [
+        "imported-plugin/.codex-plugin/plugin.json",
+        "imported-plugin/APPLICATION-INVARIANTS.md",
+        "imported-plugin/PRIVACY.md",
+        "imported-plugin/README.md",
+        "imported-plugin/RUNTIME-COMPATIBILITY.md",
+        "imported-plugin/STARTER-PROMPTS.md",
+        "imported-plugin/THIRD_PARTY_CONTENT.md",
+        "imported-plugin/THIRD_PARTY_NOTICES.md",
+        "imported-plugin/WORKBENCH-DERIVATION-MANIFEST.json",
+        "imported-plugin/contracts/source-evidence.json",
+        "imported-plugin/contracts/stage-graph.json",
+        "imported-plugin/plugin.json",
+        "imported-plugin/skills/answering-scripture-questions/SKILL.md",
+        "imported-plugin/skills/answering-scripture-questions/agents/openai.yaml",
+        "imported-plugin/skills/coaching-leadership-growth/SKILL.md",
+        "imported-plugin/skills/coaching-leadership-growth/agents/openai.yaml",
+        "imported-plugin/skills/consulting-leadership-knowledge/SKILL.md",
+        "imported-plugin/skills/consulting-leadership-knowledge/agents/openai.yaml",
+        "imported-plugin/skills/explaining-source-evidence/SKILL.md",
+        "imported-plugin/skills/explaining-source-evidence/agents/openai.yaml",
+        "imported-plugin/skills/explaining-source-evidence/references/knowledge-index.json",
+        "imported-plugin/skills/explaining-source-evidence/references/professional-cards.json",
+        "imported-plugin/skills/explaining-source-evidence/references/professional-cards.md",
+        "imported-plugin/skills/explaining-source-evidence/references/professional-index.json",
+        "imported-plugin/skills/explaining-source-evidence/references/rights-ledger.md",
+        "imported-plugin/skills/explaining-source-evidence/references/source-quality.md",
+        "imported-plugin/skills/guiding-inductive-study/SKILL.md",
+        "imported-plugin/skills/guiding-inductive-study/agents/openai.yaml",
+        "imported-plugin/skills/guiding-leadership-sessions/SKILL.md",
+        "imported-plugin/skills/guiding-leadership-sessions/agents/openai.yaml"
+      ],
+      "prefixes": [],
+      "redistribution": {
+        "provenance": "docs/source-decisions.md",
+        "status": "approved"
+      }
+    },
+    {
+      "classification": "binary",
+      "id": "imported-plugin-pdfs",
+      "paths": [
+        "imported-plugin/skills/explaining-source-evidence/references/Bible \u65b0\u7d04\u8056\u7d93\u548c\u5408\u672c.pdf",
+        "imported-plugin/skills/explaining-source-evidence/references/Bible \u820a\u7d04\u8056\u7d93\u548c\u5408\u672c.pdf",
+        "imported-plugin/skills/explaining-source-evidence/references/auxiliary-candidates.csv",
+        "imported-plugin/skills/explaining-source-evidence/references/fidelity-review.csv",
+        "imported-plugin/skills/explaining-source-evidence/references/usage-map.csv"
+      ],
+      "prefixes": [],
+      "redistribution": {
+        "provenance": "docs/source-decisions.md",
+        "status": "approved"
+      }
+    }
+  ],
+  "exclude_paths": [],
+  "family": "bundle-plugin",
+  "include_files": [
+    "imported-plugin/.codex-plugin/plugin.json",
+    "imported-plugin/APPLICATION-INVARIANTS.md",
+    "imported-plugin/PRIVACY.md",
+    "imported-plugin/README.md",
+    "imported-plugin/RUNTIME-COMPATIBILITY.md",
+    "imported-plugin/STARTER-PROMPTS.md",
+    "imported-plugin/THIRD_PARTY_CONTENT.md",
+    "imported-plugin/THIRD_PARTY_NOTICES.md",
+    "imported-plugin/WORKBENCH-DERIVATION-MANIFEST.json",
+    "imported-plugin/contracts/source-evidence.json",
+    "imported-plugin/contracts/stage-graph.json",
+    "imported-plugin/plugin.json",
+    "imported-plugin/skills/answering-scripture-questions/SKILL.md",
+    "imported-plugin/skills/answering-scripture-questions/agents/openai.yaml",
+    "imported-plugin/skills/coaching-leadership-growth/SKILL.md",
+    "imported-plugin/skills/coaching-leadership-growth/agents/openai.yaml",
+    "imported-plugin/skills/consulting-leadership-knowledge/SKILL.md",
+    "imported-plugin/skills/consulting-leadership-knowledge/agents/openai.yaml",
+    "imported-plugin/skills/explaining-source-evidence/SKILL.md",
+    "imported-plugin/skills/explaining-source-evidence/agents/openai.yaml",
+    "imported-plugin/skills/explaining-source-evidence/references/Bible \u65b0\u7d04\u8056\u7d93\u548c\u5408\u672c.pdf",
+    "imported-plugin/skills/explaining-source-evidence/references/Bible \u820a\u7d04\u8056\u7d93\u548c\u5408\u672c.pdf",
+    "imported-plugin/skills/explaining-source-evidence/references/auxiliary-candidates.csv",
+    "imported-plugin/skills/explaining-source-evidence/references/fidelity-review.csv",
+    "imported-plugin/skills/explaining-source-evidence/references/knowledge-index.json",
+    "imported-plugin/skills/explaining-source-evidence/references/professional-cards.json",
+    "imported-plugin/skills/explaining-source-evidence/references/professional-cards.md",
+    "imported-plugin/skills/explaining-source-evidence/references/professional-index.json",
+    "imported-plugin/skills/explaining-source-evidence/references/rights-ledger.md",
+    "imported-plugin/skills/explaining-source-evidence/references/source-quality.md",
+    "imported-plugin/skills/explaining-source-evidence/references/usage-map.csv",
+    "imported-plugin/skills/guiding-inductive-study/SKILL.md",
+    "imported-plugin/skills/guiding-inductive-study/agents/openai.yaml",
+    "imported-plugin/skills/guiding-leadership-sessions/SKILL.md",
+    "imported-plugin/skills/guiding-leadership-sessions/agents/openai.yaml"
+  ],
+  "include_prefixes": [],
+  "max_total_bytes": 16777216,
+  "package_name": "@obvious-one/cool-leadership-coach",
+  "plugin_id": "cool-leadership-coach",
+  "publication": {
+    "clawhub": {
+      "enabled": false,
+      "family": null,
+      "native_manifest": null
+    },
+    "github_marketplace": {
+      "enabled": true
+    }
+  },
+  "rag": null,
+  "readme_overlay": null,
+  "release_repository": "schao523/obvious-one-plugins",
+  "release_tag_template": "cool-leadership-coach-v{version}",
+  "schema_version": 3,
+  "source_root": "..",
+  "version": "1.0.0"
+}

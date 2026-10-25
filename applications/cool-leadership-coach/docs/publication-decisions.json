@@ -1,0 +1,18 @@
+{
+  "author": "Shen-Chang Chao",
+  "codex_destination": "plugins/cool-leadership-coach",
+  "confirmed_by": "Plugin Owner (chat approval)",
+  "copyright_year": 2026,
+  "installed_runtime_evidence": "NOT VERIFIED",
+  "license": "MIT",
+  "marketplace_id": "obvious-one",
+  "plugin_id": "cool-leadership-coach",
+  "public_marketplace_approved": true,
+  "redistribution_approved": true,
+  "schema": "plugin-publication-decisions-v1",
+  "source_archive_sha256": "7603ec8f8d718b776e34ee1d8d69bf8ae19681c37b64b52415a6f19520fc640b",
+  "target_runtime": "CODEX",
+  "third_party_content": "INCLUDED_WITH_PLUGIN_NOTICES",
+  "third_party_content_reviewed": true,
+  "version": "1.0.0"
+}

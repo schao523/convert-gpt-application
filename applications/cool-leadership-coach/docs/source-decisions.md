@@ -1,0 +1,5 @@
+# Source and publication decisions
+
+The owner supplied the exact 0.27.0 ZIP with SHA-256 `7603ec8f8d718b776e34ee1d8d69bf8ae19681c37b64b52415a6f19520fc640b`. Its Plugin Builder v3 sidecar, SHA-256 `0c5b33feaeca6ae767150419dae09ce0add4312900e6cf99521d9b1a3ab6d32a`, matches all 31 ZIP members and is preserved as source evidence in `source-package-metadata.json`. The sidecar describes the original private 0.27.0 package; it is not a new Plugin Builder attestation for the Workbench derivative.
+
+On 2026-10-25, the owner approved the Codex-only identity `cool-leadership-coach`, version 1.0.0, display name 酷領導力教練, author and developer Shen-Chang Chao, public Obvious One publication under MIT, and redistribution of every bundled PDF, card, reference, and code file with any required notices included. The owner-stated basis for the two retained Bible PDFs is recorded in THIRD_PARTY_NOTICES.md; Workbench does not independently determine copyright status. The three excluded original professional PDFs remain excluded. The derivative manifest records every changed and preserved file. Installed-runtime behavior remains NOT VERIFIED.

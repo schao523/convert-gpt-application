@@ -1,0 +1,33 @@
+{
+  "application_requires_inspected_response": true,
+  "external_access_evidence_required": true,
+  "read_statuses": [
+    "not_attempted",
+    "observed_success",
+    "observed_failure",
+    "unobservable"
+  ],
+  "required": [
+    "candidate_sha256",
+    "event_sequence",
+    "test_or_session_case_id",
+    "active_workflow",
+    "stage_before",
+    "stage_after",
+    "logical_module",
+    "selected_knowledge_ids",
+    "selected_card_content_locator",
+    "read_attempt_status",
+    "concept_quality_tier",
+    "attribution_boundary",
+    "applied_claim_or_question_id",
+    "learner_WAIT_occurred",
+    "method_quality_declaration",
+    "fallback_or_source_gap",
+    "outcome",
+    "rights_status",
+    "reviewer_or_observer"
+  ],
+  "schema": "leadership-source-evidence-v1",
+  "sensitive_user_content_allowed": false
+}
