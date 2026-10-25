@@ -21,7 +21,7 @@
 | SPEC-HANDOFF-001 | `creating-application-plugin-design-specifications` | Ordered 21-section specification and Workbench-reserved decision contract | Premature-handoff pressure scenario, five clean-context samples | STATICALLY VERIFIED |
 | SPEC-HANDOFF-002 | Shared Workbench handoff runtime and `creating-application-plugin-design-specifications` | `WORKBENCH_HANDOFF_V1_1`, exact requirement records, one-authority rule, and update baseline contract | Full/delta normalization, fail-closed legacy, deterministic output, and release-vendoring tests | STATICALLY VERIFIED |
 | SPEC-HANDOFF-003 | Chat/CLI handoff delivery | Final returned ZIP digest, reopened canonical validation, and one semantic authority | Final-ZIP digest mismatch cleanup, report binding, deterministic normalization, and fresh canonical inspection tests | STATICALLY VERIFIED |
-| SPEC-HANDOFF-004 | Source preflight and Chat-to-Work continuation | PF01–PF10 source checks, full/delta profile eligibility, unavailable-capability route, source digest, and Work continuation guide | Preflight positive/negative tests and source-to-canonical interoperability fixture; installed 1.0.3 Chat/Work behavior pending | STATICALLY VERIFIED |
+| SPEC-HANDOFF-004 | Source preflight and Chat-to-Work continuation | PF01–PF10 source checks, full/delta profile eligibility, unavailable-capability route, source digest, and Work continuation guide | Preflight positive/negative tests, source-to-canonical interoperability fixture, and matched installed 1.0.3 Codex/OpenClaw representative behavior | RUNTIME VERIFIED |
 | SPEC-REVIEW-001 | `reviewing-application-implementations` | Two-input review gate, evidence states, and four finding classifications | Missing-specification pressure scenario, five clean-context samples | STATICALLY VERIFIED |
 | SPEC-TEST-001 | `planning-application-tests-and-improvements` | Traceable scenario schema, coverage evidence rules, and versioned patch contract | Unsupported-coverage pressure scenario, five clean-context samples | STATICALLY VERIFIED |
 | DIST-001 | Schema-v3 contract and deterministic builders | Text-only allowlist, product audit hook, no-RAG contract, and catalog registration | Two byte-identical OpenClaw builds plus completed Codex/OpenClaw artifact audits | STATICALLY VERIFIED |
@@ -29,9 +29,10 @@
 
 ## 1.0.3 Source Contract Preflight coverage
 
-The 1.0.3 evidence below concerns a local candidate. The RUNTIME-001 row above
-remains bound to its earlier exact commit and does not establish 1.0.3 runtime
-readiness.
+The PF and AC rows below record contract and deterministic test evidence. The
+RUNTIME-001 row above remains bound to its earlier exact commit. The published
+1.0.3 installed-runtime evidence is recorded separately below and in
+`docs/runtime-compatibility.md`.
 
 | Check | Contract coverage | Test evidence | State |
 | --- | --- | --- | --- |
@@ -55,3 +56,10 @@ readiness.
 | AC07–AC08 | Shared source analyzer, existing normalizer regression and reopened canonical output | STATICALLY VERIFIED |
 | AC09 | Positive, negative and regression suites pass in a system temp outside the Git checkout; repository product verifier PASS | STATICALLY VERIFIED |
 | AC10 | Deterministic JSON with actionable diagnostic fields and status exits | STATICALLY VERIFIED |
+
+| Runtime check | Evidence | State |
+| --- | --- | --- |
+| Installed discovery | Codex 0.146.0 and OpenClaw 2026.10.6 installed the 1.0.3 marketplace artifacts; OpenClaw exposed seven eligible, model-visible Skills | RUNTIME VERIFIED |
+| Installed deterministic operations | Six configured commands passed in both installed packages; installed OpenClaw PF01–PF10 and normalization passed, with canonical SHA-256 `d311e7786e36d574dcb3ecc9e155af686ade243cf18b64c0306150a039b25ee1` matching Codex | RUNTIME VERIFIED |
+| Chat-to-Work behavior | Fresh Codex and DeepSeek-backed OpenClaw sessions required a Source Handoff ZIP from Chat, Work-mode preflight and normalization, exact-byte validation, and no invented execution claim | RUNTIME VERIFIED |
+| Published artifact | Marketplace merge `ff4fe36679783462136d1fa7af845ae6967d1ebe` passed exact-commit and fresh-checkout verification | STATICALLY VERIFIED |

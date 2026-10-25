@@ -15,8 +15,8 @@ subsystem, model, corpus, database, external service, or credential is required.
 | Shared source and deterministic build | STATICALLY VERIFIED | STATICALLY VERIFIED |
 | Installed discovery | RUNTIME VERIFIED | RUNTIME VERIFIED |
 | Packaged deterministic commands | RUNTIME VERIFIED | RUNTIME VERIFIED |
-| Approved representative-scenario suite | RUNTIME VERIFIED | RUNTIME VERIFIED |
-| Cross-runtime behavioral equivalence | RUNTIME VERIFIED | RUNTIME VERIFIED |
+| 1.0.3 Source Handoff representative scenario | RUNTIME VERIFIED | RUNTIME VERIFIED |
+| 1.0.3 cross-runtime behavioral equivalence | RUNTIME VERIFIED | RUNTIME VERIFIED |
 
 ## Local verification evidence
 
@@ -114,10 +114,40 @@ marketplace PR #5 at commit
 that immutable marketplace binding after publication; no GitHub Release,
 ClawHub publication, or OpenAI universal-directory submission was performed.
 
-## Version 1.0.3 candidate
+## Version 1.0.3 publication and runtime evidence
 
-The Source Handoff preflight and Chat-to-Work routing are local 1.0.3 changes.
-The preceding installed-runtime observations remain evidence for their named
-earlier artifacts. Codex and OpenClaw installed discovery, representative
-execution, and cross-runtime equivalence for the changed 1.0.3 artifact are
-`NOT VERIFIED` until separately observed. The 1.0.3 candidate is unpublished.
+The Source Handoff preflight and Chat-to-Work routing were merged in source PR
+#23 at `2426cdb09e27830ac6451cb8994f6375cb73dbd3` and published for Codex
+and OpenClaw in marketplace PR #15 at
+`ff4fe36679783462136d1fa7af845ae6967d1ebe`. The exact marketplace
+commit and a fresh checkout passed catalog verification for 1,118 files with
+no diagnostic plugins. No GitHub Release, ClawHub publication, or universal
+directory submission was performed.
+
+Codex CLI 0.146.0 installed the staged 1.0.3 package from an isolated local
+marketplace, then installed the published 1.0.3 package from the registered
+GitHub marketplace. A fresh representative Codex session used the installed
+Skills to require a Source Handoff ZIP in Chat mode and an observed preflight,
+normalization, and final canonical validation in Work mode. It did not claim an
+unrun tool operation.
+
+OpenClaw 2026.10.6 installed the same 1.0.3 bundle in isolated state and then
+reinstalled it from the published marketplace checkout. All seven Skills were
+eligible and model-visible. A DeepSeek-backed representative session read the
+installed Skill and references and preserved the same Source-versus-Canonical
+handoff boundary, approval gate, exact-byte checks, and Workbench-reserved
+decisions as Codex. The two runtimes differed in detail and formatting, not in
+the required route or failure behavior.
+
+The post-publication installed trees matched the published marketplace
+artifacts byte-for-byte: 68 Codex files and 70 OpenClaw files.
+
+All six configured deterministic commands passed from each installed package.
+The installed OpenClaw launcher returned PASS for PF01–PF10 on the approved
+Source Handoff fixture, then normalized it to `WORKBENCH_HANDOFF_V1_1`. Codex
+and OpenClaw produced the same Canonical ZIP SHA-256:
+`d311e7786e36d574dcb3ecc9e155af686ade243cf18b64c0306150a039b25ee1`.
+The Source ZIP SHA-256 was
+`3048f72528bea2e9983ddfd9689ced7aa655759292eb9bca7cf37e29a3342255`.
+The portable Skills and deterministic contracts need no application-level
+runtime fork or adapter, so the 1.0.3 classification is `PORTABLE`.
