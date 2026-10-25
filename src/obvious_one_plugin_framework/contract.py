@@ -16,7 +16,8 @@ _LEGACY_ROOT_KEYS = {
     "max_total_bytes", "release_repository", "release_tag_template",
     "readme_overlay", "audit_hook", "rag",
 }
-_V3_ROOT_KEYS = _LEGACY_ROOT_KEYS | {"content_rules", "publication"}
+_V3_ROOT_KEYS = _LEGACY_ROOT_KEYS | {"content_rules", "publication", "framework_packages"}
+_SUPPORTED_FRAMEWORK_PACKAGES = frozenset({"plugin_authoring", "workbench_handoff"})
 _RAG_KEYS = {
     "app_id", "namespace", "runtime_lock", "runtime_lock_digest",
     "model_manifest", "model_digest", "index_manifest", "asset_groups",
@@ -109,6 +110,7 @@ class DistributionContract:
     content_rules: tuple[ContentRule, ...]
     publication: PublicationProfile | None
     contract_path: Path
+    framework_packages: tuple[str, ...] = ()
 
 
 def _mapping(value: Any, label: str) -> Mapping[str, Any]:
@@ -194,7 +196,8 @@ def load_contract(path: Path) -> DistributionContract:
     if schema_version in (1, 2):
         _only_keys(raw, _LEGACY_ROOT_KEYS, "contract")
     elif schema_version == 3:
-        _only_keys(raw, _V3_ROOT_KEYS, "contract")
+        expected_keys = _V3_ROOT_KEYS if "framework_packages" in raw else _V3_ROOT_KEYS - {"framework_packages"}
+        _only_keys(raw, expected_keys, "contract")
     else:
         raise ContractError("unsupported_schema", str(schema_version))
     groups: list[AssetGroup] = []
@@ -246,11 +249,19 @@ def load_contract(path: Path) -> DistributionContract:
         raise ContractError("invalid_size_limit", "max_total_bytes")
     content_rules: tuple[ContentRule, ...] = ()
     publication = None
+    framework_packages: tuple[str, ...] = ()
     source_root = _source_root(raw["source_root"], contract_path)
     plugin_id = _text(raw["plugin_id"], "plugin_id")
     package_name = _text(raw["package_name"], "package_name")
     version = _text(raw["version"], "version")
     if schema_version == 3:
+        requested_packages = raw.get("framework_packages", [])
+        if not isinstance(requested_packages, list) or any(
+            not isinstance(item, str) or item not in _SUPPORTED_FRAMEWORK_PACKAGES
+            for item in requested_packages
+        ) or len(set(requested_packages)) != len(requested_packages):
+            raise ContractError("invalid_framework_packages", "framework_packages")
+        framework_packages = tuple(sorted(requested_packages))
         content_rules = _parse_content_rules(raw["content_rules"], source_root)
         publication = _parse_publication(
             raw["publication"],
@@ -291,6 +302,7 @@ def load_contract(path: Path) -> DistributionContract:
         content_rules=content_rules,
         publication=publication,
         contract_path=contract_path,
+        framework_packages=framework_packages,
     )
     validate_contract(contract, contract.source_root)
     return contract

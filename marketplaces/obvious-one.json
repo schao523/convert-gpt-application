@@ -22,8 +22,8 @@
       "application_config": "applications/cool-plugin-design-assistant/conversion.json",
       "distribution_contract": "applications/cool-plugin-design-assistant/openclaw/distribution.json",
       "targets": {
-        "codex": {"mode": "verify_existing", "destination": "plugins/cool-plugin-design-assistant"},
-        "openclaw": {"mode": "verify_existing", "destination": "openclaw/cool-plugin-design-assistant"}
+        "codex": {"mode": "build", "destination": "plugins/cool-plugin-design-assistant"},
+        "openclaw": {"mode": "build", "destination": "openclaw/cool-plugin-design-assistant"}
       }
     },
     {

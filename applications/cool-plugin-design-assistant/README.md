@@ -1,6 +1,6 @@
 # Cool Plugin Design Assistant
 
-Version 1.0.2 strengthens the Workbench handoff boundary without changing approved application behavior. Chat-driven handoff delivery now binds the returned canonical ZIP to its final SHA-256, reopens that exact ZIP for canonical validation, and reports one `workbench-handoff.json` semantic authority before delivery.
+Version 1.0.3 adds a Source Handoff route for Chat sessions that cannot execute normalization. A Work session preflights the source ZIP, runs official normalization, and validates the final Canonical Handoff ZIP. Version 1.0.2 established digest-bound canonical delivery.
 
 Cool Plugin Design Assistant 1.0 guides a human from an AI Application idea to
 an approval-gated Application Plugin Design Specification and structured
@@ -27,6 +27,7 @@ Commands:
 - `validate-modules <modules.json>`
 - `validate-handoff <handoff.json>`
 - `normalize-handoff-package <approved.zip> <normalized.zip> --confirmed-by <owner> [--runtime-scope OPENAI_ONLY_PHASE_ONE]`
+- `preflight-source-handoff <source.zip> --json`
 - `coverage <coverage.json>`
 - `distribution-audit [stage]`
 
@@ -38,7 +39,15 @@ Legacy input without exact semantic authority remains blocked. It refuses to
 overwrite an existing destination. Phase one accepts only the explicitly
 approved `OPENAI_ONLY_PHASE_ONE` runtime scope.
 
+`preflight-source-handoff` accepts the existing full and delta Design Assistant
+source envelopes and returns `PASS`, `BLOCKED`, or `INCOMPLETE` with structured
+PF01–PF10 checks. It reads the source ZIP without producing a canonical ZIP.
+If Chat cannot execute preflight, it may transfer the source with the label
+`SOURCE HANDOFF — PREFLIGHT NOT VERIFIED`; Work must preflight it before
+normalization. See the owning Skill's source-handoff guide.
+
 Every operation emits one ASCII-safe JSON document with `status`, `operation`,
 and `errors`. Exit code `0` means the operation passed, `2` means required input
-or evidence is blocked, and `3` means validation failed. A successful static
+or evidence is blocked, and `3` means validation failed or preflight is
+`INCOMPLETE`. A successful static
 validation is not runtime execution evidence.

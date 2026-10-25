@@ -26,6 +26,7 @@ from .contract import (
     validate_canonical_handoff,
 )
 from .profiles import HandoffProfile, classify_handoff_profile
+from .source_contract import SOURCE_PROFILES, analyze_source_handoff, artifact_role
 
 
 ADAPTER_VERSION = "workbench-handoff-0.1.3"
@@ -128,22 +129,6 @@ def _member_map(root: Path) -> dict[str, tuple[int, str]]:
     return result
 
 
-def _artifact_role(row: dict[str, Any]) -> str:
-    explicit = row.get("role")
-    if isinstance(explicit, str) and explicit:
-        return explicit
-    prefix = str(row.get("id", "")).partition("-")[0]
-    return {
-        "SPEC": "approved_specification",
-        "DS": "approved_design_statement",
-        "BW": "workflow_definitions_and_instruction_modules",
-        "RM": "reference_material_inventory_evaluation_and_usage_map",
-        "INV": "application_invariants_and_hitl_checkpoints",
-        "TEST": "acceptance_criteria_and_representative_scenarios",
-        "DEC": "rights_and_redistribution_decisions",
-    }.get(prefix, "")
-
-
 def _design_assistant_to_v11(
     root: Path,
     profile: str,
@@ -178,7 +163,7 @@ def _design_assistant_to_v11(
         if not isinstance(requirement_ids, list) or any(not isinstance(item, str) or not item for item in requirement_ids):
             diagnostics.append(f"requirements.artifact_index_invalid:{path}")
             requirement_ids = []
-        role = _artifact_role(raw)
+        role = artifact_role(raw)
         if not role:
             diagnostics.append(f"package.artifact_role_invalid:{path}")
         size, digest = members[path]
@@ -541,6 +526,19 @@ def normalize_handoff_archive(
         classified = classify_handoff_profile(stage)
         if classified.profile in {"UNKNOWN", "AMBIGUOUS"}:
             return _outcome("BLOCKED", classified.profile, classified.diagnostics, source_hash, runtime_scope)
+
+        if classified.profile in SOURCE_PROFILES:
+            source_analysis = analyze_source_handoff(stage, classified.profile, runtime_scope=runtime_scope)
+            if source_analysis.diagnostics:
+                hard_error = any(code.startswith((
+                    "package.undeclared_member:", "package.declared_member_mismatch:",
+                    "requirements.duplicate_id:", "requirements.source_invalid:",
+                    "requirements.source_unreadable:", "requirements.text_mismatch:",
+                )) for code in source_analysis.diagnostics)
+                return _outcome(
+                    "FAIL" if hard_error else "BLOCKED", classified.profile,
+                    source_analysis.diagnostics, source_hash, runtime_scope,
+                )
 
         diagnostics: list[str] = []
         if classified.profile in {"COOL_DESIGN_ASSISTANT_FULL_V1", "COOL_DESIGN_ASSISTANT_DELTA_V1"}:

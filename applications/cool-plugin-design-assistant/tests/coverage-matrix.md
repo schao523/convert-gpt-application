@@ -21,7 +21,37 @@
 | SPEC-HANDOFF-001 | `creating-application-plugin-design-specifications` | Ordered 21-section specification and Workbench-reserved decision contract | Premature-handoff pressure scenario, five clean-context samples | STATICALLY VERIFIED |
 | SPEC-HANDOFF-002 | Shared Workbench handoff runtime and `creating-application-plugin-design-specifications` | `WORKBENCH_HANDOFF_V1_1`, exact requirement records, one-authority rule, and update baseline contract | Full/delta normalization, fail-closed legacy, deterministic output, and release-vendoring tests | STATICALLY VERIFIED |
 | SPEC-HANDOFF-003 | Chat/CLI handoff delivery | Final returned ZIP digest, reopened canonical validation, and one semantic authority | Final-ZIP digest mismatch cleanup, report binding, deterministic normalization, and fresh canonical inspection tests | STATICALLY VERIFIED |
+| SPEC-HANDOFF-004 | Source preflight and Chat-to-Work continuation | PF01–PF10 source checks, full/delta profile eligibility, unavailable-capability route, source digest, and Work continuation guide | Preflight positive/negative tests and source-to-canonical interoperability fixture; installed 1.0.3 Chat/Work behavior pending | STATICALLY VERIFIED |
 | SPEC-REVIEW-001 | `reviewing-application-implementations` | Two-input review gate, evidence states, and four finding classifications | Missing-specification pressure scenario, five clean-context samples | STATICALLY VERIFIED |
 | SPEC-TEST-001 | `planning-application-tests-and-improvements` | Traceable scenario schema, coverage evidence rules, and versioned patch contract | Unsupported-coverage pressure scenario, five clean-context samples | STATICALLY VERIFIED |
 | DIST-001 | Schema-v3 contract and deterministic builders | Text-only allowlist, product audit hook, no-RAG contract, and catalog registration | Two byte-identical OpenClaw builds plus completed Codex/OpenClaw artifact audits | STATICALLY VERIFIED |
 | RUNTIME-001 | Codex and OpenClaw runtime validation | Both artifacts contain the same seven portable Skills and deterministic commands | Installed discovery, all packaged commands, and matched BEH-001, BEH-006, BEH-008, BEH-011, and BEH-013 executions are runtime-verified on exact commit `0699c0055361f742a24fa033be3957d86cc6aefb`; the full approved marketplace gate is tracked separately | RUNTIME VERIFIED |
+
+## 1.0.3 Source Contract Preflight coverage
+
+The 1.0.3 evidence below concerns a local candidate. The RUNTIME-001 row above
+remains bound to its earlier exact commit and does not establish 1.0.3 runtime
+readiness.
+
+| Check | Contract coverage | Test evidence | State |
+| --- | --- | --- | --- |
+| PF01 | Full/delta recognition, unknown/ambiguous/legacy eligibility | `test_workbench_handoff_preflight`, profile tests | STATICALLY VERIFIED |
+| PF02 | Required manifest fields, field types, safe paths and authority | `test_workbench_handoff_preflight` | STATICALLY VERIFIED |
+| PF03 | Exact requirement IDs, source pointers and verbatim text | `test_workbench_handoff_preflight`, normalization regression | STATICALLY VERIFIED |
+| PF04 | Declared artifact bindings, missing and unknown IDs | `test_workbench_handoff_preflight` | STATICALLY VERIFIED |
+| PF05 | Explicit approval/version and conflicting authority | `test_workbench_handoff_preflight` | STATICALLY VERIFIED |
+| PF06 | Declared reference provenance/version and usage-map type | Source analyzer and preflight tests; semantic sufficiency needs owner review | STATICALLY VERIFIED |
+| PF07 | Declared unresolved owner decisions and rights-field type | `test_workbench_handoff_preflight`; independent rights audit remains separate | STATICALLY VERIFIED |
+| PF08 | Archive safety, declared digest/size, no source mutation | `test_workbench_handoff_preflight`, package audit | STATICALLY VERIFIED |
+| PF09 | v1.1 source eligibility shares the normalizer analyzer | Preflight/normalization tests and full-source interoperability | STATICALLY VERIFIED |
+| PF10 | Stable JSON, per-check states, diagnostics and exit codes | Repeated API/CLI tests | STATICALLY VERIFIED |
+
+| Acceptance | Evidence | State |
+| --- | --- | --- |
+| AC01–AC02 | Unknown staging ZIP blocks; supported full/delta source passes | STATICALLY VERIFIED |
+| AC03–AC04 | Exact requirement text and bindings checked against packaged members | STATICALLY VERIFIED |
+| AC05 | Approval conflicts and blocking owner decisions stop preflight | STATICALLY VERIFIED |
+| AC06 | Source ZIP digest and bytes unchanged after preflight | STATICALLY VERIFIED |
+| AC07–AC08 | Shared source analyzer, existing normalizer regression and reopened canonical output | STATICALLY VERIFIED |
+| AC09 | Positive, negative and regression suites pass in a system temp outside the Git checkout; repository product verifier PASS | STATICALLY VERIFIED |
+| AC10 | Deterministic JSON with actionable diagnostic fields and status exits | STATICALLY VERIFIED |

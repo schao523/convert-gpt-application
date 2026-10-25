@@ -36,6 +36,17 @@ class ContractTests(unittest.TestCase):
         with self.assertRaisesRegex(ContractError, "unknown_key"):
             self._load_modified_v3(lambda raw: raw.update({"surprise": True}))
 
+    def test_schema_v3_accepts_allowlisted_framework_packages(self) -> None:
+        contract = self._load_modified_v3(lambda raw: raw.update({
+            "framework_packages": ["workbench_handoff", "plugin_authoring"]
+        }))
+        self.assertEqual(contract.framework_packages, ("plugin_authoring", "workbench_handoff"))
+
+    def test_schema_v3_rejects_unknown_or_duplicate_framework_packages(self) -> None:
+        for packages in (["arbitrary_module"], ["plugin_authoring", "plugin_authoring"]):
+            with self.subTest(packages=packages), self.assertRaisesRegex(ContractError, "invalid_framework_packages"):
+                self._load_modified_v3(lambda raw: raw.update({"framework_packages": packages}))
+
     def test_schema_v3_rejects_empty_rule_selectors(self) -> None:
         def modify(raw: dict[str, object]) -> None:
             raw["content_rules"][0]["paths"] = []

@@ -385,7 +385,16 @@ catalogs remain compatible inputs with their original dual-runtime meaning,
 but new or changed catalogs use schema v2.
 
 Plugin Builder's approved `OPENAI_ONLY_PHASE_ONE` release is Codex-only, while
-Cool Plugin Design Assistant remains dual-runtime. `prepare-marketplace`
+Cool Plugin Design Assistant remains dual-runtime. In version 1.0.3, when its
+Chat session cannot execute official normalization, it can transfer an
+approved-design Source Handoff ZIP to a Work session. If Chat cannot run
+preflight, the source is labeled `PREFLIGHT NOT VERIFIED`. Work runs
+`preflight-source-handoff SOURCE.zip --json`, resolves BLOCKED or INCOMPLETE
+results, then runs official normalization and validates the exact final
+Canonical Handoff ZIP. Source preflight does not itself establish canonical
+validity or publication readiness.
+
+`prepare-marketplace`
 writes a separate local tree and does not apply or publish the delta.
 `verify-marketplace` then checks the generated artifacts and, when requested,
 exact Git index, commit, and fresh-checkout bytes. Applying or pushing the
