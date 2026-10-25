@@ -108,7 +108,7 @@
       "targets": {
         "codex": {
           "destination": "plugins/cool-leadership-coach",
-          "mode": "build"
+          "mode": "verify_existing"
         },
         "openclaw": {
           "mode": "not_applicable"
