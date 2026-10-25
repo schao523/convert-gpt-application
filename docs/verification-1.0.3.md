@@ -35,6 +35,9 @@ Unavailable shared runtime capability is INCOMPLETE. Exit codes are 0, 2 and
 | Synthetic source ZIP preservation | PASS: preflight source SHA-256 `3048f72528bea2e9983ddfd9689ced7aa655759292eb9bca7cf37e29a3342255` |
 | Canonical output binding | PASS: both packaged Codex and OpenClaw commands returned and produced the same ZIP SHA-256 `d311e7786e36d574dcb3ecc9e155af686ade243cf18b64c0306150a039b25ee1`; each normalizer reopened its ZIP and validated canonical v1.1 |
 | Repository product verifier | PASS: shared framework, product, provenance, deterministic builds and package verification; marketplace gate NOT VERIFIED because no marketplace was supplied |
+| Marketplace stage | PASS: staged against published marketplace `168cb2a2549260392fee1b59c1732eff5e9a4cbc`, 66 changed paths limited to this plugin and four catalog/verification metadata files; stage SHA-256 `091741cd47af0b70f00cac2490d7f485a522c7ba6ea11b22aa026f6c99d5b008` |
+| Marketplace Git evidence | PASS: filesystem, index, exact commit `2ab0b4a8e96bc511214453710a5e2c1507e509ef`, and fresh checkout; 1118 files checked |
+| Marketplace-bound product verifier | PENDING post-publication binding: all shared and product gates PASS, while the marketplace gate correctly rejects the prior 1.0.2 `marketplace_commit` and approved-delta record for the new local 1.0.3 commit |
 | `git diff --check` | PASS |
 
 The full framework suite passes: 573 tests, 3 skips, using an elevated Windows
@@ -45,6 +48,8 @@ root. The repository product verifier subsequently passed in the corrected
 environment; its marketplace gate was NOT VERIFIED because no marketplace
 path was supplied. Raw logs are below ignored `.tmp/cpda-1.0.3/` and
 `.tmp/verification/run-20261024T235911Z-39704-ac239df1/`.
+Marketplace staging and Git verification used the focused review checkout;
+its local evidence is under that checkout's ignored `.tmp/cpda-1.0.3/`.
 
 The prior STEAM R02 archive was not available in this checkout. A synthetic
 unknown-profile staging ZIP is used for the `profile.unrecognized` regression.
@@ -96,3 +101,7 @@ Candidate paths:
 - Repository guidance: `docs/GPT_TO_PLUGIN_USER_GUIDE.md`,
   `docs/PLUGIN_AND_FRAMEWORK_COMMAND_REFERENCE.md`, this evidence report, and the approved plan in
   `docs/superpowers/plans/2026-10-24-cool-plugin-design-assistant-1.0.3-source-handoff.md`.
+- Release preparation: `marketplaces/obvious-one.json` and
+  `tests/test_application_config.py` now mark only this pending dual-runtime
+  update as build mode; the post-publication binding will restore
+  `verify_existing` after the exact marketplace commit is known.

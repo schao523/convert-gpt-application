@@ -31,15 +31,15 @@ class ApplicationConfigTests(unittest.TestCase):
             if entry.application.plugin_id == "cool-plugin-design-assistant"
         )
 
-        self.assertEqual(assistant.target("codex").mode, "verify_existing")
+        self.assertEqual(assistant.target("codex").mode, "build")
         self.assertEqual(assistant.target("codex").destination, "plugins/cool-plugin-design-assistant")
-        self.assertEqual(assistant.target("openclaw").mode, "verify_existing")
+        self.assertEqual(assistant.target("openclaw").mode, "build")
         self.assertEqual(
             assistant.target("openclaw").destination,
             "openclaw/cool-plugin-design-assistant",
         )
 
-    def test_published_targets_are_not_left_in_build_mode(self) -> None:
+    def test_only_pending_design_assistant_release_is_in_build_mode(self) -> None:
         catalog = load_preparation_catalog(
             ROOT / "marketplaces" / "obvious-one.json", ROOT
         )
@@ -50,7 +50,10 @@ class ApplicationConfigTests(unittest.TestCase):
             if target.mode == "build"
         }
 
-        self.assertEqual(build_targets, set())
+        self.assertEqual(build_targets, {
+            ("cool-plugin-design-assistant", "codex"),
+            ("cool-plugin-design-assistant", "openclaw"),
+        })
 
     def test_all_cataloged_target_destinations_match_application_identity(self) -> None:
         catalog = load_preparation_catalog(
