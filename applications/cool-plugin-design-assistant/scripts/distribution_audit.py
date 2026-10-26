@@ -85,7 +85,11 @@ def _allowed(relative: Path) -> bool:
     raw = relative.as_posix()
     if raw in EXCLUDED_PATHS:
         return False
-    return raw in ROOT_FILES or bool(relative.parts and relative.parts[0] in PREFIXES)
+    return (
+        raw in ROOT_FILES
+        or bool(relative.parts and relative.parts[0] in PREFIXES)
+        or raw.startswith("vendor/obvious-one-framework/obvious_one_plugin_framework/")
+    )
 
 
 def _audit(root: Path, reject_outside: bool) -> list[str]:

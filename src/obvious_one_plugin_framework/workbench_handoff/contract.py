@@ -16,7 +16,7 @@ HANDOFF_SCHEMA = "workbench-handoff-v1.1"
 RUNTIME_SCOPE = "OPENAI_ONLY_PHASE_ONE"
 _OPERATIONS = {"create", "update"}
 _CHANGES = {"add", "modify", "remove", "preserve"}
-_SEMANTIC_FIELD_TYPES = {
+SEMANTIC_FIELD_TYPES = {
     "approved_design_statement": dict,
     "workflow_definitions_and_instruction_modules": list,
     "reference_material_inventory_evaluation_and_usage_map": list,
@@ -210,7 +210,7 @@ def _validate_update_fields(handoff: dict[str, Any], operation: object, diagnost
 
 
 def _validate_semantic_fields(handoff: dict[str, Any], diagnostics: list[str]) -> None:
-    for field, expected_type in _SEMANTIC_FIELD_TYPES.items():
+    for field, expected_type in SEMANTIC_FIELD_TYPES.items():
         if field not in handoff:
             diagnostics.append(f"handoff.semantic_field_missing:{field}")
         elif not isinstance(handoff[field], expected_type):

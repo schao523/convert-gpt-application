@@ -15,6 +15,11 @@ def _load_runtime(package_name: str) -> ModuleType:
         sys.path.insert(0, str(vendor))
         return importlib.import_module(f"obvious_one_plugin_framework.{package_name}")
 
+    package_vendor = scripts.parent / "vendor" / "obvious-one-framework"
+    if (package_vendor / "obvious_one_plugin_framework" / package_name).is_dir():
+        sys.path.insert(0, str(package_vendor))
+        return importlib.import_module(f"obvious_one_plugin_framework.{package_name}")
+
     for parent in Path(__file__).resolve().parents:
         source = parent / "src"
         if (source / "obvious_one_plugin_framework" / package_name).is_dir():

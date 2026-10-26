@@ -121,6 +121,13 @@ Overlay files receive the same component-by-component link confinement, and
 application files may not collide with generated metadata or any path in the
 framework-owned `vendor/obvious-one-runtime` namespace.
 
+Schema-v3 contracts may declare `framework_packages` as an allowlisted array of
+`plugin_authoring` and/or `workbench_handoff`. The builder copies those Python
+packages into the generated `vendor/obvious-one-framework` namespace, records
+their canonical bytes in `CONTENT-MANIFEST.json`, and verifies them on replay.
+This is for products whose deterministic commands need the shared framework
+without a RAG profile; an absent field adds no framework code.
+
 ### Validate an adopted knowledge-reference policy
 
 Synopsis:
@@ -837,3 +844,25 @@ Automation should pause before:
 - deleting the original GPT source or an earlier generated artifact.
 
 Read-only validation, deterministic local builds, and tests may run without publication approval.
+# Cool Plugin Design Assistant source handoff preflight
+
+Version 1.0.3 of Cool Plugin Design Assistant adds a product launcher command
+for a Source Handoff ZIP transferred from Chat to Work:
+
+```powershell
+python -B applications/cool-plugin-design-assistant/scripts/cool_plugin_design_assistant.py `
+  preflight-source-handoff SOURCE.zip --json
+```
+
+It reads the ZIP, uses the Workbench handoff profile recognizer and shared
+source-contract checks, and reports `PASS` (exit 0), `BLOCKED` (exit 2), or
+`INCOMPLETE` (exit 3). The full and delta Design Assistant source profiles are
+eligible for v1.1 normalization. The report includes PF01–PF10 checks, source
+SHA-256, input profile, target profile and structured diagnostics. It creates
+no canonical output. A preflight PASS means the source contract passed; it
+does not replace official normalization or final canonical validation.
+
+To continue after PASS, run `normalize-handoff-package` through the same
+product launcher with the received source ZIP, a new output path, and the
+recorded owner confirmation. The operation reopens and validates its final
+Canonical Handoff ZIP before reporting success.

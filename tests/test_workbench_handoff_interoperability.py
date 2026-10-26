@@ -100,6 +100,22 @@ class WorkbenchHandoffInteroperabilityTests(unittest.TestCase):
         )
         return output
 
+    def test_chat_source_to_work_preflight_and_canonical_delivery(self) -> None:
+        for label, source in (("full", self._full_source()),):
+            with self.subTest(label=label):
+                before = source.read_bytes()
+                preflight = DESIGN_TOOL.preflight_source_handoff(source)
+                self.assertEqual(preflight["status"], "PASS", preflight)
+                self.assertEqual(preflight["source_archive_sha256"], sha256(before).hexdigest())
+                self.assertTrue(preflight["normalization_ready"])
+                self.assertEqual(source.read_bytes(), before)
+                produced = self._produce(source, "chat-to-work-canonical.zip")
+                with zipfile.ZipFile(produced) as archive:
+                    handoff = json.loads(archive.read("workbench-handoff.json"))
+                    self.assertEqual(handoff["source_archive_sha256"], preflight["source_archive_sha256"])
+                inspection = inspect_design_package(produced, self.root / "chat-to-work-workspace", "create")
+                self.assertEqual(inspection.status, "PASS", inspection.errors)
+
     def test_design_assistant_full_output_enters_plugin_builder_s2_without_repair(self) -> None:
         produced = self._produce(self._full_source(), "full-normalized.zip")
         outcome = inspect_design_package(produced, self.root / "full-workspace", "create")

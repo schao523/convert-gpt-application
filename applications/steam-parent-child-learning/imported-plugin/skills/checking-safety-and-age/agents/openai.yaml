@@ -1,0 +1,3 @@
+interface:
+  display_name: "Checking Safety And Age"
+  short_description: "Check safety, age fit, accessibility and child privacy before STEAM activities or games."

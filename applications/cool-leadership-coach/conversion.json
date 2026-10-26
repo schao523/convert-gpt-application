@@ -1,0 +1,41 @@
+{
+  "application_id": "cool-leadership-coach",
+  "coverage_matrix": "docs/application-invariants.md",
+  "distribution_contract": "openclaw/distribution.json",
+  "marketplace_repository": "schao523/obvious-one-plugins",
+  "plugin_id": "cool-leadership-coach",
+  "provenance": {
+    "incorporated_branches": [],
+    "inventory_rules": [
+      {
+        "classification": "approved-plugin",
+        "include": [
+          "**/*"
+        ],
+        "root": "imported-plugin"
+      }
+    ],
+    "source_repository": "owner-provided-plugin-builder-package"
+  },
+  "schema_version": 2,
+  "source_inventory": "docs/imported-package-inventory.json",
+  "source_location": "conversion.local.json",
+  "verification": {
+    "codex_build": {
+      "artifact_path": "plugins/{plugin_id}",
+      "expected_content_sha256": "07ee34ec4b80fc3ee359a0132d01276689f78a37b601e94c7b93eb3057a25e55",
+      "mode": "verify_existing"
+    },
+    "commands": [
+      {
+        "argv": [
+          "{python}",
+          "-B",
+          "{application_root}/tests/test_release.py"
+        ],
+        "id": "release"
+      }
+    ],
+    "test_directory": "tests"
+  }
+}

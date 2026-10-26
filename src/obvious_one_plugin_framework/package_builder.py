@@ -23,6 +23,8 @@ from .contract import DistributionContract, require_buildable_contract, validate
 
 MANIFEST_NAME = "CONTENT-MANIFEST.json"
 BOOTSTRAP_SOURCE = Path(__file__).resolve().parent / "templates" / "runtime"
+FRAMEWORK_SOURCE = Path(__file__).resolve().parent
+FRAMEWORK_VENDOR_ROOT = Path("vendor/obvious-one-framework/obvious_one_plugin_framework")
 FORBIDDEN_NAMES = {".env", ".git", "__pycache__"}
 SECRET_FRAGMENTS = ("BEGIN PRIVATE KEY", "AWS_SECRET_ACCESS_KEY=", "GH_TOKEN=")
 
@@ -140,6 +142,46 @@ def _render_bootstrap(stage: Path) -> dict[str, ResolvedContentPolicy]:
     return policies
 
 
+def _framework_sources(contract: DistributionContract) -> tuple[tuple[Path, str], ...]:
+    if not contract.framework_packages:
+        return ()
+    sources: list[Path] = []
+    for package in contract.framework_packages:
+        sources.extend(sorted((FRAMEWORK_SOURCE / package).rglob("*.py")))
+    return tuple(
+        (source, (FRAMEWORK_VENDOR_ROOT / source.relative_to(FRAMEWORK_SOURCE)).as_posix())
+        for source in sources
+    )
+
+
+def _framework_policies(contract: DistributionContract) -> dict[str, ResolvedContentPolicy]:
+    policies = {
+        relative: ResolvedContentPolicy(
+            relative, "framework-runtime", "utf8-lf-v1", "framework-owned-v1"
+        )
+        for _, relative in _framework_sources(contract)
+    }
+    if contract.framework_packages:
+        relative = (FRAMEWORK_VENDOR_ROOT / "__init__.py").as_posix()
+        policies[relative] = ResolvedContentPolicy(
+            relative, "framework-runtime", "utf8-lf-v1", "framework-owned-v1"
+        )
+    return policies
+
+
+def _render_framework_packages(stage: Path, contract: DistributionContract) -> dict[str, ResolvedContentPolicy]:
+    policies = _framework_policies(contract)
+    if contract.framework_packages:
+        initializer = stage / FRAMEWORK_VENDOR_ROOT / "__init__.py"
+        initializer.parent.mkdir(parents=True, exist_ok=True)
+        initializer.write_text('"""Vendored standalone framework namespace."""\n', encoding="utf-8", newline="\n")
+    for source, relative in _framework_sources(contract):
+        if _is_reparse_or_symlink(source):
+            raise PackageAuditError("link_forbidden", relative)
+        write_canonical_file(source, stage / relative, policies[relative])
+    return policies
+
+
 def _write_package_json(contract: DistributionContract, stage: Path) -> None:
     openclaw = {"family": contract.family}
     if contract.publication is not None and contract.publication.clawhub.enabled:
@@ -244,6 +286,7 @@ def _manifest_data(
                         policies[relative] = ResolvedContentPolicy(
                             relative, "framework-runtime", "utf8-lf-v1", "framework-runtime-v1"
                         )
+            policies.update(_framework_policies(contract))
             policies["package.json"] = ResolvedContentPolicy(
                 "package.json", "generated-json", "canonical-json-v1", "framework-generated-json-v1"
             )
@@ -294,6 +337,7 @@ def build_package(contract: DistributionContract, output: Path) -> BuildResult:
             write_canonical_file(source, stage / relative, policies[relative])
         if contract.rag is not None:
             policies.update(_render_bootstrap(stage))
+        policies.update(_render_framework_packages(stage, contract))
         _write_package_json(contract, stage)
         policies["package.json"] = ResolvedContentPolicy(
             "package.json", "generated-json", "canonical-json-v1", "framework-generated-json-v1"
@@ -370,14 +414,19 @@ def _planned_application_sources(
             for source in BOOTSTRAP_SOURCE.rglob("*")
             if source.is_file()
         )
+    reserved.update(_framework_policies(contract))
     reserved_folded = {item.casefold() for item in reserved}
     for relative in planned:
         folded_relative = relative.casefold()
         runtime_root = "vendor/obvious-one-runtime"
+        framework_root = "vendor/obvious-one-framework"
         runtime_collision = (
             folded_relative == runtime_root
             or folded_relative.startswith(runtime_root + "/")
             or runtime_root.startswith(folded_relative + "/")
+            or folded_relative == framework_root
+            or folded_relative.startswith(framework_root + "/")
+            or framework_root.startswith(folded_relative + "/")
         )
         if folded_relative in reserved_folded or runtime_collision:
             raise PackageAuditError("reserved_path_collision", relative)

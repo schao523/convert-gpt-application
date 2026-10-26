@@ -1,0 +1,3 @@
+interface:
+  display_name: "Guiding Leadership Sessions"
+  short_description: "Route leadership requests and preserve consent and session state."

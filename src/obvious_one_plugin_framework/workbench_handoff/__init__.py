@@ -11,6 +11,8 @@ from .contract import (
 from .identity import BaselineIdentity, baseline_identity_from_archive, validate_update_baseline
 from .normalization import ADAPTER_VERSION, HandoffNormalizationOutcome, normalize_handoff_archive
 from .profiles import HandoffProfile, classify_handoff_profile
+from .preflight import SourcePreflightOutcome, preflight_handoff_archive
+from .source_contract import SourceContractAnalysis, analyze_source_handoff
 
 __all__ = [
     "HANDOFF_CONTRACT",
@@ -27,4 +29,8 @@ __all__ = [
     "HandoffNormalizationOutcome",
     "classify_handoff_profile",
     "normalize_handoff_archive",
+    "SourcePreflightOutcome",
+    "preflight_handoff_archive",
+    "SourceContractAnalysis",
+    "analyze_source_handoff",
 ]

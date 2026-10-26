@@ -1,0 +1,49 @@
+{
+  "application_id": "steam-parent-child-learning",
+  "coverage_matrix": "docs/application-invariants.md",
+  "distribution_contract": "openclaw/distribution.json",
+  "marketplace_repository": "schao523/obvious-one-plugins",
+  "plugin_id": "steam-parent-child-learning",
+  "provenance": {
+    "incorporated_branches": [],
+    "inventory_rules": [
+      {
+        "classification": "approved-plugin",
+        "include": [
+          "**/*"
+        ],
+        "root": "imported-plugin"
+      }
+    ],
+    "source_repository": "plugin-builder-reviewed-package"
+  },
+  "schema_version": 2,
+  "source_inventory": "docs/imported-package-inventory.json",
+  "source_location": "conversion.local.json",
+  "verification": {
+    "codex_build": {
+      "artifact_path": "plugins/{plugin_id}",
+      "expected_content_sha256": "e1dafc8fc47f2e64d0f3dbc043b62176979a757d9019ce1d616f3b7891a92b81",
+      "mode": "verify_existing"
+    },
+    "commands": [
+      {
+        "argv": [
+          "{python}",
+          "-B",
+          "{application_root}/tests/test_imported_package.py"
+        ],
+        "id": "imported-package"
+      },
+      {
+        "argv": [
+          "{python}",
+          "-B",
+          "{application_root}/tests/test_marketplace_release.py"
+        ],
+        "id": "marketplace-release"
+      }
+    ],
+    "test_directory": "tests"
+  }
+}

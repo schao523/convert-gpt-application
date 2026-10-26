@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+from hashlib import sha256
 import json
+import os
 from pathlib import Path
 import shutil
 import subprocess
@@ -30,6 +32,25 @@ from tests.framework.plugin_onboarding_fixtures import (
 
 
 REPOSITORY = Path(__file__).resolve().parents[2]
+
+
+def _tracked_repository_sha256() -> str:
+    """Snapshot repository-owned bytes without unrelated ignored workspace output."""
+    result = subprocess.run(
+        ["git", "ls-files", "-z"],
+        cwd=REPOSITORY,
+        check=True,
+        capture_output=True,
+    )
+    digest = sha256()
+    for relative_bytes in sorted(set(result.stdout.split(b"\0")) - {b""}):
+        path = REPOSITORY / os.fsdecode(relative_bytes)
+        content = path.read_bytes()
+        digest.update(len(relative_bytes).to_bytes(4, "big"))
+        digest.update(relative_bytes)
+        digest.update(len(content).to_bytes(8, "big"))
+        digest.update(content)
+    return digest.hexdigest()
 
 
 class PluginOnboardingMaterializeTests(unittest.TestCase):
@@ -386,13 +407,13 @@ class PluginOnboardingMaterializeTests(unittest.TestCase):
         sentinel = output / "keep.txt"
         sentinel.write_bytes(b"keep\r\n")
         archive_before = self.fixture.archive.read_bytes()
-        repository_before = plugin_authoring.tree_sha256(REPOSITORY)
+        repository_before = _tracked_repository_sha256()
         with self.assertRaises(OnboardingError) as caught:
             self.prepare(output)
         self.assertEqual(caught.exception.code, "onboarding.output_collision")
         self.assertEqual(sentinel.read_bytes(), b"keep\r\n")
         self.assertEqual(self.fixture.archive.read_bytes(), archive_before)
-        self.assertEqual(plugin_authoring.tree_sha256(REPOSITORY), repository_before)
+        self.assertEqual(_tracked_repository_sha256(), repository_before)
 
     def test_owned_replacement_is_transactional_and_failure_preserves_previous_tree(self) -> None:
         output = self.root / "owned"

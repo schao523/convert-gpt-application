@@ -3,11 +3,15 @@ from __future__ import annotations
 import importlib.util
 from pathlib import Path
 import shutil
+import subprocess
+import sys
 import tempfile
 import unittest
 from unittest import mock
 
 from obvious_one_plugin_framework.marketplace import load_preparation_catalog
+from obvious_one_plugin_framework.contract import load_contract
+from obvious_one_plugin_framework.package_builder import build_package, verify_package
 from obvious_one_plugin_framework.plugin_authoring import validate_plugin_tree
 
 
@@ -25,6 +29,28 @@ def load_script(name: str):
 
 
 class MarketplaceReleaseTests(unittest.TestCase):
+    def test_openclaw_bundle_loads_declared_framework_from_its_own_vendor(self) -> None:
+        contract = load_contract(ROOT / "openclaw/distribution.json")
+        with tempfile.TemporaryDirectory() as temp:
+            package = Path(temp) / "openclaw"
+            built = build_package(contract, package)
+            self.assertEqual(verify_package(contract, package), built)
+            bundled = package / "vendor/obvious-one-framework/obvious_one_plugin_framework"
+            self.assertTrue((bundled / "workbench_handoff/preflight.py").is_file())
+            result = subprocess.run(
+                [sys.executable, "-I", "-B", "-c",
+                 "import importlib.util, pathlib, sys; p=pathlib.Path(sys.argv[1]); "
+                 "s=importlib.util.spec_from_file_location('bundle_bootstrap', p); "
+                 "m=importlib.util.module_from_spec(s); s.loader.exec_module(m); "
+                 "print(m.load_workbench_handoff().__file__)",
+                 str(package / "scripts/workbench_handoff_bootstrap.py")],
+                capture_output=True, text=True, check=False,
+            )
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertTrue(
+                Path(result.stdout.strip()).resolve().is_relative_to(bundled.resolve())
+            )
+
     def test_obvious_one_catalog_preserves_published_applications(self) -> None:
         catalog = load_preparation_catalog(
             REPOSITORY / "marketplaces" / "obvious-one.json", REPOSITORY
@@ -41,8 +67,8 @@ class MarketplaceReleaseTests(unittest.TestCase):
         release = load_script("build_marketplace_release.py")
         with tempfile.TemporaryDirectory() as temp:
             destination = Path(temp) / "marketplace"
-            first = release.build_release(ROOT, destination, "1.0.2")
-            second = release.build_release(ROOT, destination, "1.0.2")
+            first = release.build_release(ROOT, destination, "1.0.3")
+            second = release.build_release(ROOT, destination, "1.0.3")
             self.assertEqual(first.sha256, second.sha256)
             self.assertEqual(first.paths, second.paths)
             plugin = destination / "plugins" / "cool-plugin-design-assistant"
@@ -71,7 +97,7 @@ class MarketplaceReleaseTests(unittest.TestCase):
             (copied_source / "docs" / "source-decisions.md").unlink()
             destination = Path(temp) / "marketplace"
             with self.assertRaisesRegex(ValueError, "rights and provenance evidence missing"):
-                release.build_release(copied_source, destination, "1.0.2")
+                release.build_release(copied_source, destination, "1.0.3")
             self.assertFalse(destination.exists())
 
     def test_codex_release_detects_windows_reparse_points(self) -> None:

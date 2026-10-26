@@ -53,7 +53,9 @@ VENDOR_FILES = {
     "scripts/vendor/obvious_one_plugin_framework/workbench_handoff/contract.py",
     "scripts/vendor/obvious_one_plugin_framework/workbench_handoff/identity.py",
     "scripts/vendor/obvious_one_plugin_framework/workbench_handoff/normalization.py",
+    "scripts/vendor/obvious_one_plugin_framework/workbench_handoff/preflight.py",
     "scripts/vendor/obvious_one_plugin_framework/workbench_handoff/profiles.py",
+    "scripts/vendor/obvious_one_plugin_framework/workbench_handoff/source_contract.py",
 }
 FORBIDDEN_NAMES = {
     ".env",

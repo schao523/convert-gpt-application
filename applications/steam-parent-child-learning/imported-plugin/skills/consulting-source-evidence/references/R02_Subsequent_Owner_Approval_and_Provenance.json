@@ -1,0 +1,37 @@
+{
+  "application": "STEAM 親子共學設計助理",
+  "specification_version": "Revision 02",
+  "specification_file": "R02_Approved_Specification_Body_Historical_Draft_Header.md",
+  "specification_sha256": "f19639cc5a754e035f13e57cf456e764df08ec15c3a123284464065f3ec53987",
+  "owner": "Shen-Chang Chao",
+  "state": "approved",
+  "evidence_basis": [
+    "Current owner instruction: Continue the existing owner-approved STEAM 親子共學設計助理 Revision 02 handoff.",
+    "Current owner instruction: Do not request renewed approval for the already approved R02 specification, RM08 safety revision, or closed owner decisions.",
+    "Supplied STATUS_AND_OWNER_DECISIONS.json and OWNER_DECISION_CLOSURE_2026-10-23.md; owner approval and rights declarations retained, not independent audits."
+  ],
+  "historical_header": "Original DRAFT and pending-approval wording remains byte-identical as historical text. Subsequent owner approval is recorded separately here; no behavior change.",
+  "closed_owner_decisions": [
+    {
+      "decision_id": "SAFETY-ADOPTION",
+      "owner": "Shen-Chang Chao",
+      "disposition": "Approved reviewed RM08 replacement with 15-activity safety assessment",
+      "evidence": "explicit user approval"
+    },
+    {
+      "decision_id": "MEDIA-RIGHTS",
+      "owner": "Shen-Chang Chao",
+      "disposition": "Owner declares no unlicensed/uncleared third-party images in distribution package; claims not independently audited",
+      "evidence": "explicit owner declaration"
+    },
+    {
+      "decision_id": "CONTENT-SIGNOFF",
+      "owner": "Shen-Chang Chao",
+      "disposition": "Approved original Markdown Framework as authority and verified conversion/editorial fixes; no silent reconciliation of conflicting versions",
+      "evidence": "explicit user approval"
+    }
+  ],
+  "provenance_declaration": "Owner Shen-Chang Chao declares supplied references project-authored or self-authored; no independent audit of embedded third-party content is asserted.",
+  "authoritative_framework": "knowledge/RM02_Game_Design_Innovation_Framework.md; differing DOCX additions are not silently merged.",
+  "source_staging_sha256": "ab9ba65bdb0d2212798fc208536a798928f44d1929ac5eb2f8ac6cd0026faed8"
+}

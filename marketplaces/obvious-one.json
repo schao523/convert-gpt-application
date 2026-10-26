@@ -22,8 +22,8 @@
       "application_config": "applications/cool-plugin-design-assistant/conversion.json",
       "distribution_contract": "applications/cool-plugin-design-assistant/openclaw/distribution.json",
       "targets": {
-        "codex": {"mode": "verify_existing", "destination": "plugins/cool-plugin-design-assistant"},
-        "openclaw": {"mode": "verify_existing", "destination": "openclaw/cool-plugin-design-assistant"}
+          "codex": {"mode": "verify_existing", "destination": "plugins/cool-plugin-design-assistant"},
+          "openclaw": {"mode": "verify_existing", "destination": "openclaw/cool-plugin-design-assistant"}
       }
     },
     {
@@ -82,6 +82,32 @@
       "targets": {
         "codex": {
           "destination": "plugins/cool-gpt-application-design-assistant",
+          "mode": "verify_existing"
+        },
+        "openclaw": {
+          "mode": "not_applicable"
+        }
+      }
+    },
+    {
+      "application_config": "applications/steam-parent-child-learning/conversion.json",
+      "distribution_contract": "applications/steam-parent-child-learning/openclaw/distribution.json",
+      "targets": {
+        "codex": {
+          "destination": "plugins/steam-parent-child-learning",
+          "mode": "verify_existing"
+        },
+        "openclaw": {
+          "mode": "not_applicable"
+        }
+      }
+    },
+    {
+      "application_config": "applications/cool-leadership-coach/conversion.json",
+      "distribution_contract": "applications/cool-leadership-coach/openclaw/distribution.json",
+      "targets": {
+        "codex": {
+          "destination": "plugins/cool-leadership-coach",
           "mode": "verify_existing"
         },
         "openclaw": {

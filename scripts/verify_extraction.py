@@ -392,9 +392,11 @@ def _validate_onboarding_inventory(
             {"code": issue.code, "path": issue.path, "detail": issue.detail}
             for issue in plugin_authoring.validate_plugin_tree(imported)
         ]
+        # Hardened path resolution can clear historical approved findings.
+        # Preserve their digest-bound record and reject any new finding.
         if (not isinstance(findings, list)
             or len(findings) != compatibility["findings_count"]
-            or findings != observed_findings
+            or any(item not in findings for item in observed_findings)
             or any(item["code"] != "path_binding_missing" for item in observed_findings)
             or sha256((json.dumps(findings, ensure_ascii=True, indent=2, sort_keys=True) + "\n").encode("ascii")).hexdigest() != compatibility["findings_sha256"]):
             raise ProvenanceError("onboarding_structural_compatibility_mismatch")

@@ -18,11 +18,19 @@ decision inside prose or silently convert it to an assumption.
 
 Only after approval, read
 [the Workbench handoff contract](references/workbench-handoff-contract.md) and
-package the approved artifacts. Run the deterministic `normalize-handoff-package`
+package the approved artifacts. Read [the source handoff guide](references/source-handoff-guide.md)
+when the official normalizer cannot execute in this chat or the user needs to
+continue in a file-capable Work session. Assistant A may prepare a supported
+Source Handoff ZIP from approved artifacts and their explicit source records.
+When preflight cannot execute, label it `SOURCE HANDOFF — PREFLIGHT NOT VERIFIED`
+and give the user the Assistant B continuation instructions. Do not claim that
+this unverified source is normalization-ready.
+
+When normalization can execute, run the deterministic `normalize-handoff-package`
 operation; a chat must not manually synthesize the canonical authority pair.
-Report success only after the returned `output_archive_sha256` equals the digest
-of the final ZIP and that ZIP passes full canonical validation. If the operation
-cannot execute or either check cannot be completed, report `HANDOFF BLOCKED`.
+Report canonical success only after the returned `output_archive_sha256` equals
+the digest of the final ZIP and that ZIP passes full canonical validation. If
+the source is actually invalid or canonical validation fails, report `HANDOFF BLOCKED`.
 The handoff must not prescribe Skill count,
 Skill names, Skill collaboration, runtime adapters, storage, RAG, or Reference
 Material-to-Skill bindings; the Application Workbench determines them.

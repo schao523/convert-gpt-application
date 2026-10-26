@@ -1,0 +1,252 @@
+{
+  "adapter": null,
+  "capability_ids": [
+    "steam-contract-checks-capability"
+  ],
+  "configuration": {
+    "authentication": "NOT_REQUIRED",
+    "setup": "Owner configures Python 3 and authorized direct argv; no credentials or network."
+  },
+  "dependencies": [
+    {
+      "absence_policy": "BLOCK",
+      "id": "python",
+      "provider": "OWNER_CONFIGURED",
+      "required": true,
+      "runtime_targets": [
+        "Codex",
+        "ChatGPT Work Local/Desktop"
+      ],
+      "setup_owner": "OWNER",
+      "sha256": null,
+      "type": "EXECUTABLE",
+      "version": "3"
+    }
+  ],
+  "execution": {
+    "argv": [
+      "{python}",
+      "tools/steam_contract_checks.py"
+    ],
+    "clean_environment": true,
+    "timeout_seconds": 30
+  },
+  "fallback": {
+    "alternative_operation_id": null,
+    "degraded_requirement_ids": [
+      "DO01",
+      "DO02",
+      "DO03",
+      "DO04",
+      "DO05",
+      "DO06",
+      "DO07"
+    ],
+    "policy": "BLOCK",
+    "preserved_requirement_ids": [],
+    "trigger_conditions": [
+      "Required interpreter/execution unavailable."
+    ]
+  },
+  "files": [
+    "tools/steam_contract_checks.py"
+  ],
+  "fixtures": {
+    "input": {
+      "executed": false,
+      "operation": "evidence",
+      "produced": false,
+      "tested": false
+    },
+    "output": {
+      "checks": [
+        {
+          "id": "produced-evidence",
+          "pass": true
+        },
+        {
+          "id": "executed-evidence",
+          "pass": true
+        },
+        {
+          "id": "tested-evidence",
+          "pass": true
+        },
+        {
+          "id": "ordered-claims",
+          "pass": true
+        },
+        {
+          "id": "execution-produced",
+          "pass": true
+        },
+        {
+          "id": "learning-separate",
+          "pass": true
+        }
+      ],
+      "limitations": [
+        "Evidence references are supplied records, not independent replay of browser actions."
+      ],
+      "operation": "evidence",
+      "status": "PASS"
+    }
+  },
+  "id": "steam-contract-checks",
+  "implementation_kind": "BUNDLED_LOCAL",
+  "input_schema": {
+    "additionalProperties": true,
+    "properties": {
+      "operation": {
+        "enum": [
+          "inventory",
+          "conversion",
+          "activity",
+          "production",
+          "evidence",
+          "usage",
+          "framework"
+        ]
+      }
+    },
+    "required": [
+      "operation"
+    ],
+    "type": "object"
+  },
+  "mcp": null,
+  "operation": {
+    "capability_ids": [
+      "steam-contract-checks-capability"
+    ],
+    "id": "steam-contract-checks",
+    "idempotent": true,
+    "input_schema_sha256": "d8cf0252bb5dbb110e113c306ebe1b7b954de6d81ad09d9f42c1fb54c08952ac",
+    "output_schema_sha256": "fc8acc6997b901a48f8b245ea62274dd0f7e3f0b029a13355c1aa7223bb11928",
+    "protocol": "JSON_STDIN_STDOUT",
+    "side_effect_class": "NONE"
+  },
+  "output_schema": {
+    "properties": {
+      "checks": {
+        "type": "array"
+      },
+      "limitations": {
+        "type": "array"
+      },
+      "operation": {
+        "type": "string"
+      },
+      "status": {
+        "enum": [
+          "PASS",
+          "FAIL",
+          "NOT VERIFIED"
+        ]
+      }
+    },
+    "required": [
+      "operation",
+      "status",
+      "checks",
+      "limitations"
+    ],
+    "type": "object"
+  },
+  "permissions": [
+    {
+      "grant_source": "OWNER",
+      "id": "workspace:read",
+      "purpose": "Read bundled code and supplied record data.",
+      "required": true,
+      "target_runtime": "Codex",
+      "verification": "Observe argv, input/output and return to owning Skill."
+    },
+    {
+      "grant_source": "OWNER",
+      "id": "workspace:read",
+      "purpose": "Read bundled code and supplied record data.",
+      "required": true,
+      "target_runtime": "ChatGPT Work Local/Desktop",
+      "verification": "Observe argv, input/output and return to owning Skill."
+    }
+  ],
+  "realizations": [
+    {
+      "adapter_id": "direct-local",
+      "adapter_version": "2",
+      "dependency_ids": [
+        "python"
+      ],
+      "evidence_policy": "DEFERRED_ALLOWED",
+      "execution_location": "USER_DEVICE",
+      "exposed_capability": "steam-contract-checks",
+      "feasibility_state": "FEASIBLE_WITH_SETUP",
+      "mechanism": "DIRECT_LOCAL",
+      "operation_id": "steam-contract-checks",
+      "permission_ids": [
+        "workspace:read"
+      ],
+      "setup_owner": "OWNER",
+      "setup_requirements": [
+        "Install Python 3; permit bounded direct argv with shell=false from plugin root; return JSON stdout to consulting-source-evidence."
+      ],
+      "target_runtime": "Codex",
+      "transport": "DIRECT_ARGV"
+    },
+    {
+      "adapter_id": "direct-local",
+      "adapter_version": "2",
+      "dependency_ids": [
+        "python"
+      ],
+      "evidence_policy": "DEFERRED_ALLOWED",
+      "execution_location": "USER_DEVICE",
+      "exposed_capability": "steam-contract-checks",
+      "feasibility_state": "FEASIBLE_WITH_SETUP",
+      "mechanism": "DIRECT_LOCAL",
+      "operation_id": "steam-contract-checks",
+      "permission_ids": [
+        "workspace:read"
+      ],
+      "setup_owner": "OWNER",
+      "setup_requirements": [
+        "Install Python 3; permit bounded direct argv with shell=false from plugin root; return JSON stdout to consulting-source-evidence."
+      ],
+      "target_runtime": "ChatGPT Work Local/Desktop",
+      "transport": "DIRECT_ARGV"
+    }
+  ],
+  "redistribution": {
+    "evidence": "Generated R02 implementation code/contracts; optional host services are not bundled.",
+    "state": "APPROVED"
+  },
+  "required": true,
+  "requirement_ids": [
+    "DO01",
+    "DO02",
+    "DO03",
+    "DO04",
+    "DO05",
+    "DO06",
+    "DO07"
+  ],
+  "runtime_capability": null,
+  "runtime_targets": [
+    "Codex",
+    "ChatGPT Work Local/Desktop"
+  ],
+  "schema": "plugin-builder-application-tool-v2",
+  "side_effects": [],
+  "skill_bindings": [
+    "consulting-source-evidence"
+  ],
+  "verification": {
+    "argv": [
+      "{python}",
+      "tools/steam_contract_checks.py"
+    ],
+    "kind": "PYTHON_ARGV",
+    "network": false
+  }
+}
