@@ -34,6 +34,37 @@ def read_result(completed: subprocess.CompletedProcess[str]) -> dict:
     return json.loads(completed.stdout)
 
 
+def configure_direct_local_v2(proposal: dict, *, evidence_policy: str = "DEFERRED_ALLOWED") -> None:
+    tool = proposal["tools"][0]
+    targets = tool["runtime_targets"]
+    tool["mcp"] = None
+    proposal["expected_members"] = [
+        member for member in proposal["expected_members"]
+        if member not in {"mcp.json", ".mcp.json"}
+    ]
+    tool["dependencies"] = [{
+        "id": "python-runtime", "type": "EXECUTABLE", "provider": "OWNER_CONFIGURED",
+        "version": "3.11+", "sha256": None, "runtime_targets": targets,
+        "setup_owner": "OWNER", "required": True, "absence_policy": "BLOCK",
+    }]
+    tool["permissions"] = [{
+        "id": permission, "target_runtime": target, "grant_source": "OWNER",
+        "required": True, "purpose": "Run the approved local normalization operation.",
+        "verification": "Observe installed Skill-to-Python-to-Skill result delivery.",
+    } for target in targets for permission in ("workspace:read", "workspace:write")]
+    tool["configuration"] = {"authentication": "NOT_REQUIRED", "setup": "OWNER_CONFIGURED"}
+    tool["realizations"] = [{
+        "target_runtime": target, "mechanism": "DIRECT_LOCAL", "adapter_id": "direct-local",
+        "adapter_version": "2", "exposed_capability": "normalize-input",
+        "operation_id": "normalize-input", "transport": "DIRECT_ARGV",
+        "execution_location": "USER_DEVICE", "dependency_ids": ["python-runtime"],
+        "permission_ids": ["workspace:read", "workspace:write"],
+        "setup_requirements": ["Configure Python 3.11+ and route tool output to the owning Skill."],
+        "setup_owner": "OWNER", "feasibility_state": "FEASIBLE_WITH_SETUP",
+        "evidence_policy": evidence_policy,
+    } for target in targets]
+
+
 def prepared_workspace(root: Path, *, approve: bool = True, mutate=None) -> Path:
     archive_path = root / "design.zip"
     with zipfile.ZipFile(archive_path, "w", compression=zipfile.ZIP_DEFLATED) as archive:

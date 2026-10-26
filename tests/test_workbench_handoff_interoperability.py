@@ -57,9 +57,7 @@ def _directory_members(root: Path) -> dict[str, bytes]:
 
 class WorkbenchHandoffInteroperabilityTests(unittest.TestCase):
     def setUp(self) -> None:
-        temporary_root = ROOT / ".tmp" / "workbench-handoff-interoperability"
-        temporary_root.mkdir(parents=True, exist_ok=True)
-        self.temporary = tempfile.TemporaryDirectory(dir=temporary_root)
+        self.temporary = tempfile.TemporaryDirectory(prefix="workbench-handoff-interoperability-")
         self.root = Path(self.temporary.name)
 
     def tearDown(self) -> None:

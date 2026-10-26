@@ -31,8 +31,8 @@ class ConversionContractTests(unittest.TestCase):
         )
 
         self.assertEqual(catalog.schema_version, 2)
-        self.assertEqual(builder.application.version, "1.0.1")
-        self.assertEqual(builder.target("codex").mode, "verify_existing")
+        self.assertEqual(builder.application.version, "1.0.2")
+        self.assertEqual(builder.target("codex").mode, "build")
         self.assertEqual(builder.target("codex").destination, "plugins/plugin-builder")
         self.assertEqual(builder.target("openclaw").mode, "not_applicable")
         self.assertIsNone(builder.target("openclaw").destination)
@@ -53,7 +53,7 @@ class ConversionContractTests(unittest.TestCase):
             "approved-design-internal",
         )
         self.assertEqual(manifest["name"], "plugin-builder")
-        self.assertEqual(manifest["version"], "1.0.1")
+        self.assertEqual(manifest["version"], "1.0.2")
         self.assertEqual(portable["$schema"], "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json")
         self.assertEqual((portable["name"], portable["version"]), (manifest["name"], manifest["version"]))
         self.assertEqual(portable["extensions"]["com.openai"]["interface"], manifest["interface"])
@@ -70,14 +70,14 @@ class ConversionContractTests(unittest.TestCase):
         self.assertGreaterEqual(set(scope["excluded_runtimes"]), {"OpenClaw", "Claude"})
         self.assertEqual(
             scope["publication_state"],
-            "PUBLISHED_OBVIOUS_ONE_GITHUB_MARKETPLACE",
+            "NOT_PUBLISHED",
         )
-        self.assertEqual(scope["release_state"], "RELEASED_1.0.1_OBVIOUS_ONE")
+        self.assertEqual(scope["release_state"], "LOCAL_CANDIDATE_1.0.2")
         self.assertEqual(
             inventory["marketplace_commit"],
             "5deedc580acb9afa276f81abeca15e91ce20a56c",
         )
-        self.assertEqual(scope["version"], "1.0.1")
+        self.assertEqual(scope["version"], "1.0.2")
         self.assertEqual(
             scope["approved_release_targets"],
             ["private/local ZIP", "public GitHub Codex marketplace", "OpenAI universal directory"],
