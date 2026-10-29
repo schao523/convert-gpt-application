@@ -13,6 +13,8 @@ import subprocess
 import sys
 from tempfile import TemporaryDirectory
 
+from .plugin_authoring import tree_sha256
+
 from .contract import ContractError, DistributionContract, load_contract, require_buildable_contract
 from .package_builder import build_package, verify_package
 from .marketplace_receipt import (
@@ -42,7 +44,16 @@ _V1_ENTRY_KEYS = {
 _V2_ENTRY_KEYS = {"application_config", "distribution_contract", "targets"}
 _TARGET_NAMES = ("codex", "openclaw")
 _APPLICABLE_TARGET_MODES = {"build", "verify_existing"}
-_TARGET_MODES = _APPLICABLE_TARGET_MODES | {"not_applicable"}
+_TARGET_MODES = _APPLICABLE_TARGET_MODES | {"metadata_patch", "not_applicable"}
+
+
+@dataclass(frozen=True)
+class MetadataPatch:
+    source_sha256: str
+    source_version: str
+    version: str
+    author_name: str
+    developer_name: str
 
 
 class MarketplaceError(ValueError):
@@ -55,6 +66,7 @@ class MarketplaceError(ValueError):
 class PreparationTarget:
     mode: str
     destination: str | None
+    patch: MetadataPatch | None = None
 
 
 @dataclass(frozen=True)
@@ -223,6 +235,8 @@ def prepare_marketplace(
                         stage,
                         temporary_root / entry.application.plugin_id,
                     )
+                elif target.mode == "metadata_patch":
+                    _patch_target(entry, target_name, target, baseline_root, stage)
                 else:
                     _verify_existing_target(
                         entry,
@@ -239,7 +253,7 @@ def prepare_marketplace(
                 destinations = tuple(
                     target.destination
                     for _, target in entry.applicable_targets()
-                    if target.mode == "verify_existing" and target.destination is not None
+                    if target.mode in {"verify_existing", "metadata_patch"} and target.destination is not None
                 )
                 if destinations:
                     _materialize_committed_destinations(
@@ -530,6 +544,101 @@ def _verify_existing_target(
         )
     if not committed and _tree_files(baseline / Path(destination)) != _tree_files(artifact):
         raise MarketplaceError("verify_existing_mutated", entry.application.plugin_id)
+
+
+def _patch_target(
+    entry: PreparationEntry,
+    target_name: str,
+    target: PreparationTarget,
+    baseline: Path,
+    stage: Path,
+) -> None:
+    if target_name != "codex" or target.patch is None:
+        raise MarketplaceError("metadata_patch_target_invalid", target_name)
+    destination = _required_target_destination(target, target_name)
+    if _is_git_root(baseline):
+        _materialize_committed_destinations(baseline, stage, (destination,))
+    artifact = _stage_destination(stage, destination)
+    patch = target.patch
+    if tree_sha256(artifact) != patch.source_sha256:
+        raise MarketplaceError("metadata_patch_source_mismatch", entry.application.plugin_id)
+    before = _tree_files(artifact)
+    content_manifest = artifact / "CONTENT-MANIFEST.json"
+    content = None
+    if content_manifest.is_file():
+        try:
+            content = json.loads(content_manifest.read_text(encoding="utf-8"))
+            records = content["files"]
+            if (
+                content.get("plugin") != entry.application.plugin_id
+                or content.get("version") != patch.source_version
+                or not isinstance(records, list)
+            ):
+                raise ValueError("invalid content manifest")
+            seen: set[str] = set()
+            for record in records:
+                relative = record["path"]
+                if not isinstance(relative, str) or relative in seen or _destination(relative, "content_manifest.path") != relative:
+                    raise ValueError("invalid content manifest path")
+                seen.add(relative)
+                raw = (artifact / relative).read_bytes()
+                if record["size"] != len(raw) or record["sha256"] != sha256(raw).hexdigest():
+                    raise ValueError("stale content manifest")
+        except (OSError, UnicodeError, json.JSONDecodeError, KeyError, TypeError, ValueError, MarketplaceError) as exc:
+            raise MarketplaceError("metadata_patch_content_manifest_invalid", entry.application.plugin_id) from exc
+    changed: set[str] = set()
+    for relative in (".codex-plugin/plugin.json", "plugin.json"):
+        path = artifact / relative
+        if not path.is_file():
+            if relative == ".codex-plugin/plugin.json":
+                raise MarketplaceError("codex_manifest_invalid", entry.application.plugin_id)
+            continue
+        try:
+            payload = json.loads(path.read_text(encoding="utf-8"))
+            interface = (
+                payload.get("interface")
+                if relative.startswith(".codex-plugin/")
+                else payload.get("extensions", {}).get("com.openai", {}).get("interface")
+            )
+            if (
+                not isinstance(payload, dict)
+                or payload.get("name") != entry.application.plugin_id
+                or payload.get("version") != patch.source_version
+                or not isinstance(payload.get("author"), dict)
+                or not isinstance(interface, dict)
+            ):
+                raise ValueError("invalid manifest")
+        except (OSError, UnicodeError, json.JSONDecodeError, AttributeError, ValueError) as exc:
+            raise MarketplaceError("metadata_patch_manifest_invalid", relative) from exc
+        payload["version"] = patch.version
+        payload["author"]["name"] = patch.author_name
+        interface["developerName"] = patch.developer_name
+        _write_json_file(path, payload)
+        changed.add(relative)
+
+    if content is not None:
+        try:
+            records = content["files"]
+            for record in records:
+                relative = record["path"]
+                if relative in changed:
+                    updated = (artifact / relative).read_bytes()
+                    record["size"] = len(updated)
+                    record["sha256"] = sha256(updated).hexdigest()
+            if not changed <= seen:
+                raise ValueError("unrecorded patched manifest")
+            content["version"] = patch.version
+        except (OSError, UnicodeError, KeyError, TypeError, ValueError) as exc:
+            raise MarketplaceError("metadata_patch_content_manifest_invalid", entry.application.plugin_id) from exc
+        _write_json_file(content_manifest, content)
+        changed.add("CONTENT-MANIFEST.json")
+
+    _check_plugin_manifest(artifact, entry.application.plugin_id, patch.version)
+    after = _tree_files(artifact)
+    if {path for path in before if before[path] != after.get(path)} != changed:
+        raise MarketplaceError("metadata_patch_unexpected_delta", entry.application.plugin_id)
+    if set(before) != set(after):
+        raise MarketplaceError("metadata_patch_unexpected_delta", entry.application.plugin_id)
 
 
 def _ensure_not_applicable_targets_absent(
@@ -1071,6 +1180,30 @@ def _parse_target(value: object, name: str) -> PreparationTarget:
         return PreparationTarget(mode, None)
     if "destination" not in value:
         raise MarketplaceError("marketplace_target_destination_required", name)
+    if mode == "metadata_patch":
+        if name != "codex" or set(value) != {"mode", "destination", "patch"}:
+            raise MarketplaceError("metadata_patch_target_invalid", name)
+        patch = value["patch"]
+        keys = {"source_sha256", "source_version", "version", "author_name", "developer_name"}
+        if not isinstance(patch, dict) or set(patch) != keys:
+            raise MarketplaceError("metadata_patch_contract_invalid", name)
+        source_sha256 = patch["source_sha256"]
+        if (
+            not isinstance(source_sha256, str)
+            or len(source_sha256) != 64
+            or any(character not in "0123456789abcdef" for character in source_sha256)
+        ):
+            raise MarketplaceError("metadata_patch_contract_invalid", name)
+        fields = {key: patch[key] for key in keys - {"source_sha256"}}
+        if any(not isinstance(value, str) or not value.strip() for value in fields.values()):
+            raise MarketplaceError("metadata_patch_contract_invalid", name)
+        if fields["source_version"] == fields["version"]:
+            raise MarketplaceError("metadata_patch_contract_invalid", name)
+        return PreparationTarget(
+            mode,
+            _destination(value["destination"], f"targets.{name}.destination"),
+            MetadataPatch(source_sha256, fields["source_version"], fields["version"], fields["author_name"], fields["developer_name"]),
+        )
     if set(value) != {"mode", "destination"}:
         raise MarketplaceError("invalid_marketplace_catalog_target", name)
     return PreparationTarget(mode, _destination(value["destination"], f"targets.{name}.destination"))

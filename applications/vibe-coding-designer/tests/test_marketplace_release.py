@@ -31,9 +31,9 @@ class MarketplaceReleaseTests(unittest.TestCase):
             entry.application.plugin_id: entry.target("codex").mode
             for entry in catalog.applications
         }
-        self.assertEqual(modes["cool-bible-tutor"], "verify_existing")
-        self.assertEqual(modes["vibe-coding-designer"], "verify_existing")
-        self.assertEqual(modes["sermon-coach"], "verify_existing")
+        self.assertEqual(modes["cool-bible-tutor"], "metadata_patch")
+        self.assertEqual(modes["vibe-coding-designer"], "metadata_patch")
+        self.assertEqual(modes["sermon-coach"], "metadata_patch")
 
     def test_codex_release_is_deterministic_and_allowlisted(self) -> None:
         release = load_script("build_marketplace_release.py")

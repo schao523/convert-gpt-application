@@ -206,9 +206,11 @@ def _load_registry(path):
                 continue
             if (
                 not isinstance(target, dict)
-                or set(target) != {"state", "mode", "path", "artifact"}
+                or set(target) not in ({"state", "mode", "path", "artifact"}, {"state", "mode", "path", "artifact", "version", "author_name", "developer_name"})
                 or target.get("state") != "STATICALLY VERIFIED"
-                or target.get("mode") not in {"build", "verify_existing"}
+                or target.get("mode") not in {"build", "verify_existing", "metadata_patch"}
+                or (target.get("mode") == "metadata_patch" and (name != "codex" or not all(isinstance(target.get(key), str) and target[key] for key in ("version", "author_name", "developer_name"))))
+                or (target.get("mode") != "metadata_patch" and any(key in target for key in ("version", "author_name", "developer_name")))
             ):
                 raise SelectionError("registry_invalid")
             _validate_artifact(target.get("artifact"))

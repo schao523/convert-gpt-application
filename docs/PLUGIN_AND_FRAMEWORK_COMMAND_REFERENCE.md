@@ -485,7 +485,7 @@ or whitespace-lint immutable, hash-bound imported content.
 
 Preparation-catalog schema v2 declares `targets.codex` and
 `targets.openclaw` independently. Each target uses `build`, `verify_existing`,
-or `not_applicable`; applicable modes require a safe `destination`, while
+or `not_applicable`; Codex additionally supports `metadata_patch`. Applicable modes require a safe `destination`, while
 `not_applicable` forbids one. Schema-v1 catalogs remain readable and retain
 their original dual-runtime shared-mode meaning, but new or modified catalogs
 use schema v2. Runtime catalogs may therefore contain different exact plugin
@@ -493,6 +493,13 @@ sets. A `not_applicable` target produces no artifact, runtime-catalog entry,
 Git evidence scope, or exact-byte rule, and its validation-registry state is
 `NOT APPLICABLE`. If that target is already present in the baseline runtime
 catalog, preparation blocks instead of silently deleting it.
+`metadata_patch` is a bounded Codex patch-release mode. Its `patch` record
+must specify the exact published source-tree SHA-256, source and target
+versions, author name, and developer name. Preparation verifies the committed
+source tree, changes only the two plugin manifests when present, and refreshes
+a root `CONTENT-MANIFEST.json` only when it already records those manifests.
+The generated registry retains the target version and names for independent
+verification. Other plugin files and the OpenClaw target remain byte-identical.
 When the output is inside the conversion repository it must be below `dist` or
 `.tmp`; application source, catalog inputs, and overlapping marketplace
 destinations are rejected before staging. Links and Windows reparse points are

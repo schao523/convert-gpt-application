@@ -6,7 +6,11 @@
       "application_config": "applications/cool-bible-tutor/conversion.json",
       "distribution_contract": "applications/cool-bible-tutor/openclaw/distribution.json",
       "targets": {
-        "codex": {"mode": "verify_existing", "destination": "plugins/cool-bible-tutor"},
+        "codex": {"mode": "metadata_patch", "destination": "plugins/cool-bible-tutor", "patch": {
+          "source_sha256": "fa37c53c9770a72da15890130ef5199f0471b107b2bdc381230969a741c77bae",
+          "source_version": "2.4.7", "version": "2.4.8",
+          "author_name": "Shen-Chang Chao", "developer_name": "Shen-Chang Chao"
+        }},
         "openclaw": {"mode": "verify_existing", "destination": "openclaw/cool-bible-tutor"}
       }
     },
@@ -14,7 +18,11 @@
       "application_config": "applications/vibe-coding-designer/conversion.json",
       "distribution_contract": "applications/vibe-coding-designer/openclaw/distribution.json",
       "targets": {
-        "codex": {"mode": "verify_existing", "destination": "plugins/vibe-coding-designer"},
+        "codex": {"mode": "metadata_patch", "destination": "plugins/vibe-coding-designer", "patch": {
+          "source_sha256": "05395d690ba8262416dad7550f1c93c26988c4d318d9aafb764244e4083aa2c3",
+          "source_version": "1.0.0", "version": "1.0.1",
+          "author_name": "Shen-Chang Chao", "developer_name": "Shen-Chang Chao"
+        }},
         "openclaw": {"mode": "verify_existing", "destination": "openclaw/vibe-coding-designer"}
       }
     },
@@ -22,7 +30,11 @@
       "application_config": "applications/cool-plugin-design-assistant/conversion.json",
       "distribution_contract": "applications/cool-plugin-design-assistant/openclaw/distribution.json",
       "targets": {
-          "codex": {"mode": "verify_existing", "destination": "plugins/cool-plugin-design-assistant"},
+          "codex": {"mode": "metadata_patch", "destination": "plugins/cool-plugin-design-assistant", "patch": {
+            "source_sha256": "b6bc405b0731374b8f1fd734b9a89e64ae39c7265ed9a788c0d23e9573aa9f0f",
+            "source_version": "1.0.3", "version": "1.0.4",
+            "author_name": "Shen-Chang Chao", "developer_name": "Shen-Chang Chao"
+          }},
           "openclaw": {"mode": "verify_existing", "destination": "openclaw/cool-plugin-design-assistant"}
       }
     },
@@ -38,7 +50,11 @@
       "application_config": "applications/growing-with-children/conversion.json",
       "distribution_contract": "applications/growing-with-children/openclaw/distribution.json",
       "targets": {
-        "codex": {"mode": "verify_existing", "destination": "plugins/growing-with-children"},
+        "codex": {"mode": "metadata_patch", "destination": "plugins/growing-with-children", "patch": {
+          "source_sha256": "80a41a4c2a174cef970fde203e2b280494e41874124eddea0baaba254f7714af",
+          "source_version": "1.0.2", "version": "1.0.3",
+          "author_name": "Shen-Chang Chao", "developer_name": "Shen-Chang Chao"
+        }},
         "openclaw": {"mode": "not_applicable"}
       }
     },
@@ -46,7 +62,11 @@
       "application_config": "applications/sermon-coach/conversion.json",
       "distribution_contract": "applications/sermon-coach/openclaw/distribution.json",
       "targets": {
-        "codex": {"mode": "verify_existing", "destination": "plugins/sermon-coach"},
+        "codex": {"mode": "metadata_patch", "destination": "plugins/sermon-coach", "patch": {
+          "source_sha256": "001d45264fdcc97ee959842e9ab2ec95e57039ab774d8af98539690b170cb918",
+          "source_version": "1.0.3", "version": "1.0.4",
+          "author_name": "Shen-Chang Chao", "developer_name": "Shen-Chang Chao"
+        }},
         "openclaw": {"mode": "not_applicable"}
       }
     },
@@ -56,7 +76,12 @@
       "targets": {
         "codex": {
           "destination": "plugins/gpt-37ecb98690a080478ad351d953cdf07e",
-          "mode": "verify_existing"
+          "mode": "metadata_patch",
+          "patch": {
+            "source_sha256": "ade212bb0bfec86b316ee0d2710aa735c803ac610fff64f549a565aa1770224f",
+            "source_version": "1.0.2", "version": "1.0.3",
+            "author_name": "Shen-Chang Chao", "developer_name": "Shen-Chang Chao"
+          }
         },
         "openclaw": {
           "mode": "not_applicable"
