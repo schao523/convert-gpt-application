@@ -1,7 +1,7 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "author": {
-    "name": "Obvious One"
+    "name": "Shen-Chang Chao"
   },
   "description": "Build and update local OpenAI plugins from approved design packages.",
   "extensions": {
@@ -14,7 +14,7 @@
         ],
         "category": "Productivity",
         "defaultPrompt": "Help me build or update a plugin from an approved design package.",
-        "developerName": "Obvious One",
+        "developerName": "Shen-Chang Chao",
         "displayName": "Plugin Builder",
         "longDescription": "Plugin Builder guides approved design intake, implementation planning, deterministic local construction, validation, and packaging for OpenAI phase-one runtimes.",
         "shortDescription": "Build verified plugins"

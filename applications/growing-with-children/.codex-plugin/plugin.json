@@ -1,15 +1,15 @@
 {
   "name": "growing-with-children",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Guide parents to grow with children through biblical reflection and practical action.",
   "author": {
-    "name": "SC"
+    "name": "Shen-Chang Chao"
   },
   "interface": {
     "displayName": "Growing with Children",
     "shortDescription": "Biblical parenting reflection",
     "longDescription": "Guide parents through biblical study, family devotion, reflection, coaching, and sensitive parenting conversations.",
-    "developerName": "SC",
+    "developerName": "Shen-Chang Chao",
     "category": "Education",
     "capabilities": ["Interactive", "Read"],
     "defaultPrompt": "Help me reflect on a parenting situation and choose a faithful next step."

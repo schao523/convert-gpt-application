@@ -1,7 +1,7 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "gpt-37ecb98690a080478ad351d953cdf07e",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Creation-first AI animation story director with canonical production specifications, portable packages, target-aware adaptation, governed execution, and production-result review.",
   "author": {
     "name": "Shen-Chang Chao"
@@ -16,6 +16,7 @@
   "extensions": {
     "com.openai": {
       "interface": {
+        "developerName": "Shen-Chang Chao",
         "displayName": "酷 Vibe 動畫故事導演  Vibe StorySpirit Director",
         "shortDescription": "從故事、分鏡與電影化設計一路到可攜式製作包、目標適配與製作結果審查。",
         "defaultPrompt": [

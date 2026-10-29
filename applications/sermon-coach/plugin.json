@@ -1,7 +1,7 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "author": {
-    "name": "SC"
+    "name": "Shen-Chang Chao"
   },
   "description": "以指定聖經與講道參考資料，協助檢視、改善講章並逐步研經。",
   "extensions": {
@@ -13,7 +13,7 @@
         ],
         "category": "education",
         "defaultPrompt": "請協助我檢視這篇講章，先指出三項優先改善方向。",
-        "developerName": "SC",
+        "developerName": "Shen-Chang Chao",
         "displayName": "講章優化教練",
         "longDescription": "依指定聖經、歸納釋經法與講道參考資料，協助講員檢視講章、理解改善理由、比較修訂並逐步查經；保留講員最後判斷。",
         "shortDescription": "檢視講章、解釋建議、比較修訂，逐步歸納查經。"
@@ -21,5 +21,5 @@
     }
   },
   "name": "sermon-coach",
-  "version": "1.0.3"
+  "version": "1.0.4"
 }

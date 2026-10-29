@@ -3,7 +3,7 @@
   "plugin_id": "growing-with-children",
   "package_name": "@obvious-one/growing-with-children",
   "family": "bundle-plugin",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "source_root": "..",
   "include_files": [
     ".codex-plugin/plugin.json",
