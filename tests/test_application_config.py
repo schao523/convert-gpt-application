@@ -31,7 +31,8 @@ class ApplicationConfigTests(unittest.TestCase):
             if entry.application.plugin_id == "cool-plugin-design-assistant"
         )
 
-        self.assertEqual(assistant.target("codex").mode, "verify_existing")
+        self.assertEqual(assistant.target("codex").mode, "metadata_patch")
+        self.assertEqual(assistant.target("codex").patch.version, "1.0.4")
         self.assertEqual(assistant.target("codex").destination, "plugins/cool-plugin-design-assistant")
         self.assertEqual(assistant.target("openclaw").mode, "verify_existing")
         self.assertEqual(

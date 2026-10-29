@@ -7,6 +7,7 @@ import sys
 import unittest
 
 from obvious_one_plugin_framework.plugin_onboarding import load_repair_contract
+from obvious_one_plugin_framework.marketplace import load_preparation_catalog
 from obvious_one_plugin_framework.verification import load_application_config
 
 
@@ -55,7 +56,12 @@ class DelegatedReferenceRepairRepositoryContractTests(unittest.TestCase):
             APPLICATION / "repair" / "delegated-reference-repair-v1.json"
         )
         self.assertEqual(config.plugin_id, contract.plugin_id)
-        self.assertEqual(config.version, contract.target_version)
+        catalog = load_preparation_catalog(ROOT / "marketplaces" / "obvious-one.json", ROOT)
+        entry = next(item for item in catalog.applications if item.application.plugin_id == config.plugin_id)
+        # The repair recipe remains pinned to the prior release. The patch only
+        # updates published metadata and never rewrites its approved source.
+        self.assertEqual(contract.target_version, entry.codex.patch.source_version)
+        self.assertEqual(config.version, entry.codex.patch.version)
         self.assertEqual(
             [command.marketplace_targets for command in config.verification.commands],
             [()],
