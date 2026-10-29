@@ -114,7 +114,7 @@ def _verify_runtime_catalogs(root, registry):
                 raise ValueError("invalid_registry")
             path = _catalog_path(root, target.get("path"))
             expected[target_name][plugin_id] = (
-                path if target_name == "codex" else (path, plugin["version"])
+                path if target_name == "codex" else (path, target.get("version", plugin["version"]))
             )
     if _runtime_catalog(root, "codex") != expected["codex"]:
         raise ValueError("runtime_catalog_mismatch")
@@ -122,10 +122,15 @@ def _verify_runtime_catalogs(root, registry):
         raise ValueError("runtime_catalog_mismatch")
 
 
-def _verify_codex(root, plugin):
+def _verify_codex(root, plugin, target):
     manifest = _load(root / ".codex-plugin" / "plugin.json")
-    if manifest.get("name") != plugin["plugin_id"] or manifest.get("version") != plugin["version"]:
+    if manifest.get("name") != plugin["plugin_id"] or manifest.get("version") != target.get("version", plugin["version"]):
         raise ValueError("codex_identity_mismatch")
+    if target.get("mode") == "metadata_patch":
+        author = manifest.get("author")
+        interface = manifest.get("interface")
+        if not isinstance(author, dict) or author.get("name") != target["author_name"] or not isinstance(interface, dict) or interface.get("developerName") != target["developer_name"]:
+            raise ValueError("codex_metadata_mismatch")
 
 
 def _verify_exact_artifact(root, recorded):
@@ -187,10 +192,10 @@ def _file_record(path, root, recorded):
     return result
 
 
-def _verify_openclaw(root, plugin):
+def _verify_openclaw(root, plugin, target):
     manifest_path = root / "CONTENT-MANIFEST.json"
     manifest = _load(manifest_path)
-    if manifest.get("plugin_id") != plugin["plugin_id"] or manifest.get("version") != plugin["version"]:
+    if manifest.get("plugin_id") != plugin["plugin_id"] or manifest.get("version") != target.get("version", plugin["version"]):
         raise ValueError("openclaw_identity_mismatch")
     schema = manifest.get("schema_version")
     if schema not in (1, 2):
@@ -253,18 +258,20 @@ def _verify_targets(root, plugin):
             continue
         if (
             not isinstance(target, dict)
-            or set(target) != {"state", "mode", "path", "artifact"}
+            or set(target) not in ({"state", "mode", "path", "artifact"}, {"state", "mode", "path", "artifact", "version", "author_name", "developer_name"})
             or target.get("state") != "STATICALLY VERIFIED"
-            or target.get("mode") not in {"build", "verify_existing"}
+            or target.get("mode") not in {"build", "verify_existing", "metadata_patch"}
             or not isinstance(target.get("artifact"), dict)
+            or (target.get("mode") == "metadata_patch" and (target_name != "codex" or not all(isinstance(target.get(key), str) and target[key] for key in ("version", "author_name", "developer_name"))))
+            or (target.get("mode") != "metadata_patch" and any(key in target for key in ("version", "author_name", "developer_name")))
         ):
             raise ValueError("artifact_registry_invalid")
         artifact_root = _safe(root, target["path"])
         _verify_exact_artifact(artifact_root, target["artifact"])
         if target_name == "codex":
-            _verify_codex(artifact_root, plugin)
+            _verify_codex(artifact_root, plugin, target)
         else:
-            _verify_openclaw(artifact_root, plugin)
+            _verify_openclaw(artifact_root, plugin, target)
         roots[target_name] = artifact_root
     if not roots:
         raise ValueError("artifact_registry_invalid")

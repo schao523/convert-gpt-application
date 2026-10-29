@@ -3,14 +3,14 @@
   "version": "1.0.2",
   "description": "Build and update local OpenAI plugins from approved design packages.",
   "author": {
-    "name": "Obvious One"
+    "name": "Shen-Chang Chao"
   },
   "skills": "./skills/",
   "interface": {
     "displayName": "Plugin Builder",
     "shortDescription": "Build verified plugins",
     "longDescription": "Plugin Builder guides approved design intake, implementation planning, deterministic local construction, validation, and packaging for OpenAI phase-one runtimes.",
-    "developerName": "Obvious One",
+    "developerName": "Shen-Chang Chao",
     "category": "Productivity",
     "capabilities": ["Interactive", "Read", "Write"],
     "defaultPrompt": "Help me build or update a plugin from an approved design package."

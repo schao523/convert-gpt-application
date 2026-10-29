@@ -21,6 +21,7 @@ from obvious_one_plugin_framework.marketplace import (
     verify_marketplace,
 )
 from obvious_one_plugin_framework import marketplace_ci
+from obvious_one_plugin_framework.plugin_authoring import tree_sha256
 from obvious_one_plugin_framework.marketplace_receipt import (
     verify_marketplace_filesystem_receipt,
 )
@@ -296,6 +297,74 @@ class MarketplaceTests(unittest.TestCase):
         }
         _write_json(self.catalog_path, raw)
         with self.assertRaisesRegex(MarketplaceError, "marketplace_no_applicable_targets"):
+            load_preparation_catalog(self.catalog_path, self.repository)
+
+    def test_metadata_patch_updates_only_bound_codex_metadata_and_pins_openclaw(self) -> None:
+        artifact = self.baseline / "plugins" / "legacy"
+        codex = artifact / ".codex-plugin" / "plugin.json"
+        _write_json(codex, {
+            "name": "legacy", "version": "1.2.3",
+            "author": {"name": "Old Author"},
+            "interface": {"developerName": "Old Developer"},
+        })
+        portable = artifact / "plugin.json"
+        _write_json(portable, {
+            "name": "legacy", "version": "1.2.3",
+            "author": {"name": "Old Author"},
+            "extensions": {"com.openai": {"interface": {"developerName": "Old Developer"}}},
+        })
+        records = []
+        for relative in (".codex-plugin/plugin.json", "plugin.json"):
+            raw = (artifact / relative).read_bytes()
+            records.append({"path": relative, "size": len(raw), "sha256": sha256(raw).hexdigest()})
+        _write_json(artifact / "CONTENT-MANIFEST.json", {
+            "plugin": "legacy", "version": "1.2.3", "files": records,
+        })
+        digest = tree_sha256(artifact)
+        self._write_v2_catalog()
+        raw = json.loads(self.catalog_path.read_text(encoding="utf-8"))
+        raw["applications"][0]["targets"]["codex"] = {
+            "mode": "metadata_patch", "destination": "plugins/legacy",
+            "patch": {
+                "source_sha256": digest, "source_version": "1.2.3", "version": "1.2.4",
+                "author_name": "New Author", "developer_name": "New Developer",
+            },
+        }
+        _write_json(self.catalog_path, raw)
+        catalog = load_preparation_catalog(self.catalog_path, self.repository)
+
+        prepared = prepare_marketplace(catalog, self.baseline, self.output)
+        verified = verify_marketplace(catalog, self.output)
+
+        self.assertEqual(prepared.status, "PASS")
+        self.assertEqual(verified.status, "PASS")
+        updated = json.loads((self.output / "plugins/legacy/.codex-plugin/plugin.json").read_text(encoding="utf-8"))
+        self.assertEqual((updated["version"], updated["author"]["name"], updated["interface"]["developerName"]), ("1.2.4", "New Author", "New Developer"))
+        self.assertEqual(json.loads((self.baseline / "openclaw/legacy/CONTENT-MANIFEST.json").read_text(encoding="utf-8"))["version"], "1.2.3")
+        self.assertEqual(json.loads((self.output / "openclaw/legacy/CONTENT-MANIFEST.json").read_text(encoding="utf-8"))["version"], "1.2.3")
+        self.assertEqual(json.loads((self.output / "plugins/legacy/CONTENT-MANIFEST.json").read_text(encoding="utf-8"))["version"], "1.2.4")
+        self.assertEqual(tree_sha256(artifact), digest)
+
+    def test_metadata_patch_rejects_changed_source_and_openclaw_target(self) -> None:
+        self._write_v2_catalog()
+        raw = json.loads(self.catalog_path.read_text(encoding="utf-8"))
+        patch = {
+            "mode": "metadata_patch", "destination": "plugins/legacy",
+            "patch": {
+                "source_sha256": "0" * 64, "source_version": "1.2.3", "version": "1.2.4",
+                "author_name": "New Author", "developer_name": "New Developer",
+            },
+        }
+        raw["applications"][0]["targets"]["codex"] = patch
+        _write_json(self.catalog_path, raw)
+        catalog = load_preparation_catalog(self.catalog_path, self.repository)
+        with self.assertRaisesRegex(MarketplaceError, "metadata_patch_source_mismatch"):
+            prepare_marketplace(catalog, self.baseline, self.output)
+        self.assertFalse(self.output.exists())
+
+        raw["applications"][0]["targets"]["openclaw"] = patch
+        _write_json(self.catalog_path, raw)
+        with self.assertRaisesRegex(MarketplaceError, "metadata_patch_target_invalid"):
             load_preparation_catalog(self.catalog_path, self.repository)
 
     def test_v2_destinations_are_unique_safe_and_non_overlapping_across_targets(self) -> None:
