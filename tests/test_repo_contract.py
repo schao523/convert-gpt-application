@@ -61,7 +61,8 @@ class DelegatedReferenceRepairRepositoryContractTests(unittest.TestCase):
         # The repair recipe remains pinned to the prior release. The patch only
         # updates published metadata and never rewrites its approved source.
         self.assertEqual(contract.target_version, entry.codex.patch.source_version)
-        self.assertEqual(config.version, entry.codex.patch.version)
+        self.assertEqual(config.version, entry.codex.patch.source_version)
+        self.assertNotEqual(config.version, entry.codex.patch.version)
         self.assertEqual(
             [command.marketplace_targets for command in config.verification.commands],
             [()],

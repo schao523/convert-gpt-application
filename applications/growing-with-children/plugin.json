@@ -1,10 +1,10 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "growing-with-children",
-  "version": "1.0.3",
+  "version": "1.0.2",
   "description": "Guide parents to grow with children through biblical reflection and practical action.",
   "author": {
-    "name": "Shen-Chang Chao"
+    "name": "SC"
   },
   "extensions": {
     "com.openai": {
@@ -12,7 +12,7 @@
         "displayName": "Growing with Children",
         "shortDescription": "Biblical parenting reflection",
         "longDescription": "Guide parents through biblical study, family devotion, reflection, coaching, and sensitive parenting conversations.",
-        "developerName": "Shen-Chang Chao",
+        "developerName": "SC",
         "category": "Education",
         "capabilities": ["Interactive", "Read"],
         "defaultPrompt": "Help me reflect on a parenting situation and choose a faithful next step."

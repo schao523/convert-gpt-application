@@ -288,5 +288,5 @@
   "release_tag_template": "sermon-coach-v{version}",
   "schema_version": 3,
   "source_root": "..",
-  "version": "1.0.4"
+  "version": "1.0.3"
 }

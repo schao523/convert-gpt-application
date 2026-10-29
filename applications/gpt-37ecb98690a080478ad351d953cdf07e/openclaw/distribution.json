@@ -234,5 +234,5 @@
   "release_tag_template": "gpt-37ecb98690a080478ad351d953cdf07e-v{version}",
   "schema_version": 3,
   "source_root": "..",
-  "version": "1.0.3"
+  "version": "1.0.2"
 }
