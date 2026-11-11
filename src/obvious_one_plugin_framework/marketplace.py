@@ -67,6 +67,7 @@ class PreparationTarget:
     mode: str
     destination: str | None
     patch: MetadataPatch | None = None
+    version: str | None = None
 
 
 @dataclass(frozen=True)
@@ -166,6 +167,8 @@ def load_preparation_catalog(path: Path, repository_root: Path) -> PreparationCa
                 raise MarketplaceError("invalid_marketplace_catalog_target", f"applications[{index}].targets")
             codex = _parse_target(targets["codex"], "codex")
             openclaw = _parse_target(targets["openclaw"], "openclaw")
+            if codex.version is not None and codex.version == application.version:
+                raise MarketplaceError("verify_existing_version_redundant", application.plugin_id)
             if codex.mode == "not_applicable" and openclaw.mode == "not_applicable":
                 raise MarketplaceError("marketplace_no_applicable_targets", application.plugin_id)
             if (
@@ -533,7 +536,7 @@ def _verify_existing_target(
         )
     artifact = _stage_destination(stage, destination)
     if target_name == "codex":
-        _check_plugin_manifest(artifact, entry.application.plugin_id, entry.application.version)
+        _check_plugin_manifest(artifact, entry.application.plugin_id, target.version or entry.application.version)
     elif entry.contract.schema_version == 3:
         verify_package(entry.contract, artifact)
     else:
@@ -1203,6 +1206,12 @@ def _parse_target(value: object, name: str) -> PreparationTarget:
             mode,
             _destination(value["destination"], f"targets.{name}.destination"),
             MetadataPatch(source_sha256, fields["source_version"], fields["version"], fields["author_name"], fields["developer_name"]),
+        )
+    if mode == "verify_existing" and name == "codex" and set(value) == {"mode", "destination", "version"}:
+        return PreparationTarget(
+            mode,
+            _destination(value["destination"], f"targets.{name}.destination"),
+            version=_text(value["version"], f"targets.{name}.version"),
         )
     if set(value) != {"mode", "destination"}:
         raise MarketplaceError("invalid_marketplace_catalog_target", name)
