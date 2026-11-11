@@ -299,6 +299,44 @@ class MarketplaceTests(unittest.TestCase):
         with self.assertRaisesRegex(MarketplaceError, "marketplace_no_applicable_targets"):
             load_preparation_catalog(self.catalog_path, self.repository)
 
+    def test_codex_verify_existing_can_pin_independent_artifact_version(self) -> None:
+        self._write_v2_catalog()
+        raw = json.loads(self.catalog_path.read_text(encoding="utf-8"))
+        raw["applications"][0]["targets"]["codex"]["version"] = "1.2.4"
+        _write_json(self.catalog_path, raw)
+        codex_manifest = self.baseline / "plugins/legacy/.codex-plugin/plugin.json"
+        _write_json(codex_manifest, {"name": "legacy", "version": "1.2.4"})
+
+        catalog = load_preparation_catalog(self.catalog_path, self.repository)
+        prepared = prepare_marketplace(catalog, self.baseline, self.output)
+        verified = verify_marketplace(catalog, self.output)
+        self.assertEqual((prepared.status, verified.status), ("PASS", "PASS"))
+        registry = json.loads((self.output / ".obvious-one-validation.json").read_text(encoding="utf-8"))
+        legacy = next(item for item in registry["plugins"] if item["plugin_id"] == "legacy")
+        self.assertEqual(legacy["version"], "1.2.3")
+        self.assertEqual(legacy["targets"]["codex"]["version"], "1.2.4")
+        self.assertEqual(legacy["targets"]["openclaw"]["mode"], "verify_existing")
+        self.assertEqual(json.loads((self.output / "openclaw/legacy/CONTENT-MANIFEST.json").read_text(encoding="utf-8"))["version"], "1.2.3")
+
+        _write_json(self.output / "plugins/legacy/.codex-plugin/plugin.json", {"name": "legacy", "version": "1.2.3"})
+        self.assertEqual(verify_marketplace(catalog, self.output).status, "FAIL")
+
+    def test_codex_verify_existing_version_override_is_strictly_scoped(self) -> None:
+        for name, mode, version in (
+            ("openclaw", "verify_existing", "1.2.4"),
+            ("codex", "build", "1.2.4"),
+            ("codex", "verify_existing", ""),
+            ("codex", "verify_existing", "1.2.3"),
+        ):
+            with self.subTest(name=name, mode=mode, version=version):
+                self._write_v2_catalog()
+                raw = json.loads(self.catalog_path.read_text(encoding="utf-8"))
+                raw["applications"][0]["targets"][name]["mode"] = mode
+                raw["applications"][0]["targets"][name]["version"] = version
+                _write_json(self.catalog_path, raw)
+                with self.assertRaises(MarketplaceError):
+                    load_preparation_catalog(self.catalog_path, self.repository)
+
     def test_metadata_patch_updates_only_bound_codex_metadata_and_pins_openclaw(self) -> None:
         artifact = self.baseline / "plugins" / "legacy"
         codex = artifact / ".codex-plugin" / "plugin.json"

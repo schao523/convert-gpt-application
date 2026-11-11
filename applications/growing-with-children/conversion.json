@@ -30,7 +30,7 @@
     "codex_build": {
       "mode": "verify_existing",
       "artifact_path": "plugins/{plugin_id}",
-      "expected_content_sha256": "a24e039c4c7123bde708aed8c8c12015506d0dc2a793f64a084c6d083b72dc75"
+      "expected_content_sha256": "0e89e3b07ed383d419be2cea5dd486a20f19527adf3f4ce6b9702823e7a4b56e"
     }
   }
 }

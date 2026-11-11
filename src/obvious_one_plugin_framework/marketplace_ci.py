@@ -71,6 +71,8 @@ def build_validation_registry(
                 targets[target_name]["version"] = target.patch.version
                 targets[target_name]["author_name"] = target.patch.author_name
                 targets[target_name]["developer_name"] = target.patch.developer_name
+            elif target.version is not None:
+                targets[target_name]["version"] = target.version
         commands = []
         for command in entry.application.verification.commands:
             for target in command.marketplace_targets:

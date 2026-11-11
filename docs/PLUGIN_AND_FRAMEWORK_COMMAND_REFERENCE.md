@@ -500,6 +500,13 @@ source tree, changes only the two plugin manifests when present, and refreshes
 a root `CONTENT-MANIFEST.json` only when it already records those manifests.
 The generated registry retains the target version and names for independent
 verification. Other plugin files and the OpenClaw target remain byte-identical.
+For a Codex artifact that is already present in a verified marketplace baseline,
+schema-v2 `verify_existing` may set a nonempty `version` different from the
+application's source version. This checks the Codex manifest and records the
+target version in the generated registry while the OpenClaw target remains
+bound to its own distribution contract. The target still requires exact
+artifact verification; this field does not import an archive or grant release
+authority.
 When the output is inside the conversion repository it must be below `dist` or
 `.tmp`; application source, catalog inputs, and overlapping marketplace
 destinations are rejected before staging. Links and Windows reparse points are

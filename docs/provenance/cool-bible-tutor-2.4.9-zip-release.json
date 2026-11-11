@@ -1,0 +1,27 @@
+{
+  "schema": "cool-bible-tutor-codex-zip-release-evidence-v1",
+  "plugin_id": "cool-bible-tutor",
+  "codex_version": "2.4.9",
+  "openclaw_version_retained": "2.4.7",
+  "source_zip_sha256": "5f8b7a1b5f5ef7705885cda8458b6ea6db8ec5f824e588642f9324872d0d59cb",
+  "source_zip_member_count": 138,
+  "source_zip_member_tree_sha256": "8cdf1c102e8d76542311f18c6b758cb29a078a78f48d07d1bdb26961cc878727",
+  "published_2_4_8_tree_sha256": "59e0c9dadb2d800de217d8d33640003db9400566bda47b09dc20147ffac1930c",
+  "prepared_marketplace_tree_sha256": "bc665b7d70f312f728170a69b26305b82291be4bc49a665d2cb7845c080bac06",
+  "prepared_marketplace_changed_path_count": 11,
+  "retained_openclaw_tree_sha256": "c6c64c6049aac82f290f10bc961cf4f73e0c1f7525d5616e9da510656d325e72",
+  "changed_member_paths": [
+    ".codex-plugin/plugin.json",
+    "skills/applying-biblical-truth/SKILL.md",
+    "skills/comparing-biblical-words-and-translations/SKILL.md",
+    "skills/discussing-biblical-theology/SKILL.md",
+    "skills/guiding-bible-tutor-sessions/SKILL.md",
+    "skills/interpreting-biblical-passages/SKILL.md",
+    "skills/observing-biblical-passages/SKILL.md",
+    "skills/retrieving-chinese-union-version-scripture/SKILL.md",
+    "skills/supporting-biblical-exegesis/SKILL.md"
+  ],
+  "unchanged_member_count": 129,
+  "license_notice_and_bundled_asset_bytes": "PRESERVED_FROM_PUBLISHED_2.4.8",
+  "installed_conversation_behavior": "NOT VERIFIED"
+}

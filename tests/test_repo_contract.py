@@ -58,11 +58,12 @@ class DelegatedReferenceRepairRepositoryContractTests(unittest.TestCase):
         self.assertEqual(config.plugin_id, contract.plugin_id)
         catalog = load_preparation_catalog(ROOT / "marketplaces" / "obvious-one.json", ROOT)
         entry = next(item for item in catalog.applications if item.application.plugin_id == config.plugin_id)
-        # The repair recipe remains pinned to the prior release. The patch only
-        # updates published metadata and never rewrites its approved source.
-        self.assertEqual(contract.target_version, entry.codex.patch.source_version)
-        self.assertEqual(config.version, entry.codex.patch.source_version)
-        self.assertNotEqual(config.version, entry.codex.patch.version)
+        # The repair recipe remains pinned to its source release; the published
+        # Codex patch is now verified as an existing immutable artifact.
+        self.assertEqual(contract.target_version, config.version)
+        self.assertEqual(entry.codex.mode, "verify_existing")
+        self.assertEqual(entry.codex.version, "1.0.3")
+        self.assertNotEqual(config.version, entry.codex.version)
         self.assertEqual(
             [command.marketplace_targets for command in config.verification.commands],
             [()],
