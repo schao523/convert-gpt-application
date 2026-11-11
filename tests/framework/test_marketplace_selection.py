@@ -288,6 +288,30 @@ class MarketplaceSelectionTests(unittest.TestCase):
                     encoding="utf-8",
                 )
 
+    def test_codex_verify_existing_accepts_independent_version(self) -> None:
+        registry_path = self.root / ".obvious-one-validation.json"
+        registry = json.loads(registry_path.read_text(encoding="utf-8"))
+        codex = registry["plugins"][0]["targets"]["codex"]
+        codex["version"] = "1.2.4"
+        registry_path.write_text(
+            json.dumps(registry, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+            encoding="utf-8",
+        )
+
+        completed, payload = self._run(all_reason="workflow_dispatch")
+
+        self.assertEqual(completed.returncode, 0, completed.stderr)
+        self._assert_selection(payload, "ALL", ["legacy", "modern"], "workflow_dispatch")
+
+        registry["plugins"][0]["targets"]["openclaw"]["version"] = "1.2.4"
+        registry_path.write_text(
+            json.dumps(registry, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+            encoding="utf-8",
+        )
+        completed, payload = self._run(all_reason="workflow_dispatch")
+        self.assertNotEqual(completed.returncode, 0)
+        self.assertEqual(payload["status"], "FAIL")
+
     def test_malformed_unselected_plugin_metadata_fails_closed(self) -> None:
         registry_path = self.root / ".obvious-one-validation.json"
         registry = json.loads(registry_path.read_text(encoding="utf-8"))
