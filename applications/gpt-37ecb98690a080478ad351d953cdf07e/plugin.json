@@ -1,10 +1,27 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
-  "name": "gpt-37ecb98690a080478ad351d953cdf07e",
-  "version": "1.0.2",
-  "description": "Creation-first AI animation story director with canonical production specifications, portable packages, target-aware adaptation, governed execution, and production-result review.",
   "author": {
     "name": "Shen-Chang Chao"
+  },
+  "description": "Creation-first AI animation story director with canonical production specifications, portable packages, target-aware adaptation, governed execution, and production-result review. Adds optional professional screenplay development, critique and governed script-to-storyboard transfer.",
+  "extensions": {
+    "com.openai": {
+      "interface": {
+        "capabilities": [
+          "Interactive",
+          "Read",
+          "Write"
+        ],
+        "category": "Education",
+        "composerIcon": "./assets/gpt-icon.png",
+        "defaultPrompt": "\u6211\u60f3\u5f9e\u96f6\u958b\u59cb\u88fd\u4f5c\u4e00\u500b\u5b8c\u6574\u7684\u8056\u7d93\u52d5\u756b\u6545\u4e8b\uff0c\u4f60\u53ef\u4ee5\u5e36\u6211\u4e00\u6b65\u6b65\u5b8c\u6210\u55ce\uff1f\n\u555f\u52d5\u7d50\u69cb\u8207\u7bc0\u594f\u7a3d\u6838\u6a21\u7d44\uff1a\u5e6b\u6211\u6aa2\u67e5\u7d50\u69cb\u8207\u6545\u4e8b\u7bc0\u594f\uff0c\u4e26\u7d66\u51fa\u4fee\u6b63\u5efa\u8b70\u3002\n\u555f\u52d5\u904b\u93e1\u8207\u756b\u9762\u7cbe\u4fee\u6a21\u7d44\uff1a\u512a\u5316\u8173\u672c\u7684\u756b\u9762\u8207\u904b\u93e1\u8a2d\u8a08\uff0c\u5e6b\u6211\u91cd\u5beb\u6bcf\u4e00\u5e55\u7684\u904b\u93e1\u8aaa\u660e\u8207 Start Frame \u63cf\u8ff0\u3002\n\u4ee5\u5c08\u696d\u7de8\u5287\u6d41\u7a0b\uff0c\u5e6b\u6211\u628a\u69cb\u601d\u5beb\u6210\u53ef\u62cd\u651d\u5287\u672c\uff1b\u4e5f\u8acb\u63d0\u4f9b\u5feb\u901f\u5206\u93e1\u9078\u9805\u3002",
+        "developerName": "Shen-Chang Chao",
+        "displayName": "\u9177 Vibe \u52d5\u756b\u6545\u4e8b\u5c0e\u6f14  Vibe StorySpirit Director",
+        "logo": "./assets/gpt-icon.png",
+        "longDescription": "\u5275\u4f5c\u6545\u4e8b\u8207\u5206\u93e1\uff0c\u9078\u7528\u5c08\u696d\u7de8\u5287\u6216\u5feb\u901f\u5206\u93e1\uff0c\u7ba1\u7406\u6b63\u5178\u88fd\u4f5c\u898f\u683c\u3001\u76ee\u6a19\u9069\u914d\u3001\u57f7\u884c\u53ca\u7d50\u679c\u5be9\u67e5\u3002",
+        "shortDescription": "\u5f9e\u6545\u4e8b\u3001\u5c08\u696d\u7de8\u5287\u6216\u5feb\u901f\u5206\u93e1\uff0c\u5230\u53d7\u6cbb\u7406\u7684\u52d5\u756b\u88fd\u4f5c\u8207\u5be9\u67e5\u3002"
+      }
+    }
   },
   "keywords": [
     "animation",
@@ -13,19 +30,6 @@
     "video-production",
     "creative-direction"
   ],
-  "extensions": {
-    "com.openai": {
-      "interface": {
-        "displayName": "酷 Vibe 動畫故事導演  Vibe StorySpirit Director",
-        "shortDescription": "從故事、分鏡與電影化設計一路到可攜式製作包、目標適配與製作結果審查。",
-        "defaultPrompt": [
-          "我想從零開始製作一個完整的聖經動畫故事，你可以帶我一步步完成嗎？",
-          "啟動結構與節奏稽核模組：幫我檢查結構與故事節奏，並給出修正建議。",
-          "啟動運鏡與畫面精修模組：優化腳本的畫面與運鏡設計，幫我重寫每一幕的運鏡說明與 Start Frame 描述。"
-        ],
-        "composerIcon": "./assets/gpt-icon.png",
-        "logo": "./assets/gpt-icon.png"
-      }
-    }
-  }
+  "name": "gpt-37ecb98690a080478ad351d953cdf07e",
+  "version": "1.0.5"
 }

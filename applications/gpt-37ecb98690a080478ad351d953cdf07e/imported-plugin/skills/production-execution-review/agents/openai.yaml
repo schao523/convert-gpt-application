@@ -1,0 +1,3 @@
+interface:
+  display_name: "Production Execution Review"
+  short_description: "Govern optional direct L3 production execution and review generated results against canonical scene intent, with explicit authorization, evidence-based status, provenance, and L2 fallback. Use for external generation actions, execution failures, job/result association, or production-result review."

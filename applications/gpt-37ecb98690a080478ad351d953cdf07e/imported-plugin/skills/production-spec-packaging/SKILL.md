@@ -28,3 +28,9 @@ REQ-005, REQ-006, REQ-007, REQ-011, REQ-014, REQ-015, REQ-018, REQ-021, REQ-022,
 - `RM-P05` → `references/RM-P05_project_state_asset_provenance_standard.md`
 
 Before making a claim governed by any required professional reference above, consult the exact bound file. If a required file cannot be accessed or its operational semantics cannot be consulted, surface `REFERENCE_CONSULTATION_UNVERIFIED`, identify the affected reference ID, preserve safe non-reference-dependent work, and do not claim reference-grounded conformance.
+
+## Exact local reference paths
+- [RM-C08](references/RM-C08_visual_style_options_reference.md): read for visual style recommendation, change or approved-style preservation. Record actual access and task-specific application; if a required read fails, report `REFERENCE_CONSULTATION_UNVERIFIED` and block only its dependent claim.
+- [RM-P01](references/RM-P01_canonical_production_specification_standard.md): read for canonical scene/production semantics, including professional P8 bridge; consult without forcing L1 export. Record actual access and task-specific application; if a required read fails, report `REFERENCE_CONSULTATION_UNVERIFIED` and block only its dependent claim.
+- [RM-P02](references/RM-P02_portable_production_package_standard.md): read for L1 portable production package creation or completeness judgment. Record actual access and task-specific application; if a required read fails, report `REFERENCE_CONSULTATION_UNVERIFIED` and block only its dependent claim.
+- [RM-P05](references/RM-P05_project_state_asset_provenance_standard.md): read for approval, provenance, canonical revision, dependency staleness or professional P7/P8. Record actual access and task-specific application; if a required read fails, report `REFERENCE_CONSULTATION_UNVERIFIED` and block only its dependent claim.

@@ -1,0 +1,3 @@
+interface:
+  display_name: "Director Orchestrator State"
+  short_description: "Route Vibe StorySpirit Director requests, maintain canonical/derived project state, enforce human approvals, pause/resume continuity, and coordinate the full creation-to-production workflow. Use for new projects, resumes, ambiguous requests, workflow transitions, or state/provenance questions."

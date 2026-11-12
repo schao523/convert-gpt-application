@@ -1,0 +1,274 @@
+{
+  "SW-REQ-01": {
+    "change": "add",
+    "source": "approved_design/Design_Control/SW-01_Requirements_Traceability_Matrix.md",
+    "test_ids": [
+      "SW-T01"
+    ],
+    "verbatim": "Plan genre- and purpose-adaptive stories without imposing mandatory dramatic formula"
+  },
+  "SW-REQ-02": {
+    "change": "add",
+    "source": "approved_design/Design_Control/SW-01_Requirements_Traceability_Matrix.md",
+    "test_ids": [
+      "SW-T01"
+    ],
+    "verbatim": "Generate filmable screenplay scenes with stable scene IDs, action/dialogue, estimated timing and source labels"
+  },
+  "SW-REQ-03": {
+    "change": "add",
+    "source": "approved_design/Design_Control/SW-01_Requirements_Traceability_Matrix.md",
+    "test_ids": [
+      "SW-T03"
+    ],
+    "verbatim": "Evaluate cause/effect, motive, pressure, stakes and scene function with local evidence"
+  },
+  "SW-REQ-04": {
+    "change": "add",
+    "source": "approved_design/Design_Control/SW-01_Requirements_Traceability_Matrix.md",
+    "test_ids": [
+      "SW-T04"
+    ],
+    "verbatim": "Support subtext, differentiated voices, useful dialogue and local scope"
+  },
+  "SW-REQ-05": {
+    "change": "add",
+    "source": "approved_design/Design_Control/SW-01_Requirements_Traceability_Matrix.md",
+    "test_ids": [
+      "SW-T04"
+    ],
+    "verbatim": "Separate diagnosis from revision; report evidence, severity, alternatives, tradeoffs and regression analysis"
+  },
+  "SW-REQ-06": {
+    "change": "add",
+    "source": "approved_design/Design_Control/SW-01_Requirements_Traceability_Matrix.md",
+    "test_ids": [
+      "SW-T05"
+    ],
+    "verbatim": "Require exact owner approval of professional screenplay before canonical screenplay-derived storyboard; preserve revisions and stale propagation"
+  },
+  "SW-REQ-07": {
+    "change": "add",
+    "source": "approved_design/Design_Control/SW-01_Requirements_Traceability_Matrix.md",
+    "test_ids": [
+      "SW-T06"
+    ],
+    "verbatim": "Trace all approved screenplay scenes, meaningful beats, dialogue and constraints into storyboard dispositions"
+  },
+  "SW-REQ-08": {
+    "change": "add",
+    "source": "approved_design/Design_Control/SW-01_Requirements_Traceability_Matrix.md",
+    "test_ids": [
+      "SW-T01"
+    ],
+    "verbatim": "Distinguish verified Scripture exact text, interpretation, paraphrase and imagined staging; prevent false biblical attribution"
+  },
+  "SW-REQ-09": {
+    "change": "add",
+    "source": "approved_design/Design_Control/SW-01_Requirements_Traceability_Matrix.md",
+    "test_ids": [
+      "SW-T08"
+    ],
+    "verbatim": "Read required professional knowledge during the actual workflow and report consultation/failures truthfully"
+  },
+  "SW-REQ-10": {
+    "change": "add",
+    "source": "approved_design/Design_Control/SW-01_Requirements_Traceability_Matrix.md",
+    "test_ids": [
+      "SW-T07"
+    ],
+    "verbatim": "Preserve current Director modes, approvals, target neutrality, L1/L2/L3 and R03.1 design decisions"
+  },
+  "SW-REQ-11": {
+    "change": "add",
+    "source": "approved_design/Design_Control/SW-01_Requirements_Traceability_Matrix.md",
+    "test_ids": [
+      "SW-T11"
+    ],
+    "verbatim": "Recommend professional flow for new narrative while visibly offering direct Quick Storyboard option"
+  },
+  "SW-REQ-12": {
+    "change": "add",
+    "source": "approved_design/Design_Control/SW-01_Requirements_Traceability_Matrix.md",
+    "test_ids": [
+      "SW-T11"
+    ],
+    "verbatim": "Explicit Quick Storyboard bypass must not require SW screenplay draft, critic or SW-G2; legacy gates continue"
+  },
+  "SW-REQ-13": {
+    "change": "add",
+    "source": "approved_design/Design_Control/SW-01_Requirements_Traceability_Matrix.md",
+    "test_ids": [
+      "SW-T10"
+    ],
+    "verbatim": "Support critique-only import and targeted scene/dialogue revisions with scope limits"
+  },
+  "SW-REQ-14": {
+    "change": "add",
+    "source": "approved_design/Design_Control/SW-01_Requirements_Traceability_Matrix.md",
+    "test_ids": [
+      "SW-T10"
+    ],
+    "verbatim": "Distinguish Fast Draft screenplay from Quick Storyboard and from owner-approved screenplay"
+  },
+  "SW-REQ-15": {
+    "change": "add",
+    "source": "approved_design/Design_Control/SW-01_Requirements_Traceability_Matrix.md",
+    "test_ids": [
+      "SW-T05"
+    ],
+    "verbatim": "Support explicit review/revise/reject/stop/pause/resume with preserved state and no inferred approval"
+  },
+  "SW-REQ-16": {
+    "change": "add",
+    "source": "approved_design/Design_Control/SW-01_Requirements_Traceability_Matrix.md",
+    "test_ids": [
+      "SW-T13"
+    ],
+    "verbatim": "Provide evidence-bound before/after quality checks that can identify new problems and avoid falsely proving audience impact"
+  },
+  "SW-REQ-17": {
+    "change": "add",
+    "source": "approved_design/Design_Control/SW-01_Requirements_Traceability_Matrix.md",
+    "test_ids": [
+      "SW-T14"
+    ],
+    "verbatim": "Keep non-narrative music mode optional to screenplay while enabling narrative music scripts when wanted"
+  },
+  "SW-REQ-18": {
+    "change": "add",
+    "source": "approved_design/Design_Control/SW-01_Requirements_Traceability_Matrix.md",
+    "test_ids": [
+      "SW-T09"
+    ],
+    "verbatim": "Apply state/asset/canonical provenance and downstream selective staleness on post-approval changes"
+  },
+  "SW-REQ-19": {
+    "change": "add",
+    "source": "approved_design/Design_Control/SW-01_Requirements_Traceability_Matrix.md",
+    "test_ids": [
+      "SW-T15"
+    ],
+    "verbatim": "Respect source rights and privacy; distinguish rights for inspection, edit, quote, derivation, redistribute and never promise source exactness without verification"
+  },
+  "SW-REQ-20": {
+    "change": "add",
+    "source": "approved_design/Design_Control/SW-01_Requirements_Traceability_Matrix.md",
+    "test_ids": [
+      "SW-T07"
+    ],
+    "verbatim": "Separate screenplay quality, Plugin functional conformance and external production evidence; retain actual authorization gates"
+  },
+  "SW-REQ-21": {
+    "change": "add",
+    "source": "approved_design/Design_Control/SW-01_Requirements_Traceability_Matrix.md",
+    "test_ids": [
+      "SW-T17"
+    ],
+    "verbatim": "Separate facts, interpretation, alternate cause and verification need in critique findings, anchored to the source"
+  },
+  "SW-REQ-22": {
+    "change": "add",
+    "source": "approved_design/Design_Control/SW-01_Requirements_Traceability_Matrix.md",
+    "test_ids": [
+      "SW-T18"
+    ],
+    "verbatim": "Use anchored optional 1\u20135 ratings, N/A/insufficient evidence; keep applicable hard gates separate from artistic scores"
+  },
+  "SW-REQ-23": {
+    "change": "add",
+    "source": "approved_design/Design_Control/SW-01_Requirements_Traceability_Matrix.md",
+    "test_ids": [
+      "SW-T17"
+    ],
+    "verbatim": "Repair priority: mandatory gates \u2192 causality/knowledge \u2192 pacing/dialogue \u2192 polish, considering effort and dependencies"
+  },
+  "SW-REQ-24": {
+    "change": "add",
+    "source": "approved_design/Design_Control/SW-01_Requirements_Traceability_Matrix.md",
+    "test_ids": [
+      "SW-T20"
+    ],
+    "verbatim": "Maintain separate proposal/application states and verify each change with a five-state disposition and evidence class"
+  },
+  "SW-REQ-25": {
+    "change": "add",
+    "source": "approved_design/Design_Control/SW-01_Requirements_Traceability_Matrix.md",
+    "test_ids": [
+      "SW-T20"
+    ],
+    "verbatim": "Run change-sensitive regression checks and block handoff when a required cross-scene dependency fails/is not checked"
+  },
+  "SW-REQ-26": {
+    "change": "add",
+    "source": "approved_design/Design_Control/SW-01_Requirements_Traceability_Matrix.md",
+    "test_ids": [
+      "SW-T22"
+    ],
+    "verbatim": "Distinguish local textual correction from independently supported creative quality gains; preserve reader disagreement"
+  },
+  "SW-REQ-27": {
+    "change": "add",
+    "source": "approved_design/Design_Control/SW-01_Requirements_Traceability_Matrix.md",
+    "test_ids": [
+      "SW-T23"
+    ],
+    "verbatim": "Exact screenplay approval and bridge non-bypass guards, including bridge retry/resume via P7 only"
+  },
+  "SW-REQ-28": {
+    "change": "add",
+    "source": "approved_design/Design_Control/SW-01_Requirements_Traceability_Matrix.md",
+    "test_ids": [
+      "SW-T24"
+    ],
+    "verbatim": "Distinguish proposal acceptance, apply authority, applied draft and mandatory R6 verify; no report-only canonical approval"
+  },
+  "SW-REQ-29": {
+    "change": "add",
+    "source": "approved_design/Design_Control/SW-01_Requirements_Traceability_Matrix.md",
+    "test_ids": [
+      "SW-T25"
+    ],
+    "verbatim": "Reproducible frozen fixtures, bounded partial critique and no handoff readiness from missing context"
+  },
+  "SW-REQ-30": {
+    "change": "add",
+    "source": "approved_design/Design_Control/SW-01_Requirements_Traceability_Matrix.md",
+    "test_ids": [
+      "SW-T26"
+    ],
+    "verbatim": "Canonical six gate IDs, exact action applicability and P7/P8 evidence; legacy aliases and editorial NONE cannot pass"
+  },
+  "SW-REQ-31": {
+    "change": "add",
+    "source": "approved_design/Design_Control/SW-01_Requirements_Traceability_Matrix.md",
+    "test_ids": [
+      "SW-T27"
+    ],
+    "verbatim": "20 per-ID use conditions and inspectable access + correct-use records; missing required refs block protected claims; RC-SW suite"
+  },
+  "SW-REQ-32": {
+    "change": "add",
+    "source": "approved_design/Design_Control/SW-01_Requirements_Traceability_Matrix.md",
+    "test_ids": [
+      "SW-T28"
+    ],
+    "verbatim": "Fast Draft script-derived beat map is valid lineage alternative with exact P7 approval; no invented prior Beat Sheet"
+  },
+  "SW-REQ-33": {
+    "change": "add",
+    "source": "approved_design/Design_Control/SW-01_Requirements_Traceability_Matrix.md",
+    "test_ids": [
+      "SW-T29"
+    ],
+    "verbatim": "Imported screenplay can enter Critic without rewriting; bridge requires source/rights/map and exact owner approval"
+  },
+  "SW-REQ-34": {
+    "change": "add",
+    "source": "approved_design/Design_Control/SW-01_Requirements_Traceability_Matrix.md",
+    "test_ids": [
+      "SW-T30"
+    ],
+    "verbatim": "Silent dramatic narrative uses visual RM-W02 reasoning with dialogue N/A; nonnarrative can skip with reason"
+  }
+}

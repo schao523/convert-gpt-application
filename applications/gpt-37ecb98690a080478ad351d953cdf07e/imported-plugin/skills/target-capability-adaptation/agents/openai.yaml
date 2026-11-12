@@ -1,0 +1,3 @@
+interface:
+  display_name: "Target Capability Adaptation"
+  short_description: "Resolve current production-target capabilities and derive target-aware L2 exports without modifying the canonical Vibe StorySpirit project. Use for Runway, Pika, Veo, Kaiber, or other target-specific export, compatibility, degradation, or provider comparison requests."

@@ -27,3 +27,8 @@ REQ-008, REQ-011, REQ-012, REQ-013, REQ-018, REQ-021, REQ-022, REQ-023, REQ-024,
 - `RM-P05` → `references/RM-P05_project_state_asset_provenance_standard.md`
 
 Before making a claim governed by any required professional reference above, consult the exact bound file. If a required file cannot be accessed or its operational semantics cannot be consulted, surface `REFERENCE_CONSULTATION_UNVERIFIED`, identify the affected reference ID, preserve safe non-reference-dependent work, and do not claim reference-grounded conformance.
+
+## Exact local reference paths
+- [RM-P01](references/RM-P01_canonical_production_specification_standard.md): read for canonical scene/production semantics, including professional P8 bridge; consult without forcing L1 export. Record actual access and task-specific application; if a required read fails, report `REFERENCE_CONSULTATION_UNVERIFIED` and block only its dependent claim.
+- [RM-P03](references/RM-P03_target_capability_adaptation_standard.md): read for L2/L3 target capability, adaptation or degradation judgment; verify current provider evidence separately. Record actual access and task-specific application; if a required read fails, report `REFERENCE_CONSULTATION_UNVERIFIED` and block only its dependent claim.
+- [RM-P05](references/RM-P05_project_state_asset_provenance_standard.md): read for approval, provenance, canonical revision, dependency staleness or professional P7/P8. Record actual access and task-specific application; if a required read fails, report `REFERENCE_CONSULTATION_UNVERIFIED` and block only its dependent claim.

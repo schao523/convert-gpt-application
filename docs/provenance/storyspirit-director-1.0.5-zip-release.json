@@ -1,0 +1,21 @@
+{
+  "schema": "storyspirit-director-codex-zip-release-evidence-v1",
+  "plugin_id": "gpt-37ecb98690a080478ad351d953cdf07e",
+  "codex_version": "1.0.5",
+  "target_runtime": "CODEX",
+  "openclaw_target": "NOT APPLICABLE",
+  "source_zip_sha256": "50a59ecbd2688c7bd421f3414dd4579cbcea4d0b0cff12c7422b1b12e1decf97",
+  "package_metadata_sha256": "54f200ae7460fb7e7155db9a3e0044d9ce794e3022dc25dac3b1b5407ac52dca",
+  "source_zip_member_count": 113,
+  "source_imported_tree_sha256": "ba1484687f90f196e31755a2f1ed9e342ba7a0caa63e69974d02bdf7f9a29354",
+  "built_plugin_tree_sha256": "1c9b456a6041160e227a3fcb2f8f856e420d2ff34234bc61ca4d84a3dc4fb6d2",
+  "published_1_0_3_tree_sha256": "8f953c606d18561bf87721c64811becde74b353583a7f585bcfb69ad23079d2e",
+  "prepared_marketplace_tree_sha256": "95283d4f7467ad5d423a576f0766a2f8aa64298a963d3d77acc7afcfa1dd9e6d",
+  "prepared_marketplace_changed_path_count": 32,
+  "imported_plugin_bytes": "PRESERVED_FROM_SOURCE_ZIP",
+  "marketplace_added_file": "LICENSE",
+  "new_screenplay_guard_scenarios": 18,
+  "new_screenplay_guard_scenarios_status": "PASS",
+  "package_state": "STATICALLY VERIFIED",
+  "installed_conversation_behavior": "NOT VERIFIED"
+}
