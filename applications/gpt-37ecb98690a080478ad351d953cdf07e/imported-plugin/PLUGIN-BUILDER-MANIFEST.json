@@ -1,0 +1,1977 @@
+{
+  "adapter_registry_sha256": "3b5fb420381737aa90fe77afc140adc6cbe6e8747fc29b3301c4a8457ae336f6",
+  "capabilities": [
+    {
+      "evidence_targets": [
+        "STRUCTURE",
+        "BEHAVIOR"
+      ],
+      "id": "director-stage-review-v105",
+      "realization_need": "SKILL_ONLY",
+      "requirement_ids": [
+        "SS105-REQ-01",
+        "SS105-REQ-02",
+        "SS105-REQ-03",
+        "SS105-REQ-04",
+        "SS105-REQ-05"
+      ],
+      "runtime_targets": [
+        "ChatGPT Work Local/Desktop",
+        "Codex"
+      ],
+      "schema": "plugin-builder-capability-v1",
+      "skill_bindings": [
+        "director-orchestrator-state",
+        "production-execution-review"
+      ],
+      "tool_id": null
+    },
+    {
+      "evidence_targets": [
+        "STRUCTURE",
+        "BEHAVIOR"
+      ],
+      "id": "screenplay-contract-p7",
+      "realization_need": "TOOL_REQUIRED",
+      "requirement_ids": [
+        "SW-REQ-01",
+        "SW-REQ-02",
+        "SW-REQ-03",
+        "SW-REQ-04",
+        "SW-REQ-05",
+        "SW-REQ-07",
+        "SW-REQ-08",
+        "SW-REQ-09",
+        "SW-REQ-10",
+        "SW-REQ-11",
+        "SW-REQ-12",
+        "SW-REQ-13",
+        "SW-REQ-14",
+        "SW-REQ-15",
+        "SW-REQ-16",
+        "SW-REQ-17",
+        "SW-REQ-18",
+        "SW-REQ-19",
+        "SW-REQ-20",
+        "SW-REQ-21",
+        "SW-REQ-22",
+        "SW-REQ-23",
+        "SW-REQ-25",
+        "SW-REQ-26",
+        "SW-REQ-28",
+        "SW-REQ-29",
+        "SW-REQ-33",
+        "SW-REQ-34"
+      ],
+      "runtime_targets": [
+        "ChatGPT Work Local/Desktop",
+        "Codex"
+      ],
+      "schema": "plugin-builder-capability-v1",
+      "skill_bindings": [
+        "professional-screenwriting"
+      ],
+      "tool_id": "screenplay-guard-p7"
+    },
+    {
+      "evidence_targets": [
+        "STRUCTURE",
+        "BEHAVIOR"
+      ],
+      "id": "screenplay-contract-p8-draft",
+      "realization_need": "TOOL_REQUIRED",
+      "requirement_ids": [
+        "SW-REQ-01",
+        "SW-REQ-02",
+        "SW-REQ-03",
+        "SW-REQ-04",
+        "SW-REQ-05",
+        "SW-REQ-07",
+        "SW-REQ-08",
+        "SW-REQ-09",
+        "SW-REQ-10",
+        "SW-REQ-11",
+        "SW-REQ-12",
+        "SW-REQ-13",
+        "SW-REQ-14",
+        "SW-REQ-15",
+        "SW-REQ-16",
+        "SW-REQ-17",
+        "SW-REQ-18",
+        "SW-REQ-19",
+        "SW-REQ-20",
+        "SW-REQ-21",
+        "SW-REQ-22",
+        "SW-REQ-23",
+        "SW-REQ-25",
+        "SW-REQ-26",
+        "SW-REQ-28",
+        "SW-REQ-29",
+        "SW-REQ-33",
+        "SW-REQ-34"
+      ],
+      "runtime_targets": [
+        "ChatGPT Work Local/Desktop",
+        "Codex"
+      ],
+      "schema": "plugin-builder-capability-v1",
+      "skill_bindings": [
+        "professional-screenwriting"
+      ],
+      "tool_id": "screenplay-guard-p8-draft"
+    },
+    {
+      "evidence_targets": [
+        "STRUCTURE",
+        "BEHAVIOR"
+      ],
+      "id": "screenplay-contract-p8-entry",
+      "realization_need": "TOOL_REQUIRED",
+      "requirement_ids": [
+        "SW-REQ-01",
+        "SW-REQ-02",
+        "SW-REQ-03",
+        "SW-REQ-04",
+        "SW-REQ-05",
+        "SW-REQ-07",
+        "SW-REQ-08",
+        "SW-REQ-09",
+        "SW-REQ-10",
+        "SW-REQ-11",
+        "SW-REQ-12",
+        "SW-REQ-13",
+        "SW-REQ-14",
+        "SW-REQ-15",
+        "SW-REQ-16",
+        "SW-REQ-17",
+        "SW-REQ-18",
+        "SW-REQ-19",
+        "SW-REQ-20",
+        "SW-REQ-21",
+        "SW-REQ-22",
+        "SW-REQ-23",
+        "SW-REQ-25",
+        "SW-REQ-26",
+        "SW-REQ-28",
+        "SW-REQ-29",
+        "SW-REQ-33",
+        "SW-REQ-34"
+      ],
+      "runtime_targets": [
+        "ChatGPT Work Local/Desktop",
+        "Codex"
+      ],
+      "schema": "plugin-builder-capability-v1",
+      "skill_bindings": [
+        "professional-screenwriting"
+      ],
+      "tool_id": "screenplay-guard-p8-entry"
+    },
+    {
+      "evidence_targets": [
+        "STRUCTURE",
+        "OPERATION",
+        "INSTALLED_REALIZATION",
+        "BEHAVIOR"
+      ],
+      "id": "screenplay-governed-workflow",
+      "realization_need": "SKILL_ONLY",
+      "requirement_ids": [
+        "SW-REQ-06",
+        "SW-REQ-24",
+        "SW-REQ-27",
+        "SW-REQ-30",
+        "SW-REQ-31",
+        "SW-REQ-32"
+      ],
+      "runtime_targets": [
+        "ChatGPT Work Local/Desktop",
+        "Codex"
+      ],
+      "schema": "plugin-builder-capability-v1",
+      "skill_bindings": [
+        "professional-screenwriting",
+        "director-orchestrator-state"
+      ],
+      "tool_id": null
+    }
+  ],
+  "capabilities_sha256": "f037596666bc16420f97cca8da9b4e84aa792c892a73c753d3c16e3c28cecdd1",
+  "content_tree_sha256": "640a6a95e57646511a951aaab242e3229d5c5253cc512b75ace1b70e966452e2",
+  "dependencies_sha256": "8e0a1afd2f45b8796c47ae861af702e256eb60f66d1810dcbd11280b20a3dbf3",
+  "expected_members": [
+    ".codex-plugin/plugin.json",
+    "CONTENT-MANIFEST.json",
+    "PLUGIN-BUILDER-CHANGES.json",
+    "PLUGIN-BUILDER-MANIFEST.json",
+    "assets/gpt-icon.png",
+    "docs/acceptance-tests.md",
+    "docs/application-tool-binding.json",
+    "docs/application-tool-contract.json",
+    "docs/approved-behavioral-contracts.md",
+    "docs/approved-design-specification.md",
+    "docs/architecture-decisions.md",
+    "docs/build-source.json",
+    "docs/candidate-content-manifest.json",
+    "docs/guard-stage-acceptance.py",
+    "docs/reference-bindings.json",
+    "docs/reference-traceability.json",
+    "docs/representative-reference-consultation-results.json",
+    "docs/representative-reference-consultation-tests.md",
+    "docs/requirement-coverage.json",
+    "docs/sw01-requirement-coverage.json",
+    "docs/upgrade-identity-fix-v1.0.1.json",
+    "docs/verification-report.json",
+    "legacy-baseline/README.md",
+    "legacy-baseline/instructions/SKILL.md",
+    "legacy-baseline/instructions/agents/openai.yaml",
+    "legacy-baseline/instructions/lookup/knowledge-index.json",
+    "legacy-baseline/instructions/references/Resource Index.txt",
+    "legacy-baseline/instructions/references/ai_video_production_package_guide.md",
+    "legacy-baseline/instructions/references/ai_video_prompt_template.md",
+    "legacy-baseline/instructions/references/bible_story_template_rubric.md",
+    "legacy-baseline/instructions/references/bible_story_templates_list.md",
+    "legacy-baseline/instructions/references/camera_techniques_glossary.md",
+    "legacy-baseline/instructions/references/character_acting_reference.md",
+    "legacy-baseline/instructions/references/cinematic_lighting_mood_reference.md",
+    "legacy-baseline/instructions/references/dialogue_script_support_guide.md",
+    "legacy-baseline/instructions/references/director_bundle_spec.txt",
+    "legacy-baseline/instructions/references/directors_cinematic_output_format_guide.md",
+    "legacy-baseline/instructions/references/export_metadata_standard.md",
+    "legacy-baseline/instructions/references/inspirational_story_rubric.md",
+    "legacy-baseline/instructions/references/inspirational_story_templates_list.md",
+    "legacy-baseline/instructions/references/sound_music_cues_reference.md",
+    "legacy-baseline/instructions/references/storyboard_composition_reference.md",
+    "legacy-baseline/instructions/references/visual_rhythm_support_module.md",
+    "plugin.json",
+    "scripts/production_engine.py",
+    "scripts/reference_consultation_probe.py",
+    "scripts/screenplay_guard.py",
+    "skills/cinematic-direction-quality/SKILL.md",
+    "skills/cinematic-direction-quality/agents/openai.yaml",
+    "skills/cinematic-direction-quality/lookup/knowledge-index.json",
+    "skills/cinematic-direction-quality/references/RM-C01_visual_rhythm_support_module.md",
+    "skills/cinematic-direction-quality/references/RM-C02_camera_techniques_glossary.md",
+    "skills/cinematic-direction-quality/references/RM-C03_storyboard_composition_reference.md",
+    "skills/cinematic-direction-quality/references/RM-C04_cinematic_lighting_mood_reference.md",
+    "skills/cinematic-direction-quality/references/RM-C05_character_acting_reference.md",
+    "skills/cinematic-direction-quality/references/RM-C06_sound_music_cues_reference.md",
+    "skills/cinematic-direction-quality/references/RM-C07_dialogue_script_support_guide.md",
+    "skills/cinematic-direction-quality/references/RM-C08_visual_style_options_reference.md",
+    "skills/cinematic-direction-quality/references/RM-S02_bible_story_template_rubric.md",
+    "skills/cinematic-direction-quality/references/RM-S04_inspirational_story_rubric.md",
+    "skills/director-orchestrator-state/SKILL.md",
+    "skills/director-orchestrator-state/agents/openai.yaml",
+    "skills/director-orchestrator-state/lookup/knowledge-index.json",
+    "skills/director-orchestrator-state/references/RM-P05_project_state_asset_provenance_standard.md",
+    "skills/director-orchestrator-state/scripts/production_engine.py",
+    "skills/production-execution-review/SKILL.md",
+    "skills/production-execution-review/agents/openai.yaml",
+    "skills/production-execution-review/lookup/knowledge-index.json",
+    "skills/production-execution-review/references/RM-C02_camera_techniques_glossary.md",
+    "skills/production-execution-review/references/RM-C03_storyboard_composition_reference.md",
+    "skills/production-execution-review/references/RM-C04_cinematic_lighting_mood_reference.md",
+    "skills/production-execution-review/references/RM-C05_character_acting_reference.md",
+    "skills/production-execution-review/references/RM-C06_sound_music_cues_reference.md",
+    "skills/production-execution-review/references/RM-P01_canonical_production_specification_standard.md",
+    "skills/production-execution-review/references/RM-P03_target_capability_adaptation_standard.md",
+    "skills/production-execution-review/references/RM-P04_production_execution_result_contract.md",
+    "skills/production-execution-review/references/RM-P05_project_state_asset_provenance_standard.md",
+    "skills/production-execution-review/scripts/production_engine.py",
+    "skills/production-spec-packaging/SKILL.md",
+    "skills/production-spec-packaging/agents/openai.yaml",
+    "skills/production-spec-packaging/lookup/knowledge-index.json",
+    "skills/production-spec-packaging/references/RM-C08_visual_style_options_reference.md",
+    "skills/production-spec-packaging/references/RM-P01_canonical_production_specification_standard.md",
+    "skills/production-spec-packaging/references/RM-P02_portable_production_package_standard.md",
+    "skills/production-spec-packaging/references/RM-P05_project_state_asset_provenance_standard.md",
+    "skills/production-spec-packaging/scripts/production_engine.py",
+    "skills/professional-screenwriting/SKILL.md",
+    "skills/professional-screenwriting/agents/openai.yaml",
+    "skills/professional-screenwriting/references/RM-W01_Professional_Screenwriting_Fundamentals_v0.3.1_FDR-01_DRAFT.md",
+    "skills/professional-screenwriting/references/RM-W02_Dramatic_Storytelling_and_Dialogue_v0.3.2_RIC-01_DRAFT.md",
+    "skills/professional-screenwriting/references/RM-W03_Screenplay_Evaluation_and_Controlled_Revision_v0.3.2_RIC-01_DRAFT.md",
+    "skills/professional-screenwriting/references/SW-01_Behavioral_Workflow_and_IM_Contracts.md",
+    "skills/professional-screenwriting/references/SW-01_Canonical_Gate_Registry_v0.3.2.md",
+    "skills/professional-screenwriting/references/SW-01_Reference_Material_Evaluation_and_Usage_Map.md",
+    "skills/professional-screenwriting/references/Screenplay_Guard_Runtime_Contract.md",
+    "skills/story-and-creative-development/SKILL.md",
+    "skills/story-and-creative-development/agents/openai.yaml",
+    "skills/story-and-creative-development/lookup/knowledge-index.json",
+    "skills/story-and-creative-development/references/RM-C01_visual_rhythm_support_module.md",
+    "skills/story-and-creative-development/references/RM-C03_storyboard_composition_reference.md",
+    "skills/story-and-creative-development/references/RM-C07_dialogue_script_support_guide.md",
+    "skills/story-and-creative-development/references/RM-C08_visual_style_options_reference.md",
+    "skills/story-and-creative-development/references/RM-S01_bible_story_templates_list.md",
+    "skills/story-and-creative-development/references/RM-S02_bible_story_template_rubric.md",
+    "skills/story-and-creative-development/references/RM-S03_inspirational_story_templates_list.md",
+    "skills/story-and-creative-development/references/RM-S04_inspirational_story_rubric.md",
+    "skills/target-capability-adaptation/SKILL.md",
+    "skills/target-capability-adaptation/agents/openai.yaml",
+    "skills/target-capability-adaptation/lookup/knowledge-index.json",
+    "skills/target-capability-adaptation/references/RM-P01_canonical_production_specification_standard.md",
+    "skills/target-capability-adaptation/references/RM-P03_target_capability_adaptation_standard.md",
+    "skills/target-capability-adaptation/references/RM-P05_project_state_asset_provenance_standard.md",
+    "skills/target-capability-adaptation/scripts/production_engine.py"
+  ],
+  "file_roles": {
+    ".codex-plugin/plugin.json": "GENERATED_METADATA",
+    "CONTENT-MANIFEST.json": "GENERATED_METADATA",
+    "assets/gpt-icon.png": "INHERITED_UNCLASSIFIED",
+    "docs/acceptance-tests.md": "INHERITED_UNCLASSIFIED",
+    "docs/application-tool-binding.json": "INHERITED_UNCLASSIFIED",
+    "docs/application-tool-contract.json": "INHERITED_UNCLASSIFIED",
+    "docs/approved-behavioral-contracts.md": "INHERITED_UNCLASSIFIED",
+    "docs/approved-design-specification.md": "INHERITED_UNCLASSIFIED",
+    "docs/architecture-decisions.md": "INHERITED_UNCLASSIFIED",
+    "docs/build-source.json": "INHERITED_UNCLASSIFIED",
+    "docs/candidate-content-manifest.json": "GENERATED_METADATA",
+    "docs/guard-stage-acceptance.py": "EXECUTABLE_TOOL",
+    "docs/reference-bindings.json": "INHERITED_UNCLASSIFIED",
+    "docs/reference-traceability.json": "INHERITED_UNCLASSIFIED",
+    "docs/representative-reference-consultation-results.json": "INHERITED_UNCLASSIFIED",
+    "docs/representative-reference-consultation-tests.md": "INHERITED_UNCLASSIFIED",
+    "docs/requirement-coverage.json": "INHERITED_UNCLASSIFIED",
+    "docs/sw01-requirement-coverage.json": "GENERATED_METADATA",
+    "docs/upgrade-identity-fix-v1.0.1.json": "INHERITED_UNCLASSIFIED",
+    "docs/verification-report.json": "INHERITED_UNCLASSIFIED",
+    "legacy-baseline/README.md": "INHERITED_UNCLASSIFIED",
+    "legacy-baseline/instructions/SKILL.md": "INHERITED_UNCLASSIFIED",
+    "legacy-baseline/instructions/agents/openai.yaml": "INHERITED_UNCLASSIFIED",
+    "legacy-baseline/instructions/lookup/knowledge-index.json": "INHERITED_UNCLASSIFIED",
+    "legacy-baseline/instructions/references/Resource Index.txt": "INHERITED_UNCLASSIFIED",
+    "legacy-baseline/instructions/references/ai_video_production_package_guide.md": "INHERITED_UNCLASSIFIED",
+    "legacy-baseline/instructions/references/ai_video_prompt_template.md": "INHERITED_UNCLASSIFIED",
+    "legacy-baseline/instructions/references/bible_story_template_rubric.md": "INHERITED_UNCLASSIFIED",
+    "legacy-baseline/instructions/references/bible_story_templates_list.md": "INHERITED_UNCLASSIFIED",
+    "legacy-baseline/instructions/references/camera_techniques_glossary.md": "INHERITED_UNCLASSIFIED",
+    "legacy-baseline/instructions/references/character_acting_reference.md": "INHERITED_UNCLASSIFIED",
+    "legacy-baseline/instructions/references/cinematic_lighting_mood_reference.md": "INHERITED_UNCLASSIFIED",
+    "legacy-baseline/instructions/references/dialogue_script_support_guide.md": "INHERITED_UNCLASSIFIED",
+    "legacy-baseline/instructions/references/director_bundle_spec.txt": "INHERITED_UNCLASSIFIED",
+    "legacy-baseline/instructions/references/directors_cinematic_output_format_guide.md": "INHERITED_UNCLASSIFIED",
+    "legacy-baseline/instructions/references/export_metadata_standard.md": "INHERITED_UNCLASSIFIED",
+    "legacy-baseline/instructions/references/inspirational_story_rubric.md": "INHERITED_UNCLASSIFIED",
+    "legacy-baseline/instructions/references/inspirational_story_templates_list.md": "INHERITED_UNCLASSIFIED",
+    "legacy-baseline/instructions/references/sound_music_cues_reference.md": "INHERITED_UNCLASSIFIED",
+    "legacy-baseline/instructions/references/storyboard_composition_reference.md": "INHERITED_UNCLASSIFIED",
+    "legacy-baseline/instructions/references/visual_rhythm_support_module.md": "INHERITED_UNCLASSIFIED",
+    "plugin.json": "PLUGIN_MANIFEST",
+    "scripts/production_engine.py": "INHERITED_UNCLASSIFIED",
+    "scripts/reference_consultation_probe.py": "INHERITED_UNCLASSIFIED",
+    "scripts/screenplay_guard.py": "EXECUTABLE_TOOL",
+    "skills/cinematic-direction-quality/SKILL.md": "SKILL_ENTRYPOINT",
+    "skills/cinematic-direction-quality/agents/openai.yaml": "GENERATED_METADATA",
+    "skills/cinematic-direction-quality/lookup/knowledge-index.json": "INHERITED_UNCLASSIFIED",
+    "skills/cinematic-direction-quality/references/RM-C01_visual_rhythm_support_module.md": "INHERITED_UNCLASSIFIED",
+    "skills/cinematic-direction-quality/references/RM-C02_camera_techniques_glossary.md": "INHERITED_UNCLASSIFIED",
+    "skills/cinematic-direction-quality/references/RM-C03_storyboard_composition_reference.md": "INHERITED_UNCLASSIFIED",
+    "skills/cinematic-direction-quality/references/RM-C04_cinematic_lighting_mood_reference.md": "INHERITED_UNCLASSIFIED",
+    "skills/cinematic-direction-quality/references/RM-C05_character_acting_reference.md": "INHERITED_UNCLASSIFIED",
+    "skills/cinematic-direction-quality/references/RM-C06_sound_music_cues_reference.md": "INHERITED_UNCLASSIFIED",
+    "skills/cinematic-direction-quality/references/RM-C07_dialogue_script_support_guide.md": "INHERITED_UNCLASSIFIED",
+    "skills/cinematic-direction-quality/references/RM-C08_visual_style_options_reference.md": "INHERITED_UNCLASSIFIED",
+    "skills/cinematic-direction-quality/references/RM-S02_bible_story_template_rubric.md": "INHERITED_UNCLASSIFIED",
+    "skills/cinematic-direction-quality/references/RM-S04_inspirational_story_rubric.md": "INHERITED_UNCLASSIFIED",
+    "skills/director-orchestrator-state/SKILL.md": "SKILL_ENTRYPOINT",
+    "skills/director-orchestrator-state/agents/openai.yaml": "GENERATED_METADATA",
+    "skills/director-orchestrator-state/lookup/knowledge-index.json": "INHERITED_UNCLASSIFIED",
+    "skills/director-orchestrator-state/references/RM-P05_project_state_asset_provenance_standard.md": "INHERITED_UNCLASSIFIED",
+    "skills/director-orchestrator-state/scripts/production_engine.py": "INHERITED_UNCLASSIFIED",
+    "skills/production-execution-review/SKILL.md": "SKILL_ENTRYPOINT",
+    "skills/production-execution-review/agents/openai.yaml": "GENERATED_METADATA",
+    "skills/production-execution-review/lookup/knowledge-index.json": "INHERITED_UNCLASSIFIED",
+    "skills/production-execution-review/references/RM-C02_camera_techniques_glossary.md": "INHERITED_UNCLASSIFIED",
+    "skills/production-execution-review/references/RM-C03_storyboard_composition_reference.md": "INHERITED_UNCLASSIFIED",
+    "skills/production-execution-review/references/RM-C04_cinematic_lighting_mood_reference.md": "INHERITED_UNCLASSIFIED",
+    "skills/production-execution-review/references/RM-C05_character_acting_reference.md": "INHERITED_UNCLASSIFIED",
+    "skills/production-execution-review/references/RM-C06_sound_music_cues_reference.md": "INHERITED_UNCLASSIFIED",
+    "skills/production-execution-review/references/RM-P01_canonical_production_specification_standard.md": "INHERITED_UNCLASSIFIED",
+    "skills/production-execution-review/references/RM-P03_target_capability_adaptation_standard.md": "INHERITED_UNCLASSIFIED",
+    "skills/production-execution-review/references/RM-P04_production_execution_result_contract.md": "INHERITED_UNCLASSIFIED",
+    "skills/production-execution-review/references/RM-P05_project_state_asset_provenance_standard.md": "INHERITED_UNCLASSIFIED",
+    "skills/production-execution-review/scripts/production_engine.py": "INHERITED_UNCLASSIFIED",
+    "skills/production-spec-packaging/SKILL.md": "SKILL_ENTRYPOINT",
+    "skills/production-spec-packaging/agents/openai.yaml": "GENERATED_METADATA",
+    "skills/production-spec-packaging/lookup/knowledge-index.json": "INHERITED_UNCLASSIFIED",
+    "skills/production-spec-packaging/references/RM-C08_visual_style_options_reference.md": "INHERITED_UNCLASSIFIED",
+    "skills/production-spec-packaging/references/RM-P01_canonical_production_specification_standard.md": "INHERITED_UNCLASSIFIED",
+    "skills/production-spec-packaging/references/RM-P02_portable_production_package_standard.md": "INHERITED_UNCLASSIFIED",
+    "skills/production-spec-packaging/references/RM-P05_project_state_asset_provenance_standard.md": "INHERITED_UNCLASSIFIED",
+    "skills/production-spec-packaging/scripts/production_engine.py": "INHERITED_UNCLASSIFIED",
+    "skills/professional-screenwriting/SKILL.md": "SKILL_ENTRYPOINT",
+    "skills/professional-screenwriting/agents/openai.yaml": "GENERATED_METADATA",
+    "skills/professional-screenwriting/references/RM-W01_Professional_Screenwriting_Fundamentals_v0.3.1_FDR-01_DRAFT.md": "PROFESSIONAL_KNOWLEDGE",
+    "skills/professional-screenwriting/references/RM-W02_Dramatic_Storytelling_and_Dialogue_v0.3.2_RIC-01_DRAFT.md": "PROFESSIONAL_KNOWLEDGE",
+    "skills/professional-screenwriting/references/RM-W03_Screenplay_Evaluation_and_Controlled_Revision_v0.3.2_RIC-01_DRAFT.md": "PROFESSIONAL_KNOWLEDGE",
+    "skills/professional-screenwriting/references/SW-01_Behavioral_Workflow_and_IM_Contracts.md": "PROFESSIONAL_KNOWLEDGE",
+    "skills/professional-screenwriting/references/SW-01_Canonical_Gate_Registry_v0.3.2.md": "PROFESSIONAL_KNOWLEDGE",
+    "skills/professional-screenwriting/references/SW-01_Reference_Material_Evaluation_and_Usage_Map.md": "PROFESSIONAL_KNOWLEDGE",
+    "skills/professional-screenwriting/references/Screenplay_Guard_Runtime_Contract.md": "PROFESSIONAL_KNOWLEDGE",
+    "skills/story-and-creative-development/SKILL.md": "SKILL_ENTRYPOINT",
+    "skills/story-and-creative-development/agents/openai.yaml": "GENERATED_METADATA",
+    "skills/story-and-creative-development/lookup/knowledge-index.json": "INHERITED_UNCLASSIFIED",
+    "skills/story-and-creative-development/references/RM-C01_visual_rhythm_support_module.md": "INHERITED_UNCLASSIFIED",
+    "skills/story-and-creative-development/references/RM-C03_storyboard_composition_reference.md": "INHERITED_UNCLASSIFIED",
+    "skills/story-and-creative-development/references/RM-C07_dialogue_script_support_guide.md": "INHERITED_UNCLASSIFIED",
+    "skills/story-and-creative-development/references/RM-C08_visual_style_options_reference.md": "INHERITED_UNCLASSIFIED",
+    "skills/story-and-creative-development/references/RM-S01_bible_story_templates_list.md": "INHERITED_UNCLASSIFIED",
+    "skills/story-and-creative-development/references/RM-S02_bible_story_template_rubric.md": "INHERITED_UNCLASSIFIED",
+    "skills/story-and-creative-development/references/RM-S03_inspirational_story_templates_list.md": "INHERITED_UNCLASSIFIED",
+    "skills/story-and-creative-development/references/RM-S04_inspirational_story_rubric.md": "INHERITED_UNCLASSIFIED",
+    "skills/target-capability-adaptation/SKILL.md": "SKILL_ENTRYPOINT",
+    "skills/target-capability-adaptation/agents/openai.yaml": "GENERATED_METADATA",
+    "skills/target-capability-adaptation/lookup/knowledge-index.json": "INHERITED_UNCLASSIFIED",
+    "skills/target-capability-adaptation/references/RM-P01_canonical_production_specification_standard.md": "INHERITED_UNCLASSIFIED",
+    "skills/target-capability-adaptation/references/RM-P03_target_capability_adaptation_standard.md": "INHERITED_UNCLASSIFIED",
+    "skills/target-capability-adaptation/references/RM-P05_project_state_asset_provenance_standard.md": "INHERITED_UNCLASSIFIED",
+    "skills/target-capability-adaptation/scripts/production_engine.py": "INHERITED_UNCLASSIFIED"
+  },
+  "generated_runtime_configuration": [],
+  "generated_runtime_configuration_sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+  "manifest_profile": {
+    "listing_status": {
+      "brand_colors": "UNRESOLVED",
+      "homepage": "UNRESOLVED",
+      "icons": "UNRESOLVED",
+      "keywords": "SUPPLIED",
+      "license": "UNRESOLVED",
+      "repository": "UNRESOLVED"
+    },
+    "mcp_configuration": "NOT_APPLICABLE",
+    "profile": "PRIVATE_LOCAL",
+    "schema": "plugin-builder-manifest-profile-v1",
+    "target": "OPENAI_DESKTOP",
+    "vocabulary_version": "obvious-one-openai-interface-v1"
+  },
+  "manifest_profile_sha256": "f38b5902e9afe3de096edbc8ae56f4b7706813b1d3b99b0d669335910f14c10c",
+  "members": [
+    {
+      "path": ".codex-plugin/plugin.json",
+      "sha256": "d7bae0c94f82a5b71b73207b2feb8339dc7b2e57fe687a85562accf560832157",
+      "size": 2135
+    },
+    {
+      "path": "CONTENT-MANIFEST.json",
+      "sha256": "9d9da9a651311725f00fb0f14ef8dcad88e36d8a9f31082306bc306e523e947e",
+      "size": 22117
+    },
+    {
+      "path": "PLUGIN-BUILDER-CHANGES.json",
+      "sha256": "e3a7dab007bf9876a75858ef16bc70b351659e8c3f35699e74fa2ed2ce90da94",
+      "size": 8921
+    },
+    {
+      "path": "assets/gpt-icon.png",
+      "sha256": "dd705cb5d209da1d5e0f3f9e5057d4d69bdc0f85e28764002de0dd1c09135259",
+      "size": 554398
+    },
+    {
+      "path": "docs/acceptance-tests.md",
+      "sha256": "567b20d2c72bd915c5bb430f3fa174374f7c36f830e2d1685b05a917ccf4c39d",
+      "size": 510
+    },
+    {
+      "path": "docs/application-tool-binding.json",
+      "sha256": "a60b1c17174a3d7243464a707aa995ea652f6a90bdcb9861e41547528719dfbb",
+      "size": 253
+    },
+    {
+      "path": "docs/application-tool-contract.json",
+      "sha256": "344a7cf69b33c1bb546a2b70ce6ba45f1d52500832f704b5ea70aa43a815433b",
+      "size": 953
+    },
+    {
+      "path": "docs/approved-behavioral-contracts.md",
+      "sha256": "2f26f754825e3928eaf5e16e5e698ca144f181bbcf16c2b96bdaba81b4b33ef5",
+      "size": 1604
+    },
+    {
+      "path": "docs/approved-design-specification.md",
+      "sha256": "e88b1c01ea3648e1eacd2699b3a4e999ad19598a3fd5a15a3e3633efd615859c",
+      "size": 52725
+    },
+    {
+      "path": "docs/architecture-decisions.md",
+      "sha256": "f6c6299b775c3fcd2c91a3962a86db890d65eb80ee846c6af0086e8be1237c78",
+      "size": 891
+    },
+    {
+      "path": "docs/build-source.json",
+      "sha256": "b6aa75948c63310b98253d181d1677f9c31f017fde4e2010f89d95954232ed4b",
+      "size": 486
+    },
+    {
+      "path": "docs/candidate-content-manifest.json",
+      "sha256": "bffdf3f08838967d3b38eea5f03a9c3259d9a5d3304def630c1e2d19b8ac69dc",
+      "size": 21912
+    },
+    {
+      "path": "docs/guard-stage-acceptance.py",
+      "sha256": "23148e8c3580fbd04db914f1f900dd9fb162f06ccdbe6d37440757173400ebd8",
+      "size": 6102
+    },
+    {
+      "path": "docs/reference-bindings.json",
+      "sha256": "9375dfb11411a19281261c6b597071d6454ca5d8ed7087b9631ab7c9a287d50f",
+      "size": 2729
+    },
+    {
+      "path": "docs/reference-traceability.json",
+      "sha256": "62329db6ee1dee616a52bf2ff7ceb57c223cca20fbcdcd0e48a9855e5ae475cf",
+      "size": 4015
+    },
+    {
+      "path": "docs/representative-reference-consultation-results.json",
+      "sha256": "64e4df4f12b6152783702cc4837a76a984d7e0e89574490671d33cbf3f9e4715",
+      "size": 1663
+    },
+    {
+      "path": "docs/representative-reference-consultation-tests.md",
+      "sha256": "1241231cd583c3fdcd5ab59bf62609fbd58de3951e37f9eeab68559bccf1996e",
+      "size": 1571
+    },
+    {
+      "path": "docs/requirement-coverage.json",
+      "sha256": "7e4839e3ec0e88e4ec551b7dead4fbb6d085aa061f49bde1de42107bc4a2e7c0",
+      "size": 18402
+    },
+    {
+      "path": "docs/sw01-requirement-coverage.json",
+      "sha256": "e1d5a8b871b0abbb56a82fda6a5de393c371a54bb6692d415983a14b1a851984",
+      "size": 10291
+    },
+    {
+      "path": "docs/upgrade-identity-fix-v1.0.1.json",
+      "sha256": "c28159ef2c456cd65b98b1a5f65f79458d164740c3ed663965702dc4861fdaed",
+      "size": 534
+    },
+    {
+      "path": "docs/verification-report.json",
+      "sha256": "edcf46d8c2b2cf03b490dedf2826786209007d5c9fb7a09b7ffdc13eed26d981",
+      "size": 2551
+    },
+    {
+      "path": "legacy-baseline/README.md",
+      "sha256": "563eff01530127cd61d79aada4252e571408cea836f800ba3349d5b9f38bdd2d",
+      "size": 192
+    },
+    {
+      "path": "legacy-baseline/instructions/SKILL.md",
+      "sha256": "5f7b1ef487e34cbed8969b67dc9212fae6d0a03a2b15e732b9634c20f8a8a6e0",
+      "size": 14378
+    },
+    {
+      "path": "legacy-baseline/instructions/agents/openai.yaml",
+      "sha256": "219b8e6c2921049a415c89646b289ebfc13181386546a2f22aa1a9e9d8d3e675",
+      "size": 411
+    },
+    {
+      "path": "legacy-baseline/instructions/lookup/knowledge-index.json",
+      "sha256": "7b5f1ebf1e7e28fe33d9f5a725d468e47246343be2bbd7a01a12800711f8199e",
+      "size": 2063
+    },
+    {
+      "path": "legacy-baseline/instructions/references/Resource Index.txt",
+      "sha256": "cdd0889495bbc1900c20299fd67b3ecdc5569624a2d09295bab4caa985723b04",
+      "size": 6782
+    },
+    {
+      "path": "legacy-baseline/instructions/references/ai_video_production_package_guide.md",
+      "sha256": "cd0b1cca0d5038b30fd9f0f3ae611ffda980403a9b61af2bf094890557a96153",
+      "size": 1524
+    },
+    {
+      "path": "legacy-baseline/instructions/references/ai_video_prompt_template.md",
+      "sha256": "80ca6edd5f76af9bd8874b79c64f1c33e8bc17968d007cad339069dc95ab5602",
+      "size": 3621
+    },
+    {
+      "path": "legacy-baseline/instructions/references/bible_story_template_rubric.md",
+      "sha256": "bba95fb28d6bb8536d2907e4acbb6ec5cbb7d0187e0d4c57ba131c28eedff2c8",
+      "size": 1045
+    },
+    {
+      "path": "legacy-baseline/instructions/references/bible_story_templates_list.md",
+      "sha256": "2c2c0f84e86dd6c2c6ced31dd926e686fb7b6f325576eeb26d59ffe9aa902259",
+      "size": 2394
+    },
+    {
+      "path": "legacy-baseline/instructions/references/camera_techniques_glossary.md",
+      "sha256": "553fc28b1bb5b431ddabe889872efe270e21bf255f35c96b9fb1ef0d4c8187ca",
+      "size": 3622
+    },
+    {
+      "path": "legacy-baseline/instructions/references/character_acting_reference.md",
+      "sha256": "388cf093698265ab8a6d44d74cbf35314d2f2bec0bedefe753f14c40d80ce918",
+      "size": 3955
+    },
+    {
+      "path": "legacy-baseline/instructions/references/cinematic_lighting_mood_reference.md",
+      "sha256": "acead014b4a802ff69a347bf446362db07d3d26c2e629cfa5186a917b522ae2e",
+      "size": 4247
+    },
+    {
+      "path": "legacy-baseline/instructions/references/dialogue_script_support_guide.md",
+      "sha256": "911a88aa9a4d6b594b97c4233cb53ef5e10c9498fa541ba15f2f38ccbc389495",
+      "size": 1368
+    },
+    {
+      "path": "legacy-baseline/instructions/references/director_bundle_spec.txt",
+      "sha256": "a5447c30e36821a05f50f7df95071c8668e777b87cec79dc46a9c23494fea49f",
+      "size": 1907
+    },
+    {
+      "path": "legacy-baseline/instructions/references/directors_cinematic_output_format_guide.md",
+      "sha256": "22107dbb986c823cd5ea97e1259faf763da25793515fa8bfac47d0ba2dde99e1",
+      "size": 4950
+    },
+    {
+      "path": "legacy-baseline/instructions/references/export_metadata_standard.md",
+      "sha256": "9808469dce9f50c6e12aece4ec0845fee3fd2d847181470aa4648bf418f3da2c",
+      "size": 1299
+    },
+    {
+      "path": "legacy-baseline/instructions/references/inspirational_story_rubric.md",
+      "sha256": "3eb9494827e82e7341032ca8a82c31114a7c37dbe2d7805a4194c3894dd2222b",
+      "size": 4078
+    },
+    {
+      "path": "legacy-baseline/instructions/references/inspirational_story_templates_list.md",
+      "sha256": "c3016d5a0d5f3bff093fd6972efe2824cf0966031da3026845f3acdfbea84416",
+      "size": 3676
+    },
+    {
+      "path": "legacy-baseline/instructions/references/sound_music_cues_reference.md",
+      "sha256": "c0bd0fd2243dffe0e5304d32d68be25c55f4442f7806e10a1f580693b58246cd",
+      "size": 3526
+    },
+    {
+      "path": "legacy-baseline/instructions/references/storyboard_composition_reference.md",
+      "sha256": "d8eab29365fe3652ea27104399038e2969402e392174e0281f6d387057bbd958",
+      "size": 3988
+    },
+    {
+      "path": "legacy-baseline/instructions/references/visual_rhythm_support_module.md",
+      "sha256": "89369beb529ad933e4f8e66181a06054f82aeaf12825b56586f6acf284c703be",
+      "size": 3147
+    },
+    {
+      "path": "plugin.json",
+      "sha256": "33c26ae59b6124f6a216236b26cba0cb0bcaa83524b4b5f345a64d449f10691b",
+      "size": 2415
+    },
+    {
+      "path": "scripts/production_engine.py",
+      "sha256": "8e30843103335cc79b6002e0bf43b47fa29b7c13b85f36e4007efd407e15c546",
+      "size": 3818
+    },
+    {
+      "path": "scripts/reference_consultation_probe.py",
+      "sha256": "ff9040a864d00ad7a3cfc734530a02c17e3fc7c8ab154e335eb9fa4cc7384b7d",
+      "size": 2208
+    },
+    {
+      "path": "scripts/screenplay_guard.py",
+      "sha256": "0121e5b217c5f3dca9a129433e99e30555681e211e5ce14a9db479c8913e251c",
+      "size": 14326
+    },
+    {
+      "path": "skills/cinematic-direction-quality/SKILL.md",
+      "sha256": "60b56813e4e2e64d3e264b2f76e2d2b329e76bb45f9dcf62fdfed75df8e62bcc",
+      "size": 4324
+    },
+    {
+      "path": "skills/cinematic-direction-quality/agents/openai.yaml",
+      "sha256": "938416718857718cd69d4e654c0a33f094d7af3f2360e5d47c8dc8574c305133",
+      "size": 318
+    },
+    {
+      "path": "skills/cinematic-direction-quality/lookup/knowledge-index.json",
+      "sha256": "08ae92504b90e312def77ca070eafa5ac7d17cdc490ccc185848a6878f42742d",
+      "size": 1376
+    },
+    {
+      "path": "skills/cinematic-direction-quality/references/RM-C01_visual_rhythm_support_module.md",
+      "sha256": "89369beb529ad933e4f8e66181a06054f82aeaf12825b56586f6acf284c703be",
+      "size": 3147
+    },
+    {
+      "path": "skills/cinematic-direction-quality/references/RM-C02_camera_techniques_glossary.md",
+      "sha256": "553fc28b1bb5b431ddabe889872efe270e21bf255f35c96b9fb1ef0d4c8187ca",
+      "size": 3622
+    },
+    {
+      "path": "skills/cinematic-direction-quality/references/RM-C03_storyboard_composition_reference.md",
+      "sha256": "d8eab29365fe3652ea27104399038e2969402e392174e0281f6d387057bbd958",
+      "size": 3988
+    },
+    {
+      "path": "skills/cinematic-direction-quality/references/RM-C04_cinematic_lighting_mood_reference.md",
+      "sha256": "acead014b4a802ff69a347bf446362db07d3d26c2e629cfa5186a917b522ae2e",
+      "size": 4247
+    },
+    {
+      "path": "skills/cinematic-direction-quality/references/RM-C05_character_acting_reference.md",
+      "sha256": "388cf093698265ab8a6d44d74cbf35314d2f2bec0bedefe753f14c40d80ce918",
+      "size": 3955
+    },
+    {
+      "path": "skills/cinematic-direction-quality/references/RM-C06_sound_music_cues_reference.md",
+      "sha256": "c0bd0fd2243dffe0e5304d32d68be25c55f4442f7806e10a1f580693b58246cd",
+      "size": 3526
+    },
+    {
+      "path": "skills/cinematic-direction-quality/references/RM-C07_dialogue_script_support_guide.md",
+      "sha256": "911a88aa9a4d6b594b97c4233cb53ef5e10c9498fa541ba15f2f38ccbc389495",
+      "size": 1368
+    },
+    {
+      "path": "skills/cinematic-direction-quality/references/RM-C08_visual_style_options_reference.md",
+      "sha256": "6447a81443b0e35492b2d313bf9135a1639e38831d24a308eb4df35bd0cfe02f",
+      "size": 3312
+    },
+    {
+      "path": "skills/cinematic-direction-quality/references/RM-S02_bible_story_template_rubric.md",
+      "sha256": "bba95fb28d6bb8536d2907e4acbb6ec5cbb7d0187e0d4c57ba131c28eedff2c8",
+      "size": 1045
+    },
+    {
+      "path": "skills/cinematic-direction-quality/references/RM-S04_inspirational_story_rubric.md",
+      "sha256": "3eb9494827e82e7341032ca8a82c31114a7c37dbe2d7805a4194c3894dd2222b",
+      "size": 4078
+    },
+    {
+      "path": "skills/director-orchestrator-state/SKILL.md",
+      "sha256": "5ec477bdb70392ba3b4a7024ba18c3da03a5ceb7ca4ad028aa8584fea6ea778d",
+      "size": 7208
+    },
+    {
+      "path": "skills/director-orchestrator-state/agents/openai.yaml",
+      "sha256": "4c38d985da3e4298ced477c953abdc4206b04c6be7fbbb685ce340fa951ff8ec",
+      "size": 375
+    },
+    {
+      "path": "skills/director-orchestrator-state/lookup/knowledge-index.json",
+      "sha256": "66458b462b8f024f95f39bc3174ba5f1953aa462bc34e123694f51230da1aa0f",
+      "size": 177
+    },
+    {
+      "path": "skills/director-orchestrator-state/references/RM-P05_project_state_asset_provenance_standard.md",
+      "sha256": "1b73fa6896374f7226fed13ced8fa26779914578de2c39d13b34c14ebee681d7",
+      "size": 26142
+    },
+    {
+      "path": "skills/director-orchestrator-state/scripts/production_engine.py",
+      "sha256": "8e30843103335cc79b6002e0bf43b47fa29b7c13b85f36e4007efd407e15c546",
+      "size": 3818
+    },
+    {
+      "path": "skills/production-execution-review/SKILL.md",
+      "sha256": "50b0c37f0333023e38e201fb042f91c38fcae28cef99685bcb321a23009b9fff",
+      "size": 8053
+    },
+    {
+      "path": "skills/production-execution-review/agents/openai.yaml",
+      "sha256": "52449be05eb29709748844d1c81307b97bfbad67f3cc49cb213381bc30bc3c16",
+      "size": 379
+    },
+    {
+      "path": "skills/production-execution-review/lookup/knowledge-index.json",
+      "sha256": "6733463238b15e082c9dedae887f285150bab3f7a9f1dd623e79bd238c27234f",
+      "size": 1327
+    },
+    {
+      "path": "skills/production-execution-review/references/RM-C02_camera_techniques_glossary.md",
+      "sha256": "553fc28b1bb5b431ddabe889872efe270e21bf255f35c96b9fb1ef0d4c8187ca",
+      "size": 3622
+    },
+    {
+      "path": "skills/production-execution-review/references/RM-C03_storyboard_composition_reference.md",
+      "sha256": "d8eab29365fe3652ea27104399038e2969402e392174e0281f6d387057bbd958",
+      "size": 3988
+    },
+    {
+      "path": "skills/production-execution-review/references/RM-C04_cinematic_lighting_mood_reference.md",
+      "sha256": "acead014b4a802ff69a347bf446362db07d3d26c2e629cfa5186a917b522ae2e",
+      "size": 4247
+    },
+    {
+      "path": "skills/production-execution-review/references/RM-C05_character_acting_reference.md",
+      "sha256": "388cf093698265ab8a6d44d74cbf35314d2f2bec0bedefe753f14c40d80ce918",
+      "size": 3955
+    },
+    {
+      "path": "skills/production-execution-review/references/RM-C06_sound_music_cues_reference.md",
+      "sha256": "c0bd0fd2243dffe0e5304d32d68be25c55f4442f7806e10a1f580693b58246cd",
+      "size": 3526
+    },
+    {
+      "path": "skills/production-execution-review/references/RM-P01_canonical_production_specification_standard.md",
+      "sha256": "3a9c270ebbed207475a1943fb44db302726f56749d30cf68cc428bdaf6a0f428",
+      "size": 21484
+    },
+    {
+      "path": "skills/production-execution-review/references/RM-P03_target_capability_adaptation_standard.md",
+      "sha256": "55cb17de9295d99824d5843fc821a93c3e9431781f05b02639ffac469390aad2",
+      "size": 29243
+    },
+    {
+      "path": "skills/production-execution-review/references/RM-P04_production_execution_result_contract.md",
+      "sha256": "e3925c8b799b35a6762f609e691de401f5d05b1b4af7c4abb341b2db402e9a75",
+      "size": 22936
+    },
+    {
+      "path": "skills/production-execution-review/references/RM-P05_project_state_asset_provenance_standard.md",
+      "sha256": "1b73fa6896374f7226fed13ced8fa26779914578de2c39d13b34c14ebee681d7",
+      "size": 26142
+    },
+    {
+      "path": "skills/production-execution-review/scripts/production_engine.py",
+      "sha256": "8e30843103335cc79b6002e0bf43b47fa29b7c13b85f36e4007efd407e15c546",
+      "size": 3818
+    },
+    {
+      "path": "skills/production-spec-packaging/SKILL.md",
+      "sha256": "2317dbb997f85464e7a7a0a131d586af55cf9b3ebad4cebc6ca8fbda4395b937",
+      "size": 3642
+    },
+    {
+      "path": "skills/production-spec-packaging/agents/openai.yaml",
+      "sha256": "5ad74d62200acc17acc1c405fa5a436a1cffc4f7c4cb4bb08be123ddf1958900",
+      "size": 365
+    },
+    {
+      "path": "skills/production-spec-packaging/lookup/knowledge-index.json",
+      "sha256": "5dff4a6dcd2b17b2b00642e7272b8a20218a0d126d08988c85fa75d3fce8392c",
+      "size": 632
+    },
+    {
+      "path": "skills/production-spec-packaging/references/RM-C08_visual_style_options_reference.md",
+      "sha256": "6447a81443b0e35492b2d313bf9135a1639e38831d24a308eb4df35bd0cfe02f",
+      "size": 3312
+    },
+    {
+      "path": "skills/production-spec-packaging/references/RM-P01_canonical_production_specification_standard.md",
+      "sha256": "3a9c270ebbed207475a1943fb44db302726f56749d30cf68cc428bdaf6a0f428",
+      "size": 21484
+    },
+    {
+      "path": "skills/production-spec-packaging/references/RM-P02_portable_production_package_standard.md",
+      "sha256": "62b0e900be8fee0013d7db4476521bcb5cd800a270491faed438377c55bfbd45",
+      "size": 24776
+    },
+    {
+      "path": "skills/production-spec-packaging/references/RM-P05_project_state_asset_provenance_standard.md",
+      "sha256": "1b73fa6896374f7226fed13ced8fa26779914578de2c39d13b34c14ebee681d7",
+      "size": 26142
+    },
+    {
+      "path": "skills/production-spec-packaging/scripts/production_engine.py",
+      "sha256": "8e30843103335cc79b6002e0bf43b47fa29b7c13b85f36e4007efd407e15c546",
+      "size": 3818
+    },
+    {
+      "path": "skills/professional-screenwriting/SKILL.md",
+      "sha256": "ba868f713d5f82a4a3740a3ee52415ff1e7ff670d20f633781fa191e6572a42e",
+      "size": 7628
+    },
+    {
+      "path": "skills/professional-screenwriting/agents/openai.yaml",
+      "sha256": "338a8e6bdb08a654bf8dad1d46021ec2a0f3b4cc049077373707ae7517cb52c9",
+      "size": 158
+    },
+    {
+      "path": "skills/professional-screenwriting/references/RM-W01_Professional_Screenwriting_Fundamentals_v0.3.1_FDR-01_DRAFT.md",
+      "sha256": "bcc19b4fb62f6c82196e9b31cb8063f6cae193552e80cc40fd46090106c50b4c",
+      "size": 16361
+    },
+    {
+      "path": "skills/professional-screenwriting/references/RM-W02_Dramatic_Storytelling_and_Dialogue_v0.3.2_RIC-01_DRAFT.md",
+      "sha256": "4703476af7435fabfe0577d4bf28c6a2cddca47f2d736af346e8040e58b401d1",
+      "size": 17425
+    },
+    {
+      "path": "skills/professional-screenwriting/references/RM-W03_Screenplay_Evaluation_and_Controlled_Revision_v0.3.2_RIC-01_DRAFT.md",
+      "sha256": "3c6ebd9f6574b9a47ccb3b1d0633e66e1bd4eef669a89e26384cbda620f1596b",
+      "size": 33928
+    },
+    {
+      "path": "skills/professional-screenwriting/references/SW-01_Behavioral_Workflow_and_IM_Contracts.md",
+      "sha256": "dcdfa8e61944c103967fb1d48ace717d4fe780ee47842db8861cb646e1ba075a",
+      "size": 34149
+    },
+    {
+      "path": "skills/professional-screenwriting/references/SW-01_Canonical_Gate_Registry_v0.3.2.md",
+      "sha256": "0ddb4a52fbce770801cef602cb72ac1976c32a73c04255ff4e5eb7c4fa3d39eb",
+      "size": 3056
+    },
+    {
+      "path": "skills/professional-screenwriting/references/SW-01_Reference_Material_Evaluation_and_Usage_Map.md",
+      "sha256": "a3ed34d90798dc5c3064e5c547765bd782c94f9a961059780f87511879541263",
+      "size": 25863
+    },
+    {
+      "path": "skills/professional-screenwriting/references/Screenplay_Guard_Runtime_Contract.md",
+      "sha256": "163b8e2a46c9e551d8516089ef51cddfe622b667bbda12c47903ff356f372018",
+      "size": 2759
+    },
+    {
+      "path": "skills/story-and-creative-development/SKILL.md",
+      "sha256": "c84ca25d2bc16850164e2f80aa9486af7c7a2918ca831e36cdaaf25a815cc96e",
+      "size": 4542
+    },
+    {
+      "path": "skills/story-and-creative-development/agents/openai.yaml",
+      "sha256": "8c012bb0bdf82f5287e25e112482c2409ae8902010de140a8f289d89837dfb9c",
+      "size": 356
+    },
+    {
+      "path": "skills/story-and-creative-development/lookup/knowledge-index.json",
+      "sha256": "6969962847078d546871224e6213bbdbfad3c4b2361a981427ab1c8506e81f47",
+      "size": 1116
+    },
+    {
+      "path": "skills/story-and-creative-development/references/RM-C01_visual_rhythm_support_module.md",
+      "sha256": "89369beb529ad933e4f8e66181a06054f82aeaf12825b56586f6acf284c703be",
+      "size": 3147
+    },
+    {
+      "path": "skills/story-and-creative-development/references/RM-C03_storyboard_composition_reference.md",
+      "sha256": "d8eab29365fe3652ea27104399038e2969402e392174e0281f6d387057bbd958",
+      "size": 3988
+    },
+    {
+      "path": "skills/story-and-creative-development/references/RM-C07_dialogue_script_support_guide.md",
+      "sha256": "911a88aa9a4d6b594b97c4233cb53ef5e10c9498fa541ba15f2f38ccbc389495",
+      "size": 1368
+    },
+    {
+      "path": "skills/story-and-creative-development/references/RM-C08_visual_style_options_reference.md",
+      "sha256": "6447a81443b0e35492b2d313bf9135a1639e38831d24a308eb4df35bd0cfe02f",
+      "size": 3312
+    },
+    {
+      "path": "skills/story-and-creative-development/references/RM-S01_bible_story_templates_list.md",
+      "sha256": "2c2c0f84e86dd6c2c6ced31dd926e686fb7b6f325576eeb26d59ffe9aa902259",
+      "size": 2394
+    },
+    {
+      "path": "skills/story-and-creative-development/references/RM-S02_bible_story_template_rubric.md",
+      "sha256": "bba95fb28d6bb8536d2907e4acbb6ec5cbb7d0187e0d4c57ba131c28eedff2c8",
+      "size": 1045
+    },
+    {
+      "path": "skills/story-and-creative-development/references/RM-S03_inspirational_story_templates_list.md",
+      "sha256": "c3016d5a0d5f3bff093fd6972efe2824cf0966031da3026845f3acdfbea84416",
+      "size": 3676
+    },
+    {
+      "path": "skills/story-and-creative-development/references/RM-S04_inspirational_story_rubric.md",
+      "sha256": "3eb9494827e82e7341032ca8a82c31114a7c37dbe2d7805a4194c3894dd2222b",
+      "size": 4078
+    },
+    {
+      "path": "skills/target-capability-adaptation/SKILL.md",
+      "sha256": "85edec6543192e7c591cbcbfbb0e9151b93b6fc6ebecf72da610c8d1e47f3ac7",
+      "size": 3625
+    },
+    {
+      "path": "skills/target-capability-adaptation/agents/openai.yaml",
+      "sha256": "f537e2cdc5b1d42fedc34e9dadff3ab4854b85aef48bf0140308a5e7c37a88a1",
+      "size": 350
+    },
+    {
+      "path": "skills/target-capability-adaptation/lookup/knowledge-index.json",
+      "sha256": "c8be7c07b7915447b2514bac36c09ad77c8a9fff80ccfa93403221d2c33a5fcf",
+      "size": 495
+    },
+    {
+      "path": "skills/target-capability-adaptation/references/RM-P01_canonical_production_specification_standard.md",
+      "sha256": "3a9c270ebbed207475a1943fb44db302726f56749d30cf68cc428bdaf6a0f428",
+      "size": 21484
+    },
+    {
+      "path": "skills/target-capability-adaptation/references/RM-P03_target_capability_adaptation_standard.md",
+      "sha256": "55cb17de9295d99824d5843fc821a93c3e9431781f05b02639ffac469390aad2",
+      "size": 29243
+    },
+    {
+      "path": "skills/target-capability-adaptation/references/RM-P05_project_state_asset_provenance_standard.md",
+      "sha256": "1b73fa6896374f7226fed13ced8fa26779914578de2c39d13b34c14ebee681d7",
+      "size": 26142
+    },
+    {
+      "path": "skills/target-capability-adaptation/scripts/production_engine.py",
+      "sha256": "8e30843103335cc79b6002e0bf43b47fa29b7c13b85f36e4007efd407e15c546",
+      "size": 3818
+    }
+  ],
+  "operation": "update",
+  "permissions_sha256": "a289421a0fd8010358852b1f4941900a2e8bee3f6653b62ccf9553e3654ffe2a",
+  "plan_sha256": "55878c7765c523c5bac6df2c17917b87040cddae5aaaabb69c755fbe94f0313e",
+  "preflight_evidence_sha256": "43144036f15104e530147c31b17ca56d6b6d375bc9c1af2ffb0552ebfda3600e",
+  "realizations": [
+    {
+      "adapter_id": "direct-local",
+      "adapter_version": "2",
+      "dependency_ids": [
+        "python3"
+      ],
+      "evidence_policy": "DEFERRED_ALLOWED",
+      "execution_location": "USER_DEVICE",
+      "exposed_capability": "screenplay-guard-p7",
+      "feasibility_state": "FEASIBLE_WITH_SETUP",
+      "mechanism": "DIRECT_LOCAL",
+      "operation_id": "screenplay-guard-p7",
+      "permission_ids": [
+        "workspace:read"
+      ],
+      "setup_owner": "OWNER",
+      "setup_requirements": [
+        "Run bundled Python 3.10+ helper locally with JSON input."
+      ],
+      "target_runtime": "ChatGPT Work Local/Desktop",
+      "tool_id": "screenplay-guard-p7",
+      "transport": "DIRECT_ARGV"
+    },
+    {
+      "adapter_id": "direct-local",
+      "adapter_version": "2",
+      "dependency_ids": [
+        "python3"
+      ],
+      "evidence_policy": "DEFERRED_ALLOWED",
+      "execution_location": "USER_DEVICE",
+      "exposed_capability": "screenplay-guard-p7",
+      "feasibility_state": "FEASIBLE_WITH_SETUP",
+      "mechanism": "DIRECT_LOCAL",
+      "operation_id": "screenplay-guard-p7",
+      "permission_ids": [
+        "workspace:read"
+      ],
+      "setup_owner": "OWNER",
+      "setup_requirements": [
+        "Run bundled Python 3.10+ helper locally with JSON input."
+      ],
+      "target_runtime": "Codex",
+      "tool_id": "screenplay-guard-p7",
+      "transport": "DIRECT_ARGV"
+    },
+    {
+      "adapter_id": "direct-local",
+      "adapter_version": "2",
+      "dependency_ids": [
+        "python3"
+      ],
+      "evidence_policy": "DEFERRED_ALLOWED",
+      "execution_location": "USER_DEVICE",
+      "exposed_capability": "screenplay-guard-p8-draft",
+      "feasibility_state": "FEASIBLE_WITH_SETUP",
+      "mechanism": "DIRECT_LOCAL",
+      "operation_id": "screenplay-guard-p8-draft",
+      "permission_ids": [
+        "workspace:read"
+      ],
+      "setup_owner": "OWNER",
+      "setup_requirements": [
+        "Run bundled Python 3.10+ helper locally with JSON input."
+      ],
+      "target_runtime": "ChatGPT Work Local/Desktop",
+      "tool_id": "screenplay-guard-p8-draft",
+      "transport": "DIRECT_ARGV"
+    },
+    {
+      "adapter_id": "direct-local",
+      "adapter_version": "2",
+      "dependency_ids": [
+        "python3"
+      ],
+      "evidence_policy": "DEFERRED_ALLOWED",
+      "execution_location": "USER_DEVICE",
+      "exposed_capability": "screenplay-guard-p8-draft",
+      "feasibility_state": "FEASIBLE_WITH_SETUP",
+      "mechanism": "DIRECT_LOCAL",
+      "operation_id": "screenplay-guard-p8-draft",
+      "permission_ids": [
+        "workspace:read"
+      ],
+      "setup_owner": "OWNER",
+      "setup_requirements": [
+        "Run bundled Python 3.10+ helper locally with JSON input."
+      ],
+      "target_runtime": "Codex",
+      "tool_id": "screenplay-guard-p8-draft",
+      "transport": "DIRECT_ARGV"
+    },
+    {
+      "adapter_id": "direct-local",
+      "adapter_version": "2",
+      "dependency_ids": [
+        "python3"
+      ],
+      "evidence_policy": "DEFERRED_ALLOWED",
+      "execution_location": "USER_DEVICE",
+      "exposed_capability": "screenplay-guard-p8-entry",
+      "feasibility_state": "FEASIBLE_WITH_SETUP",
+      "mechanism": "DIRECT_LOCAL",
+      "operation_id": "screenplay-guard-p8-entry",
+      "permission_ids": [
+        "workspace:read"
+      ],
+      "setup_owner": "OWNER",
+      "setup_requirements": [
+        "Run bundled Python 3.10+ helper locally with JSON input."
+      ],
+      "target_runtime": "ChatGPT Work Local/Desktop",
+      "tool_id": "screenplay-guard-p8-entry",
+      "transport": "DIRECT_ARGV"
+    },
+    {
+      "adapter_id": "direct-local",
+      "adapter_version": "2",
+      "dependency_ids": [
+        "python3"
+      ],
+      "evidence_policy": "DEFERRED_ALLOWED",
+      "execution_location": "USER_DEVICE",
+      "exposed_capability": "screenplay-guard-p8-entry",
+      "feasibility_state": "FEASIBLE_WITH_SETUP",
+      "mechanism": "DIRECT_LOCAL",
+      "operation_id": "screenplay-guard-p8-entry",
+      "permission_ids": [
+        "workspace:read"
+      ],
+      "setup_owner": "OWNER",
+      "setup_requirements": [
+        "Run bundled Python 3.10+ helper locally with JSON input."
+      ],
+      "target_runtime": "Codex",
+      "tool_id": "screenplay-guard-p8-entry",
+      "transport": "DIRECT_ARGV"
+    }
+  ],
+  "realizations_sha256": "f526e1fbb8386bcd4cb6ea46fea15374ecdea5bdee50722e80baf4c5114da8f3",
+  "schema": "plugin-builder-candidate-manifest-v3",
+  "tool_bindings": [
+    {
+      "contract_sha256": "e70dfb80227623f6856b96506e43dc2d936e71c1b6de8beed6239b929dd8a18f",
+      "dependencies": [
+        {
+          "absence_policy": "BLOCK",
+          "id": "python3",
+          "provider": "OWNER_CONFIGURED",
+          "required": true,
+          "runtime_targets": [
+            "ChatGPT Work Local/Desktop",
+            "Codex"
+          ],
+          "setup_owner": "OWNER",
+          "sha256": null,
+          "type": "EXECUTABLE",
+          "version": "3.10+"
+        }
+      ],
+      "files": [
+        "scripts/screenplay_guard.py"
+      ],
+      "implementation_kind": "BUNDLED_LOCAL",
+      "permissions": [
+        {
+          "grant_source": "RUNTIME",
+          "id": "workspace:read",
+          "purpose": "Read local structured script and approval evidence.",
+          "required": true,
+          "target_runtime": "ChatGPT Work Local/Desktop",
+          "verification": "Installed exact artifact invocation evidence."
+        },
+        {
+          "grant_source": "RUNTIME",
+          "id": "workspace:read",
+          "purpose": "Read local structured script and approval evidence.",
+          "required": true,
+          "target_runtime": "Codex",
+          "verification": "Installed exact artifact invocation evidence."
+        }
+      ],
+      "requirements": [
+        "SW-REQ-06",
+        "SW-REQ-24",
+        "SW-REQ-27",
+        "SW-REQ-30",
+        "SW-REQ-31",
+        "SW-REQ-32"
+      ],
+      "runtime_targets": [
+        "ChatGPT Work Local/Desktop",
+        "Codex"
+      ],
+      "skills": [
+        "professional-screenwriting",
+        "director-orchestrator-state"
+      ],
+      "tool_id": "screenplay-guard-p7"
+    },
+    {
+      "contract_sha256": "f9e7c8adf85b87c10aa7d0617d43225662da91e6a5265a5d400345068fe8d336",
+      "dependencies": [
+        {
+          "absence_policy": "BLOCK",
+          "id": "python3",
+          "provider": "OWNER_CONFIGURED",
+          "required": true,
+          "runtime_targets": [
+            "ChatGPT Work Local/Desktop",
+            "Codex"
+          ],
+          "setup_owner": "OWNER",
+          "sha256": null,
+          "type": "EXECUTABLE",
+          "version": "3.10+"
+        }
+      ],
+      "files": [
+        "scripts/screenplay_guard.py"
+      ],
+      "implementation_kind": "BUNDLED_LOCAL",
+      "permissions": [
+        {
+          "grant_source": "RUNTIME",
+          "id": "workspace:read",
+          "purpose": "Read local structured script and approval evidence.",
+          "required": true,
+          "target_runtime": "ChatGPT Work Local/Desktop",
+          "verification": "Installed exact artifact invocation evidence."
+        },
+        {
+          "grant_source": "RUNTIME",
+          "id": "workspace:read",
+          "purpose": "Read local structured script and approval evidence.",
+          "required": true,
+          "target_runtime": "Codex",
+          "verification": "Installed exact artifact invocation evidence."
+        }
+      ],
+      "requirements": [
+        "SW-REQ-06",
+        "SW-REQ-24",
+        "SW-REQ-27",
+        "SW-REQ-30",
+        "SW-REQ-31",
+        "SW-REQ-32"
+      ],
+      "runtime_targets": [
+        "ChatGPT Work Local/Desktop",
+        "Codex"
+      ],
+      "skills": [
+        "professional-screenwriting",
+        "director-orchestrator-state"
+      ],
+      "tool_id": "screenplay-guard-p8-draft"
+    },
+    {
+      "contract_sha256": "e7f510674d9c454087178e423df3bbce0a1e8302a80d6878e2d376ac844f8780",
+      "dependencies": [
+        {
+          "absence_policy": "BLOCK",
+          "id": "python3",
+          "provider": "OWNER_CONFIGURED",
+          "required": true,
+          "runtime_targets": [
+            "ChatGPT Work Local/Desktop",
+            "Codex"
+          ],
+          "setup_owner": "OWNER",
+          "sha256": null,
+          "type": "EXECUTABLE",
+          "version": "3.10+"
+        }
+      ],
+      "files": [
+        "scripts/screenplay_guard.py"
+      ],
+      "implementation_kind": "BUNDLED_LOCAL",
+      "permissions": [
+        {
+          "grant_source": "RUNTIME",
+          "id": "workspace:read",
+          "purpose": "Read local structured script and approval evidence.",
+          "required": true,
+          "target_runtime": "ChatGPT Work Local/Desktop",
+          "verification": "Installed exact artifact invocation evidence."
+        },
+        {
+          "grant_source": "RUNTIME",
+          "id": "workspace:read",
+          "purpose": "Read local structured script and approval evidence.",
+          "required": true,
+          "target_runtime": "Codex",
+          "verification": "Installed exact artifact invocation evidence."
+        }
+      ],
+      "requirements": [
+        "SW-REQ-06",
+        "SW-REQ-24",
+        "SW-REQ-27",
+        "SW-REQ-30",
+        "SW-REQ-31",
+        "SW-REQ-32"
+      ],
+      "runtime_targets": [
+        "ChatGPT Work Local/Desktop",
+        "Codex"
+      ],
+      "skills": [
+        "professional-screenwriting",
+        "director-orchestrator-state"
+      ],
+      "tool_id": "screenplay-guard-p8-entry"
+    }
+  ],
+  "tool_contracts": [
+    {
+      "adapter": null,
+      "capability_ids": [
+        "screenplay-contract-p7"
+      ],
+      "configuration": {
+        "authentication": "NOT_REQUIRED",
+        "setup": "LOCAL_PYTHON"
+      },
+      "dependencies": [
+        {
+          "absence_policy": "BLOCK",
+          "id": "python3",
+          "provider": "OWNER_CONFIGURED",
+          "required": true,
+          "runtime_targets": [
+            "ChatGPT Work Local/Desktop",
+            "Codex"
+          ],
+          "setup_owner": "OWNER",
+          "sha256": null,
+          "type": "EXECUTABLE",
+          "version": "3.10+"
+        }
+      ],
+      "execution": {
+        "argv": [
+          "{python}",
+          "scripts/screenplay_guard.py",
+          "p7-check"
+        ],
+        "clean_environment": true,
+        "timeout_seconds": 30
+      },
+      "fallback": {
+        "alternative_operation_id": null,
+        "degraded_requirement_ids": [
+          "SW-REQ-06",
+          "SW-REQ-24",
+          "SW-REQ-27",
+          "SW-REQ-30",
+          "SW-REQ-31",
+          "SW-REQ-32"
+        ],
+        "policy": "BLOCK",
+        "preserved_requirement_ids": [],
+        "trigger_conditions": [
+          "Python or installed direct execution unavailable."
+        ]
+      },
+      "files": [
+        "scripts/screenplay_guard.py"
+      ],
+      "fixtures": {
+        "input": {
+          "previous_stage": "PF",
+          "route": "PROFESSIONAL",
+          "stage": "P8"
+        },
+        "output": {
+          "self_test": "PASS"
+        }
+      },
+      "id": "screenplay-guard-p7",
+      "implementation_kind": "BUNDLED_LOCAL",
+      "input_schema": {
+        "properties": {
+          "approval": {
+            "type": "object"
+          },
+          "mapping": {
+            "type": "array"
+          },
+          "route": {
+            "type": "string"
+          },
+          "screenplay": {
+            "type": "object"
+          }
+        },
+        "required": [
+          "route"
+        ],
+        "type": "object"
+      },
+      "mcp": null,
+      "operation": {
+        "capability_ids": [
+          "screenplay-contract-p7"
+        ],
+        "id": "screenplay-guard-p7",
+        "idempotent": true,
+        "input_schema_sha256": "61351a671b7d467b173e41004feda09baca49aff689c83d9fe9c609cf8969219",
+        "output_schema_sha256": "77afdfb069e23a3b1ae8fdbf1c05149062a3dd339c8bbb0b0ed048444d9cf0f7",
+        "protocol": "JSON_STDIN_STDOUT",
+        "side_effect_class": "NONE"
+      },
+      "output_schema": {
+        "properties": {
+          "issues": {
+            "type": "array"
+          },
+          "operation": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "operation",
+          "status",
+          "issues"
+        ],
+        "type": "object"
+      },
+      "permissions": [
+        {
+          "grant_source": "RUNTIME",
+          "id": "workspace:read",
+          "purpose": "Read local structured script and approval evidence.",
+          "required": true,
+          "target_runtime": "ChatGPT Work Local/Desktop",
+          "verification": "Installed exact artifact invocation evidence."
+        },
+        {
+          "grant_source": "RUNTIME",
+          "id": "workspace:read",
+          "purpose": "Read local structured script and approval evidence.",
+          "required": true,
+          "target_runtime": "Codex",
+          "verification": "Installed exact artifact invocation evidence."
+        }
+      ],
+      "realizations": [
+        {
+          "adapter_id": "direct-local",
+          "adapter_version": "2",
+          "dependency_ids": [
+            "python3"
+          ],
+          "evidence_policy": "DEFERRED_ALLOWED",
+          "execution_location": "USER_DEVICE",
+          "exposed_capability": "screenplay-guard-p7",
+          "feasibility_state": "FEASIBLE_WITH_SETUP",
+          "mechanism": "DIRECT_LOCAL",
+          "operation_id": "screenplay-guard-p7",
+          "permission_ids": [
+            "workspace:read"
+          ],
+          "setup_owner": "OWNER",
+          "setup_requirements": [
+            "Run bundled Python 3.10+ helper locally with JSON input."
+          ],
+          "target_runtime": "ChatGPT Work Local/Desktop",
+          "transport": "DIRECT_ARGV"
+        },
+        {
+          "adapter_id": "direct-local",
+          "adapter_version": "2",
+          "dependency_ids": [
+            "python3"
+          ],
+          "evidence_policy": "DEFERRED_ALLOWED",
+          "execution_location": "USER_DEVICE",
+          "exposed_capability": "screenplay-guard-p7",
+          "feasibility_state": "FEASIBLE_WITH_SETUP",
+          "mechanism": "DIRECT_LOCAL",
+          "operation_id": "screenplay-guard-p7",
+          "permission_ids": [
+            "workspace:read"
+          ],
+          "setup_owner": "OWNER",
+          "setup_requirements": [
+            "Run bundled Python 3.10+ helper locally with JSON input."
+          ],
+          "target_runtime": "Codex",
+          "transport": "DIRECT_ARGV"
+        }
+      ],
+      "redistribution": {
+        "evidence": "Owner-approved W1 implementation; original generated local script",
+        "state": "APPROVED"
+      },
+      "required": true,
+      "requirement_ids": [
+        "SW-REQ-06",
+        "SW-REQ-24",
+        "SW-REQ-27",
+        "SW-REQ-30",
+        "SW-REQ-31",
+        "SW-REQ-32"
+      ],
+      "runtime_capability": null,
+      "runtime_targets": [
+        "ChatGPT Work Local/Desktop",
+        "Codex"
+      ],
+      "schema": "plugin-builder-application-tool-v2",
+      "side_effects": [],
+      "skill_bindings": [
+        "professional-screenwriting",
+        "director-orchestrator-state"
+      ],
+      "verification": {
+        "argv": [
+          "{python}",
+          "scripts/screenplay_guard.py",
+          "self-test"
+        ],
+        "kind": "PYTHON_ARGV",
+        "network": false
+      }
+    },
+    {
+      "adapter": null,
+      "capability_ids": [
+        "screenplay-contract-p8-draft"
+      ],
+      "configuration": {
+        "authentication": "NOT_REQUIRED",
+        "setup": "LOCAL_PYTHON"
+      },
+      "dependencies": [
+        {
+          "absence_policy": "BLOCK",
+          "id": "python3",
+          "provider": "OWNER_CONFIGURED",
+          "required": true,
+          "runtime_targets": [
+            "ChatGPT Work Local/Desktop",
+            "Codex"
+          ],
+          "setup_owner": "OWNER",
+          "sha256": null,
+          "type": "EXECUTABLE",
+          "version": "3.10+"
+        }
+      ],
+      "execution": {
+        "argv": [
+          "{python}",
+          "scripts/screenplay_guard.py",
+          "p8-draft-check"
+        ],
+        "clean_environment": true,
+        "timeout_seconds": 30
+      },
+      "fallback": {
+        "alternative_operation_id": null,
+        "degraded_requirement_ids": [
+          "SW-REQ-06",
+          "SW-REQ-24",
+          "SW-REQ-27",
+          "SW-REQ-30",
+          "SW-REQ-31",
+          "SW-REQ-32"
+        ],
+        "policy": "BLOCK",
+        "preserved_requirement_ids": [],
+        "trigger_conditions": [
+          "Python or installed direct execution unavailable."
+        ]
+      },
+      "files": [
+        "scripts/screenplay_guard.py"
+      ],
+      "fixtures": {
+        "input": {
+          "previous_stage": "PF",
+          "route": "PROFESSIONAL",
+          "stage": "P8"
+        },
+        "output": {
+          "self_test": "PASS"
+        }
+      },
+      "id": "screenplay-guard-p8-draft",
+      "implementation_kind": "BUNDLED_LOCAL",
+      "input_schema": {
+        "properties": {
+          "approval": {
+            "type": "object"
+          },
+          "mapping": {
+            "type": "array"
+          },
+          "route": {
+            "type": "string"
+          },
+          "screenplay": {
+            "type": "object"
+          }
+        },
+        "required": [
+          "route"
+        ],
+        "type": "object"
+      },
+      "mcp": null,
+      "operation": {
+        "capability_ids": [
+          "screenplay-contract-p8-draft"
+        ],
+        "id": "screenplay-guard-p8-draft",
+        "idempotent": true,
+        "input_schema_sha256": "61351a671b7d467b173e41004feda09baca49aff689c83d9fe9c609cf8969219",
+        "output_schema_sha256": "77afdfb069e23a3b1ae8fdbf1c05149062a3dd339c8bbb0b0ed048444d9cf0f7",
+        "protocol": "JSON_STDIN_STDOUT",
+        "side_effect_class": "NONE"
+      },
+      "output_schema": {
+        "properties": {
+          "issues": {
+            "type": "array"
+          },
+          "operation": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "operation",
+          "status",
+          "issues"
+        ],
+        "type": "object"
+      },
+      "permissions": [
+        {
+          "grant_source": "RUNTIME",
+          "id": "workspace:read",
+          "purpose": "Read local structured script and approval evidence.",
+          "required": true,
+          "target_runtime": "ChatGPT Work Local/Desktop",
+          "verification": "Installed exact artifact invocation evidence."
+        },
+        {
+          "grant_source": "RUNTIME",
+          "id": "workspace:read",
+          "purpose": "Read local structured script and approval evidence.",
+          "required": true,
+          "target_runtime": "Codex",
+          "verification": "Installed exact artifact invocation evidence."
+        }
+      ],
+      "realizations": [
+        {
+          "adapter_id": "direct-local",
+          "adapter_version": "2",
+          "dependency_ids": [
+            "python3"
+          ],
+          "evidence_policy": "DEFERRED_ALLOWED",
+          "execution_location": "USER_DEVICE",
+          "exposed_capability": "screenplay-guard-p8-draft",
+          "feasibility_state": "FEASIBLE_WITH_SETUP",
+          "mechanism": "DIRECT_LOCAL",
+          "operation_id": "screenplay-guard-p8-draft",
+          "permission_ids": [
+            "workspace:read"
+          ],
+          "setup_owner": "OWNER",
+          "setup_requirements": [
+            "Run bundled Python 3.10+ helper locally with JSON input."
+          ],
+          "target_runtime": "ChatGPT Work Local/Desktop",
+          "transport": "DIRECT_ARGV"
+        },
+        {
+          "adapter_id": "direct-local",
+          "adapter_version": "2",
+          "dependency_ids": [
+            "python3"
+          ],
+          "evidence_policy": "DEFERRED_ALLOWED",
+          "execution_location": "USER_DEVICE",
+          "exposed_capability": "screenplay-guard-p8-draft",
+          "feasibility_state": "FEASIBLE_WITH_SETUP",
+          "mechanism": "DIRECT_LOCAL",
+          "operation_id": "screenplay-guard-p8-draft",
+          "permission_ids": [
+            "workspace:read"
+          ],
+          "setup_owner": "OWNER",
+          "setup_requirements": [
+            "Run bundled Python 3.10+ helper locally with JSON input."
+          ],
+          "target_runtime": "Codex",
+          "transport": "DIRECT_ARGV"
+        }
+      ],
+      "redistribution": {
+        "evidence": "Owner-approved W1 implementation; original generated local script",
+        "state": "APPROVED"
+      },
+      "required": true,
+      "requirement_ids": [
+        "SW-REQ-06",
+        "SW-REQ-24",
+        "SW-REQ-27",
+        "SW-REQ-30",
+        "SW-REQ-31",
+        "SW-REQ-32"
+      ],
+      "runtime_capability": null,
+      "runtime_targets": [
+        "ChatGPT Work Local/Desktop",
+        "Codex"
+      ],
+      "schema": "plugin-builder-application-tool-v2",
+      "side_effects": [],
+      "skill_bindings": [
+        "professional-screenwriting",
+        "director-orchestrator-state"
+      ],
+      "verification": {
+        "argv": [
+          "{python}",
+          "scripts/screenplay_guard.py",
+          "self-test"
+        ],
+        "kind": "PYTHON_ARGV",
+        "network": false
+      }
+    },
+    {
+      "adapter": null,
+      "capability_ids": [
+        "screenplay-contract-p8-entry"
+      ],
+      "configuration": {
+        "authentication": "NOT_REQUIRED",
+        "setup": "LOCAL_PYTHON"
+      },
+      "dependencies": [
+        {
+          "absence_policy": "BLOCK",
+          "id": "python3",
+          "provider": "OWNER_CONFIGURED",
+          "required": true,
+          "runtime_targets": [
+            "ChatGPT Work Local/Desktop",
+            "Codex"
+          ],
+          "setup_owner": "OWNER",
+          "sha256": null,
+          "type": "EXECUTABLE",
+          "version": "3.10+"
+        }
+      ],
+      "execution": {
+        "argv": [
+          "{python}",
+          "scripts/screenplay_guard.py",
+          "p8-entry-check"
+        ],
+        "clean_environment": true,
+        "timeout_seconds": 30
+      },
+      "fallback": {
+        "alternative_operation_id": null,
+        "degraded_requirement_ids": [
+          "SW-REQ-06",
+          "SW-REQ-24",
+          "SW-REQ-27",
+          "SW-REQ-30",
+          "SW-REQ-31",
+          "SW-REQ-32"
+        ],
+        "policy": "BLOCK",
+        "preserved_requirement_ids": [],
+        "trigger_conditions": [
+          "Python or installed direct execution unavailable."
+        ]
+      },
+      "files": [
+        "scripts/screenplay_guard.py"
+      ],
+      "fixtures": {
+        "input": {
+          "previous_stage": "PF",
+          "route": "PROFESSIONAL",
+          "stage": "P8"
+        },
+        "output": {
+          "self_test": "PASS"
+        }
+      },
+      "id": "screenplay-guard-p8-entry",
+      "implementation_kind": "BUNDLED_LOCAL",
+      "input_schema": {
+        "properties": {
+          "approval": {
+            "type": "object"
+          },
+          "mapping": {
+            "type": "array"
+          },
+          "route": {
+            "type": "string"
+          },
+          "screenplay": {
+            "type": "object"
+          }
+        },
+        "required": [
+          "route"
+        ],
+        "type": "object"
+      },
+      "mcp": null,
+      "operation": {
+        "capability_ids": [
+          "screenplay-contract-p8-entry"
+        ],
+        "id": "screenplay-guard-p8-entry",
+        "idempotent": true,
+        "input_schema_sha256": "61351a671b7d467b173e41004feda09baca49aff689c83d9fe9c609cf8969219",
+        "output_schema_sha256": "77afdfb069e23a3b1ae8fdbf1c05149062a3dd339c8bbb0b0ed048444d9cf0f7",
+        "protocol": "JSON_STDIN_STDOUT",
+        "side_effect_class": "NONE"
+      },
+      "output_schema": {
+        "properties": {
+          "issues": {
+            "type": "array"
+          },
+          "operation": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "operation",
+          "status",
+          "issues"
+        ],
+        "type": "object"
+      },
+      "permissions": [
+        {
+          "grant_source": "RUNTIME",
+          "id": "workspace:read",
+          "purpose": "Read local structured script and approval evidence.",
+          "required": true,
+          "target_runtime": "ChatGPT Work Local/Desktop",
+          "verification": "Installed exact artifact invocation evidence."
+        },
+        {
+          "grant_source": "RUNTIME",
+          "id": "workspace:read",
+          "purpose": "Read local structured script and approval evidence.",
+          "required": true,
+          "target_runtime": "Codex",
+          "verification": "Installed exact artifact invocation evidence."
+        }
+      ],
+      "realizations": [
+        {
+          "adapter_id": "direct-local",
+          "adapter_version": "2",
+          "dependency_ids": [
+            "python3"
+          ],
+          "evidence_policy": "DEFERRED_ALLOWED",
+          "execution_location": "USER_DEVICE",
+          "exposed_capability": "screenplay-guard-p8-entry",
+          "feasibility_state": "FEASIBLE_WITH_SETUP",
+          "mechanism": "DIRECT_LOCAL",
+          "operation_id": "screenplay-guard-p8-entry",
+          "permission_ids": [
+            "workspace:read"
+          ],
+          "setup_owner": "OWNER",
+          "setup_requirements": [
+            "Run bundled Python 3.10+ helper locally with JSON input."
+          ],
+          "target_runtime": "ChatGPT Work Local/Desktop",
+          "transport": "DIRECT_ARGV"
+        },
+        {
+          "adapter_id": "direct-local",
+          "adapter_version": "2",
+          "dependency_ids": [
+            "python3"
+          ],
+          "evidence_policy": "DEFERRED_ALLOWED",
+          "execution_location": "USER_DEVICE",
+          "exposed_capability": "screenplay-guard-p8-entry",
+          "feasibility_state": "FEASIBLE_WITH_SETUP",
+          "mechanism": "DIRECT_LOCAL",
+          "operation_id": "screenplay-guard-p8-entry",
+          "permission_ids": [
+            "workspace:read"
+          ],
+          "setup_owner": "OWNER",
+          "setup_requirements": [
+            "Run bundled Python 3.10+ helper locally with JSON input."
+          ],
+          "target_runtime": "Codex",
+          "transport": "DIRECT_ARGV"
+        }
+      ],
+      "redistribution": {
+        "evidence": "Owner-approved W1 implementation; original generated local script",
+        "state": "APPROVED"
+      },
+      "required": true,
+      "requirement_ids": [
+        "SW-REQ-06",
+        "SW-REQ-24",
+        "SW-REQ-27",
+        "SW-REQ-30",
+        "SW-REQ-31",
+        "SW-REQ-32"
+      ],
+      "runtime_capability": null,
+      "runtime_targets": [
+        "ChatGPT Work Local/Desktop",
+        "Codex"
+      ],
+      "schema": "plugin-builder-application-tool-v2",
+      "side_effects": [],
+      "skill_bindings": [
+        "professional-screenwriting",
+        "director-orchestrator-state"
+      ],
+      "verification": {
+        "argv": [
+          "{python}",
+          "scripts/screenplay_guard.py",
+          "self-test"
+        ],
+        "kind": "PYTHON_ARGV",
+        "network": false
+      }
+    }
+  ],
+  "tools_sha256": "a132ace88dc00860f09a271612762647a4272cc199b01c009af30538b6185d48"
+}

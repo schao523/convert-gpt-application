@@ -57,7 +57,7 @@
         "codex": {
           "destination": "plugins/gpt-37ecb98690a080478ad351d953cdf07e",
           "mode": "verify_existing",
-          "version": "1.0.3"
+          "version": "1.0.5"
         },
         "openclaw": {
           "mode": "not_applicable"
