@@ -18,6 +18,8 @@ ZIP and matching sidecar identified in
   deterministic Codex builder. The builder adds only Workbench's MIT `LICENSE`.
 - Advance the Codex `verify_existing` target to 1.0.5. Retain the historical
   OpenClaw distribution contract and keep its marketplace target not applicable.
+  Pin the product's Codex verification build command to 1.0.5 independently of
+  the historical application contract version.
 - Record the new publication decision and exact marketplace stage. Package
   inspection and local screenplay-guard scenarios are static/local evidence;
   installed conversation behavior remains `NOT VERIFIED`.

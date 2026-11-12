@@ -31,7 +31,7 @@
         "--destination",
         "{diagnostics}/codex-marketplace",
         "--version",
-        "{version}"
+        "1.0.5"
       ],
       "artifact_path": "plugins/{plugin_id}"
     },
